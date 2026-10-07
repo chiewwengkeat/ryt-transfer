@@ -1,8 +1,11 @@
 // Its mocks run at require time, so they must load before any test module imports expo-router.
 import "expo-router/testing-library";
 
+import { setObservabilitySink } from "@/shared/observability/observability";
+
 import type * as NativeDoubles from "./harness/native-doubles";
 import { resetNativeDoubles } from "./harness/native-doubles";
+import { observedRecords, recordObservation } from "./harness/recording-sink";
 import {
   mswServer,
   recordUnhandledRequest,
@@ -46,7 +49,12 @@ beforeAll(() => {
   mswServer.listen({ onUnhandledRequest: recordUnhandledRequest });
 });
 
+beforeEach(() => {
+  setObservabilitySink(recordObservation);
+});
+
 afterEach(() => {
+  observedRecords.splice(0);
   resetNativeDoubles();
   mswServer.resetHandlers();
   sentRequests.splice(0);
