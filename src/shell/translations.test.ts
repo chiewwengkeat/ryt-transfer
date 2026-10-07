@@ -59,9 +59,12 @@ it("finds a Malay or Chinese plural whose `_one` twin is missing or differs", ()
       "ms-MY": {
         common: [
           {
-            list: {
-              count_other: "{{count}} pindahan",
-              count_one: "{{count}} pindahan",
+            history: {
+              list: {
+                count_other: "{{count}} pindahan",
+                count_one: "{{count}} pindahan",
+                nested_other: "{{count}} pindahan",
+              },
             },
           },
           { missing_other: "{{count}} pindahan" },
@@ -71,7 +74,11 @@ it("finds a Malay or Chinese plural whose `_one` twin is missing or differs", ()
         common: [{ differs_other: "{{count}} 笔", differs_one: "一笔" }],
       },
     }),
-  ).toEqual(["ms-MY common:missing_other", "zh-MY common:differs_other"]);
+  ).toEqual([
+    "ms-MY common:history.list.nested_other",
+    "ms-MY common:missing_other",
+    "zh-MY common:differs_other",
+  ]);
 });
 
 it("registers every Malay and Chinese plural with its `_one` twin", () => {

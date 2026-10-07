@@ -1,13 +1,24 @@
 import * as Localization from "expo-localization";
-import i18next, { t } from "i18next";
+import { t } from "i18next";
+
+import { kvStorage } from "@/shared/platform/kv-storage";
 
 import { AppLanguage, initTranslations, pickAppLanguage } from "./i18n";
 
-function launchOnPhoneSetTo(languageCode: string) {
+const WELCOME_IN_EVERY_LANGUAGE = {
+  "en-MY": { common: [{ welcome: "Welcome" }] },
+  "ms-MY": { common: [{ welcome: "Selamat datang" }] },
+  "zh-MY": { common: [{ welcome: "欢迎" }] },
+};
+
+function launchOnPhoneSetTo(
+  languageCode: string,
+  bundles: Parameters<typeof initTranslations>[0] = WELCOME_IN_EVERY_LANGUAGE,
+) {
   jest
     .spyOn(Localization, "getLocales")
     .mockReturnValue([{ languageCode } as Localization.Locale]);
-  initTranslations({ "en-MY": { common: [{ greeting: "Hello" }] } });
+  initTranslations(bundles);
 }
 
 afterEach(() => {
@@ -15,27 +26,27 @@ afterEach(() => {
 });
 
 it.each([
-  ["en", "en-MY"],
-  ["ms", "ms-MY"],
-  ["zh", "zh-MY"],
-  ["ta", "en-MY"],
-])("launches a phone set to %s in %s", (languageCode, appLanguage) => {
+  ["en", "Welcome"],
+  ["ms", "Selamat datang"],
+  ["zh", "欢迎"],
+  ["ta", "Welcome"],
+])("greets a phone set to %s with %s", (languageCode, greeting) => {
   launchOnPhoneSetTo(languageCode);
 
-  expect(i18next.language).toBe(appLanguage);
+  expect(t("welcome", { defaultValue: "missing" })).toBe(greeting);
 });
 
 it("shows English in a language with no bundle yet", () => {
-  launchOnPhoneSetTo("ms");
+  launchOnPhoneSetTo("ms", { "en-MY": WELCOME_IN_EVERY_LANGUAGE["en-MY"] });
 
-  expect(t("greeting", { defaultValue: "missing" })).toBe("Hello");
+  expect(t("welcome", { defaultValue: "missing" })).toBe("Welcome");
 });
 
 it("follows the phone's language at every launch until one is picked", () => {
   launchOnPhoneSetTo("ms");
   launchOnPhoneSetTo("zh");
 
-  expect(i18next.language).toBe("zh-MY");
+  expect(t("welcome", { defaultValue: "missing" })).toBe("欢迎");
 });
 
 it("keeps a picked language over the phone's at the next launch", () => {
@@ -43,5 +54,16 @@ it("keeps a picked language over the phone's at the next launch", () => {
   pickAppLanguage(AppLanguage.Chinese);
   launchOnPhoneSetTo("ms");
 
-  expect(i18next.language).toBe("zh-MY");
+  expect(t("welcome", { defaultValue: "missing" })).toBe("欢迎");
+});
+
+it("follows the phone when the stored language is not one the app has", () => {
+  kvStorage.setItemSync("app-language", AppLanguage.Chinese);
+  launchOnPhoneSetTo("ms");
+  const greetingInStoredLanguage = t("welcome", { defaultValue: "missing" });
+  kvStorage.setItemSync("app-language", "fr-FR");
+  launchOnPhoneSetTo("ms");
+
+  expect(greetingInStoredLanguage).toBe("欢迎");
+  expect(t("welcome", { defaultValue: "missing" })).toBe("Selamat datang");
 });
