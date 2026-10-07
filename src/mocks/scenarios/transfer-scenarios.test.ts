@@ -312,6 +312,99 @@ describe("conditions the bank applies itself", () => {
     },
   );
 
+  it("transfer.account_locked leaves a refused transfer approvable to the last millisecond of its 60 seconds, then lets it expire", async () => {
+    clockAt(TEST_START_MS);
+    const { biometricKeyId } = await pairTestPhone();
+    const key = { kind: "biometric" as const, keyId: biometricKeyId };
+    const approvedInTime = await startTestTransfer(2_550);
+    const leftToLapse = await startTestTransfer(2_550);
+    const sendSignedApproval = (started: typeof approvedInTime) =>
+      sendToBank<ApproveTransferResponse & BankErrorBody>(
+        "POST",
+        started.approvalPath,
+        { body: signTestApproval(started, key) },
+      );
+    pickTransferScenario("transfer.account_locked");
+
+    const lockRefusals = [
+      await sendSignedApproval(approvedInTime),
+      await sendSignedApproval(leftToLapse),
+    ];
+    clearTransferScenario();
+    clockAt(TEST_START_MS + 59_999);
+    const lastMoment = await sendSignedApproval(approvedInTime);
+    clockAt(TEST_START_MS + 60_000);
+    const { body: atSixty } = await readTransfer(
+      leftToLapse.created.transfer.transferId,
+    );
+
+    expect(lockRefusals.map(({ body }) => body.error.code)).toEqual([
+      "ACCOUNT_LOCKED",
+      "ACCOUNT_LOCKED",
+    ]);
+    expect(lastMoment.body.transfer.status).toBe(TransferStatus.Completed);
+    expect(atSixty.transfer).toMatchObject({
+      status: TransferStatus.Expired,
+      funds: TransferFunds.NotDebited,
+      version: 2,
+    });
+  });
+
+  it("transfer.account_locked answers an approval alike whatever PIN it carries, spending no PIN try", async () => {
+    const { possessionKeyId } = await pairTestPhone();
+    const started = await startTestTransfer(2_550);
+    const approval = signTestApproval(started, {
+      kind: "possession",
+      keyId: possessionKeyId,
+    });
+    const approveWithPin = (pin: string) =>
+      sendToBank<BankErrorBody>("POST", started.approvalPath, {
+        body: { ...approval, pin },
+      });
+    pickTransferScenario("transfer.account_locked");
+
+    const withRightPin = await approveWithPin(DEMO_PIN);
+    const withWrongPin = await approveWithPin("135790");
+    clearTransferScenario();
+    const withWrongPinAfterLift = await approveWithPin("135790");
+
+    expect([withRightPin.status, withRightPin.body.error.code]).toEqual([
+      403,
+      "ACCOUNT_LOCKED",
+    ]);
+    expect(withWrongPin).toEqual(withRightPin);
+    expect(withWrongPinAfterLift.body.error).toMatchObject({
+      code: "PIN_INCORRECT",
+      attemptsRemaining: 2,
+    });
+  });
+
+  it.each<TransferScenarioId>([
+    "transfer.account_locked",
+    "transfer.cooling_off_new_phone",
+    "transfer.cooling_off_new_account",
+  ])(
+    "%s, begun after the approval executed, still answers a retry with the completed transfer",
+    async (scenarioId) => {
+      const ready = await transferReadyToApprove();
+      const balanceBefore = await readBankBalanceMinor();
+      pickTransferScenario("transfer.approval_unanswered");
+      await expect(ready.approvalRequest("lost-approval")).rejects.toThrow();
+      pickTransferScenario(scenarioId);
+
+      // ⛔ A fresh key: "lost-approval" would replay the stored answer and never meet the hold.
+      const retriedApproval = await ready.approve();
+
+      expect(retriedApproval.status).toBe(200);
+      expect(retriedApproval.body.transfer).toMatchObject({
+        status: TransferStatus.Completed,
+        funds: TransferFunds.Debited,
+        version: 2,
+      });
+      expect(await readBankBalanceMinor()).toBe(balanceBefore - 2_550);
+    },
+  );
+
   it("transfer.approval_key_unknown forgets keys from before it began, until the PIN registers new ones", async () => {
     clockAt(TEST_START_MS);
     const ready = await transferReadyToApprove();
