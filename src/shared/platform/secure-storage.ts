@@ -8,20 +8,22 @@ const KEY_PREFIX = "ryt-transfer";
 // after a reinstall cannot know whose records survived in the keychain.
 const INDEX_KEY = `${KEY_PREFIX}.index`;
 
-let pendingIndexUpdate: Promise<void> = Promise.resolve();
+let pendingSecureChange: Promise<void> = Promise.resolve();
 
 export async function writeSecureRecord(
   address: SecureRecordAddress,
   value: string,
 ) {
   const key = secureRecordKey(address);
-  // Indexed first: a crash between the two leaves an entry with no record, never a record no wipe finds.
-  await updateSecureIndex((entries) =>
-    entries.some((entry) => isSameRecordAddress(entry, address))
-      ? entries
-      : [...entries, address],
-  );
-  await SecureStore.setItemAsync(key, value, RECORD_OPTIONS);
+  await changeSecureRecordsInTurn(async () => {
+    // Indexed first: a crash between the two leaves an entry with no record, never a record no wipe finds.
+    await updateSecureIndex((entries) =>
+      entries.some((entry) => isSameRecordAddress(entry, address))
+        ? entries
+        : [...entries, address],
+    );
+    await SecureStore.setItemAsync(key, value, RECORD_OPTIONS);
+  });
 }
 
 export async function readSecureRecord(address: SecureRecordAddress) {
@@ -32,10 +34,13 @@ export async function readSecureRecord(address: SecureRecordAddress) {
 }
 
 export async function deleteSecureRecord(address: SecureRecordAddress) {
-  await SecureStore.deleteItemAsync(secureRecordKey(address), RECORD_OPTIONS);
-  await updateSecureIndex((entries) =>
-    entries.filter((entry) => !isSameRecordAddress(entry, address)),
-  );
+  const key = secureRecordKey(address);
+  await changeSecureRecordsInTurn(async () => {
+    await SecureStore.deleteItemAsync(key, RECORD_OPTIONS);
+    await updateSecureIndex((entries) =>
+      entries.filter((entry) => !isSameRecordAddress(entry, address)),
+    );
+  });
 }
 
 export async function listSecureRecords() {
@@ -57,21 +62,24 @@ export async function deleteAllSecureRecords() {
   await Promise.all(records.map(deleteSecureRecord));
 }
 
-// Serialised: two overlapping read-then-write updates would each drop the other's entry.
-function updateSecureIndex(
+// One change at a time, record and index together: overlapping ones drop each other's index
+// entries, or leave a record stored that the index has dropped.
+function changeSecureRecordsInTurn(change: () => Promise<void>) {
+  const turn = pendingSecureChange.then(change);
+  // The caller sees a failure; the queue must not, or every later change fails with it.
+  pendingSecureChange = turn.catch(() => undefined);
+  return turn;
+}
+
+async function updateSecureIndex(
   change: (entries: SecureRecordAddress[]) => SecureRecordAddress[],
 ) {
-  const update = pendingIndexUpdate.then(async () => {
-    const entries = await listSecureRecords();
-    await SecureStore.setItemAsync(
-      INDEX_KEY,
-      JSON.stringify(change(entries)),
-      RECORD_OPTIONS,
-    );
-  });
-  // The caller sees a failure; the queue must not, or every later update fails with it.
-  pendingIndexUpdate = update.catch(() => undefined);
-  return update;
+  const entries = await listSecureRecords();
+  await SecureStore.setItemAsync(
+    INDEX_KEY,
+    JSON.stringify(change(entries)),
+    RECORD_OPTIONS,
+  );
 }
 
 // The namespace takes no dot, so no two addresses can build the same key.

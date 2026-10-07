@@ -1,6 +1,9 @@
 import * as SecureStore from "expo-secure-store";
 
-import { secureStoreEntries } from "@/test/harness/native-doubles";
+import {
+  secureStoreEntries,
+  secureStoreNativeDouble,
+} from "@/test/harness/native-doubles";
 
 import {
   deleteAllSecureRecords,
@@ -14,6 +17,10 @@ import {
 const FIRST_PENDING = { namespace: "customer-1", name: "pending.tr-1" };
 const FIRST_KEYS = { namespace: "customer-1", name: "approval-keys" };
 const SECOND_PENDING = { namespace: "customer-2", name: "pending.tr-2" };
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 it("keeps records to this unlocked phone and never asks for the passcode", async () => {
   await writeSecureRecord(FIRST_PENDING, "{}");
@@ -55,6 +62,31 @@ it("lists every record when writes overlap", async () => {
   await Promise.all(pending.map((address) => writeSecureRecord(address, "{}")));
 
   expect(await listSecureRecords()).toEqual(pending);
+});
+
+it("applies an overlapping write and delete of one record in the order they were asked for", async () => {
+  await Promise.all([
+    writeSecureRecord(FIRST_PENDING, "{}"),
+    deleteSecureRecord(FIRST_PENDING),
+  ]);
+
+  expect(await readSecureRecord(FIRST_PENDING)).toBeNull();
+  expect(await listSecureRecords()).toEqual([]);
+});
+
+it("leaves no record a wipe cannot find when a write stops halfway", async () => {
+  const writeForReal = secureStoreNativeDouble.setValueWithKeyAsync;
+  jest
+    .spyOn(secureStoreNativeDouble, "setValueWithKeyAsync")
+    .mockImplementationOnce(writeForReal)
+    .mockRejectedValueOnce(new Error("the phone died"));
+
+  await expect(writeSecureRecord(FIRST_PENDING, "{}")).rejects.toThrow(
+    "the phone died",
+  );
+  await deleteAllSecureRecords();
+
+  expect(await readSecureRecord(FIRST_PENDING)).toBeNull();
 });
 
 it("wipes one customer's records and keeps the other customer's", async () => {
