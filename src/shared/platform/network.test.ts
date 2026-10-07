@@ -1,0 +1,75 @@
+import { setPhoneNetwork } from "@/test/harness/native-doubles";
+
+import { subscribeToPhoneConnection } from "./network";
+
+const OFFLINE = { isConnected: false, isInternetReachable: false };
+const ONLINE = { isConnected: true, isInternetReachable: true };
+
+function settle() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+it("reports the phone's connection as soon as it subscribes", async () => {
+  setPhoneNetwork(OFFLINE);
+  const heard: boolean[] = [];
+
+  const unsubscribe = subscribeToPhoneConnection((connected) => {
+    heard.push(connected);
+  });
+  await settle();
+  unsubscribe();
+
+  expect(heard).toEqual([false]);
+});
+
+it("reports each change the phone announces", async () => {
+  const heard: boolean[] = [];
+  const unsubscribe = subscribeToPhoneConnection((connected) => {
+    heard.push(connected);
+  });
+  await settle();
+
+  setPhoneNetwork(OFFLINE);
+  setPhoneNetwork(ONLINE);
+  unsubscribe();
+
+  expect(heard).toEqual([true, false, true]);
+});
+
+it("keeps a change that arrives before the first read answers", async () => {
+  const heard: boolean[] = [];
+
+  const unsubscribe = subscribeToPhoneConnection((connected) => {
+    heard.push(connected);
+  });
+  setPhoneNetwork(OFFLINE);
+  await settle();
+  unsubscribe();
+
+  expect(heard).toEqual([false]);
+});
+
+it("reports nothing after unsubscribing, the first read included", async () => {
+  const heard: boolean[] = [];
+
+  subscribeToPhoneConnection((connected) => {
+    heard.push(connected);
+  })();
+  setPhoneNetwork(OFFLINE);
+  await settle();
+
+  expect(heard).toEqual([]);
+});
+
+it("counts a phone that gives no answer as connected", async () => {
+  setPhoneNetwork({});
+  const heard: boolean[] = [];
+
+  const unsubscribe = subscribeToPhoneConnection((connected) => {
+    heard.push(connected);
+  });
+  await settle();
+  unsubscribe();
+
+  expect(heard).toEqual([true]);
+});
