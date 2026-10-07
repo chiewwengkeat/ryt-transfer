@@ -2,11 +2,8 @@ import { delay, http, HttpResponse } from "msw";
 import type { RequestHandler } from "msw";
 
 import { API_BASE_URL } from "@/shared/config/config";
-import {
-  configureTransport,
-  requestJson,
-  TransportErrorKind,
-} from "@/shared/http/transport";
+import { configureTransport, requestJson } from "@/shared/http/transport";
+import { TransportErrorKind } from "@/shared/http/transport-error";
 import { mswServer } from "@/test/msw-server";
 
 import { createDemoSend } from "./demo-send";

@@ -1,7 +1,10 @@
 import { MutationObserver, QueryObserver } from "@tanstack/react-query";
 import { AppState, type AppStateStatus } from "react-native";
 
-import { TransportError, TransportErrorKind } from "@/shared/http/transport";
+import {
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport-error";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 
 import { createQueryClient } from "./query-client";

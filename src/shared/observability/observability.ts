@@ -1,4 +1,4 @@
-import { TransportError } from "@/shared/http/transport";
+import { TransportError } from "@/shared/http/transport-error";
 
 // An allow-list, so nothing unvetted reaches a sink: credentials and personal data never pass; amounts may, in sen.
 const ALLOWED_PROPERTY_NAMES = new Set([

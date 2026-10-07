@@ -1,32 +1,13 @@
 import { API_BASE_URL } from "@/shared/config/config";
 import { reportError } from "@/shared/observability/observability";
 
+import { TransportError, TransportErrorKind } from "./transport-error";
+
 export type Send = (request: Request) => Promise<Response>;
 
 // The demo layer's module shape lives here: the shell may not import even a type from src/mocks.
 export interface DemoLayer {
   demoSend: Send;
-}
-
-export enum TransportErrorKind {
-  Timeout = "timeout",
-  Network = "network",
-  Http = "http",
-  Aborted = "aborted",
-  // A 2xx that could not be read: the server acted on it, so never treat it as a refusal.
-  Unreadable = "unreadable",
-}
-
-export class TransportError extends Error {
-  constructor(
-    readonly kind: TransportErrorKind,
-    readonly status?: number,
-    readonly code?: string,
-    readonly body?: unknown,
-  ) {
-    super(status === undefined ? kind : `${kind} ${status}`);
-    this.name = "TransportError";
-  }
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000;

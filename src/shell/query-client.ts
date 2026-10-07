@@ -5,7 +5,10 @@ import {
 } from "@tanstack/react-query";
 import { AppState } from "react-native";
 
-import { TransportError, TransportErrorKind } from "@/shared/http/transport";
+import {
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport-error";
 import { subscribeToPhoneConnection } from "@/shared/platform/network";
 
 onlineManager.setEventListener(subscribeToPhoneConnection);

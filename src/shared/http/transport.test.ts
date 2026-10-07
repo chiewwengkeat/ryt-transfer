@@ -8,9 +8,8 @@ import {
   addUnauthorizedListener,
   configureTransport,
   requestJson,
-  TransportError,
-  TransportErrorKind,
 } from "./transport";
+import { TransportError, TransportErrorKind } from "./transport-error";
 
 const PROBE_URL = `${API_BASE_URL}/probe`;
 
