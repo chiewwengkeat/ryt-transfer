@@ -94,12 +94,12 @@ export default [
         },
         {
           selector:
-            "JSXSpreadAttribute > ObjectExpression > Property[key.name='testID']",
+            "JSXSpreadAttribute > ObjectExpression > Property:matches([key.name='testID'], [key.value='testID'])",
           message: TEST_ID_INSTEAD_OF_ACCESSIBLE_NAME,
         },
         {
           selector:
-            "CallExpression:matches([callee.name='createElement'], [callee.property.name='createElement']) > ObjectExpression > Property[key.name='testID']",
+            "CallExpression:matches([callee.name='createElement'], [callee.property.name='createElement']) > ObjectExpression > Property:matches([key.name='testID'], [key.value='testID'])",
           message: TEST_ID_INSTEAD_OF_ACCESSIBLE_NAME,
         },
       ],

@@ -71,6 +71,42 @@ const CASES = [
       'import React from "react";\n',
       'React.createElement(View, { accessibilityLabel: "probe" })',
     ],
+    [
+      "an object literal spread into JSX, as a quoted key",
+      true,
+      "",
+      '<View {...{ "testID": "probe" }} />',
+    ],
+    [
+      "an object literal spread into JSX, as a computed string key",
+      true,
+      "",
+      '<View {...{ ["testID"]: "probe" }} />',
+    ],
+    [
+      "createElement's props, as a quoted key",
+      true,
+      'import { createElement } from "react";\n',
+      'createElement(View, { "testID": "probe" })',
+    ],
+    [
+      "an object literal spread into JSX, as a quoted key",
+      false,
+      "",
+      '<View {...{ "accessibilityLabel": "probe" }} />',
+    ],
+    [
+      "createElement's props, as a quoted key",
+      false,
+      'import { createElement } from "react";\n',
+      'createElement(View, { "accessibilityLabel": "probe" })',
+    ],
+    [
+      "an object literal spread into JSX, with testID as its value",
+      false,
+      "",
+      '<View {...{ accessibilityLabel: "testID" }} />',
+    ],
   ].map(([place, refused, imports, element], i) => ({
     title: `${refused ? "refuses testID" : "passes an accessible name"} in ${place}`,
     file: `${SCREEN_DIR}/test-id-${i}.tsx`,
