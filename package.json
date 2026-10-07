@@ -14,7 +14,7 @@
     "lint": "eslint . --max-warnings 0 && git ls-files -z --cached --others --exclude-standard | xargs -0 prettier --check --ignore-unknown --no-error-on-unmatched-pattern && node scripts/check-placement-ladder.js && secretlint \"**/*\"",
     "prepare": "husky",
     "start": "EXPO_PUBLIC_APP_VARIANT=development expo start",
-    "test": "jest && node --test \"scripts/**/*.test.js\"",
+    "test": "jest && node --test \"scripts/**/*.test.js\" \"eslint-rules/__tests__/*.test.js\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
