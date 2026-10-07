@@ -319,6 +319,38 @@ test("counts the final importers behind a file that imports a component and expo
   );
 });
 
+const CARD_TRANSFER_FILE =
+  "src/screens/transfer/components/CardTransfer/CardTransfer.tsx";
+const CARDS_STATE_FILE = "src/screens/transfer/state/cards.ts";
+const CARDS_STATE_SOURCE =
+  'import CardTransfer from "../components/CardTransfer/CardTransfer";\n\nexport const Card = CardTransfer;\n';
+const cardsStateUser = moduleImporting("@/screens/transfer/state/cards");
+
+test("counts the final importers behind a file that exports an imported component as a const", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [CARD_TRANSFER_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
+    [CARDS_STATE_FILE]: CARDS_STATE_SOURCE,
+    "src/screens/home/HomeScreen/HomeScreen.tsx": cardsStateUser,
+  });
+  assert.equal(exitCode, 1);
+  assert.match(
+    errors,
+    /CardTransfer: every user sits in src\/screens\/home\/HomeScreen\//,
+  );
+});
+
+test("passes a component that two screens reach through a const export", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [CARD_TRANSFER_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
+    [CARDS_STATE_FILE]: CARDS_STATE_SOURCE,
+    [AMOUNT_SCREEN_FILE]: cardsStateUser,
+    "src/screens/transfer/TransferReviewScreen/TransferReviewScreen.tsx":
+      cardsStateUser,
+  });
+  assert.equal(errors, "");
+  assert.equal(exitCode, 0);
+});
+
 test("counts no story or test utility as a user", () => {
   const receiptSpecifier =
     "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";

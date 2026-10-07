@@ -57,6 +57,24 @@ function readImportSpecifiers(rootDir, file) {
       reexportedBindings.add(node.expression.text);
       return;
     }
+    if (
+      ts.isVariableStatement(node) &&
+      node.modifiers?.some(({ kind }) => kind === ts.SyntaxKind.ExportKeyword)
+    ) {
+      for (const declaration of node.declarationList.declarations) {
+        if (
+          ts.isIdentifier(declaration.name) &&
+          declaration.initializer &&
+          ts.isIdentifier(declaration.initializer)
+        ) {
+          reexportedBindings.add(declaration.initializer.text);
+          if (declaration.type) visit(declaration.type);
+        } else {
+          visit(declaration);
+        }
+      }
+      return;
+    }
     if (ts.isIdentifier(node)) referencedBindings.add(node.text);
     if (
       ts.isImportEqualsDeclaration(node) &&
