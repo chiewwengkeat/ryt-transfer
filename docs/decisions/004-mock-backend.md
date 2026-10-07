@@ -17,7 +17,7 @@ The app carries its own mock bank, and one set of [msw](https://mswjs.io) handle
 
 - **msw's own routes into React Native.** On Hermes, msw 2's React Native entry returned empty response bodies; the newer `@msw/react-native` was an unreleased experiment that worked only after a manual build, bundler aliases and two hand-written shims; msw 3 has no React Native entry at all.
 - **msw 2's main entry, shimmed.** It loads two browser APIs React Native lacks and crashes at startup without hand-written stand-ins for them.
-- **msw in tests only, with plain handlers in the app.** Two sources of truth for every response the bank sends.
+- **msw in tests only, with plain handlers in the app.** The phone would not have depended on msw's internal files; msw's own handlers answer on the phone instead, through the alias.
 - **A local mock server.** The most production-like, but an installed APK has no server to reach.
 - **A bank that forgets on restart.** Killing the app kills the mock, so the scenarios about a killed app could be shown only in tests.
 - **Fixed answers per scenario.** No balance change after a transfer, no limit used, no repeat recognised.

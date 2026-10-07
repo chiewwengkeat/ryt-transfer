@@ -10,7 +10,7 @@ The transfer flow is a plain typed reducer. It is in one state at a time — edi
 
 The reducer lives in a zustand store. A component subscribes to the slice it shows and re-renders only when that slice changes, and code outside React reads the store directly: the deep-link handler drops a link that arrives mid-transfer, and a background check takes over a transfer the person leaves while it is being sent. `src/mocks/switcher/switcher-store.ts`, read by the mock bank outside React, is the same pattern at its smallest.
 
-The bank's data is not client state. The flow holds only the transfer's id, and the transfer itself lives in the query cache ([010](010-query-cache-only.md)). Each form keeps its fields in react-hook-form, so a keystroke re-renders its field rather than the screen. The language picked is the one piece kept across launches, in a key-value store read synchronously, so the first screen appears already in that language (`src/shared/platform/kv-storage.ts`).
+The bank's data is not client state. The flow keeps the draft and the transfer's id, never the transfer itself, which lives in the query cache ([010](010-query-cache-only.md)). Each form keeps its fields in react-hook-form, so a keystroke re-renders its field rather than the screen. The language picked is kept across launches in a key-value store read synchronously, so the first screen appears already in that language (`src/shared/platform/kv-storage.ts`). Development and demo builds also keep the scenario picked, saved with the mock bank's state, and a transfer still being checked keeps its ids in secure storage ([006](006-never-sent-twice.md)).
 
 ## Rejected
 
