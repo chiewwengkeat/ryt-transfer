@@ -50,7 +50,7 @@ export interface Transfer {
   amount: WireMoney;
   note?: string;
   reference?: string;
-  // Every instant on this API is ISO 8601 with Malaysia's +08:00 offset.
+  // Both instants are ISO 8601 at Malaysia's +08:00 offset.
   createdAt: string;
   updatedAt: string;
   failureReason?: TransferFailureReason;
