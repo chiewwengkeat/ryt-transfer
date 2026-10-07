@@ -118,7 +118,7 @@ export function bankState() {
   const { scenarioId, activatedAtMs } = snapshot.scenarioPick ?? {};
   switcherStore.setState(
     typeof scenarioId === "string" &&
-      scenarioId in TRANSFER_SCENARIOS &&
+      Object.hasOwn(TRANSFER_SCENARIOS, scenarioId) &&
       typeof activatedAtMs === "number"
       ? {
           scenarioId: scenarioId as keyof typeof TRANSFER_SCENARIOS,

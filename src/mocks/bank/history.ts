@@ -54,7 +54,11 @@ export function listBankTransfers(query: URLSearchParams): BankAnswer {
     } catch {
       return invalid("This cursor did not come from this list.");
     }
-    if (typeof after[0] !== "number" || typeof after[1] !== "string") {
+    if (
+      !Array.isArray(after) ||
+      typeof after[0] !== "number" ||
+      typeof after[1] !== "string"
+    ) {
       return invalid("This cursor did not come from this list.");
     }
   }

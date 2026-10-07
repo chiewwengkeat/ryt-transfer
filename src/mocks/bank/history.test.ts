@@ -73,10 +73,13 @@ it("totals every day a page touches over that whole day, the next page's rows in
   );
 });
 
-it("refuses a cursor it never issued", async () => {
+it.each([
+  ["text that is not encoded JSON", "not-a-cursor"],
+  ["JSON that is not a position", btoa("null")],
+])("refuses a cursor it never issued: %s", async (_, cursor) => {
   const refused = await sendToBank<BankErrorBody>(
     "GET",
-    "/transfers?cursor=not-a-cursor",
+    `/transfers?cursor=${encodeURIComponent(cursor)}`,
   );
 
   expect([refused.status, refused.body.error.code]).toEqual([
