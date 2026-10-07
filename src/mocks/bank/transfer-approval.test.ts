@@ -9,6 +9,7 @@ import {
   TransferStatus,
   type GetTransferResponse,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { bankPorts, bindBankPorts } from "@/mocks/bank/ports";
 import { DEMO_PIN } from "@/mocks/bank/seed";
 import { demoBankNotifications, unlockDemoPin } from "@/mocks/demo-bank";
 import {
@@ -256,6 +257,35 @@ it("re-checks today's limit at approval and ends a short transfer unsuccessful, 
     failureReason: TransferFailureReason.DailyLimitExceeded,
   });
   expect(await balanceMinor()).toBe(balanceBefore - 300_000);
+});
+
+it("keeps a transfer approvable when minting its reference fails", async () => {
+  const { biometricKeyId } = await pairTestPhone();
+  const started = await startTestTransfer(2_550);
+  const approval = signTestApproval(started, {
+    kind: "biometric",
+    keyId: biometricKeyId,
+  });
+  const workingPorts = bankPorts();
+  bindBankPorts({
+    ...workingPorts,
+    randomBytes: () => {
+      throw new Error("No randomness on this phone");
+    },
+  });
+
+  const failed = await sendToBank("POST", started.approvalPath, {
+    body: approval,
+  });
+  bindBankPorts(workingPorts);
+  const retried = await sendToBank<ApproveTransferResponse>(
+    "POST",
+    started.approvalPath,
+    { body: approval },
+  );
+
+  expect(failed.status).toBe(500);
+  expect(retried.body.transfer.status).toBe(TransferStatus.Completed);
 });
 
 it("approves with the possession key only beside the right PIN, and a resent wrong PIN costs one try", async () => {

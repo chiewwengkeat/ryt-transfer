@@ -111,7 +111,6 @@ export function approveBankTransfer(
     if (refusal) return refusal;
   }
 
-  delete record.approval;
   const amountMinor = record.transfer.amount.minor;
   const executed = {
     ...record.transfer,
@@ -119,6 +118,8 @@ export function approveBankTransfer(
     reference: `${malaysianDate(nowMs).replace(/-/g, "")}${randomHex(4).toUpperCase()}`,
     updatedAt: toMalaysiaIso(nowMs),
   };
+  // Spent only now: minting the reference can throw, and must leave the transfer approvable.
+  delete record.approval;
   const endUnsuccessful = (failureReason: TransferFailureReason) => {
     record.transfer = {
       ...executed,
