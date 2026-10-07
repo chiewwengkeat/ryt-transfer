@@ -19,7 +19,10 @@ module.exports = {
   transform: { "\\.mjs$": expoPreset.transform["\\.[jt]sx?$"] },
   // jest-expo's first ignore pattern is its allow-list, a negative lookahead ending in "))".
   transformIgnorePatterns: [
-    presetAllowList.replace(/\)\)$/, "|rettime|until-async|@open-draft))"),
+    presetAllowList.replace(
+      /\)\)$/,
+      "|rettime|until-async|@open-draft|@noble))",
+    ),
     ...presetIgnorePatterns,
   ],
 };
