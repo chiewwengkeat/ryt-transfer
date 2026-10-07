@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "@/shared/config/config";
+import { reportError } from "@/shared/observability/observability";
 
 export type Send = (request: Request) => Promise<Response>;
 
@@ -12,6 +13,8 @@ export enum TransportErrorKind {
   Network = "network",
   Http = "http",
   Aborted = "aborted",
+  // A 2xx that could not be read: the server acted on it, so never treat it as a refusal.
+  Unreadable = "unreadable",
 }
 
 export class TransportError extends Error {
@@ -62,6 +65,8 @@ export async function requestJson<Data>(
   } = {},
 ) {
   const { method = "GET", body, idempotencyKey, signal } = options;
+  // Before the race: an abort that has already happened fires no event for it to hear.
+  if (signal?.aborted) throw new TransportError(TransportErrorKind.Aborted);
   const headers: Record<string, string> = {
     Accept: "application/json",
     ...authHeaders(),
@@ -71,6 +76,13 @@ export async function requestJson<Data>(
 
   // Hermes leaves signal.reason undefined, so which abort fired is tracked here.
   const controller = new AbortController();
+  // Built outside the race: a request that cannot be built is a bug, never a dropped connection.
+  const request = new Request(`${API_BASE_URL}${path}`, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+    signal: controller.signal,
+  });
   let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
@@ -80,7 +92,6 @@ export async function requestJson<Data>(
     controller.abort();
   };
   signal?.addEventListener("abort", abortForCaller);
-  if (signal?.aborted) controller.abort();
 
   let response: Response;
   let text: string;
@@ -90,14 +101,7 @@ export async function requestJson<Data>(
       controller.signal.addEventListener("abort", () => {
         reject(new Error("aborted"));
       });
-      configuredSend(
-        new Request(`${API_BASE_URL}${path}`, {
-          method,
-          headers,
-          body: body === undefined ? undefined : JSON.stringify(body),
-          signal: controller.signal,
-        }),
-      ).then(resolve, reject);
+      configuredSend(request).then(resolve, reject);
     });
     text = await response.text();
   } catch {
@@ -111,9 +115,23 @@ export async function requestJson<Data>(
     signal?.removeEventListener("abort", abortForCaller);
   }
 
-  if (response.ok) return JSON.parse(text) as Data;
-  if (response.status === 401)
-    for (const listener of unauthorizedListeners) listener();
+  if (response.ok) {
+    try {
+      return JSON.parse(text) as Data;
+    } catch {
+      throw new TransportError(TransportErrorKind.Unreadable, response.status);
+    }
+  }
+  if (response.status === 401) {
+    for (const listener of unauthorizedListeners) {
+      try {
+        listener();
+      } catch (listenerFailure) {
+        // Reported, not thrown: the caller is owed the 401, and the other listeners still run.
+        reportError(listenerFailure, { boundary: "unauthorized_listener" });
+      }
+    }
+  }
   let errorBody: unknown;
   try {
     errorBody = JSON.parse(text);
