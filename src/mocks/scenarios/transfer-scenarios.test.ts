@@ -1,4 +1,3 @@
-import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import type { ApproveTransferResponse } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import {
@@ -24,6 +23,7 @@ import {
   lookUpTestRecipient,
   pairTestPhone,
   phonePublicKeySpki,
+  readBankBalanceMinor,
   sendToBank,
   signTestApproval,
   startTestTransfer,
@@ -41,14 +41,6 @@ afterEach(() => {
 
 function clockAt(epochMs: number) {
   jest.spyOn(Date, "now").mockReturnValue(epochMs);
-}
-
-async function balanceMinor() {
-  const { body } = await sendToBank<GetPrimaryAccountResponse>(
-    "GET",
-    "/accounts/primary",
-  );
-  return body.balance.minor;
 }
 
 const readTransfer = (transferId: string) =>
@@ -307,7 +299,7 @@ describe("conditions the bank applies itself", () => {
     "%s also refuses an approval arriving after it began, moving no money",
     async (scenarioId, refusal) => {
       const ready = await transferReadyToApprove();
-      const balanceBefore = await balanceMinor();
+      const balanceBefore = await readBankBalanceMinor();
       pickTransferScenario(scenarioId);
 
       const refused = await ready.approve();
@@ -316,7 +308,7 @@ describe("conditions the bank applies itself", () => {
       expect(refused.status).toBe(403);
       expect(refused.body.error).toMatchObject(refusal);
       expect(body.transfer.funds).toBe(TransferFunds.NotDebited);
-      expect(await balanceMinor()).toBe(balanceBefore);
+      expect(await readBankBalanceMinor()).toBe(balanceBefore);
     },
   );
 
@@ -401,7 +393,7 @@ describe("conditions the bank applies itself", () => {
     "%s ends the transfer unsuccessful without debiting it",
     async (scenarioId, failureReason) => {
       const ready = await transferReadyToApprove();
-      const balanceBefore = await balanceMinor();
+      const balanceBefore = await readBankBalanceMinor();
       pickTransferScenario(scenarioId);
 
       const { body } = await ready.approve();
@@ -411,7 +403,7 @@ describe("conditions the bank applies itself", () => {
         funds: TransferFunds.NotDebited,
         failureReason,
       });
-      expect(await balanceMinor()).toBe(balanceBefore);
+      expect(await readBankBalanceMinor()).toBe(balanceBefore);
     },
   );
 
@@ -436,7 +428,7 @@ describe("conditions the bank applies itself", () => {
     async (scenarioId, underReview) => {
       clockAt(T0);
       const ready = await transferReadyToApprove();
-      const balanceBefore = await balanceMinor();
+      const balanceBefore = await readBankBalanceMinor();
       pickTransferScenario(scenarioId);
 
       const { body: approved } = await ready.approve();
@@ -457,20 +449,20 @@ describe("conditions the bank applies itself", () => {
         version: approved.transfer.version + 1,
       });
       expect(after.transfer.underReview).toBeUndefined();
-      expect(await balanceMinor()).toBe(balanceBefore - 2_550);
+      expect(await readBankBalanceMinor()).toBe(balanceBefore - 2_550);
     },
   );
 
   it("transfer.refunded_after_processing fails after processing, then refunds the money", async () => {
     clockAt(T0);
     const ready = await transferReadyToApprove();
-    const balanceBefore = await balanceMinor();
+    const balanceBefore = await readBankBalanceMinor();
     pickTransferScenario("transfer.refunded_after_processing");
 
     await ready.approve();
     clockAt(T0 + 20_000);
     const { body: failed } = await readTransfer(ready.transferId);
-    const balanceWhilePending = await balanceMinor();
+    const balanceWhilePending = await readBankBalanceMinor();
     clockAt(T0 + 30_000);
     const { body: refunded } = await readTransfer(ready.transferId);
 
@@ -480,7 +472,7 @@ describe("conditions the bank applies itself", () => {
     });
     expect(balanceWhilePending).toBe(balanceBefore - 2_550);
     expect(refunded.transfer.funds).toBe(TransferFunds.Refunded);
-    expect(await balanceMinor()).toBe(balanceBefore);
+    expect(await readBankBalanceMinor()).toBe(balanceBefore);
   });
 });
 
@@ -510,7 +502,7 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
 
   it("transfer.approval_unanswered debits once while every answer is lost", async () => {
     const ready = await transferReadyToApprove();
-    const balanceBefore = await balanceMinor();
+    const balanceBefore = await readBankBalanceMinor();
     pickTransferScenario("transfer.approval_unanswered");
 
     await expect(ready.approvalRequest("lost-approval")).rejects.toThrow();
@@ -520,17 +512,17 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
     const { body } = await readTransfer(ready.transferId);
 
     expect(body.transfer.status).toBe(TransferStatus.Completed);
-    expect(await balanceMinor()).toBe(balanceBefore - 2_550);
+    expect(await readBankBalanceMinor()).toBe(balanceBefore - 2_550);
   });
 
   it("transfer.status_unreachable commits the approval, then loses every answer, checks included", async () => {
     const ready = await transferReadyToApprove();
-    const balanceBefore = await balanceMinor();
+    const balanceBefore = await readBankBalanceMinor();
     pickTransferScenario("transfer.status_unreachable");
 
     await expect(ready.approvalRequest("lost-approval")).rejects.toThrow();
     await expect(readTransfer(ready.transferId)).rejects.toThrow();
-    expect(await balanceMinor()).toBe(balanceBefore - 2_550);
+    expect(await readBankBalanceMinor()).toBe(balanceBefore - 2_550);
   });
 
   it.each<[TransferScenarioId, number, string]>([
@@ -540,7 +532,7 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
     "%s commits the approval, loses its answer, then answers the check with %i %s",
     async (scenarioId, checkStatus, checkCode) => {
       const ready = await transferReadyToApprove();
-      const balanceBefore = await balanceMinor();
+      const balanceBefore = await readBankBalanceMinor();
       pickTransferScenario(scenarioId);
 
       await expect(ready.approvalRequest("lost-approval")).rejects.toThrow();
@@ -550,13 +542,13 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
         checkStatus,
         checkCode,
       ]);
-      expect(await balanceMinor()).toBe(balanceBefore - 2_550);
+      expect(await readBankBalanceMinor()).toBe(balanceBefore - 2_550);
     },
   );
 
   it("transfer.approval_unknown_answer commits the approval but answers with a code the app never learned", async () => {
     const ready = await transferReadyToApprove();
-    const balanceBefore = await balanceMinor();
+    const balanceBefore = await readBankBalanceMinor();
     pickTransferScenario("transfer.approval_unknown_answer");
 
     const garbled = await ready.approve();
@@ -565,6 +557,6 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
       400,
       "NEW_BANK_CODE",
     ]);
-    expect(await balanceMinor()).toBe(balanceBefore - 2_550);
+    expect(await readBankBalanceMinor()).toBe(balanceBefore - 2_550);
   });
 });

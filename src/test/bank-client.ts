@@ -1,5 +1,7 @@
 import { p256 } from "@noble/curves/nist.js";
 
+import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import type { RegisterApprovalKeysResponse } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
 import { buildSignedApprovalText } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import type { ApproveTransferRequest } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
@@ -55,6 +57,22 @@ export async function sendToBank<ResponseBody>(
     status: response.status,
     body: (await response.json()) as ResponseBody,
   };
+}
+
+export async function readBankBalanceMinor() {
+  const { body } = await sendToBank<GetPrimaryAccountResponse>(
+    "GET",
+    "/accounts/primary",
+  );
+  return body.balance.minor;
+}
+
+export async function readBankUsedTodayMinor() {
+  const { body } = await sendToBank<GetTransferLimitsResponse>(
+    "GET",
+    "/transfer-limits",
+  );
+  return body.daily.usedToday.minor;
 }
 
 export function phonePublicKeySpki(kind: keyof typeof PHONE_SECRET_KEYS) {

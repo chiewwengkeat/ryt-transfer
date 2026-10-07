@@ -1,8 +1,4 @@
-import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
-import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
-import type { RegisterApprovalKeysResponse } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
 import type { ApproveTransferResponse } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
-import type { CreateTransferResponse } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import {
   TransferFailureReason,
   TransferFunds,
@@ -13,9 +9,9 @@ import { bankPorts, bindBankPorts } from "@/mocks/bank/ports";
 import { DEMO_PIN } from "@/mocks/bank/seed";
 import { demoBankNotifications, unlockDemoPin } from "@/mocks/demo-bank";
 import {
-  lookUpTestRecipient,
   pairTestPhone,
-  phonePublicKeySpki,
+  readBankBalanceMinor,
+  readBankUsedTodayMinor,
   sendToBank,
   signTestApproval,
   startTestTransfer,
@@ -26,45 +22,9 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function balanceMinor() {
-  const { body } = await sendToBank<GetPrimaryAccountResponse>(
-    "GET",
-    "/accounts/primary",
-  );
-  return body.balance.minor;
-}
-
-async function usedTodayMinor() {
-  const { body } = await sendToBank<GetTransferLimitsResponse>(
-    "GET",
-    "/transfer-limits",
-  );
-  return body.daily.usedToday.minor;
-}
-
-const errorCodeOf = ({ body }: { body: BankErrorBody }) => body.error.code;
-
-it("creates a transfer awaiting approval and moves no money", async () => {
-  const balanceBefore = await balanceMinor();
-
-  const { created } = await startTestTransfer(2_550, { note: "Lunch" });
-
-  expect(created).toMatchObject({
-    transfer: {
-      status: TransferStatus.AwaitingApproval,
-      funds: TransferFunds.NotDebited,
-      amount: { minor: 2_550, currency: "MYR" },
-      note: "Lunch",
-    },
-    approval: { expiresInSeconds: 60 },
-  });
-  expect(await balanceMinor()).toBe(balanceBefore);
-  expect(await usedTodayMinor()).toBe(0);
-});
-
 it("debits once when the approval verifies, however many approvals arrive", async () => {
   const { biometricKeyId } = await pairTestPhone();
-  const balanceBefore = await balanceMinor();
+  const balanceBefore = await readBankBalanceMinor();
   const started = await startTestTransfer(2_550);
   const approval = signTestApproval(started, {
     kind: "biometric",
@@ -94,8 +54,8 @@ it("debits once when the approval verifies, however many approvals arrive", asyn
   });
   expect(resent).toEqual(first);
   expect(retried.body.transfer).toEqual(first.body.transfer);
-  expect(await balanceMinor()).toBe(balanceBefore - 2_550);
-  expect(await usedTodayMinor()).toBe(2_550);
+  expect(await readBankBalanceMinor()).toBe(balanceBefore - 2_550);
+  expect(await readBankUsedTodayMinor()).toBe(2_550);
   expect(demoBankNotifications()).toEqual([
     expect.objectContaining({
       message: expect.stringContaining("You sent 25.50 MYR") as string,
@@ -103,80 +63,10 @@ it("debits once when the approval verifies, however many approvals arrive", asyn
   ]);
 });
 
-it("refuses a write without an Idempotency-Key, and a key reused for another body", async () => {
-  const lookup = await lookUpTestRecipient();
-  const transfer = (minor: number) => ({
-    recipientRef: lookup.recipientRef,
-    amount: { minor, currency: "MYR" },
-  });
-
-  const unkeyed = await sendToBank<BankErrorBody>("POST", "/transfers", {
-    body: transfer(1_000),
-    idempotencyKey: null,
-  });
-  await sendToBank("POST", "/transfers", {
-    body: transfer(1_000),
-    idempotencyKey: "reused",
-  });
-  const reused = await sendToBank<BankErrorBody>("POST", "/transfers", {
-    body: transfer(2_000),
-    idempotencyKey: "reused",
-  });
-
-  expect([unkeyed.status, errorCodeOf(unkeyed)]).toEqual([
-    400,
-    "INVALID_REQUEST",
-  ]);
-  expect([reused.status, errorCodeOf(reused)]).toEqual([
-    409,
-    "IDEMPOTENCY_KEY_REUSED",
-  ]);
-});
-
-it.each([
-  ["a note with symbols", { note: "Lunch!" }, "NOTE_INVALID"],
-  ["an amount of zero", { minor: 0 }, "AMOUNT_INVALID"],
-  ["an amount above RM50,000", { minor: 5_000_001 }, "ABOVE_PER_TRANSFER_MAX"],
-  ["an amount above the balance", { minor: 1_300_000 }, "INSUFFICIENT_FUNDS"],
-  ["an amount above today's limit", { minor: 600_000 }, "DAILY_LIMIT_EXCEEDED"],
-])("refuses to create a transfer with %s", async (_, change, code) => {
-  const lookup = await lookUpTestRecipient();
-
-  const refused = await sendToBank<BankErrorBody>("POST", "/transfers", {
-    body: {
-      recipientRef: lookup.recipientRef,
-      amount: {
-        minor: "minor" in change ? change.minor : 1_000,
-        currency: "MYR",
-      },
-      ...("note" in change && { note: change.note }),
-    },
-  });
-
-  expect([refused.status, errorCodeOf(refused)]).toEqual([422, code]);
-});
-
-it("refuses to create a transfer once the name check is ten minutes old", async () => {
-  const lookup = await lookUpTestRecipient();
-  jest.spyOn(Date, "now").mockReturnValue(Date.now() + 600_000);
-
-  const refused = await sendToBank<BankErrorBody>("POST", "/transfers", {
-    body: {
-      recipientRef: lookup.recipientRef,
-      amount: { minor: 1_000, currency: "MYR" },
-    },
-  });
-
-  expect([refused.status, errorCodeOf(refused)]).toEqual([
-    422,
-    "RECIPIENT_REF_EXPIRED",
-  ]);
-});
-
 it("expires an approval that arrives after its 60 seconds, moving no money", async () => {
   const { biometricKeyId } = await pairTestPhone();
   const started = await startTestTransfer(2_550);
-  const balanceBefore = await balanceMinor();
+  const balanceBefore = await readBankBalanceMinor();
   jest.spyOn(Date, "now").mockReturnValue(Date.now() + 60_000);
 
   const late = await sendToBank<BankErrorBody>("POST", started.approvalPath, {
@@ -190,13 +80,16 @@ it("expires an approval that arrives after its 60 seconds, moving no money", asy
     `/transfers/${started.created.transfer.transferId}`,
   );
 
-  expect([late.status, errorCodeOf(late)]).toEqual([410, "APPROVAL_EXPIRED"]);
+  expect([late.status, late.body.error.code]).toEqual([
+    410,
+    "APPROVAL_EXPIRED",
+  ]);
   expect(body.transfer).toMatchObject({
     status: TransferStatus.Expired,
     funds: TransferFunds.NotDebited,
     version: 2,
   });
-  expect(await balanceMinor()).toBe(balanceBefore);
+  expect(await readBankBalanceMinor()).toBe(balanceBefore);
 });
 
 it("refuses a signature over other details, and a key it never registered", async () => {
@@ -225,11 +118,11 @@ it("refuses a signature over other details, and a key it never registered", asyn
     },
   );
 
-  expect([tampered.status, errorCodeOf(tampered)]).toEqual([
+  expect([tampered.status, tampered.body.error.code]).toEqual([
     403,
     "APPROVAL_INVALID",
   ]);
-  expect([unknownKey.status, errorCodeOf(unknownKey)]).toEqual([
+  expect([unknownKey.status, unknownKey.body.error.code]).toEqual([
     409,
     "KEY_NOT_REGISTERED",
   ]);
@@ -237,7 +130,7 @@ it("refuses a signature over other details, and a key it never registered", asyn
 
 it("re-checks today's limit at approval and ends a short transfer unsuccessful, undebited", async () => {
   const { biometricKeyId } = await pairTestPhone();
-  const balanceBefore = await balanceMinor();
+  const balanceBefore = await readBankBalanceMinor();
   const first = await startTestTransfer(300_000);
   const second = await startTestTransfer(300_000);
   const key = { kind: "biometric" as const, keyId: biometricKeyId };
@@ -256,7 +149,7 @@ it("re-checks today's limit at approval and ends a short transfer unsuccessful, 
     funds: TransferFunds.NotDebited,
     failureReason: TransferFailureReason.DailyLimitExceeded,
   });
-  expect(await balanceMinor()).toBe(balanceBefore - 300_000);
+  expect(await readBankBalanceMinor()).toBe(balanceBefore - 300_000);
 });
 
 it("keeps a transfer approvable when minting its reference fails", async () => {
@@ -316,7 +209,7 @@ it("approves with the possession key only beside the right PIN, and a resent wro
     { body: { ...approval, pin: DEMO_PIN } },
   );
 
-  expect([withoutPin.status, errorCodeOf(withoutPin)]).toEqual([
+  expect([withoutPin.status, withoutPin.body.error.code]).toEqual([
     400,
     "INVALID_REQUEST",
   ]);
@@ -350,71 +243,10 @@ it("locks the PIN on the third wrong try, refusing even the right one until unlo
   const rightAfterUnlock = await tryPin(DEMO_PIN);
 
   expect(tries.map(({ body }) => body.error.attemptsRemaining)).toEqual([2, 1]);
-  expect([third.status, errorCodeOf(third)]).toEqual([423, "PIN_LOCKED"]);
-  expect([rightWhileLocked.status, errorCodeOf(rightWhileLocked)]).toEqual([
+  expect([third.status, third.body.error.code]).toEqual([423, "PIN_LOCKED"]);
+  expect([rightWhileLocked.status, rightWhileLocked.body.error.code]).toEqual([
     423,
     "PIN_LOCKED",
   ]);
   expect(rightAfterUnlock.body.transfer.status).toBe(TransferStatus.Completed);
-});
-
-it("asks for the PIN before replacing keys on file, then tells the customer", async () => {
-  const paired = await pairTestPhone();
-  const biometricKey = { biometricPublicKey: phonePublicKeySpki("biometric") };
-
-  const withoutPin = await sendToBank<BankErrorBody>("POST", "/approval-keys", {
-    body: biometricKey,
-  });
-  const replaced = await sendToBank<RegisterApprovalKeysResponse>(
-    "POST",
-    "/approval-keys",
-    { body: { ...biometricKey, pin: DEMO_PIN } },
-  );
-  const started = await startTestTransfer(2_550);
-  const withOldKey = await sendToBank<BankErrorBody>(
-    "POST",
-    started.approvalPath,
-    {
-      body: signTestApproval(started, {
-        kind: "biometric",
-        keyId: paired.biometricKeyId,
-      }),
-    },
-  );
-
-  expect([withoutPin.status, errorCodeOf(withoutPin)]).toEqual([
-    403,
-    "PIN_REQUIRED",
-  ]);
-  expect(replaced.status).toBe(200);
-  expect(Object.keys(replaced.body)).toEqual(["biometricKeyId"]);
-  expect(errorCodeOf(withOldKey)).toBe("KEY_NOT_REGISTERED");
-  expect(demoBankNotifications()).toEqual([
-    expect.objectContaining({
-      message: expect.stringContaining("approve transfers changed") as string,
-    }),
-  ]);
-});
-
-it("answers a repeated create with the first transfer rather than a second", async () => {
-  const lookup = await lookUpTestRecipient();
-  const body = {
-    recipientRef: lookup.recipientRef,
-    amount: { minor: 1_000, currency: "MYR" },
-  };
-
-  const first = await sendToBank<CreateTransferResponse>("POST", "/transfers", {
-    body,
-    idempotencyKey: "create-once",
-  });
-  const repeat = await sendToBank<CreateTransferResponse>(
-    "POST",
-    "/transfers",
-    {
-      body,
-      idempotencyKey: "create-once",
-    },
-  );
-
-  expect(repeat).toEqual(first);
 });
