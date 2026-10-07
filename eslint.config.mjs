@@ -224,6 +224,11 @@ export default defineConfig(
     },
   },
   {
+    files: ["metro.msw-entry.mjs"],
+    // msw-core/* exists only inside Metro, which metro.config.js points at msw's own modules.
+    rules: { "import-x/no-unresolved": "off" },
+  },
+  {
     files: SOURCE_FILES,
     extends: [
       eslintReact.configs["recommended-type-checked"],

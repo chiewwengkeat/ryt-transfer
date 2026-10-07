@@ -1,23 +1,44 @@
 import type { ExpoConfig } from "expo/config";
 
+const VARIANTS: Record<
+  string,
+  { name: string; idSuffix: string; scheme: string }
+> = {
+  production: { name: "Ryt Transfer", idSuffix: "", scheme: "ryt" },
+  demo: { name: "Ryt Transfer Demo", idSuffix: ".demo", scheme: "ryt-demo" },
+  development: {
+    name: "Ryt Transfer Dev",
+    idSuffix: ".dev",
+    scheme: "ryt-dev",
+  },
+};
+const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT || "development";
+const variant = VARIANTS[appVariant];
+if (!variant) {
+  throw new Error(
+    `EXPO_PUBLIC_APP_VARIANT must be production, demo or development, not "${appVariant}".`,
+  );
+}
+const appId = `io.github.chiewwengkeat.ryttransfer${variant.idSuffix}`;
+
 const config: ExpoConfig = {
-  name: "Ryt Transfer",
+  name: variant.name,
   slug: "ryt-transfer",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
-  scheme: "ryt",
+  scheme: variant.scheme,
   userInterfaceStyle: "light",
   ios: {
     icon: "./assets/expo.icon",
-    bundleIdentifier: "io.github.chiewwengkeat.ryttransfer",
+    bundleIdentifier: appId,
     infoPlist: {
       NSFaceIDUsageDescription:
         "$(PRODUCT_NAME) uses Face ID to approve your transfers.",
     },
   },
   android: {
-    package: "io.github.chiewwengkeat.ryttransfer",
+    package: appId,
     allowBackup: false,
     blockedPermissions: ["android.permission.WRITE_CONTACTS"],
     adaptiveIcon: {
