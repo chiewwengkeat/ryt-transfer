@@ -4,5 +4,5 @@ module.exports = {
     "prettier --write",
   ],
   "*.{json,md,yml,yaml}": "prettier --write",
-  "*": ["secretlint", () => "node scripts/check-placement-ladder.js"],
+  "*": "secretlint",
 };

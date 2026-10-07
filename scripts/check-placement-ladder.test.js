@@ -12,20 +12,48 @@ const moduleImporting = (...specifiers) =>
     .map((specifier, i) => `import * as Imported${i} from "${specifier}";\n`)
     .join("");
 
+const CHECK_SCRIPT = path.join(__dirname, "check-placement-ladder.js");
+
+function writeTree(root, tree) {
+  for (const [file, content] of Object.entries(tree)) {
+    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+    fs.writeFileSync(path.join(root, file), content);
+  }
+}
+
 function runPlacementCheckOn(tree) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "placement-ladder-"));
   try {
-    for (const [file, content] of Object.entries(tree)) {
-      fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
-      fs.writeFileSync(path.join(root, file), content);
-    }
-    const result = spawnSync(
-      process.execPath,
-      [path.join(__dirname, "check-placement-ladder.js"), root],
-      {
-        encoding: "utf8",
-      },
-    );
+    writeTree(root, tree);
+    const result = spawnSync(process.execPath, [CHECK_SCRIPT, root], {
+      encoding: "utf8",
+    });
+    return { exitCode: result.status, errors: result.stderr };
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+function runStagedPlacementCheckOn({
+  staged,
+  workingTreeOnly = {},
+  deletionsStaged = [],
+}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "placement-staged-"));
+  // Inside a hook or a rebase, git exports variables that would aim these commands at this repo.
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_")),
+  );
+  const run = (command, args) =>
+    spawnSync(command, args, { cwd: root, env, encoding: "utf8" });
+  try {
+    run("git", ["init", "-q"]);
+    writeTree(root, staged);
+    run("git", ["add", "--all"]);
+    for (const file of deletionsStaged)
+      run("git", ["rm", "-q", "--cached", file]);
+    writeTree(root, workingTreeOnly);
+    const result = run(process.execPath, [CHECK_SCRIPT, "--staged"]);
     return { exitCode: result.status, errors: result.stderr };
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
@@ -489,4 +517,40 @@ test("counts a type-only import as a user", () => {
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
+});
+
+const amountScreenWithField = {
+  [AMOUNT_SCREEN_FILE]: screenRendering(
+    'import FieldAmount from "./components/FieldAmount/FieldAmount";',
+  ),
+  [FIELD_AMOUNT_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
+};
+
+test("fails a commit that stages a component while its user stays unstaged", () => {
+  const { exitCode, errors } = runStagedPlacementCheckOn({
+    staged: { [FIELD_AMOUNT_FILE]: PLACEHOLDER_COMPONENT_SOURCE },
+    workingTreeOnly: {
+      [AMOUNT_SCREEN_FILE]: amountScreenWithField[AMOUNT_SCREEN_FILE],
+    },
+  });
+  assert.equal(exitCode, 1);
+  assert.match(errors, /FieldAmount: no app code uses it/);
+});
+
+test("passes a commit whose staged tree is placed right, whatever lies unstaged", () => {
+  const { exitCode, errors } = runStagedPlacementCheckOn({
+    staged: amountScreenWithField,
+    workingTreeOnly: { [RECENTS_COMPONENT_FILE]: PLACEHOLDER_COMPONENT_SOURCE },
+  });
+  assert.equal(errors, "");
+  assert.equal(exitCode, 0);
+});
+
+test("fails a commit that only deletes a component's last user", () => {
+  const { exitCode, errors } = runStagedPlacementCheckOn({
+    staged: amountScreenWithField,
+    deletionsStaged: [AMOUNT_SCREEN_FILE],
+  });
+  assert.equal(exitCode, 1);
+  assert.match(errors, /FieldAmount: no app code uses it/);
 });

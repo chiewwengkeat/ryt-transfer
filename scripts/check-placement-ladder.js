@@ -1,3 +1,6 @@
+const { spawnSync } = require("node:child_process");
+const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 
 const { isTestCode } = require("../test-files");
@@ -145,10 +148,36 @@ function checkPlacementLadder(rootDir) {
   return { placedCount: placedByPath.size, failures: failures.sort() };
 }
 
-const rootDir = path.resolve(process.argv[2] ?? process.cwd());
-const { placedCount, failures } = checkPlacementLadder(rootDir);
-for (const failure of failures) console.error(failure);
-console.log(
-  `placement ladder: ${placedCount} components and hooks checked, ${failures.length} misplaced`,
-);
-process.exitCode = failures.length > 0 ? 1 : 0;
+// The commit's own tree: the working tree may hold users, or strays, the commit does not.
+function checkoutStagedSnapshot() {
+  const snapshotDir = fs.mkdtempSync(
+    path.join(os.tmpdir(), "placement-staged-"),
+  );
+  const runGit = (args, input) => {
+    const result = spawnSync("git", args, { input, encoding: "utf8" });
+    if (result.status !== 0)
+      throw new Error(`git ${args[0]} failed: ${result.stderr}`);
+    return result.stdout;
+  };
+  const stagedPaths = runGit(["ls-files", "-z", "--", "src", "modules"]);
+  runGit(
+    ["checkout-index", "-z", "--stdin", `--prefix=${snapshotDir}/`],
+    stagedPaths,
+  );
+  return snapshotDir;
+}
+
+const staged = process.argv[2] === "--staged";
+const rootDir = staged
+  ? checkoutStagedSnapshot()
+  : path.resolve(process.argv[2] ?? process.cwd());
+try {
+  const { placedCount, failures } = checkPlacementLadder(rootDir);
+  for (const failure of failures) console.error(failure);
+  console.log(
+    `placement ladder: ${placedCount} components and hooks checked, ${failures.length} misplaced`,
+  );
+  process.exitCode = failures.length > 0 ? 1 : 0;
+} finally {
+  if (staged) fs.rmSync(rootDir, { recursive: true, force: true });
+}
