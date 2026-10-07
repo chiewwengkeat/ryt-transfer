@@ -1,0 +1,21 @@
+const expoPreset = require("jest-expo/jest-preset");
+
+const [presetAllowList, ...presetIgnorePatterns] =
+  expoPreset.transformIgnorePatterns;
+
+module.exports = {
+  preset: "jest-expo",
+  roots: ["<rootDir>/src"],
+  globalSetup: "<rootDir>/jest.global-setup.js",
+  setupFilesAfterEnv: ["<rootDir>/src/test/jest-setup.ts"],
+  // msw/node maps the react-native condition to null, so `node` must follow it.
+  testEnvironmentOptions: {
+    customExportConditions: ["require", "react-native", "node"],
+  },
+  // msw's dependencies ship ESM-only .mjs entry points, which jest-expo leaves untransformed.
+  transform: { "\\.mjs$": expoPreset.transform["\\.[jt]sx?$"] },
+  transformIgnorePatterns: [
+    presetAllowList.replace(/\)\)$/, "|rettime|until-async|@open-draft))"),
+    ...presetIgnorePatterns,
+  ],
+};

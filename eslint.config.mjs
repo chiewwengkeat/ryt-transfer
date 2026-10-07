@@ -363,6 +363,12 @@ export default defineConfig(
       testingLibrary.configs["flat/react"],
     ],
     settings: { jest: { version: 29 } },
+    rules: {
+      // These assume the DOM library's sync events, and await-async-events' fixer crashes
+      // require-await; no-floating-promises catches an un-awaited event from its types.
+      "testing-library/await-async-events": "off",
+      "testing-library/no-await-sync-events": "off",
+    },
   },
   {
     files: SOURCE_FILES,
