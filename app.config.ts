@@ -33,6 +33,7 @@ const config: ExpoConfig = {
   ios: {
     icon: "./assets/expo.icon",
     bundleIdentifier: appId,
+    // Not a plugin option: two plugins write this key, and each keeps a value already set.
     infoPlist: {
       NSFaceIDUsageDescription:
         "$(PRODUCT_NAME) uses Face ID to approve your transfers.",
@@ -41,7 +42,16 @@ const config: ExpoConfig = {
   android: {
     package: appId,
     allowBackup: false,
-    blockedPermissions: ["android.permission.WRITE_CONTACTS"],
+    // Library manifests request these, and the app uses none: it reads only the contact a person
+    // picks, never draws over other apps or opens shared files, and blocks screenshots outright.
+    blockedPermissions: [
+      "android.permission.WRITE_CONTACTS",
+      "android.permission.SYSTEM_ALERT_WINDOW",
+      "android.permission.READ_EXTERNAL_STORAGE",
+      "android.permission.WRITE_EXTERNAL_STORAGE",
+      "android.permission.READ_MEDIA_IMAGES",
+      "android.permission.DETECT_SCREEN_CAPTURE",
+    ],
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/images/android-icon-foreground.png",
