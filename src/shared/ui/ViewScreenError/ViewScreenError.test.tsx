@@ -1,6 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { Pressable, Text } from "react-native";
+import { AccessibilityInfo, Pressable, Text } from "react-native";
 
 import { observedRecords } from "@/test/harness/recording-sink";
 import { renderRoute } from "@/test/render-route";
@@ -40,6 +40,29 @@ it("puts a crashed screen behind Try again, which renders it afresh", async () =
   await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
 
   expect(screen.getByText("Details")).toBeOnTheScreen();
+});
+
+it("moves a screen reader to the title of the view that replaces a crashed screen", async () => {
+  // Jest has no screen reader: the focus request is the nearest thing it can see.
+  const focusRequests = jest.spyOn(AccessibilityInfo, "sendAccessibilityEvent");
+  focusRequests.mockClear();
+
+  await renderRoute("/", {
+    appDir: "src/app",
+    overrides: {
+      index: { default: ScreenThatCrashes, ErrorBoundary: ViewScreenError },
+    },
+  });
+
+  expect(focusRequests).toHaveBeenCalledWith(
+    expect.objectContaining({
+      props: expect.objectContaining({
+        accessibilityRole: "header",
+        children: "Something went wrong",
+      }) as object,
+    }),
+    "focus",
+  );
 });
 
 it("offers Back to the screen before the one that crashed", async () => {

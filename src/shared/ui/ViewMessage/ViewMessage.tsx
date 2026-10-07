@@ -23,7 +23,7 @@ export default function ViewMessage({
   return (
     <View style={[styles.container, fullScreen && { paddingTop: top }]}>
       <ViewScreenFrame footer={actions}>
-        <TextHeading>{title}</TextHeading>
+        <TextHeading autoFocus>{title}</TextHeading>
         <TextBody>{message}</TextBody>
       </ViewScreenFrame>
     </View>

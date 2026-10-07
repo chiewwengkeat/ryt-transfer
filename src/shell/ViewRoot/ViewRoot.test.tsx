@@ -2,7 +2,12 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
-import { DeviceEventEmitter, Pressable, Text } from "react-native";
+import {
+  AccessibilityInfo,
+  DeviceEventEmitter,
+  Pressable,
+  Text,
+} from "react-native";
 
 import { requestJson } from "@/shared/http/transport";
 import { mswServer } from "@/test/msw-server";
@@ -59,6 +64,28 @@ it("covers the app with the session-ended view when a request answers 401", asyn
   expect(
     screen.getByText("RM 10.00", { includeHiddenElements: true }),
   ).toBeOnTheScreen();
+});
+
+it("moves a screen reader to the session-ended view's title", async () => {
+  // Jest has no screen reader: the focus request is the nearest thing it can see.
+  const focusRequests = jest.spyOn(AccessibilityInfo, "sendAccessibilityEvent");
+  focusRequests.mockClear();
+  await renderRoute("/", {
+    appDir: "src/app",
+    overrides: { index: () => <Text>Home</Text> },
+  });
+
+  await endSessionWithAnyRequest();
+
+  expect(focusRequests).toHaveBeenCalledWith(
+    expect.objectContaining({
+      props: expect.objectContaining({
+        accessibilityRole: "header",
+        children: "Your session has ended",
+      }) as object,
+    }),
+    "focus",
+  );
 });
 
 it("signs back in to the app it covered, with its data fetched again", async () => {
