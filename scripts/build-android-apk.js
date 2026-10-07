@@ -29,7 +29,7 @@ function buildAndroidReleaseApk({
   };
   const androidDirectory = path.join(projectRoot, "android");
 
-  // Expo skips Gradle's reset of this cache under CI, and the cache ignores the variant.
+  // Expo skips Gradle's reset of this cache under CI.
   fs.rmSync(metroCacheDirectory, { recursive: true, force: true });
   runBuildCommand(path.join(projectRoot, "node_modules", ".bin", "expo"), [
     "prebuild",

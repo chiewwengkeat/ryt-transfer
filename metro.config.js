@@ -3,6 +3,9 @@ const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
 
+// Release transforms inline EXPO_PUBLIC_ variables, and Metro's cache key never sees them.
+config.cacheVersion = process.env.EXPO_PUBLIC_APP_VARIANT || "production";
+
 // msw's root entry loads modules that need MessageEvent and BroadcastChannel, which Hermes
 // lacks, so app code gets an entry exposing only the request-handling core. No passthrough:
 // a catch-all passthrough would send real requests from a demo build.
