@@ -35,6 +35,8 @@ const storageAnywhere = {
 };
 const CONSOLE_OUTSIDE_OBSERVABILITY =
   "Report through src/shared/observability/, which redacts personal data before anything is logged.";
+const TEST_ID_INSTEAD_OF_ACCESSIBLE_NAME =
+  "Name the element for its users instead (accessibilityRole and accessibilityLabel): tests query by accessible name.";
 
 export default [
   {
@@ -77,8 +79,17 @@ export default [
         },
         {
           selector: "JSXAttribute[name.name='testID']",
-          message:
-            "Name the element for its users instead (accessibilityRole and accessibilityLabel): tests query by accessible name.",
+          message: TEST_ID_INSTEAD_OF_ACCESSIBLE_NAME,
+        },
+        {
+          selector:
+            "JSXSpreadAttribute > ObjectExpression > Property[key.name='testID']",
+          message: TEST_ID_INSTEAD_OF_ACCESSIBLE_NAME,
+        },
+        {
+          selector:
+            "CallExpression:matches([callee.name='createElement'], [callee.property.name='createElement']) > ObjectExpression > Property[key.name='testID']",
+          message: TEST_ID_INSTEAD_OF_ACCESSIBLE_NAME,
         },
       ],
       "no-restricted-globals": [
