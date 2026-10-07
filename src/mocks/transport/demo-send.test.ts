@@ -7,12 +7,14 @@ import {
   requestJson,
   TransportErrorKind,
 } from "@/shared/http/transport";
+import { mswServer } from "@/test/msw-server";
 
 import { createDemoSend } from "./demo-send";
 
 const PROBE_URL = `${API_BASE_URL}/probe`;
 const activeHandlers: RequestHandler[] = [];
-const demoSend = createDemoSend(() => activeHandlers);
+// ⛔ A fresh array per call, as the demo bank hands out: a shared one passes a send that reads it once.
+const demoSend = createDemoSend(() => [...activeHandlers]);
 
 afterEach(() => {
   activeHandlers.splice(0);
@@ -66,6 +68,24 @@ it("lets the transport time out a handler that ignores the abort", async () => {
 
   await expect(requestJson("/probe", { timeoutMs: 20 })).rejects.toMatchObject({
     kind: TransportErrorKind.Timeout,
+  });
+});
+
+it("answers a handler that throws with the 500 that Jest's server gives it", async () => {
+  const handlerThatThrows = http.get(PROBE_URL, () => {
+    throw new Error("bank bug");
+  });
+  mswServer.use(handlerThatThrows);
+  await expect(requestJson("/probe")).rejects.toMatchObject({
+    kind: TransportErrorKind.Http,
+    status: 500,
+  });
+  activeHandlers.push(handlerThatThrows);
+  configureTransport({ send: demoSend });
+
+  await expect(requestJson("/probe")).rejects.toMatchObject({
+    kind: TransportErrorKind.Http,
+    status: 500,
   });
 });
 
