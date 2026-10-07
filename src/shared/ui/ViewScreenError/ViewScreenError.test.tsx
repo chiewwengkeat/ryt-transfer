@@ -5,7 +5,7 @@ import { Pressable, Text } from "react-native";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { renderRoute } from "@/test/render-route";
 
-import ViewRouteError from "./ViewRouteError";
+import ViewScreenError from "./ViewScreenError";
 
 let screenCrashes = true;
 function ScreenThatCrashes() {
@@ -21,7 +21,7 @@ it("puts a crashed screen behind Try again, which renders it afresh", async () =
   await renderRoute("/", {
     appDir: "src/app",
     overrides: {
-      index: { default: ScreenThatCrashes, ErrorBoundary: ViewRouteError },
+      index: { default: ScreenThatCrashes, ErrorBoundary: ViewScreenError },
     },
   });
 
@@ -56,7 +56,7 @@ it("offers Back to the screen before the one that crashed", async () => {
           <Text>Open details</Text>
         </Pressable>
       ),
-      details: { default: ScreenThatCrashes, ErrorBoundary: ViewRouteError },
+      details: { default: ScreenThatCrashes, ErrorBoundary: ViewScreenError },
     },
   });
   await fireEvent.press(screen.getByRole("button", { name: "Open details" }));

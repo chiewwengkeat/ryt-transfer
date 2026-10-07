@@ -9,7 +9,7 @@ import TextBody from "@/shared/ui/TextBody/TextBody";
 import TextHeading from "@/shared/ui/TextHeading/TextHeading";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
-export default function ViewRouteError({ error, retry }: ErrorBoundaryProps) {
+export default function ViewScreenError({ error, retry }: ErrorBoundaryProps) {
   const { t } = useTranslation();
   useEffect(() => {
     reportError(error, { boundary: "route" });
@@ -20,14 +20,14 @@ export default function ViewRouteError({ error, retry }: ErrorBoundaryProps) {
       footer={
         <>
           <ButtonPrimary
-            label={t("view_route_error.retry")}
+            label={t("view_screen_error.retry")}
             onPress={() => {
               void retry();
             }}
           />
           {router.canGoBack() && (
             <ButtonSecondary
-              label={t("view_route_error.back")}
+              label={t("view_screen_error.back")}
               onPress={() => {
                 router.back();
               }}
@@ -36,8 +36,8 @@ export default function ViewRouteError({ error, retry }: ErrorBoundaryProps) {
         </>
       }
     >
-      <TextHeading>{t("view_route_error.title")}</TextHeading>
-      <TextBody>{t("view_route_error.body")}</TextBody>
+      <TextHeading>{t("view_screen_error.title")}</TextHeading>
+      <TextBody>{t("view_screen_error.body")}</TextBody>
     </ViewScreenFrame>
   );
 }

@@ -25,13 +25,13 @@
   "loader": {
     "label": "Loading"
   },
-  "view_route_error": {
+  "view_screen_error": {
     "title": "Something went wrong",
     "body": "This screen stopped working.",
     "retry": "Try again",
     "back": "Back"
   },
-  "view_root_error": {
+  "view_app_error": {
     "title": "Something went wrong",
     "body": "The app stopped working.",
     "retry": "Try again"

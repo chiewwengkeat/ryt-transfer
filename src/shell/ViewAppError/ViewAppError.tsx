@@ -11,7 +11,7 @@ import TextBody from "@/shared/ui/TextBody/TextBody";
 import TextHeading from "@/shared/ui/TextHeading/TextHeading";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
-export default function ViewRootError({ error, retry }: ErrorBoundaryProps) {
+export default function ViewAppError({ error, retry }: ErrorBoundaryProps) {
   const { t } = useTranslation();
   const { top } = useSafeAreaInsets();
   useEffect(() => {
@@ -23,15 +23,15 @@ export default function ViewRootError({ error, retry }: ErrorBoundaryProps) {
       <ViewScreenFrame
         footer={
           <ButtonPrimary
-            label={t("view_root_error.retry")}
+            label={t("view_app_error.retry")}
             onPress={() => {
               void retry();
             }}
           />
         }
       >
-        <TextHeading>{t("view_root_error.title")}</TextHeading>
-        <TextBody>{t("view_root_error.body")}</TextBody>
+        <TextHeading>{t("view_app_error.title")}</TextHeading>
+        <TextBody>{t("view_app_error.body")}</TextBody>
       </ViewScreenFrame>
     </View>
   );
