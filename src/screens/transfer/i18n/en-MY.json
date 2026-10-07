@@ -8,7 +8,13 @@
       "retry": "Try again"
     },
     "badly_formed_input": {
-      "mobile": "Enter a Malaysian mobile number, like 012-345 6789."
+      "mobile": "Enter a Malaysian mobile number, like 012-345 6789.",
+      "amount": "Enter an amount in ringgit, with up to two decimal places."
+    },
+    "amount_too_high": {
+      "over_balance": "That is more than your balance of {{amount}}.",
+      "over_remaining_today": "That is more than the {{amount}} you can still send today.",
+      "over_per_transfer_max": "That is more than {{amount}}, the most you can send in one transfer."
     }
   },
   "recipient": {
@@ -16,5 +22,11 @@
     "mobile_label": "DuitNow mobile number",
     "mobile_placeholder": "012-345 6789",
     "continue": "Continue"
+  },
+  "amount": {
+    "title": "Amount",
+    "label": "Amount (RM)",
+    "amount_missing": "Enter the amount to send.",
+    "review": "Review"
   }
 }

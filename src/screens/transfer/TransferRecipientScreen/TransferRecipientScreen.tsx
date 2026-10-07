@@ -15,7 +15,7 @@ import {
 
 export default function TransferRecipientScreen() {
   const { t } = useTranslation("transfer");
-  const chosenMobile = useTransferFlow((flow) => flow.recipient?.idValue);
+  const chosenMobile = useTransferFlow((flow) => flow.draft.recipient?.idValue);
   const [mobile, setMobile] = useState(chosenMobile ?? "");
   const [mobileError, setMobileError] = useState<string>();
 

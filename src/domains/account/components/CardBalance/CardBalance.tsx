@@ -12,7 +12,7 @@ import Loader from "@/shared/ui/Loader/Loader";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
 export default function CardBalance() {
-  const { t } = useTranslation(["home", "transfer"]);
+  const { t } = useTranslation(["account", "transfer"]);
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
 
