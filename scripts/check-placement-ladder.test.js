@@ -449,10 +449,53 @@ test("passes a domain component that the demo layer and one screens folder use",
   assert.equal(exitCode, 0);
 });
 
-test("ignores shared/ui, where base components wait for their first screen", () => {
+const BUTTON_PRIMARY_FILE = "src/shared/ui/ButtonPrimary/ButtonPrimary.tsx";
+const SHARED_UI_HOOK_FILE = "src/shared/ui/hooks/use-press-scale.ts";
+const PRESS_SCALE_HOOK_SOURCE =
+  "export function usePressScale() {\n  return 1;\n}\n";
+
+test("passes a base component in shared/ui that no screen uses yet", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    "src/shared/ui/ButtonPrimary/ButtonPrimary.tsx":
-      PLACEHOLDER_COMPONENT_SOURCE,
+    [BUTTON_PRIMARY_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
+  });
+  assert.equal(errors, "");
+  assert.equal(exitCode, 0);
+});
+
+test("fails a hook directly under shared/ui that nothing uses", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [SHARED_UI_HOOK_FILE]: PRESS_SCALE_HOOK_SOURCE,
+  });
+  assert.equal(exitCode, 1);
+  assert.match(errors, /use-press-scale\.ts: no app code uses it/);
+});
+
+test("fails a shared/ui hook that one base component uses, naming that component's hooks folder", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [SHARED_UI_HOOK_FILE]: PRESS_SCALE_HOOK_SOURCE,
+    [BUTTON_PRIMARY_FILE]: moduleImporting("@/shared/ui/hooks/use-press-scale"),
+  });
+  assert.equal(exitCode, 1);
+  assert.match(errors, /belongs in src\/shared\/ui\/ButtonPrimary\/hooks\/$/m);
+});
+
+test("passes a base component's own hook in its hooks folder", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    "src/shared/ui/ButtonPrimary/hooks/use-press-scale.ts":
+      PRESS_SCALE_HOOK_SOURCE,
+    [BUTTON_PRIMARY_FILE]: moduleImporting("./hooks/use-press-scale"),
+  });
+  assert.equal(errors, "");
+  assert.equal(exitCode, 0);
+});
+
+test("passes a shared/ui hook that two base components use", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [SHARED_UI_HOOK_FILE]: PRESS_SCALE_HOOK_SOURCE,
+    [BUTTON_PRIMARY_FILE]: moduleImporting("@/shared/ui/hooks/use-press-scale"),
+    "src/shared/ui/FieldText/FieldText.tsx": moduleImporting(
+      "@/shared/ui/hooks/use-press-scale",
+    ),
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);

@@ -9,10 +9,7 @@ const { findEntriesOutsideTheSliceFolders } = require("./slice-layout");
 
 function findPlacedComponentOrHook(file) {
   const parts = file.split("/");
-  const inSlice = parts[1] === "screens" || parts[1] === "domains";
-  // Base components in shared/ui are built before any screen uses them.
-  const inSharedOutsideUi = parts[1] === "shared" && parts[2] !== "ui";
-  if (!inSlice && !inSharedOutsideUi) return null;
+  if (!["screens", "domains", "shared"].includes(parts[1])) return null;
   for (let i = parts.length - 2; i >= 2; i -= 1) {
     if (parts[i] === "components" || parts[i] === "hooks") {
       return {
@@ -35,9 +32,19 @@ function findNearestFolderThatHoldsComponents(directory) {
       candidate[1] === "screens" &&
       candidate[3].endsWith("Screen");
     const isComponentFolder = candidate[length - 2] === "components";
+    const isBaseComponentFolder =
+      length === 4 &&
+      candidate[1] === "shared" &&
+      candidate[2] === "ui" &&
+      /^[A-Z]/.test(candidate[3]);
     const isSliceFolder =
       length === 3 && ["screens", "domains", "shared"].includes(candidate[1]);
-    if (isScreenFolder || isComponentFolder || isSliceFolder)
+    if (
+      isScreenFolder ||
+      isComponentFolder ||
+      isBaseComponentFolder ||
+      isSliceFolder
+    )
       return candidate.join("/");
   }
   return null;
