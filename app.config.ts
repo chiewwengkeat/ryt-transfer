@@ -12,7 +12,8 @@ const VARIANTS: Record<
     scheme: "ryt-dev",
   },
 };
-const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT || "development";
+// Unset or empty fails closed: a forgotten variable builds an app with no fake bank.
+const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT || "production";
 const variant = VARIANTS[appVariant];
 if (!variant) {
   throw new Error(
