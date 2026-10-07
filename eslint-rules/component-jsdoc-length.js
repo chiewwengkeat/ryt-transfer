@@ -6,9 +6,7 @@ module.exports = {
     type: "suggestion",
     docs: {
       description:
-        "Component JSDoc stays short — name, folder, and Props carry the intent. Option " +
-        "`requireSrcRoot` (default true) limits the rule to files under a `src/` root; " +
-        "`recognizeAllExportShapes` (default false) also recognises the other component export shapes.",
+        "Component JSDoc stays short — name, folder, and Props carry the intent.",
     },
     messages: {
       tooLong:
@@ -19,24 +17,20 @@ module.exports = {
         type: "object",
         properties: {
           maxLines: { type: "integer", minimum: 1 },
-          requireSrcRoot: { type: "boolean" },
-          recognizeAllExportShapes: { type: "boolean" },
         },
         additionalProperties: false,
       },
     ],
   },
   create(context) {
-    const opts = context.options[0] || {};
-    if (!isComponentTsxFile(context, opts)) return {};
-    const max = opts.maxLines || 4;
+    if (!isComponentTsxFile(context)) return {};
+    const max = (context.options[0] || {}).maxLines || 4;
 
     return {
       Program(program) {
-        const comp = componentExport(program.body, opts);
+        const comp = componentExport(program.body);
         if (!comp) return;
-        const sourceCode = context.sourceCode ?? context.getSourceCode();
-        const comments = sourceCode.getCommentsBefore(comp);
+        const comments = context.sourceCode.getCommentsBefore(comp);
         const last = comments[comments.length - 1];
         if (!last || last.type !== "Block" || !last.value.startsWith("*"))
           return;

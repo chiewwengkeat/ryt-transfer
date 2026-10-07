@@ -1,21 +1,9 @@
-const { dirEntries, filenameOf, parsePath, underSrcRoot } = require("./_paths");
+const { dirEntries, filenameOf, parsePath } = require("./_paths");
 
 // Not "any dot segment": platform segments (`.ios`, `.android`) name no owner.
-const ROLE_SUFFIXES = [
-  "action",
-  "constant",
-  "helper",
-  "mock",
-  "module",
-  "reducer",
-  "style",
-  "type",
-  "util",
-];
+const ROLE_SUFFIXES = ["constant", "helper", "mock", "style", "type", "util"];
 
-// componentStems() is not usable here: it maps `Grid.type.tsx` to the stem
-// `Grid`, so a sibling would own itself and pass unconditionally. The caller
-// drops the file under lint before either of these runs.
+// The caller drops the file under lint first: `Grid.type.tsx` would otherwise own itself.
 function componentStemsIn(entries) {
   return entries
     .filter(
@@ -69,8 +57,7 @@ module.exports = {
         "Runs only in a folder that has an identity to track — one holding a component, or one " +
         "named after a module inside it — so shared type, mock and helper directories, where " +
         "each file names its own domain, are outside the rule rather than exempted by a list. " +
-        "Test files are excluded: a route test is named for the route it exercises. " +
-        "Option `requireSrcRoot` (default true) limits the rule to files under a `src/` root.",
+        "Test files are excluded: a route test is named for the route it exercises.",
     },
     messages: {
       orphanSibling:
@@ -78,20 +65,10 @@ module.exports = {
       orphanSiblingNoName:
         "'{{file}}' is colocated but names '{{stem}}', which nothing in this folder is called — and every name it could take ({{taken}}) is in use. Give '{{stem}}' its own module here, or move this file beside the unit it describes.",
     },
-    schema: [
-      {
-        type: "object",
-        properties: { requireSrcRoot: { type: "boolean" } },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
   },
   create(context) {
-    const filename = filenameOf(context);
-    const opts = context.options[0] || {};
-    if (opts.requireSrcRoot !== false && !underSrcRoot(filename)) return {};
-
-    const p = parsePath(filename);
+    const p = parsePath(filenameOf(context));
     if (!p.dir) return {};
     if (p.suffixes.length === 0) return {};
     if (p.base.endsWith(".d.ts")) return {};

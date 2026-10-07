@@ -6,7 +6,6 @@ const {
   joinPath,
   parsePath,
   resolveModule,
-  underSrcRoot,
 } = require("./_paths");
 const { moduleSources } = require("./_imports");
 
@@ -22,8 +21,6 @@ function lastSegment(dir) {
   return dir.slice(dir.lastIndexOf("/") + 1);
 }
 
-// ⚠ NOT componentStems(): its stems stop at the first dot, so a folder holding
-// only `auth.reducer.tsx` would score as the component folder `auth`.
 function isComponentDir(dir) {
   return dirEntries(dir).includes(lastSegment(dir) + ".tsx");
 }
@@ -93,26 +90,16 @@ module.exports = {
         'from the parent folder. Re-exports count: `export { X } from "../Bar/internal"` ' +
         "reaches in exactly as an import does. Only RELATIVE sources are resolved — " +
         "`tsconfig` path aliases are not read, so an alias import reaching the same file " +
-        "is invisible to this rule. " +
-        "Option `requireSrcRoot` (default true) limits the rule to files under a `src/` root.",
+        "is invisible to this rule.",
     },
     messages: {
       crossInternals:
         "'{{target}}' is internal to the component folder '{{owner}}/' — only files inside {{owner}}/ may import it. Import {{owner}} itself if its rendered output is what you need; if you genuinely need '{{target}}', then it is not {{owner}}'s alone, so lift it to a shared location both can import. A colocated sibling is part of its component's implementation and gets renamed with it.",
     },
-    schema: [
-      {
-        type: "object",
-        properties: { requireSrcRoot: { type: "boolean" } },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
   },
   create(context) {
     const file = filenameOf(context);
-    const opts = context.options[0] || {};
-    if (opts.requireSrcRoot !== false && !underSrcRoot(file)) return {};
-
     if (!parsePath(file).dir) return {};
 
     return {

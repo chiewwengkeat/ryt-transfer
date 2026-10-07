@@ -4,7 +4,6 @@ const {
   kebabCase,
   parsePath,
   stripAffixes,
-  underSrcRoot,
 } = require("./_paths");
 
 const HOOK_EXPORT = /^use[A-Z]/;
@@ -82,28 +81,16 @@ module.exports = {
         "hook-file-kebab-case, which checks the casing of a file already named use*: " +
         "this one checks the name itself, and reaches files not named use* at all. " +
         "A leading `use` and a trailing `Store` may be dropped from the filename, so " +
-        "store/transfer.ts exporting useTransferStore passes. " +
-        "Option `requireSrcRoot` (default true) limits the rule to files under a `src/` root.",
+        "store/transfer.ts exporting useTransferStore passes.",
     },
     messages: {
       rename:
         "File '{{file}}' exports nothing but the hook '{{hook}}', so its name should be '{{kebab}}'. A reader searching for '{{hook}}' has to land on the file that defines it, and an importer should be able to guess the path from the name. Dropping a leading 'use' or a trailing 'Store' is allowed (store/transfer.ts exporting useTransferStore passes); anything else must match.",
     },
-    schema: [
-      {
-        type: "object",
-        properties: { requireSrcRoot: { type: "boolean" } },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
   },
   create(context) {
-    const file = filenameOf(context);
-    const opts = context.options[0] || {};
-    const requireSrcRoot = opts.requireSrcRoot !== false;
-    if (requireSrcRoot && !underSrcRoot(file)) return {};
-
-    const p = parsePath(file);
+    const p = parsePath(filenameOf(context));
     // ESLint hands a rule "<input>" for a bare --stdin with no --stdin-filename;
     // the stem would then be compared against nothing.
     if (!p.dir) return {};

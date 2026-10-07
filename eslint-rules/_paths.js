@@ -1,6 +1,5 @@
 const { readdirSync } = require("fs");
 
-const SRC = /(?:^|\/)src\//;
 const MODULE_EXTS = [".ts", ".tsx", ".js", ".jsx"];
 
 function normalize(filename) {
@@ -8,11 +7,7 @@ function normalize(filename) {
 }
 
 function filenameOf(context) {
-  return normalize(context.filename ?? context.getFilename());
-}
-
-function underSrcRoot(filename) {
-  return SRC.test(normalize(filename));
+  return normalize(context.filename);
 }
 
 /** `stem` stops at the FIRST dot so that two rules can read one filename without
@@ -95,16 +90,6 @@ function dirEntries(dir) {
   }
 }
 
-/** The components a colocated sibling can belong to. Reads the disk. */
-function componentStems(dir) {
-  return dirEntries(dir)
-    .filter(
-      (n) =>
-        n.endsWith(".tsx") && !n.includes(".test.") && !n.includes(".spec."),
-    )
-    .map((n) => parsePath(n).stem);
-}
-
 function isRelativeSource(source) {
   return /^\.\.?(\/|$)/.test(String(source));
 }
@@ -139,7 +124,6 @@ function resolveModule(fromFile, source, exts = MODULE_EXTS) {
 module.exports = {
   MODULE_EXTS,
   camelCase,
-  componentStems,
   dirEntries,
   filenameOf,
   hasDirSegment,
@@ -149,5 +133,4 @@ module.exports = {
   parsePath,
   resolveModule,
   stripAffixes,
-  underSrcRoot,
 };

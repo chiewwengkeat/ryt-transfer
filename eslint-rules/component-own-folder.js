@@ -1,4 +1,4 @@
-const SRC = /(?:^|\/)src\//;
+const { filenameOf } = require("./_paths");
 
 /** @type {import("eslint").Rule.RuleModule} */
 module.exports = {
@@ -7,30 +7,16 @@ module.exports = {
     docs: {
       description:
         "Require each component to live in its own folder, not loose under components/ " +
-        "(a singular component/ directory is policed the same way). " +
-        "Option `requireSrcRoot` (default true) limits the rule to files under a `src/` root.",
+        "(a singular component/ directory is policed the same way).",
     },
     messages: {
       ownFolder:
         "Component '{{file}}' sits directly under {{dir}}/. Give it its own folder: {{dir}}/{{name}}/{{file}} — that folder is where any helper it already has colocates as a sibling (and a helper with its own helpers gets its own subfolder, recursively). ⛔ This says where a helper goes, never that one should exist: a single-use child earns its own file only where its name states its whole job, and is inlined otherwise.",
     },
-    schema: [
-      {
-        type: "object",
-        properties: { requireSrcRoot: { type: "boolean" } },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
   },
   create(context) {
-    const filename = (context.filename ?? context.getFilename()).replace(
-      /\\/g,
-      "/",
-    );
-    const opts = context.options[0] || {};
-    const requireSrcRoot = opts.requireSrcRoot !== false;
-    if (requireSrcRoot && !SRC.test(filename)) return {};
-
+    const filename = filenameOf(context);
     const slash = filename.lastIndexOf("/");
     const base = filename.slice(slash + 1);
     if (!base.endsWith(".tsx")) return {};

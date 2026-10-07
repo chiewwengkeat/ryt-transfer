@@ -1,16 +1,10 @@
-const {
-  dirEntries,
-  filenameOf,
-  hasDirSegment,
-  parsePath,
-  underSrcRoot,
-} = require("./_paths");
+const { dirEntries, filenameOf, parsePath } = require("./_paths");
 
 const PASCAL_STEM = /^[A-Z][A-Za-z0-9]*$/;
 const PASCAL_COMPONENT_FILE = /^[A-Z][A-Za-z0-9]*\.tsx$/;
 
 // A route file is named for its URL, not a component, so it has no folder to match.
-const ROUTE_DIRS = ["pages", "app"];
+const ROUTE_DIR = "/src/app/";
 
 function isComponentFile(name) {
   return (
@@ -34,8 +28,7 @@ module.exports = {
         "inside `components/` are left to `component-own-folder`, which already owns that " +
         "position. Dot-suffixed files (`Foo.type.tsx`) are left to " +
         "`sibling-basename-tracks-folder`, which names the file rather than the folder. " +
-        "Option `routeDirs` (default `pages`, `app`) names the directories whose files are named " +
-        "for a URL. Option `requireSrcRoot` (default true) limits the rule to files under a `src/` root.",
+        "Route files under src/app/ are named for a URL and skipped.",
     },
     messages: {
       folderIdentity:
@@ -43,21 +36,10 @@ module.exports = {
       childOwnFolder:
         "Component '{{file}}' sits beside another component in '{{parent}}/'. A child component gets its own folder under a sibling components/ directory, never a flat file beside its parent. Move it to '{{parent}}/components/{{stem}}/{{file}}'.",
     },
-    schema: [
-      {
-        type: "object",
-        properties: {
-          requireSrcRoot: { type: "boolean" },
-          routeDirs: { type: "array", items: { type: "string" } },
-        },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
   },
   create(context) {
-    const filename = filenameOf(context);
-    const opts = context.options[0] || {};
-    const p = parsePath(filename);
+    const p = parsePath(filenameOf(context));
 
     if (p.ext !== "tsx") return {};
     if (p.suffixes.includes("test") || p.suffixes.includes("spec")) return {};
@@ -66,8 +48,7 @@ module.exports = {
     if (p.suffixes.length > 0) return {};
     if (!PASCAL_STEM.test(p.stem)) return {};
     if (!p.dir) return {};
-    if (opts.requireSrcRoot !== false && !underSrcRoot(p.path)) return {};
-    if (hasDirSegment(p.path, opts.routeDirs ?? ROUTE_DIRS)) return {};
+    if (p.path.includes(ROUTE_DIR)) return {};
     // component-own-folder already reports this position; without this arm a flat
     // child draws two errors for one defect.
     if (p.parent === "components" || p.parent === "component") return {};

@@ -1,3 +1,5 @@
+const { filenameOf } = require("./_paths");
+
 /** PascalCase or anonymous: a default-exported `useThing` is a hook module, which these rules leave alone. */
 function isComponentName(name) {
   return !name || /^[A-Z]/.test(name);
@@ -9,8 +11,6 @@ const isFnExpr = (n) =>
 
 const WRAPPERS = new Set(["memo", "forwardRef"]);
 
-/** "memo" / "forwardRef" when `callee` is one, else "" — read through a member
- * expression too, so a namespaced `React.memo` matches the bare import. */
 function wrapperName(callee) {
   if (callee.type === "Identifier")
     return WRAPPERS.has(callee.name) ? callee.name : "";
@@ -82,7 +82,6 @@ function localComponentDecl(body, name) {
   return null;
 }
 
-/** The `export { Foo as default }` specifier naming a component, or null. */
 function defaultSpecifier(stmt) {
   if (
     stmt.type !== "ExportNamedDeclaration" ||
@@ -101,14 +100,9 @@ function defaultSpecifier(stmt) {
   );
 }
 
-/** Without `recognizeAllExportShapes`, only `export default function` and memo()/forwardRef()
- * around an inline function count; `export const Foo`, `export default Foo`, `memo(Foo)`,
- * nested wrappers and React classes stay invisible to every rule built on this. */
-function componentExport(body, options = {}) {
-  const wide = options.recognizeAllExportShapes === true;
-
+function componentExport(body) {
   for (const stmt of body) {
-    const spec = wide ? defaultSpecifier(stmt) : null;
+    const spec = defaultSpecifier(stmt);
     if (spec) {
       const decl = localComponentDecl(body, spec.local.name);
       if (decl) return decl;
@@ -119,14 +113,11 @@ function componentExport(body, options = {}) {
       return isComponentName(d.id ? d.id.name : "") ? stmt : null;
     }
     if (d.type === "CallExpression" && wrapperName(d.callee)) {
-      // Recognition asks whether SOME argument is an inline component, apart from the
-      // arguments[0] name on purpose: resolving `memo(Foo)`'s name must not widen reach.
       const inner = d.arguments.find(isFnExpr);
       if (inner && isComponentName(inner.id ? inner.id.name : "")) return stmt;
-      if (wide && isComponentName(wrappedName(d))) return stmt;
+      if (isComponentName(wrappedName(d))) return stmt;
       return null;
     }
-    if (!wide) continue;
     if (isFnExpr(d))
       return isComponentName(d.id ? d.id.name : "") ? stmt : null;
     if (d.type === "ClassDeclaration")
@@ -136,8 +127,6 @@ function componentExport(body, options = {}) {
     if (d.type === "Identifier")
       return isComponentName(d.name) ? localComponentDecl(body, d.name) : null;
   }
-
-  if (!wide) return null;
 
   // A lone `export const Foo = () => …`. Two or more candidates is ambiguous and
   // yields null rather than a guess, matching `component-type-prefix`.
@@ -157,7 +146,6 @@ function componentExport(body, options = {}) {
   return named.length === 1 ? named[0] : null;
 }
 
-/** The component's declared name ("" when anonymous). */
 function componentName(comp) {
   const d =
     comp.type === "ExportDefaultDeclaration" ||
@@ -191,14 +179,8 @@ function isDefaultReExport(stmt, name) {
   return Boolean(spec) && spec.local.name === name;
 }
 
-const SRC = /(?:^|\/)src\//;
-
-function isComponentTsxFile(context, options = {}) {
-  const filename = (context.filename ?? context.getFilename()).replace(
-    /\\/g,
-    "/",
-  );
-  if (options.requireSrcRoot !== false && !SRC.test(filename)) return false;
+function isComponentTsxFile(context) {
+  const filename = filenameOf(context);
   if (!filename.endsWith(".tsx")) return false;
   const base = filename.slice(filename.lastIndexOf("/") + 1);
   return !base.includes(".test.") && !base.includes(".spec.");
@@ -209,4 +191,5 @@ module.exports = {
   componentName,
   isDefaultReExport,
   isComponentTsxFile,
+  isFnExpr,
 };

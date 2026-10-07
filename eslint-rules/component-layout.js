@@ -96,9 +96,7 @@ module.exports = {
     docs: {
       description:
         "Component files read imports → Props → export default function → StyleSheet.create → " +
-        "everything else. Option `requireSrcRoot` (default true) limits the rule to files under a " +
-        "`src/` root; `recognizeAllExportShapes` (default false) also recognises " +
-        "`export const Foo = () => …`, `export default Foo`, `React.memo(Foo)` and React classes.",
+        "everything else, whichever way the component is exported.",
     },
     fixable: "whitespace",
     messages: {
@@ -117,29 +115,19 @@ module.exports = {
       blankBeforeComponent:
         "No blank line between `Props` and the component — they read as one unit.",
     },
-    schema: [
-      {
-        type: "object",
-        properties: {
-          requireSrcRoot: { type: "boolean" },
-          recognizeAllExportShapes: { type: "boolean" },
-        },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
   },
   create(context) {
-    const opts = context.options[0] || {};
-    if (!isComponentTsxFile(context, opts)) return {};
+    if (!isComponentTsxFile(context)) return {};
 
     return {
       Program(program) {
         const body = program.body;
-        const comp = componentExport(body, opts);
+        const comp = componentExport(body);
         if (!comp) return;
         const compIdx = body.indexOf(comp);
         const compName = componentName(comp);
-        const sourceCode = context.sourceCode ?? context.getSourceCode();
+        const sourceCode = context.sourceCode;
 
         const stylesStmt = body.find(isStylesCreate) || null;
         const stylesIdx = stylesStmt ? body.indexOf(stylesStmt) : -1;

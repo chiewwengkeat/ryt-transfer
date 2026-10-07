@@ -1,4 +1,5 @@
-const SRC = /(?:^|\/)src\//;
+const { filenameOf } = require("./_paths");
+
 const CAMEL_HOOK = /^use[A-Z]/;
 
 /** @type {import("eslint").Rule.RuleModule} */
@@ -6,31 +7,16 @@ module.exports = {
   meta: {
     type: "problem",
     docs: {
-      description:
-        "Hook filenames use kebab-case (use-foo.ts). " +
-        "Option `requireSrcRoot` (default true) limits the rule to files under a `src/` root.",
+      description: "Hook filenames use kebab-case (use-foo.ts).",
     },
     messages: {
       kebab:
         "Hook file '{{file}}' is camelCase. Rename it to '{{kebab}}' — the exported function stays camelCase, only the filename is kebab-cased. Uniform hook filenames keep imports predictable across the repo.",
     },
-    schema: [
-      {
-        type: "object",
-        properties: { requireSrcRoot: { type: "boolean" } },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
   },
   create(context) {
-    const filename = (context.filename ?? context.getFilename()).replace(
-      /\\/g,
-      "/",
-    );
-    const opts = context.options[0] || {};
-    const requireSrcRoot = opts.requireSrcRoot !== false;
-    if (requireSrcRoot && !SRC.test(filename)) return {};
-
+    const filename = filenameOf(context);
     const slash = filename.lastIndexOf("/");
     const dir = filename.slice(0, slash);
     // Singular stays unendorsed; it is matched so a `hook/` directory is policed

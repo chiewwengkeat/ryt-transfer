@@ -133,16 +133,10 @@ export default defineConfig(
     plugins: { fe },
     rules: {
       "fe/component-folder-identity": "error",
-      "fe/component-jsdoc-length": [
-        "error",
-        { recognizeAllExportShapes: true },
-      ],
-      "fe/component-layout": ["error", { recognizeAllExportShapes: true }],
+      "fe/component-jsdoc-length": "error",
+      "fe/component-layout": "error",
       "fe/component-own-folder": "error",
-      "fe/component-type-prefix": [
-        "error",
-        { requireFilenameMatchesComponent: true },
-      ],
+      "fe/component-type-prefix": "error",
       "fe/hook-file-kebab-case": "error",
       "fe/hook-filename-matches-export": "error",
       "fe/no-component-fetch-hooks": "error",

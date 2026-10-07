@@ -52,11 +52,11 @@ function calleeBinding(callNode, bindings) {
 
 /** The binding when this call fetches over the wire, rather than importing a
  * helper, an options object or `useQueryClient`. */
-function fetchHookCall(callNode, bindings, opts = {}) {
+function fetchHookCall(callNode, bindings) {
   const b = calleeBinding(callNode, bindings);
   if (!b || b.typeOnly) return null;
-  if (!(opts.modules || FETCH_MODULES).includes(b.source)) return null;
-  return (opts.hooks || FETCH_HOOKS).includes(b.imported) ? b : null;
+  if (!FETCH_MODULES.includes(b.source)) return null;
+  return FETCH_HOOKS.includes(b.imported) ? b : null;
 }
 
 /** Every module this file names, re-exports included — `export { X } from
@@ -79,13 +79,4 @@ function moduleSources(programNode) {
   return out;
 }
 
-module.exports = {
-  DEFAULT,
-  FETCH_HOOKS,
-  FETCH_MODULES,
-  NAMESPACE,
-  calleeBinding,
-  fetchHookCall,
-  importedBindings,
-  moduleSources,
-};
+module.exports = { fetchHookCall, importedBindings, moduleSources };

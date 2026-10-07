@@ -1,7 +1,10 @@
+const { isFnExpr } = require("./_component");
+const { filenameOf } = require("./_paths");
+
 // Checks only the leading Type: the rest of a name needs a reader's recognition test.
 
-// A closed vocabulary: a new Type is added here, never through the `types` option.
-const DEFAULT_TYPES = [
+// A closed vocabulary: a new Type joins the author's canonical set first, then is copied here.
+const TYPES = [
   "Button",
   "Modal",
   "BottomSheet",
@@ -24,6 +27,10 @@ const DEFAULT_TYPES = [
   "Text",
 ];
 
+// A route file is named for its URL (`[transferId].tsx`, `_layout.tsx`), so the
+// filename check never enters the route directory.
+const ROUTE_DIR = "/src/app/";
+
 /** True when `name` starts with `type` on a PascalCase word boundary, so
  * `Card` matches `CardPayment` and bare `Card` but not `Cardinal`. */
 function hasTypePrefix(name, type) {
@@ -40,9 +47,6 @@ function trailingType(name, types) {
 }
 
 const isPascal = (n) => /^[A-Z][A-Za-z0-9]*$/.test(n);
-const isFnExpr = (n) =>
-  Boolean(n) &&
-  (n.type === "ArrowFunctionExpression" || n.type === "FunctionExpression");
 
 /** The single component this file names, or null when it names none or more than one.
  * Classes, call results, tagged templates and lowercase bindings never count. */
@@ -90,17 +94,6 @@ function fileComponentName(body) {
   return named.length === 1 ? named[0] : null;
 }
 
-// A route file is named for its URL (`[transferId].tsx`, `_layout.tsx`), so the
-// filename check never enters these directories.
-const DEFAULT_ROUTE_DIRS = ["pages", "app"];
-
-function inRouteDir(filename, routeDirs) {
-  return filename
-    .split("/")
-    .slice(0, -1)
-    .some((seg) => routeDirs.includes(seg));
-}
-
 /** @type {import("eslint").Rule.RuleModule} */
 module.exports = {
   meta: {
@@ -108,52 +101,29 @@ module.exports = {
     docs: {
       description:
         "Component names lead with their Type — `{Type}{Purpose}{Feature}{Variant}`, " +
-        "no suffix-style names (`ButtonNavHome`, not `HomeNavTile`). Options: `types` " +
-        "replaces the default Type vocabulary; `exempt` lists names to skip verbatim " +
-        "(well-known framework and library components keep their upstream spelling); " +
-        "`allowScreenSuffix` (default true) skips `*Screen` files. " +
-        "`requireFilenameMatchesComponent` (default false) also requires a component file to " +
-        "be named after the component it exports, which implies PascalCase; a file is checked " +
-        "only when it names exactly one component, and `index.tsx` is skipped as a module " +
-        'entry point. `routeDirs` (default ["pages", "app"]) names directories whose ' +
-        "filenames the framework owns and which the filename check never enters.",
+        "no suffix-style names (`ButtonNavHome`, not `HomeNavTile`), and a component file is " +
+        "named after the component it exports, which implies PascalCase. A file is checked " +
+        "only when it names exactly one component; `index.tsx`, `*Screen` files and route " +
+        "files are skipped.",
     },
     messages: {
       typePrefix:
-        "Component '{{name}}' does not lead with a Type. Names read {Type}{Purpose}{Feature}{Variant} — Type first (`ButtonNavHome`, not `HomeNavTile`). Valid Types: {{types}}. If this is a framework or library component keeping its upstream spelling, add it to this rule's `exempt` option.",
+        "Component '{{name}}' does not lead with a Type. Names read {Type}{Purpose}{Feature}{Variant} — Type first (`ButtonNavHome`, not `HomeNavTile`). Valid Types: {{types}}.",
       typeSuffix:
         "Component '{{name}}' is suffix-style — it ends with the Type '{{type}}' instead of leading with it. Rename it to '{{suggested}}' (and its file and folder to match). Type first is what lets a reader scan a folder and see what each file is.",
       filenameMismatch:
         "This file exports the component '{{component}}' but is named '{{base}}'. Rename the file to '{{component}}.tsx': the function name, the file name and the folder name all match, so a component can be found from its filename alone.",
     },
-    schema: [
-      {
-        type: "object",
-        properties: {
-          types: { type: "array", items: { type: "string" }, minItems: 1 },
-          exempt: { type: "array", items: { type: "string" } },
-          allowScreenSuffix: { type: "boolean" },
-          requireFilenameMatchesComponent: { type: "boolean" },
-          routeDirs: { type: "array", items: { type: "string" } },
-        },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
   },
   create(context) {
-    const filename = (context.filename ?? context.getFilename()).replace(
-      /\\/g,
-      "/",
-    );
+    const filename = filenameOf(context);
     if (!filename.endsWith(".tsx")) return {};
 
     const base = filename.slice(filename.lastIndexOf("/") + 1);
     if (base.includes(".test.") || base.includes(".spec.")) return {};
 
     const name = base.slice(0, -".tsx".length);
-    const opts = context.options[0] || {};
-    const types = opts.types || DEFAULT_TYPES;
-    const exempt = opts.exempt || [];
 
     // The Type check reads the filename, so it only applies to a file already
     // named for its component. `index.tsx`, `use-foo.tsx` and kebab-case files
@@ -162,10 +132,7 @@ module.exports = {
 
     // `index.tsx` is a module entry point, not a component filename — the folder
     // carries the name, and this rule does not lint folder names.
-    const wantFilename =
-      opts.requireFilenameMatchesComponent === true &&
-      name !== "index" &&
-      !inRouteDir(filename, opts.routeDirs || DEFAULT_ROUTE_DIRS);
+    const wantFilename = name !== "index" && !filename.includes(ROUTE_DIR);
 
     if (!wantFilename && !namedForComponent) return {};
 
@@ -187,13 +154,11 @@ module.exports = {
         }
 
         if (!namedForComponent) return;
-        if (exempt.includes(name)) return;
-        // Screens are named `<Domain><Purpose>Screen`, which the Type rule must not fight.
-        if (opts.allowScreenSuffix !== false && name.endsWith("Screen")) return;
+        // Screen names are repo-local; the Type rule must not fight the Screen suffix.
+        if (name.endsWith("Screen")) return;
 
-        // Longest first, so a caller-supplied `types` containing both `Card` and
-        // `CardMini` resolves to the more specific one.
-        const sorted = [...types].sort((a, b) => b.length - a.length);
+        // Longest first, so of two Types where one ends with the other, the longer wins.
+        const sorted = [...TYPES].sort((a, b) => b.length - a.length);
         if (sorted.some((t) => hasTypePrefix(name, t))) return;
 
         const trailing = trailingType(name, sorted);
@@ -212,7 +177,7 @@ module.exports = {
         context.report({
           node,
           messageId: "typePrefix",
-          data: { name, types: types.join(", ") },
+          data: { name, types: TYPES.join(", ") },
         });
       },
     };

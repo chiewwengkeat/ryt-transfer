@@ -1,15 +1,10 @@
-const { filenameOf, parsePath, underSrcRoot } = require("./_paths");
+const { filenameOf, parsePath } = require("./_paths");
 
-/** Singular spellings, the plural derived: the ALLOWED spelling is the source of truth.
- * `hook` is absent on purpose — no filename uses it as a suffix. */
 const ROLE_WORDS = [
-  "action",
   "config",
-  "conformance",
   "constant",
   "helper",
   "mock",
-  "reducer",
   "route",
   "spec",
   "style",
@@ -28,28 +23,16 @@ module.exports = {
       description:
         "A filename role suffix uses its singular spelling (Foo.type.ts, not Foo.types.ts). " +
         "FILENAMES ONLY — directory names stay plural (types/, hooks/, utils/), which is a " +
-        "separate settled convention this rule must never reach. " +
-        "Option `requireSrcRoot` (default true) limits the rule to files under a `src/` root.",
+        "separate settled convention this rule must never reach.",
     },
     messages: {
       singular:
         "Filename '{{file}}' uses the plural role suffix '.{{plural}}.'. Use the singular '{{singular}}' — rename it to '{{fixed}}'. A second spelling for one role hides files from anyone searching for the first. FILENAMES ONLY: directory names stay plural (types/, hooks/, utils/), a separate settled convention this rule does not touch.",
     },
-    schema: [
-      {
-        type: "object",
-        properties: { requireSrcRoot: { type: "boolean" } },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
   },
   create(context) {
-    const file = filenameOf(context);
-    const opts = context.options[0] || {};
-    const requireSrcRoot = opts.requireSrcRoot !== false;
-    if (requireSrcRoot && !underSrcRoot(file)) return {};
-
-    const p = parsePath(file);
+    const p = parsePath(filenameOf(context));
     // ESLint hands a rule "<input>" for a bare --stdin with no --stdin-filename.
     if (!p.dir) return {};
 
