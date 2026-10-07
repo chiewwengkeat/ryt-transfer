@@ -7,7 +7,7 @@ const DEMO_LAYER_VARIANTS = ["demo", "development"];
 const RENDER_TRACE = "the render trace";
 
 // Strings each group's code uses at runtime: minify drops a constant only a dead branch reads.
-// An export name survives minify too: Metro's CommonJS wrapper writes it as a string.
+// An export name survives minify too: Metro's module transform writes it as a property of exports.
 const BUNDLE_MARKERS = [
   {
     source: "src/mocks/bank",
