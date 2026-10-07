@@ -45,7 +45,7 @@ The placement check fails any other entry in a slice (`scripts/slice-layout.js`)
 
 Imports run one way: a screens folder may use domains and shared code, a domain only itself and shared code, and shared code only shared code. Nothing imports sideways: no screens folder imports another, no domain imports another, and a screen's own `components/` and `hooks/` are private to that screen.
 
-App code outside a domain reaches it only through its public files: an endpoint's `<endpoint>.ts` and `<endpoint>.type.ts`, a domain component's own file, the domain's `api/<area>.keys.ts`, and the files directly in its `hooks/`. Routes and the shell reach a screens folder only through a screen's entry file and the folder's `state/`, and the shell through its `i18n/` bundles too, which it registers. Only the shell may load `src/mocks/`, and only through `require`, never an `import`. Tests may import anything.
+App code outside a domain reaches it only through its public files: an endpoint's `<endpoint>.ts` and `<endpoint>.type.ts`, a domain component's own file, the domain's `api/<area>.keys.ts`, and the files directly in its `hooks/`. Routes and the shell reach a screens folder only through a screen's entry file and the folder's `state/`, and the shell through its `i18n/` bundles too, which it registers. Only the shell may load `src/mocks/`, and only through `require`, never an `import`. The test harness in `src/test/` may import from any slice, the mock bank included; any other test keeps the import rules of the code beside it and may also import the harness.
 
 `eslint.boundaries.mjs` holds the slice rules and `eslint.bans.mjs` the import bans; `pnpm lint` fails a breach of either.
 
@@ -58,7 +58,7 @@ Colocation first: a piece of code lives as close to its users as possible. Most 
 3. Used by two or more screens folders, or by the shell → `src/domains/<area>/components/<Component>/`, in the area whose data it shows.
 4. Knows nothing about banking → `src/shared/ui/`.
 
-Hooks climb the same ladder in `hooks/` folders, except that a hook that knows nothing about banking and that only the shell uses stays in `src/shell/` until a second user appears. A component that only one other component uses nests in that component's own `components/`. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
+Hooks climb the same ladder in `hooks/` folders. A component that only one other component uses nests in that component's own `components/`. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
 
 `scripts/check-placement-ladder.js` fails a component or hook placed higher than its users need, and the import rules fail one placed too low. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case, the script is the authority, not this summary.
 
@@ -85,22 +85,16 @@ Test a route the way a person uses it, against the mock bank:
 
 ## Translations
 
-Every string the app shows comes from a bundle in English (`en-MY`), Malay (`ms-MY`) and Chinese (`zh-MY`). Malay and Chinese are machine translations, set as they come out, with no human review.
+Every string the production app shows comes from a bundle in English (`en-MY`), Malay (`ms-MY`) and Chinese (`zh-MY`), except the language names: each is a constant in its own script, never a translation key, so it reads the same whichever language is picked. Malay and Chinese are machine translations, set as they come out, with no human review.
 
 - A slice's bundle has one top-level key per screen, plus `common` for what two or more of its screens share; a scenario's words sit under `common.<name>`. A leaf key is named for its role (`title`, `body_secondary`), never numbered.
 - Every English key has a Malay and a Chinese string, each with the same `{{placeholders}}`.
 - A plural comes as a twin. English has `_one` and `_other`; Malay and Chinese repeat their `_other` string under `_one`. Hermes lacks `Intl.PluralRules`, so i18next reads `_one` for a count of one in every language, and a missing twin shows English.
 - A money state's phrase appears in each language exactly as the matrix's money table gives it.
-- Nothing the person can press offers to send again in a scenario whose **Never** forbids it, in any language. The matrix header lists the banned words.
+- Nothing the person can press offers to send again in a scenario whose **Never** forbids it, in any language. A message may still warn against sending again.
 - When an English string changes, re-translate its Malay and Chinese in the same commit. No check notices a translation left behind by a change to its English.
 
-Three tests guard the translations, each reading something different:
-
-| It reads                      | Test                                         | It fails on                                                                                                   |
-| ----------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| The bundles the app registers | `src/shell/translations.test.ts`             | A top-level key defined twice in one namespace; a Malay or Chinese plural without its `_one` twin             |
-| Every bundle file             | the key-parity test                          | A Malay or Chinese bundle that lacks a key English has, holds one English lacks, or changes a placeholder     |
-| The promises the matrix makes | `src/test/scenarios/transfer-matrix.test.ts` | A money message without its state's phrase in some language; a banned word on a button where Never forbids it |
+`src/shell/translations.test.ts` reads the bundles the app registers, and fails on a top-level key defined twice in one namespace, or on a Malay or Chinese plural without its `_one` twin.
 
 ## Build variants
 
@@ -116,7 +110,6 @@ Every script sets its variant itself. Those that build also regenerate the nativ
 
 - Code that a production build must not contain is loaded by a `require` gated on a literal comparison of `process.env.EXPO_PUBLIC_APP_VARIANT`, written at the `require` itself. Metro strips only that form: code behind an imported predicate, or reached by a static `import`, ships in every build.
 - Decisions made at runtime read `isProductionBuild` from `src/shared/config/config.ts`.
-- CI exports the production bundle and fails if any mock-layer code is in it.
 
 ## Commits
 
