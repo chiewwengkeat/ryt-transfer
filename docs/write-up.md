@@ -22,7 +22,7 @@ On Android, the PIN pad must ignore touches while another app draws over the scr
 
 ### A check that would have removed the warnings it guards
 
-Malay and Chinese ship as machine translations, so a check fails any money message that leaves out its money state's phrase, and anything that offers to send the money again where a scenario forbids it. The banned words were to cover "send it again" as well as "try again", in all three languages. But six scenarios must warn against resending: three tell the person they shouldn't send it again, and three to check History before sending again. Banning the words anywhere in a message would have failed all six, and rewording them to pass would have removed the very warnings the check exists to protect. The check reads only what a person can press, buttons and action labels, and messages keep their warnings ([002](decisions/002-scenario-matrix.md)). The cost is that a message urging a resend in words passes the check, so those messages are read by eye.
+Malay and Chinese ship as machine translations, so I decided on a check that fails any money message leaving out its money state's phrase, and anything that offers to send the money again where a scenario forbids it. The banned words were to cover "send it again" as well as "try again", in all three languages. But six scenarios must warn against resending: three tell the person they shouldn't send it again, and three to check History before sending again. Banning the words anywhere in a message would have failed all six, and rewording them to pass would have removed the very warnings the check exists to protect. So the check as decided reads only what a person can press, buttons and action labels, and messages keep their warnings ([002](decisions/002-scenario-matrix.md)). The cost is that a message urging a resend in words passes the check.
 
 ## The decisions
 
@@ -32,7 +32,7 @@ Malay and Chinese ship as machine translations, so a check fails any money messa
 - [004 Mock backend](decisions/004-mock-backend.md): one fake bank with state, answering through the same msw handlers in tests and on a phone.
 - [005 State](decisions/005-state.md): the flow is a typed reducer in a zustand store, and the bank's data stays out of client state.
 - [006 Never sent twice](decisions/006-never-sent-twice.md): create, then approve; an idempotency key on every write; a lost answer resent briefly, then checked.
-- [007 The fake bank cannot ship](decisions/007-production-guard.md): one build variant, one literally gated way in, and CI checking what the production bundle holds.
+- [007 The fake bank cannot ship](decisions/007-production-guard.md): one build variant, one literally gated way in, and a decided CI check on what the production bundle holds.
 - [008 Hardening](decisions/008-hardening.md): capture blocked everywhere but the receipts, the switcher blur, the rooted-phone refusal, and what only the bank's servers can do.
 - [009 History at scale](decisions/009-history-at-scale.md): cursor pages, day totals from the bank, a recycling list, and re-render counts in place of timing claims.
 - [010 Query cache only](decisions/010-query-cache-only.md): the bank's data lives only in TanStack Query's cache, with no normalized store beside it.
@@ -43,23 +43,23 @@ Nothing here ran on a physical phone: every device check used an emulator or a s
 
 - **Device-only security is not device-verified.** On the iOS simulator the keys are software, the signing library draws its own prompt, there is no Secure Enclave, and the keychain ignores the setting that should demand authentication. On the Android emulator the keystore is software too, so the hardware guarantee needs a real phone. Release builds ran on the emulator and the simulator; physical devices, Android 16 and older, and the next Expo SDK remain untested.
 - **No key attestation.** Nothing yet proves to the bank that a signing key lives in a phone's secure hardware: Android key attestation and Apple App Attest are production steps, and the Secure Enclave and manufacturers' Android builds are unverified on real devices.
-- **No VoiceOver pass on a real iPhone.** Screen-reader checks ran with TalkBack on the Android emulator; on iOS they ran on the simulator only.
-- **The blur during approval.** The iOS switcher blur is always on at the system's default strength, so figures may stay legible in the switcher. I expect the Face ID prompt to make the app inactive and so appear over the blur; no device has confirmed it.
+- **No VoiceOver pass on a real iPhone.** No screen-reader check in this project uses a real iPhone.
+- **The blur during approval.** The iOS switcher blur is always on at the library's default strength, so figures may stay legible in the switcher. I expect the Face ID prompt to make the app inactive and so appear over the blur; no device has confirmed it.
 - **The touch guard** is read from the code, not seen working: the emulator has no overlay app to test it with.
 - **Haptics and motion.** An emulator has no vibration motor, and its frame rate says nothing about a phone's, so the feel of the haptics and how the motion runs on a real phone are unchecked.
-- **The capture block on manufacturers' Android.** It is checked on Google's emulator image only; how other manufacturers' builds of Android honour it is unverified.
+- **The capture block on manufacturers' Android.** Only Google's emulator image is available to check it on; how other manufacturers' builds of Android honour it is unverified.
 
 ## What the bank and the host app own
 
-- **Proving the phone's integrity.** The rooted-phone check runs on the phone, so it can be fooled, and it can refuse a genuine customer whose phone misreports. The refusal takes the place of the approval prompt and offers no appeal inside this module, and no way to approve anyway. The real control is the bank verifying the phone on its servers, through Google Play Integrity and Apple App Attest; this module names that step and builds none of it. As I read Bank Negara Malaysia's Risk Management in Technology policy, it also looks to the bank to detect hijacked sessions and warn customers about risky apps, which sits on the bank's side too.
+- **Proving the phone's integrity.** The rooted-phone check runs on the phone, so it can be fooled, and it can refuse a genuine customer whose phone misreports. The refusal takes the place of the approval prompt and offers no appeal inside this module, and no way to approve anyway. The real control is the bank verifying the phone on its servers, through Google Play Integrity and Apple App Attest; this module names that step and builds none of it. Separately, Bank Negara Malaysia's Risk Management in Technology policy, in Appendix 11, paragraph 3, expects the bank to detect and end hijacked sessions promptly, and to warn a customer when a risky app raises their risk; that sits on the bank's side too.
 - **Apps that read the screen.** Blocking screenshots does not stop a malicious accessibility service or a remote-control app from reading the screen, a common route for Android banking scams in Malaysia. Android 14 can hide an app's views from all but genuine accessibility tools, but that needs native code I chose not to add yet; with the bank's server-side fraud signals, it is the production answer.
-- **Two unblocked moments.** The capture block is never on during the splash screen before JavaScript loads, which shows no data, or during the few frames while a receipt is being left.
+- **Unblocked moments.** At worst, the capture block is off during the splash screen before the app's code loads, which shows no data, and through a transition into or out of a receipt, when the screen on the other side, such as the review with its recipient and amount, is drawn unblocked.
 - **The host app.** Sign-in, device pairing, PIN setup and reset, the biometrics setting and session handling belong to the banking app this module runs inside.
-- **Someone holding the phone and the PIN** can approve through the PIN path. What stops them is the bank's: three wrong PINs lock the PIN at the bank, every transfer and every biometric change is notified, and the account can be locked.
+- **Someone holding the phone and the PIN** can approve through the PIN path. What acts against them is the bank's: every transfer and every biometric change is notified, and the account can be locked. Three wrong PINs lock the PIN at the bank, which stops someone guessing it, not someone who knows it.
 
 ## Languages and text size
 
-- Malay and Chinese are machine translations, used as they came and reviewed by no one. A glossary fixes the money phrases and the retry words, and a check holds every money message to its phrase, but the translations' overall quality is unknown.
+- Malay and Chinese are machine translations, used as they came and reviewed by no one. A glossary fixes the money phrases and the retry words, but the translations' overall quality is unknown.
 - The Chinese is simplified. The app matches the phone's language on its language code alone, so a phone set to traditional Chinese gets the simplified text too.
-- Every screen was walked at 200% text in English only. Malay and Chinese were walked at the default size, on Android only, so Malay, which runs about a quarter longer than English, may clip at large sizes where nobody has looked.
+- The walk at 200% text is planned in English only, with Malay and Chinese at the default size on Android only, so Malay, which runs about a quarter longer than English, may clip at large sizes where nobody looks.
 - Typing an amount gives no haptic tick: the amount is typed on the phone's own keyboard, which already clicks or buzzes on each key on most phones.
