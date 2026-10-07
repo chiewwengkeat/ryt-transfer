@@ -10,11 +10,11 @@ import {
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import { ApprovalOutcome } from "@/mocks/scenarios/transfer-scenarios";
 
 import { lockOrCoolingOffRefusal, transferLimitsAt } from "./account";
 import { tryDemoPin } from "./approval-keys";
 import { bankError, type BankAnswer } from "./answers";
+import { ApprovalOutcome } from "./conditions";
 import { malaysianDate, toMalaysiaIso } from "./malaysia-time";
 import { randomHex } from "./ports";
 import {

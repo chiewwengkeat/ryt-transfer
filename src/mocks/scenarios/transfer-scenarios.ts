@@ -1,4 +1,4 @@
-import { getResponse, http, HttpResponse } from "msw";
+import { http } from "msw";
 import type { RequestHandler } from "msw";
 
 import { GetTransferLimitsErrorCode } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
@@ -8,10 +8,17 @@ import {
 } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { LookupRecipientErrorCode } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import { bankError, httpResponseFrom } from "@/mocks/bank/answers";
-import { toMalaysiaIso } from "@/mocks/bank/malaysia-time";
+import { ApprovalOutcome, type BankConditions } from "@/mocks/bank/conditions";
 import { BANK_PATHS } from "@/mocks/handlers/bank-paths";
-import { switcherStore } from "@/mocks/switcher/switcher-store";
+
+import {
+  commitThenAnswer,
+  errorAnswer,
+  lostAnswer,
+  maintenanceAnswer,
+  serverErrorAnswer,
+  unknownCodeAnswer,
+} from "./overlay-answers";
 
 export enum TransferStep {
   Start = "Start",
@@ -21,25 +28,6 @@ export enum TransferStep {
   Approval = "Approval",
   Outcome = "Outcome",
   Recovery = "Recovery",
-}
-
-export enum ApprovalOutcome {
-  ShortAtApproval = "SHORT_AT_APPROVAL",
-  FraudBlocked = "FRAUD_BLOCKED",
-  HeldForReview = "HELD_FOR_REVIEW",
-  RecipientAccountInactive = "RECIPIENT_ACCOUNT_INACTIVE",
-  Processing = "PROCESSING",
-  RefundedAfterProcessing = "REFUNDED_AFTER_PROCESSING",
-}
-
-export interface BankConditions {
-  dailyLimitMinor?: number;
-  coolingOff?: { reason: CoolingOffReason; endsAfterActivationMs: number };
-  accountLocked?: boolean;
-  keysBeforeActivationUnknown?: boolean;
-  approvalsArriveLate?: boolean;
-  signaturesRejected?: boolean;
-  approvalOutcome?: ApprovalOutcome;
 }
 
 export interface TransferScenario {
@@ -52,45 +40,6 @@ export interface TransferScenario {
 
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
-
-const lostAnswer = () => HttpResponse.error();
-const unknownCodeAnswer = () =>
-  httpResponseFrom(
-    bankError(400, "NEW_BANK_CODE", "A code added after this app was built."),
-  );
-const serverErrorAnswer = () =>
-  httpResponseFrom(
-    bankError(500, "INTERNAL_ERROR", "The bank could not answer."),
-  );
-const maintenanceAnswer =
-  (codes: { ServiceUnavailable: string }) =>
-  // Typed by hand: inferring it loops through the store's type back to this registry's ids.
-  (): Response =>
-    httpResponseFrom({
-      status: 503,
-      body: {
-        error: {
-          code: codes.ServiceUnavailable,
-          message: "Transfers are paused.",
-          until: toMalaysiaIso(
-            switcherStore.getState().activatedAtMs + 2 * HOUR_MS,
-          ),
-        },
-      },
-    });
-const errorAnswer = (status: number, code: string, message: string) => () =>
-  httpResponseFrom(bankError(status, code, message));
-
-function commitThenAnswer(
-  path: string,
-  bankHandlers: RequestHandler[],
-  answer: () => Response,
-) {
-  return http.post(path, async ({ request }) => {
-    await getResponse(bankHandlers, request);
-    return answer();
-  });
-}
 
 export const TRANSFER_SCENARIOS = {
   "transfer.balance_and_limit_shown": { step: TransferStep.Start },
