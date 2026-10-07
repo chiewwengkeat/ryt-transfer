@@ -7,9 +7,14 @@ import {
 } from "@tanstack/react-query";
 
 import { setObservabilitySink } from "@/shared/observability/observability";
+// Ahead of every test, as at launch: loaded with the first route instead, its reinstall wipe would erase keys a
+// test paired before rendering.
+import "@/shell/app-launch";
 import type * as ShellQueryClient from "@/shell/query-client";
 import "@/shell/translations";
 
+import type * as BiometricsDouble from "./biometrics-double";
+import { resetBiometricsDouble } from "./biometrics-double";
 import type * as NativeDoubles from "./harness/native-doubles";
 import { resetNativeDoubles } from "./harness/native-doubles";
 import { observedRecords, recordObservation } from "./harness/recording-sink";
@@ -50,6 +55,13 @@ jest.mock("expo-crypto", () => ({
     "./harness/native-doubles",
   ).randomUUIDDouble,
 }));
+// Replaced whole: the library throws as it loads when no native module is registered.
+jest.mock(
+  "@sbaiahmed1/react-native-biometrics",
+  () =>
+    jest.requireActual<typeof BiometricsDouble>("./biometrics-double")
+      .biometricsLibraryDouble,
+);
 
 // Each test gets its own client, so no test reads another's cache, with no retry backoff: RNTL's waitFor
 // gives up after 1 s, before TanStack's first two retries have run.
@@ -96,6 +108,7 @@ afterEach(() => {
   focusManager.setFocused(undefined);
   observedRecords.splice(0);
   resetNativeDoubles();
+  resetBiometricsDouble();
   mswServer.resetHandlers();
   sentRequests.splice(0);
   // The app sees the throw above as a 500, which an error-state test could mistake for its scenario.

@@ -1,4 +1,21 @@
+import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import { configureTransport, type DemoLayer } from "@/shared/http/transport";
+import { reportError } from "@/shared/observability/observability";
+import { kvStorage } from "@/shared/platform/kv-storage";
+import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
+
+const INSTALL_MARKER_KEY = "install-marker";
+
+// The keychain keeps records and keys through an uninstall and this app's own storage does not, so no marker
+// means a reinstall: nothing left from before it may approve or be resumed. Asked at load, ahead of any write.
+const installChecked = (async () => {
+  if (kvStorage.getItemSync(INSTALL_MARKER_KEY) !== null) return;
+  await deleteAllSecureRecords();
+  await deleteApprovalKeys();
+  kvStorage.setItemSync(INSTALL_MARKER_KEY, new Date().toISOString());
+})().catch((error: unknown) => {
+  reportError(error, { boundary: "install_marker" });
+});
 
 // Compared literally, never through the config predicate: Metro strips the demo layer from production only for this form.
 if (
@@ -9,4 +26,10 @@ if (
     .default;
   // At module scope, never in an effect: a screen's effects run before the shell's, so its first request would miss it.
   configureTransport({ send: demoLayer.demoSend });
+  // After the install check, whose wipe would delete keys paired while it ran.
+  void installChecked
+    .then(demoLayer.pairPhoneAtFirstLaunch)
+    .catch((error: unknown) => {
+      reportError(error, { boundary: "demo_pairing" });
+    });
 }

@@ -18,7 +18,9 @@ import {
 
 export default function TransferAmountScreen() {
   const { t } = useTranslation("transfer");
-  const enteredAmount = useTransferFlow((flow) => flow.draft.amount);
+  const enteredAmount = useTransferFlow((flow) =>
+    "draft" in flow ? flow.draft.amount : undefined,
+  );
   const [typedAmount, setTypedAmount] = useState(
     enteredAmount === undefined ? "" : (enteredAmount.minor / 100).toFixed(2),
   );

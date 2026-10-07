@@ -22,6 +22,7 @@ export default function TransferLayout() {
     <Stack>
       <Stack.Protected guard={draftOpen}>
         <Stack.Screen name="amount" />
+        <Stack.Screen name="review" />
       </Stack.Protected>
     </Stack>
   );

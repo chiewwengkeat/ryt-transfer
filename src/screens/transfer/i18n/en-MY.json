@@ -15,6 +15,22 @@
       "over_balance": "That is more than your balance of {{amount}}.",
       "over_remaining_today": "That is more than the {{amount}} you can still send today.",
       "over_per_transfer_max": "That is more than {{amount}}, the most you can send in one transfer."
+    },
+    "first_transfer_to_recipient": {
+      "body": "This is your first transfer to this recipient. Check the name is who you expect."
+    },
+    "review_unexpected": {
+      "body": "Something unexpected stopped the transfer — no money moved.",
+      "retry": "Try again"
+    },
+    "biometrics_recognised": {
+      "body": "Sending your transfer. The bank's answer comes next."
+    },
+    "approval_cancelled": {
+      "body": "The transfer was not sent — no money moved."
+    },
+    "approval_unanswered": {
+      "body": "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
     }
   },
   "recipient": {
@@ -28,5 +44,16 @@
     "label": "Amount (RM)",
     "amount_missing": "Enter the amount to send.",
     "review": "Review"
+  },
+  "review": {
+    "title": "Review",
+    "recipient_name": "To",
+    "bank": "Bank",
+    "mobile": "Mobile number",
+    "amount": "Amount",
+    "transfer": "Transfer",
+    "prompt_title": "Approve your transfer",
+    "prompt_cancel": "Cancel",
+    "home": "Back to Home"
   }
 }

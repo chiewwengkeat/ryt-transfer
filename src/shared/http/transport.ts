@@ -8,6 +8,7 @@ export type Send = (request: Request) => Promise<Response>;
 // The demo layer's module shape lives here: the shell may not import even a type from src/mocks.
 export interface DemoLayer {
   demoSend: Send;
+  pairPhoneAtFirstLaunch: () => Promise<void>;
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000;
