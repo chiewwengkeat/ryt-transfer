@@ -4,7 +4,8 @@ const { getDefaultConfig } = require("expo/metro-config");
 const config = getDefaultConfig(__dirname);
 
 // msw's root entry loads modules that need MessageEvent and BroadcastChannel, which Hermes
-// lacks, so app code gets an entry exposing only the request-handling core.
+// lacks, so app code gets an entry exposing only the request-handling core. No passthrough:
+// a catch-all passthrough would send real requests from a demo build.
 const MSW_DIR = path.dirname(require.resolve("msw/package.json"));
 const MSW_NATIVE_ENTRY = path.join(__dirname, "metro.msw-entry.mjs");
 const MSW_CORE_MODULES = new Map(

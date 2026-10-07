@@ -1,4 +1,14 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import { SOURCE_FILES } from "./eslint.boundaries.mjs";
+
+const MSW_DEVICE_EXPORTS = [
+  ...readFileSync(
+    path.join(import.meta.dirname, "metro.msw-entry.mjs"),
+    "utf8",
+  ).matchAll(/^export \{ (\w+) \}/gm),
+].map(([, name]) => name);
 
 const staticMocksImport = {
   group: ["@/mocks", "@/mocks/**", "**/mocks", "**/mocks/**"],
@@ -85,6 +95,19 @@ export default [
             staticMocksImport,
             storageOutsidePlatform,
             storageAnywhere,
+          ],
+        },
+      ],
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "msw",
+              allowImportNames: MSW_DEVICE_EXPORTS,
+              allowTypeImports: true,
+              message: `On a device, msw is metro.msw-entry.mjs, which exposes only ${MSW_DEVICE_EXPORTS.join(", ")}: a catch-all passthrough would send real requests from a demo build.`,
+            },
           ],
         },
       ],
