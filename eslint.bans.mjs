@@ -23,6 +23,8 @@ const storageAnywhere = {
   message:
     "Use src/shared/platform/: secrets in secure storage, everything else in the kv-store.",
 };
+const CONSOLE_OUTSIDE_OBSERVABILITY =
+  "Report through src/shared/observability/, which redacts personal data before anything is logged.";
 
 export default [
   {
@@ -64,7 +66,18 @@ export default [
             "Use `import type`: the slice boundaries cannot follow an import() type.",
         },
       ],
-      "no-console": "error",
+      "no-restricted-globals": [
+        "error",
+        { name: "console", message: CONSOLE_OUTSIDE_OBSERVABILITY },
+      ],
+      "no-restricted-properties": [
+        "error",
+        ...["globalThis", "global", "window"].map((object) => ({
+          object,
+          property: "console",
+          message: CONSOLE_OUTSIDE_OBSERVABILITY,
+        })),
+      ],
       "no-restricted-imports": [
         "error",
         {
@@ -79,7 +92,10 @@ export default [
   },
   {
     files: ["src/shared/observability/**"],
-    rules: { "no-console": "off" },
+    rules: {
+      "no-restricted-globals": "off",
+      "no-restricted-properties": "off",
+    },
   },
   {
     files: ["src/shared/platform/**"],
