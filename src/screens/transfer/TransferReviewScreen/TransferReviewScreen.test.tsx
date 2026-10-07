@@ -63,7 +63,7 @@ it(
       await screen.findByRole("button", { name: "Transfer" }),
     );
 
-    await screen.findByText("Page not found");
+    await screen.findByText("Transfer sent");
     expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
     // The bank answers after a delay, which the route's fake timers would hold forever.
     jest.useRealTimers();
@@ -78,7 +78,7 @@ it("asks for a face or fingerprint only, never the phone's passcode", async () =
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
-  await screen.findByText("Page not found");
+  await screen.findByText("Transfer sent");
 
   expect(phoneKeyOptions()).toContainEqual(
     expect.objectContaining({

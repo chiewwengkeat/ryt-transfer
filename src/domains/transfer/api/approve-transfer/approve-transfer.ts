@@ -1,8 +1,9 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { requestJson } from "@/shared/http/transport";
 import type { WireMoney } from "@/shared/lib/money/money.type";
 
+import { getTransferOptions } from "../get-transfer/get-transfer";
 import {
   ApproveTransferErrorCode,
   type ApproveTransferRequest,
@@ -23,6 +24,7 @@ export const APPROVAL_REFUSAL_CODES = new Set<string>([
 ]);
 
 export function useApproveTransfer() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       transferId,
@@ -42,6 +44,15 @@ export function useApproveTransfer() {
           timeoutMs: 30_000,
         },
       ),
+    onSuccess: ({ transfer }) => {
+      queryClient.setQueryData(
+        getTransferOptions(transfer.transferId).queryKey,
+        (held) =>
+          held !== undefined && held.version > transfer.version
+            ? held
+            : transfer,
+      );
+    },
   });
 }
 

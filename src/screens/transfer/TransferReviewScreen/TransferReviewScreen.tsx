@@ -1,13 +1,16 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { accountKeys } from "@/domains/account/api/account.keys";
 import {
   APPROVAL_REFUSAL_CODES,
   useApproveTransfer,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
+import { resetTransferHistory } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import type { LookupRecipientResponse } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
@@ -41,6 +44,7 @@ export default function TransferReviewScreen() {
     return flow.draft;
   });
   const step = useTransferFlow((flow) => flow.step);
+  const queryClient = useQueryClient();
   const lookup = useLookupRecipient(draft.recipient);
   const createTransfer = useCreateTransfer();
   const signTransferApproval = useSignTransferApproval();
@@ -134,6 +138,8 @@ export default function TransferReviewScreen() {
       } else setAnswerLost(true);
       return;
     }
+    void queryClient.invalidateQueries({ queryKey: accountKeys.all });
+    void resetTransferHistory(queryClient);
     // From Home, so Back from the result never reopens a transfer already sent.
     router.dismissTo("/");
     router.push(`/transfer/result/${transferId}`);

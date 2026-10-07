@@ -31,6 +31,14 @@
     },
     "approval_unanswered": {
       "body": "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
+    },
+    "completed": {
+      "title": "Transfer sent",
+      "body": "{{amount}} sent to {{name}} — money moved."
+    },
+    "outcome_unexpected": {
+      "body": "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
+      "retry": "Try again"
     }
   },
   "recipient": {
@@ -55,5 +63,16 @@
     "prompt_title": "Approve your transfer",
     "prompt_cancel": "Cancel",
     "home": "Back to Home"
+  },
+  "result": {
+    "title": "Receipt",
+    "amount": "Amount",
+    "recipient_name": "To",
+    "mobile": "Mobile number",
+    "bank": "Bank",
+    "note": "Note",
+    "reference": "Reference",
+    "completed_at": "Completed",
+    "done": "Done"
   }
 }
