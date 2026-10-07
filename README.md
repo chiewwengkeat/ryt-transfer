@@ -13,6 +13,8 @@ pnpm install
 npx expo run:ios      # or: npx expo run:android
 ```
 
+Expo Go cannot run this app: it carries native modules, biometric key signing among them, that Expo Go does not ship.
+
 ## Checks
 
 ```sh
