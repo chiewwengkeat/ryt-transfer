@@ -8,13 +8,20 @@ import {
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { ApprovalOutcome } from "@/mocks/scenarios/transfer-scenarios";
 
 import { transferLimitsAt } from "./account";
 import { refusalOfDemoPin } from "./approval-keys";
 import { bankError, type BankAnswer } from "./answers";
 import { malaysianDate, toMalaysiaIso } from "./malaysia-time";
 import { randomHex } from "./ports";
-import { bankState, notifyCustomer } from "./state";
+import {
+  expireTransfer,
+  notifyTransferSent,
+  PendingTransferChange,
+  SETTLES_AFTER_MS,
+} from "./settlement";
+import { activeBankConditions, bankState, notifyCustomer } from "./state";
 import { verifyApprovalSignature } from "./verification";
 
 export function approveBankTransfer(
@@ -22,6 +29,7 @@ export function approveBankTransfer(
   { body, nowMs }: { body: Record<string, unknown>; nowMs: number },
 ): BankAnswer {
   const state = bankState();
+  const conditions = activeBankConditions();
   const record = state.transfers.find(
     ({ transfer }) => transfer.transferId === transferId,
   );
@@ -31,6 +39,9 @@ export function approveBankTransfer(
       ApproveTransferErrorCode.TransferNotFound,
       "No transfer has this id.",
     );
+  }
+  if (record.approval && conditions.approvalsArriveLate) {
+    expireTransfer(record, nowMs);
   }
   if (record.transfer.status === TransferStatus.Expired) {
     return bankError(
@@ -56,7 +67,14 @@ export function approveBankTransfer(
       "Send a keyId, a signature and, for the possession key, a pin.",
     );
   }
-  const key = state.approvalKeys.find((candidate) => candidate.keyId === keyId);
+  const key = state.approvalKeys.find(
+    (candidate) =>
+      candidate.keyId === keyId &&
+      !(
+        conditions.keysBeforeActivationUnknown &&
+        candidate.registeredAtMs < conditions.activatedAtMs
+      ),
+  );
   if (!key) {
     return bankError(
       409,
@@ -64,11 +82,13 @@ export function approveBankTransfer(
       "No approval key with this id is registered.",
     );
   }
-  const verified = verifyApprovalSignature({
-    signedText: buildSignedApprovalText(record.approval.signedDetails),
-    signatureBase64: signature,
-    publicKeySpkiBase64: key.spkiBase64,
-  });
+  const verified =
+    !conditions.signaturesRejected &&
+    verifyApprovalSignature({
+      signedText: buildSignedApprovalText(record.approval.signedDetails),
+      signatureBase64: signature,
+      publicKeySpkiBase64: key.spkiBase64,
+    });
   if (!verified) {
     return bankError(
       403,
@@ -90,35 +110,68 @@ export function approveBankTransfer(
 
   delete record.approval;
   const amountMinor = record.transfer.amount.minor;
-  const shortfall =
-    amountMinor > state.balanceMinor
-      ? TransferFailureReason.InsufficientFunds
-      : amountMinor > transferLimitsAt(nowMs).remainingMinor
-        ? TransferFailureReason.DailyLimitExceeded
-        : undefined;
   const executed = {
     ...record.transfer,
     version: record.transfer.version + 1,
     reference: `${malaysianDate(nowMs).replace(/-/g, "")}${randomHex(4).toUpperCase()}`,
     updatedAt: toMalaysiaIso(nowMs),
   };
-  if (shortfall) {
+  const endUnsuccessful = (failureReason: TransferFailureReason) => {
     record.transfer = {
       ...executed,
       status: TransferStatus.Unsuccessful,
-      failureReason: shortfall,
+      failureReason,
     };
-  } else {
+  };
+  const debitAndHold = (change: PendingTransferChange, underReview = false) => {
     state.balanceMinor -= amountMinor;
     record.transfer = {
       ...executed,
-      status: TransferStatus.Completed,
+      status: TransferStatus.Processing,
       funds: TransferFunds.Debited,
+      ...(underReview && { underReview }),
     };
-    notifyCustomer(
-      nowMs,
-      `You sent ${(amountMinor / 100).toFixed(2)} MYR to ${executed.counterparty.registeredName}. Reference ${executed.reference}.`,
-    );
+    record.pendingChange = { atMs: nowMs + SETTLES_AFTER_MS, change };
+  };
+
+  if (amountMinor > state.balanceMinor) {
+    endUnsuccessful(TransferFailureReason.InsufficientFunds);
+  } else if (amountMinor > transferLimitsAt(nowMs).remainingMinor) {
+    endUnsuccessful(TransferFailureReason.DailyLimitExceeded);
+  } else {
+    switch (conditions.approvalOutcome) {
+      case ApprovalOutcome.ShortAtApproval:
+        endUnsuccessful(TransferFailureReason.InsufficientFunds);
+        break;
+      case ApprovalOutcome.FraudBlocked:
+        endUnsuccessful(TransferFailureReason.FraudBlocked);
+        notifyCustomer(
+          nowMs,
+          `We stopped your transfer to ${executed.counterparty.registeredName} to protect your account. We will contact you about it.`,
+        );
+        break;
+      case ApprovalOutcome.RecipientAccountInactive:
+        endUnsuccessful(TransferFailureReason.RecipientAccountInactive);
+        break;
+      case ApprovalOutcome.HeldForReview:
+        debitAndHold(PendingTransferChange.Complete, true);
+        break;
+      case ApprovalOutcome.Processing:
+        debitAndHold(PendingTransferChange.Complete);
+        break;
+      case ApprovalOutcome.RefundedAfterProcessing:
+        debitAndHold(PendingTransferChange.FailForRefund);
+        break;
+      case undefined:
+        state.balanceMinor -= amountMinor;
+        record.transfer = {
+          ...executed,
+          status: TransferStatus.Completed,
+          funds: TransferFunds.Debited,
+        };
+        notifyTransferSent(record, nowMs);
+        break;
+    }
   }
   return { status: 200, body: { transfer: record.transfer } };
 }

@@ -7,6 +7,7 @@ import {
 import { toMalaysiaIso } from "./malaysia-time";
 import { bankState, notifyCustomer, type BankTransferRecord } from "./state";
 
+export const SETTLES_AFTER_MS = 20_000;
 const REFUND_PENDING_MS = 10_000;
 
 export enum PendingTransferChange {
@@ -25,6 +26,14 @@ export function expireTransfer(record: BankTransferRecord, atMs: number) {
   };
 }
 
+export function notifyTransferSent(record: BankTransferRecord, atMs: number) {
+  const { amount, counterparty, reference } = record.transfer;
+  notifyCustomer(
+    atMs,
+    `You sent ${(amount.minor / 100).toFixed(2)} MYR to ${counterparty.registeredName}. Reference ${reference}.`,
+  );
+}
+
 // Runs before every operation, so expiry and settlement land in the same synchronous step as
 // whatever the request then does: an approval can never race its own expiry.
 export function advanceBankTransfers(nowMs: number) {
@@ -41,15 +50,11 @@ export function advanceBankTransfers(nowMs: number) {
         version: record.transfer.version + 1,
         updatedAt: toMalaysiaIso(atMs),
       };
-      const { registeredName } = changed.counterparty;
       switch (change) {
         case PendingTransferChange.Complete:
           record.transfer = { ...changed, status: TransferStatus.Completed };
           delete record.transfer.underReview;
-          notifyCustomer(
-            atMs,
-            `Your transfer to ${registeredName} is complete. Reference ${changed.reference}.`,
-          );
+          notifyTransferSent(record, atMs);
           break;
         case PendingTransferChange.FailForRefund:
           record.transfer = {
@@ -68,7 +73,7 @@ export function advanceBankTransfers(nowMs: number) {
           record.transfer = { ...changed, funds: TransferFunds.Refunded };
           notifyCustomer(
             atMs,
-            `Your transfer to ${registeredName} did not go through and was refunded. Reference ${changed.reference}.`,
+            `Your transfer to ${changed.counterparty.registeredName} did not go through and was refunded. Reference ${changed.reference}.`,
           );
           break;
       }

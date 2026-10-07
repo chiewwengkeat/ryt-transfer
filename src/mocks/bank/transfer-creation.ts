@@ -13,7 +13,7 @@ import { PER_TRANSFER_MAX_MINOR, transferLimitsAt } from "./account";
 import { bankError, wireMoney, type BankAnswer } from "./answers";
 import { toMalaysiaIso } from "./malaysia-time";
 import { bankPorts, randomHex } from "./ports";
-import { bankState } from "./state";
+import { activeBankConditions, bankState } from "./state";
 
 const APPROVAL_WINDOW_SECONDS = 60;
 // No wider: DuitNow carries the note onto the recipient's statement as it is.
@@ -37,6 +37,25 @@ export function createBankTransfer({
       400,
       CreateTransferErrorCode.InvalidRequest,
       "Send a recipientRef, an amount and an optional note.",
+    );
+  }
+  const conditions = activeBankConditions();
+  if (conditions.accountLocked) {
+    return bankError(
+      403,
+      CreateTransferErrorCode.AccountLocked,
+      "The account is locked.",
+    );
+  }
+  const { coolingOff, activatedAtMs } = conditions;
+  const coolingOffEndsAtMs =
+    activatedAtMs + (coolingOff?.endsAfterActivationMs ?? 0);
+  if (coolingOff && nowMs < coolingOffEndsAtMs) {
+    return bankError(
+      403,
+      CreateTransferErrorCode.CoolingOff,
+      "Transfers wait out a security cooling-off period.",
+      { until: toMalaysiaIso(coolingOffEndsAtMs), reason: coolingOff.reason },
     );
   }
   const state = bankState();

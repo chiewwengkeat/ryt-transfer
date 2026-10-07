@@ -12,10 +12,12 @@ import {
   sendToBank,
   signTestApproval,
   startTestTransfer,
+  type BankErrorBody,
 } from "@/test/bank-client";
 import { jestBankPorts } from "@/test/jest-bank-ports";
 
 import type * as BankPorts from "./bank/ports";
+import { pickTransferScenario } from "./demo-bank";
 import type * as DemoBank from "./demo-bank";
 
 // A fresh module registry is a fresh app: nothing survives it but what the bank saved.
@@ -66,4 +68,30 @@ it("keeps a completed transfer and its debit across a restart", async () => {
 
   expect(restartedAccount.balance).toEqual(account.balance);
   expect(transfer.status).toBe(TransferStatus.Completed);
+});
+
+it("keeps the picked scenario across a restart", async () => {
+  pickTransferScenario("transfer.start_unexpected");
+
+  const answer = await restartTheApp()<BankErrorBody>("/accounts/primary");
+
+  expect(answer.error.code).toBe("NEW_BANK_CODE");
+});
+
+it("drops a saved pick that the scenario registry no longer has", async () => {
+  pickTransferScenario("transfer.start_unexpected");
+  const saved = JSON.parse(jestBankPorts.storage.read() ?? "{}") as {
+    scenarioPick: { scenarioId: string };
+  };
+  jestBankPorts.storage.write(
+    JSON.stringify({
+      ...saved,
+      scenarioPick: { ...saved.scenarioPick, scenarioId: "transfer.retired" },
+    }),
+  );
+
+  const answer =
+    await restartTheApp()<GetPrimaryAccountResponse>("/accounts/primary");
+
+  expect(answer.balance.currency).toBe("MYR");
 });

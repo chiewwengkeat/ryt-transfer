@@ -6,7 +6,7 @@ import {
 import { wireMoney, type BankAnswer } from "./answers";
 import { malaysianDate } from "./malaysia-time";
 import { DEMO_CUSTOMER } from "./seed";
-import { bankState } from "./state";
+import { activeBankConditions, bankState } from "./state";
 
 const DEFAULT_DAILY_LIMIT_MINOR = 500_000;
 export const PER_TRANSFER_MAX_MINOR = 5_000_000;
@@ -23,7 +23,8 @@ export function transferLimitsAt(nowMs: number) {
         malaysianDate(createdAtMs) === today,
     )
     .reduce((sum, { transfer }) => sum + transfer.amount.minor, 0);
-  const limitMinor = DEFAULT_DAILY_LIMIT_MINOR;
+  const limitMinor =
+    activeBankConditions().dailyLimitMinor ?? DEFAULT_DAILY_LIMIT_MINOR;
   return {
     limitMinor,
     usedMinor,

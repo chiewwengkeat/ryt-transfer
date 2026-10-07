@@ -1,3 +1,5 @@
+import { TRANSFER_SCENARIOS } from "@/mocks/scenarios/transfer-scenarios";
+
 // Jest defines it; the app's types deliberately leave out Node's globals.
 declare const __dirname: string;
 
@@ -153,6 +155,20 @@ it("links every scenario once from the index, on its own step's line", () => {
         (section) => `${section.heading} #${anchorOf(section.heading)}`,
       ),
     })),
+  );
+});
+
+it("gives the mock registry exactly the matrix's ids, each under its own step", () => {
+  const registrySteps = Object.fromEntries(
+    Object.entries(TRANSFER_SCENARIOS).map(([id, { step }]) => [id, step]),
+  );
+
+  expect(registrySteps).toEqual(
+    Object.fromEntries(
+      steps.flatMap((step) =>
+        step.sections.map((section) => [section.id, step.name]),
+      ),
+    ),
   );
 });
 

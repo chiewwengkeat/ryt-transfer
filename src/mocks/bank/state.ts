@@ -4,6 +4,14 @@ import type {
   LookupRecipientResponse,
   RecipientIdType,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import {
+  TRANSFER_SCENARIOS,
+  type TransferScenario,
+} from "@/mocks/scenarios/transfer-scenarios";
+import {
+  NO_SCENARIO_PICK,
+  switcherStore,
+} from "@/mocks/switcher/switcher-store";
 
 import type { BankAnswer } from "./answers";
 import { toMalaysiaIso } from "./malaysia-time";
@@ -92,17 +100,33 @@ export function bankState() {
   if (loadedState) return loadedState;
 
   const { storage, seed } = bankPorts();
-  let snapshot: { formatVersion?: number; state?: BankState } | null;
+  let snapshot: {
+    formatVersion?: number;
+    state?: BankState;
+    scenarioPick?: { scenarioId?: unknown; activatedAtMs?: unknown };
+  } | null;
   try {
     snapshot = JSON.parse(storage.read() ?? "null") as typeof snapshot;
   } catch {
     snapshot = null;
   }
-  return installBankState(
-    snapshot?.formatVersion === SNAPSHOT_FORMAT_VERSION && snapshot.state
-      ? snapshot.state
-      : freshBankState(seed.anchorMs()),
+  if (snapshot?.formatVersion !== SNAPSHOT_FORMAT_VERSION || !snapshot.state) {
+    return installBankState(freshBankState(seed.anchorMs()));
+  }
+
+  // A pick saved by a build whose registry no longer has it falls back to no scenario.
+  const { scenarioId, activatedAtMs } = snapshot.scenarioPick ?? {};
+  switcherStore.setState(
+    typeof scenarioId === "string" &&
+      scenarioId in TRANSFER_SCENARIOS &&
+      typeof activatedAtMs === "number"
+      ? {
+          scenarioId: scenarioId as keyof typeof TRANSFER_SCENARIOS,
+          activatedAtMs,
+        }
+      : NO_SCENARIO_PICK,
   );
+  return installBankState(snapshot.state);
 }
 
 export function persistBankState() {
@@ -110,13 +134,38 @@ export function persistBankState() {
     JSON.stringify({
       formatVersion: SNAPSHOT_FORMAT_VERSION,
       state: bankState(),
+      scenarioPick: switcherStore.getState(),
     }),
   );
 }
 
 export function resetBankState() {
   installBankState(freshBankState(bankPorts().seed.anchorMs()));
+  switcherStore.setState(NO_SCENARIO_PICK);
   persistBankState();
+}
+
+export function saveScenarioPick(
+  pick: ReturnType<typeof switcherStore.getState>,
+) {
+  // Load first: a load after the pick would restore the saved one over it.
+  bankState();
+  switcherStore.setState(pick);
+  persistBankState();
+}
+
+export function activeTransferScenario(): TransferScenario | undefined {
+  // Loading restores a pick saved before a restart, so a cold start sees it too.
+  bankState();
+  const { scenarioId } = switcherStore.getState();
+  return scenarioId === null ? undefined : TRANSFER_SCENARIOS[scenarioId];
+}
+
+export function activeBankConditions() {
+  return {
+    ...activeTransferScenario()?.conditions,
+    activatedAtMs: switcherStore.getState().activatedAtMs,
+  };
 }
 
 export function notifyCustomer(atMs: number, message: string) {
