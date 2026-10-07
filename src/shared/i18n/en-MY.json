@@ -1,1 +1,25 @@
-{}
+{
+  "date": {
+    "month_short": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Dec"
+    },
+    "am": "am",
+    "pm": "pm",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "day_month_year": "{{day}} {{month}} {{year}}",
+    "time": "{{hour}}:{{minute}} {{period}}",
+    "date_time": "{{date}}, {{time}}"
+  }
+}

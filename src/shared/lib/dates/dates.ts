@@ -1,0 +1,56 @@
+import { t } from "i18next";
+
+// Malaysia has kept +08:00, with no daylight saving, since 1982: shifting by it and reading UTC getters gives
+// the same text on every phone and in Jest, with no Intl time-zone data.
+const MALAYSIA_OFFSET_MS = 8 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+] as const;
+
+export function formatMalaysianDateTime(instant: string) {
+  const wallClock = new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS);
+  const hour = wallClock.getUTCHours();
+  return t("date.date_time", {
+    date: formatDayMonthYear(wallClock),
+    time: t("date.time", {
+      hour: hour % 12 || 12,
+      minute: String(wallClock.getUTCMinutes()).padStart(2, "0"),
+      period: hour < 12 ? t("date.am") : t("date.pm"),
+    }),
+  });
+}
+
+// `dateKey` is the server's Malaysian date, YYYY-MM-DD.
+export function formatMalaysianDayHeader(dateKey: string, now: Date) {
+  const nowInMalaysia = new Date(now.getTime() + MALAYSIA_OFFSET_MS);
+  if (dateKey === nowInMalaysia.toISOString().slice(0, 10))
+    return t("date.today");
+  if (
+    dateKey ===
+    new Date(nowInMalaysia.getTime() - DAY_MS).toISOString().slice(0, 10)
+  )
+    return t("date.yesterday");
+  return formatDayMonthYear(new Date(`${dateKey}T00:00:00Z`));
+}
+
+function formatDayMonthYear(wallClock: Date) {
+  const monthKey = MONTH_KEYS[wallClock.getUTCMonth()];
+  if (monthKey === undefined) throw new RangeError("Invalid time value");
+  return t("date.day_month_year", {
+    day: wallClock.getUTCDate(),
+    month: t(`date.month_short.${monthKey}`),
+    year: wallClock.getUTCFullYear(),
+  });
+}
