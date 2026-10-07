@@ -8,6 +8,8 @@
     "android": "EXPO_PUBLIC_APP_VARIANT=development expo prebuild --clean --platform android && EXPO_PUBLIC_APP_VARIANT=development expo run:android",
     "android:demo": "EXPO_PUBLIC_APP_VARIANT=demo expo prebuild --clean --platform android && EXPO_PUBLIC_APP_VARIANT=demo expo run:android --variant release",
     "android:production": "EXPO_PUBLIC_APP_VARIANT=production expo prebuild --clean --platform android && EXPO_PUBLIC_APP_VARIANT=production expo run:android --variant release",
+    "build:android:demo": "node scripts/build-android-apk.js demo",
+    "build:android:production": "node scripts/build-android-apk.js production",
     "ios": "EXPO_PUBLIC_APP_VARIANT=development expo prebuild --clean --platform ios && EXPO_PUBLIC_APP_VARIANT=development expo run:ios",
     "ios:demo": "EXPO_PUBLIC_APP_VARIANT=demo expo prebuild --clean --platform ios && EXPO_PUBLIC_APP_VARIANT=demo expo run:ios --configuration Release",
     "ios:production": "EXPO_PUBLIC_APP_VARIANT=production expo prebuild --clean --platform ios && EXPO_PUBLIC_APP_VARIANT=production expo run:ios --configuration Release",
