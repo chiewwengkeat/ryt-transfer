@@ -1,7 +1,9 @@
 // Its mocks run at require time, so they must load before any test module imports expo-router.
 import "expo-router/testing-library";
+import { onlineManager, type QueryClient } from "@tanstack/react-query";
 
 import { setObservabilitySink } from "@/shared/observability/observability";
+import type * as ShellQueryClient from "@/shell/query-client";
 import "@/shell/translations";
 
 import type * as NativeDoubles from "./harness/native-doubles";
@@ -45,6 +47,31 @@ jest.mock("expo-crypto", () => ({
   ).randomUUIDDouble,
 }));
 
+// Each test gets its own client, so no test reads another's cache, with no retry backoff: RNTL's waitFor
+// gives up after 1 s, before TanStack's first two retries have run.
+let mockQueryClient: QueryClient | undefined;
+jest.mock("@/shell/query-client", () => {
+  const actual = jest.requireActual<typeof ShellQueryClient>(
+    "@/shell/query-client",
+  );
+  // Defined after the spread: Babel's object spread reads a getter once and keeps the value.
+  return Object.defineProperty({ __esModule: true, ...actual }, "queryClient", {
+    enumerable: true,
+    get() {
+      if (mockQueryClient === undefined) {
+        mockQueryClient = actual.createQueryClient();
+        // setDefaultOptions replaces every default, so the app's retry rule is handed back with the rest.
+        const defaults = mockQueryClient.getDefaultOptions();
+        mockQueryClient.setDefaultOptions({
+          ...defaults,
+          queries: { ...defaults.queries, staleTime: 0, retryDelay: 0 },
+        });
+      }
+      return mockQueryClient;
+    },
+  });
+});
+
 beforeAll(() => {
   // A function, not "error": msw's built-in strategies let static-asset paths such as `.json` through.
   mswServer.listen({ onUnhandledRequest: recordUnhandledRequest });
@@ -55,6 +82,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  mockQueryClient?.clear();
+  mockQueryClient = undefined;
+  // TanStack keeps its own online flag, which outlives a test that ended with the phone offline.
+  onlineManager.setOnline(true);
   observedRecords.splice(0);
   resetNativeDoubles();
   mswServer.resetHandlers();

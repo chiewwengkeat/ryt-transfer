@@ -2,6 +2,9 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { Stack, router } from "expo-router";
 import { Pressable, Text } from "react-native";
 
+import { TransportError, TransportErrorKind } from "@/shared/http/transport";
+import { queryClient } from "@/shell/query-client";
+
 import { renderRoute } from "./render-route";
 
 it("reports the pathname the user navigated to", async () => {
@@ -35,3 +38,26 @@ it("hands the next test real timers", async () => {
 
   expect(realTimerFired).toBe(true);
 });
+
+it("hands each test a query client of its own: this one leaves a balance behind", () => {
+  queryClient.setQueryData(["balance"], "left behind");
+
+  expect(queryClient.getQueryData(["balance"])).toBe("left behind");
+});
+
+// ⛔ Keep this right after the test above: alone, it passes against a client every test shares.
+it("hands each test a query client of its own: this one finds no balance", () => {
+  expect(queryClient.getQueryData(["balance"])).toBeUndefined();
+});
+
+it("keeps the app's retry rule, without its backoff", async () => {
+  const queryFn = jest.fn(() =>
+    Promise.reject(new TransportError(TransportErrorKind.Http, 503)),
+  );
+
+  await expect(
+    queryClient.fetchQuery({ queryKey: ["balance"], queryFn }),
+  ).rejects.toThrow(TransportError);
+
+  expect(queryFn).toHaveBeenCalledTimes(3);
+}, 1000);

@@ -1,0 +1,94 @@
+import { MutationObserver } from "@tanstack/react-query";
+
+import { TransportError, TransportErrorKind } from "@/shared/http/transport";
+import { setPhoneNetwork } from "@/test/harness/native-doubles";
+
+import { createQueryClient } from "./query-client";
+
+const OFFLINE = { isConnected: false, isInternetReachable: false };
+
+it("holds a read while the phone is offline and sends it once the phone reconnects", async () => {
+  const client = createQueryClient();
+  client.mount();
+  setPhoneNetwork(OFFLINE);
+  const queryFn = jest.fn(() => Promise.resolve("balance"));
+
+  const read = client.fetchQuery({ queryKey: ["balance"], queryFn });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  const attemptsWhileOffline = queryFn.mock.calls.length;
+  setPhoneNetwork({ isConnected: true, isInternetReachable: true });
+
+  expect(attemptsWhileOffline).toBe(0);
+  await expect(read).resolves.toBe("balance");
+  client.unmount();
+});
+
+it("sends a write once, at once, even while the phone is offline", async () => {
+  const client = createQueryClient();
+  client.mount();
+  setPhoneNetwork(OFFLINE);
+  const mutationFn = jest.fn(() =>
+    Promise.reject(new TransportError(TransportErrorKind.Timeout)),
+  );
+
+  await expect(
+    new MutationObserver(client, { mutationFn }).mutate(),
+  ).rejects.toThrow(TransportError);
+
+  expect(mutationFn).toHaveBeenCalledTimes(1);
+  client.unmount();
+});
+
+// ⛔ Keep these after the offline write, which ends offline: they prove each test starts online.
+it.each([
+  {
+    failure: "a dropped connection",
+    error: new TransportError(TransportErrorKind.Network),
+    attempts: 3,
+  },
+  {
+    failure: "a timeout",
+    error: new TransportError(TransportErrorKind.Timeout),
+    attempts: 3,
+  },
+  {
+    failure: "a server failure",
+    error: new TransportError(TransportErrorKind.Http, 503),
+    attempts: 3,
+  },
+  {
+    failure: "a refusal",
+    error: new TransportError(TransportErrorKind.Http, 404),
+    attempts: 1,
+  },
+  {
+    failure: "an ended session",
+    error: new TransportError(TransportErrorKind.Http, 401),
+    attempts: 1,
+  },
+  {
+    failure: "a cancelled request",
+    error: new TransportError(TransportErrorKind.Aborted),
+    attempts: 1,
+  },
+  {
+    failure: "a bug",
+    error: new TypeError("undefined is not a function"),
+    attempts: 1,
+  },
+])(
+  "tries a read that fails with $failure $attempts time(s)",
+  async ({ error, attempts }) => {
+    const queryFn = jest.fn(() => Promise.reject(error));
+
+    await expect(
+      createQueryClient().fetchQuery({
+        queryKey: ["balance"],
+        queryFn,
+        retryDelay: 0,
+      }),
+    ).rejects.toBe(error);
+
+    expect(queryFn).toHaveBeenCalledTimes(attempts);
+  },
+);
