@@ -31,12 +31,6 @@ function parsePath(filename) {
   };
 }
 
-/** Takes a FILE path — handed a directory, it ignores the last segment. */
-function hasDirSegment(filename, names) {
-  const wanted = Array.isArray(names) ? names : [names];
-  return parsePath(filename).dirSegments.some((seg) => wanted.includes(seg));
-}
-
 /** Compare names in THIS direction: kebabCase() below is lossy, so only this one proves a misnaming. */
 function camelCase(name) {
   return name
@@ -126,7 +120,6 @@ module.exports = {
   camelCase,
   dirEntries,
   filenameOf,
-  hasDirSegment,
   isRelativeSource,
   joinPath,
   kebabCase,

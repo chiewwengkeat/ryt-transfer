@@ -9,7 +9,6 @@ const {
   camelCase,
   dirEntries,
   filenameOf,
-  hasDirSegment,
   isRelativeSource,
   joinPath,
   kebabCase,
@@ -130,34 +129,6 @@ test("parsePath: dirSegments lists the directories only", () => {
 
 test("parsePath: normalises Windows separators", () => {
   assert.equal(parsePath("C:\\repo\\src\\Foo.tsx").parent, "src");
-});
-
-test("hasDirSegment: an ancestor directory matches", () => {
-  assert.equal(
-    hasDirSegment(
-      "/repo/src/domains/transfer/api/get-transfer/get-transfer.ts",
-      "api",
-    ),
-    true,
-  );
-});
-
-test("hasDirSegment: accepts a list", () => {
-  assert.equal(
-    hasDirSegment("/repo/src/test/msw/recipient.mock.ts", ["test", "utils"]),
-    true,
-  );
-});
-
-test("hasDirSegment: no match returns false", () => {
-  assert.equal(
-    hasDirSegment("/repo/src/domains/account/Foo.tsx", ["test", "utils"]),
-    false,
-  );
-});
-
-test("hasDirSegment: the file's own basename is not a directory segment", () => {
-  assert.equal(hasDirSegment("/repo/src/domains/api.ts", "api"), false);
 });
 
 test("camelCase: a digit-initial word survives (use-last-7-days)", () => {

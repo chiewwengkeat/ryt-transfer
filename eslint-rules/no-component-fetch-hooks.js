@@ -1,8 +1,5 @@
-const { filenameOf, hasDirSegment, parsePath } = require("./_paths");
+const { filenameOf, parsePath } = require("./_paths");
 const { fetchHookCall, importedBindings } = require("./_imports");
-
-// A route directory holds the QueryClientProvider mount, which cannot move.
-const ROUTE_DIRS = ["pages", "app"];
 
 // A `use-*` file is the data layer, not a component, even with a .tsx extension.
 const HOOK_FILE = /^use[-A-Z]/;
@@ -16,8 +13,7 @@ module.exports = {
         "A component may not call useQuery, useMutation or useInfiniteQuery — owning a " +
         "fetch is the data layer's job. Reading the cache stays allowed: useQueryClient, " +
         "cache orchestration, and importing a query's options factory to reach its cache " +
-        "key. Exempt: hook files (`use-*`), tests, and route directories (pages/, app/), " +
-        "which hold the QueryClientProvider mount.",
+        "key. Exempt: hook files (`use-*`) and tests.",
     },
     messages: {
       componentFetch:
@@ -26,13 +22,11 @@ module.exports = {
     schema: [],
   },
   create(context) {
-    const file = filenameOf(context);
-    const p = parsePath(file);
+    const p = parsePath(filenameOf(context));
     if (!p.dir) return {};
     if (p.ext !== "tsx") return {};
     if (p.suffixes.includes("test") || p.suffixes.includes("spec")) return {};
     if (HOOK_FILE.test(p.stem)) return {};
-    if (hasDirSegment(file, ROUTE_DIRS)) return {};
 
     let bindings = new Map();
     return {

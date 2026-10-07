@@ -160,19 +160,6 @@ test("valid: a camelCase hook file calling useQuery", () => {
   });
 });
 
-test("valid: src/app/_layout.tsx calling useQuery — a route directory", () => {
-  passes({
-    filename: S + "/app/_layout.tsx",
-    code: [
-      'import { QueryClientProvider, useQuery } from "@tanstack/react-query";',
-      "export default function Layout({ client, children }) {",
-      '  useQuery({ queryKey: ["boot"] });',
-      "  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;",
-      "}",
-    ].join("\n"),
-  });
-});
-
 test("valid: a .test.tsx calling useQuery", () => {
   passes({
     filename: S + "/test/routes/transfer-details.test.tsx",
@@ -336,14 +323,22 @@ test("invalid: two fetch calls in one component report twice", () => {
   });
 });
 
-test("invalid: an 'apps' directory is not 'app' — route dirs match segment-wise", () => {
+test("invalid: a route file calling useQuery, since a route only re-exports a screen", () => {
   reports({
-    filename: S + "/apps/SectionRecents/SectionRecents.tsx",
+    filename: S + "/app/_layout.tsx",
     code: [
-      'import { useQuery } from "@tanstack/react-query";',
-      'export default function SectionRecents() { useQuery({ queryKey: ["r"] }); return <div />; }',
+      'import { QueryClientProvider, useQuery } from "@tanstack/react-query";',
+      "export default function Layout({ client, children }) {",
+      '  useQuery({ queryKey: ["boot"] });',
+      "  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;",
+      "}",
     ].join("\n"),
-    errors: [{ messageId: "componentFetch" }],
+    errors: [
+      {
+        messageId: "componentFetch",
+        data: { file: "_layout.tsx", hook: "useQuery" },
+      },
+    ],
   });
 });
 
