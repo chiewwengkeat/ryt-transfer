@@ -1,11 +1,24 @@
-import { MutationObserver } from "@tanstack/react-query";
+import { MutationObserver, QueryObserver } from "@tanstack/react-query";
+import { AppState, type AppStateStatus } from "react-native";
 
 import { TransportError, TransportErrorKind } from "@/shared/http/transport";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 
 import { createQueryClient } from "./query-client";
 
+// ⛔ gcTime 0 on every query and mutation here: a cached entry's 5-minute timer keeps a single-file run alive.
+
 const OFFLINE = { isConnected: false, isInternetReachable: false };
+
+function letPendingFetchesRun() {
+  return new Promise((resolve) => setTimeout(resolve, 10));
+}
+
+function moveAppTo(state: AppStateStatus) {
+  for (const [eventName, listener] of jest.mocked(AppState).addEventListener
+    .mock.calls)
+    if (eventName === "change") listener(state);
+}
 
 it("holds a read while the phone is offline and sends it once the phone reconnects", async () => {
   const client = createQueryClient();
@@ -13,8 +26,8 @@ it("holds a read while the phone is offline and sends it once the phone reconnec
   setPhoneNetwork(OFFLINE);
   const queryFn = jest.fn(() => Promise.resolve("balance"));
 
-  const read = client.fetchQuery({ queryKey: ["balance"], queryFn });
-  await new Promise((resolve) => setTimeout(resolve, 10));
+  const read = client.fetchQuery({ queryKey: ["balance"], queryFn, gcTime: 0 });
+  await letPendingFetchesRun();
   const attemptsWhileOffline = queryFn.mock.calls.length;
   setPhoneNetwork({ isConnected: true, isInternetReachable: true });
 
@@ -32,10 +45,33 @@ it("sends a write once, at once, even while the phone is offline", async () => {
   );
 
   await expect(
-    new MutationObserver(client, { mutationFn }).mutate(),
+    new MutationObserver(client, { mutationFn, gcTime: 0 }).mutate(),
   ).rejects.toThrow(TransportError);
 
   expect(mutationFn).toHaveBeenCalledTimes(1);
+  client.unmount();
+});
+
+it("fetches a stale read again when the app comes back to the front, not when it leaves", async () => {
+  const client = createQueryClient();
+  client.mount();
+  const queryFn = jest.fn(() => Promise.resolve("balance"));
+  const stopObserving = new QueryObserver(client, {
+    queryKey: ["balance"],
+    queryFn,
+    gcTime: 0,
+  }).subscribe(() => undefined);
+  await letPendingFetchesRun();
+
+  moveAppTo("background");
+  await letPendingFetchesRun();
+  const fetchesAfterLeaving = queryFn.mock.calls.length;
+  moveAppTo("active");
+  await letPendingFetchesRun();
+
+  expect(fetchesAfterLeaving).toBe(1);
+  expect(queryFn).toHaveBeenCalledTimes(2);
+  stopObserving();
   client.unmount();
 });
 
@@ -86,6 +122,7 @@ it.each([
         queryKey: ["balance"],
         queryFn,
         retryDelay: 0,
+        gcTime: 0,
       }),
     ).rejects.toBe(error);
 

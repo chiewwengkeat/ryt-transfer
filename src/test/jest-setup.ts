@@ -1,6 +1,10 @@
 // Its mocks run at require time, so they must load before any test module imports expo-router.
 import "expo-router/testing-library";
-import { onlineManager, type QueryClient } from "@tanstack/react-query";
+import {
+  focusManager,
+  onlineManager,
+  type QueryClient,
+} from "@tanstack/react-query";
 
 import { setObservabilitySink } from "@/shared/observability/observability";
 import type * as ShellQueryClient from "@/shell/query-client";
@@ -84,8 +88,9 @@ beforeEach(() => {
 afterEach(() => {
   mockQueryClient?.clear();
   mockQueryClient = undefined;
-  // TanStack keeps its own online flag, which outlives a test that ended with the phone offline.
+  // TanStack's online and focus flags outlive a test that left either off, stalling every later retry.
   onlineManager.setOnline(true);
+  focusManager.setFocused(undefined);
   observedRecords.splice(0);
   resetNativeDoubles();
   mswServer.resetHandlers();
