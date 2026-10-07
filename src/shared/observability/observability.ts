@@ -16,7 +16,11 @@ const ALLOWED_PROPERTY_NAMES = new Set([
   "errorCode",
 ]);
 
-let sink: ObservabilitySink | null = __DEV__ ? logToConsole : null;
+let sink: ObservabilitySink | null = __DEV__
+  ? (record) => {
+      console.info(`[${record.type}] ${record.name}`, record.properties);
+    }
+  : null;
 
 export function setObservabilitySink(nextSink: ObservabilitySink | null) {
   sink = nextSink;
@@ -64,10 +68,6 @@ function redactProperties(properties: Record<string, unknown>) {
       allowed[name] = value;
   }
   return allowed;
-}
-
-function logToConsole(record: ObservedRecord) {
-  console.info(`[${record.type}] ${record.name}`, record.properties);
 }
 
 export type ObservabilitySink = (record: ObservedRecord) => void;

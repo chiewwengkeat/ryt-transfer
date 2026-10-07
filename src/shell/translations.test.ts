@@ -1,12 +1,9 @@
+import type { initTranslations } from "@/shared/i18n/i18n";
+
 import { TRANSLATION_BUNDLES } from "./translations";
 
-type TranslationBundles = Record<
-  string,
-  Record<string, Record<string, unknown>[]>
->;
-
 // One namespace's bundles are spread together, so a top-level key two of them define keeps only one string.
-function findKeysDefinedTwice(bundles: TranslationBundles) {
+function findKeysDefinedTwice(bundles: Parameters<typeof initTranslations>[0]) {
   const found: string[] = [];
   for (const [language, namespaces] of Object.entries(bundles))
     for (const [namespace, parts] of Object.entries(namespaces)) {
@@ -21,7 +18,9 @@ function findKeysDefinedTwice(bundles: TranslationBundles) {
 
 // Hermes lacks Intl.PluralRules, so i18next reads `_one` for a count of 1 in every language: a Malay or Chinese
 // `_other` with no twin shows English. Jest has the rules, so only this structural check sees it.
-function findPluralsWithoutTwin(bundles: TranslationBundles) {
+function findPluralsWithoutTwin(
+  bundles: Parameters<typeof initTranslations>[0],
+) {
   const found: string[] = [];
   const visit = (node: Record<string, unknown>, path: string) => {
     for (const [key, value] of Object.entries(node)) {

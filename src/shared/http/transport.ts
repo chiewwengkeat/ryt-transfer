@@ -32,14 +32,14 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 const sendWithFetch: Send = (request) => fetch(request);
 const withoutAuthHeaders = () => ({});
 
-let send = sendWithFetch;
+let configuredSend = sendWithFetch;
 let authHeaders: () => Record<string, string> = withoutAuthHeaders;
 const unauthorizedListeners = new Set<() => void>();
 
 export function configureTransport(
   options: { send?: Send; authHeaders?: () => Record<string, string> } = {},
 ) {
-  send = options.send ?? sendWithFetch;
+  configuredSend = options.send ?? sendWithFetch;
   authHeaders = options.authHeaders ?? withoutAuthHeaders;
 }
 
@@ -90,7 +90,7 @@ export async function requestJson<Data>(
       controller.signal.addEventListener("abort", () => {
         reject(new Error("aborted"));
       });
-      send(
+      configuredSend(
         new Request(`${API_BASE_URL}${path}`, {
           method,
           headers,
@@ -120,17 +120,14 @@ export async function requestJson<Data>(
   } catch {
     // A proxy's error page is not JSON; its status still says what happened.
   }
+  // Every endpoint shares this envelope; each narrows the code to its own union.
+  const errorCode = (
+    errorBody as { error?: { code?: unknown } } | null | undefined
+  )?.error?.code;
   throw new TransportError(
     TransportErrorKind.Http,
     response.status,
-    readErrorCode(errorBody),
+    typeof errorCode === "string" ? errorCode : undefined,
     errorBody,
   );
-}
-
-// Every endpoint answers an error as { error: { code, message } }; the endpoint narrows the code.
-function readErrorCode(errorBody: unknown) {
-  if (typeof errorBody !== "object" || errorBody === null) return undefined;
-  const { error } = errorBody as { error?: { code?: unknown } };
-  return typeof error?.code === "string" ? error.code : undefined;
 }

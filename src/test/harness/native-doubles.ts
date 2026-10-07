@@ -70,11 +70,11 @@ export function randomUUIDDouble() {
   return `00000000-0000-4000-8000-${String(uuidsIssued).padStart(12, "0")}`;
 }
 
-const CONNECTED: NetworkState = {
+const CONNECTED_NETWORK: NetworkState = {
   isConnected: true,
   isInternetReachable: true,
 };
-let phoneNetwork = CONNECTED;
+let phoneNetwork = CONNECTED_NETWORK;
 const networkListeners = new Set<(state: NetworkState) => void>();
 
 export const networkNativeDouble = {
@@ -102,5 +102,5 @@ export function resetNativeDoubles() {
   kvEntries.clear();
   secureStoreEntries.clear();
   uuidsIssued = 0;
-  phoneNetwork = CONNECTED;
+  phoneNetwork = CONNECTED_NETWORK;
 }

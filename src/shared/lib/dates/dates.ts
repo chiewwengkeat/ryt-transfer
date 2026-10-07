@@ -32,17 +32,16 @@ export function formatMalaysianDateTime(instant: string) {
   });
 }
 
-// `dateKey` is the server's Malaysian date, YYYY-MM-DD.
-export function formatMalaysianDayHeader(dateKey: string, now: Date) {
+export function formatMalaysianDayHeader(malaysianIsoDate: string, now: Date) {
   const nowInMalaysia = new Date(now.getTime() + MALAYSIA_OFFSET_MS);
-  if (dateKey === nowInMalaysia.toISOString().slice(0, 10))
+  if (malaysianIsoDate === nowInMalaysia.toISOString().slice(0, 10))
     return t("date.today");
   if (
-    dateKey ===
+    malaysianIsoDate ===
     new Date(nowInMalaysia.getTime() - DAY_MS).toISOString().slice(0, 10)
   )
     return t("date.yesterday");
-  return formatDayMonthYear(new Date(`${dateKey}T00:00:00Z`));
+  return formatDayMonthYear(new Date(`${malaysianIsoDate}T00:00:00Z`));
 }
 
 function formatDayMonthYear(wallClock: Date) {

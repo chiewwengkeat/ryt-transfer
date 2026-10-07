@@ -6,9 +6,9 @@ import TextBody from "@/shared/ui/TextBody/TextBody";
 
 interface Props {
   message: string;
-  tone?: "notice" | "negative";
+  tone?: "warning" | "negative";
 }
-export default function BannerNotice({ message, tone = "notice" }: Props) {
+export default function BannerNotice({ message, tone = "warning" }: Props) {
   // iOS reads no live region, so a banner that appears is announced outright.
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(message);
@@ -32,6 +32,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     backgroundColor: colors.surface,
   },
-  notice: { borderLeftColor: colors.notice },
+  warning: { borderLeftColor: colors.warning },
   negative: { borderLeftColor: colors.negative },
 });

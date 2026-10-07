@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 
-const RECORD_OPTIONS: SecureStore.SecureStoreOptions = {
+const RECORD_OPTIONS = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
 };
 const KEY_PREFIX = "ryt-transfer";
@@ -38,9 +38,9 @@ export async function deleteSecureRecord(address: SecureRecordAddress) {
   );
 }
 
-export async function listSecureRecords(): Promise<SecureRecordAddress[]> {
+export async function listSecureRecords() {
   const index = await SecureStore.getItemAsync(INDEX_KEY, RECORD_OPTIONS);
-  return index === null ? [] : (JSON.parse(index) as SecureRecordAddress[]);
+  return (index === null ? [] : JSON.parse(index)) as SecureRecordAddress[];
 }
 
 export async function deleteSecureNamespace(namespace: string) {
