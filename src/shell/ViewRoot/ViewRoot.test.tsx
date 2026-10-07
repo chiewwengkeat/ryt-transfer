@@ -1,11 +1,19 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { useQuery } from "@tanstack/react-query";
+import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
-import { Text } from "react-native";
+import { DeviceEventEmitter, Pressable, Text } from "react-native";
 
 import { requestJson } from "@/shared/http/transport";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
+
+// Jest runs as iOS, whose BackHandler ignores every listener: Android's lets a test press Back.
+jest.mock("react-native/Libraries/Utilities/BackHandler", () =>
+  jest.requireActual<object>(
+    "react-native/Libraries/Utilities/BackHandler.android",
+  ),
+);
 
 function HomeBalance() {
   const { data } = useQuery({
@@ -25,6 +33,12 @@ async function endSessionWithAnyRequest() {
   );
   await act(async () => {
     await requestJson("/any-request").catch(() => undefined);
+  });
+}
+
+async function pressHardwareBack() {
+  await act(() => {
+    DeviceEventEmitter.emit("hardwareBackPress");
   });
 }
 
@@ -63,4 +77,33 @@ it("signs back in to the app it covered, with its data fetched again", async () 
     screen.queryByRole("header", { name: "Your session has ended" }),
   ).toBeNull();
   expect(await screen.findByText("RM 25.00")).toBeOnTheScreen();
+});
+
+it("ignores hardware Back while the session-ended view covers the app, and obeys it after", async () => {
+  const view = await renderRoute("/", {
+    appDir: "src/app",
+    overrides: {
+      index: () => (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            router.push("./details");
+          }}
+        >
+          <Text>Open details</Text>
+        </Pressable>
+      ),
+      details: () => <Text>Details</Text>,
+    },
+  });
+  await fireEvent.press(screen.getByRole("button", { name: "Open details" }));
+  await endSessionWithAnyRequest();
+
+  await pressHardwareBack();
+  const pathnameUnderTheView = view.getPathname();
+  await fireEvent.press(screen.getByRole("button", { name: "Sign in again" }));
+  await pressHardwareBack();
+
+  expect(pathnameUnderTheView).toBe("/details");
+  expect(view.getPathname()).toBe("/");
 });
