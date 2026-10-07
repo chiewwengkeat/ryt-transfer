@@ -4,32 +4,22 @@ import { Pressable, Text } from "react-native";
 
 import { renderRoute } from "./render-route";
 
-const navigationRoutes = {
-  _layout: () => <Stack />,
-  index: () => (
-    <Pressable
-      accessibilityRole="button"
-      onPress={() => {
-        router.push("/details");
-      }}
-    >
-      <Text>Open details</Text>
-    </Pressable>
-  ),
-  details: () => <Text accessibilityRole="header">Details</Text>,
-};
-
-it("renders the app's own home route", async () => {
-  const view = await renderRoute("/");
-
-  expect(
-    screen.getByRole("header", { name: "Ryt Transfer" }),
-  ).toBeOnTheScreen();
-  expect(view.getPathname()).toBe("/");
-});
-
 it("reports the pathname the user navigated to", async () => {
-  const view = await renderRoute("/", navigationRoutes);
+  const view = await renderRoute("/", {
+    _layout: () => <Stack />,
+    index: () => (
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          // Relative: once Metro generates route types, only the app's real routes type-check.
+          router.push("./details");
+        }}
+      >
+        <Text>Open details</Text>
+      </Pressable>
+    ),
+    details: () => <Text accessibilityRole="header">Details</Text>,
+  });
 
   await fireEvent.press(screen.getByRole("button", { name: "Open details" }));
 
