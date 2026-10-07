@@ -16,7 +16,10 @@ import {
 } from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
-interface Props extends Omit<TextInputProps, "style" | "accessibilityLabel"> {
+interface Props extends Omit<
+  TextInputProps,
+  "style" | "accessibilityLabel" | "accessibilityHint"
+> {
   label: string;
   value: string;
   onChangeText: (text: string) => void;
@@ -30,9 +33,13 @@ export default function FieldText({ label, error, ...inputProps }: Props) {
 
   return (
     <View style={styles.container}>
-      <TextBody strong>{label}</TextBody>
+      {/* Hidden from screen readers: the input below is named by it, so it would be read twice. */}
+      <View aria-hidden>
+        <TextBody strong>{label}</TextBody>
+      </View>
       <TextInput
         accessibilityLabel={label}
+        accessibilityHint={error}
         placeholderTextColor={colors.textSecondary}
         style={[styles.input, error !== undefined && styles.inputInvalid]}
         {...inputProps}
