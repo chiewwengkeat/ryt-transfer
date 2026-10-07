@@ -30,9 +30,10 @@ const BUNDLE_MARKERS = [
     text: "switcherStore",
     carriedBy: DEMO_LAYER_VARIANTS,
   },
+  // Not one of its literals: msw's own packages and React Native's fetch carry those too.
   {
     source: "src/mocks/transport",
-    text: "Unhandled Exception",
+    text: "createDemoSend",
     carriedBy: DEMO_LAYER_VARIANTS,
   },
   {
