@@ -2,7 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const ts = require("typescript");
 
-const MODULE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx"];
+const MODULE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 const PLATFORM_INFIXES = ["", ".ios", ".android", ".native"];
 
 function listSourceModules(rootDir, relativeDir, found) {
@@ -38,6 +38,12 @@ function readImportSpecifiers(rootDir, file) {
     ) {
       reexports.push(node.moduleSpecifier.text);
     } else if (
+      ts.isImportEqualsDeclaration(node) &&
+      ts.isExternalModuleReference(node.moduleReference) &&
+      ts.isStringLiteral(node.moduleReference.expression)
+    ) {
+      uses.push(node.moduleReference.expression.text);
+    } else if (
       ts.isCallExpression(node) &&
       node.arguments[0] &&
       ts.isStringLiteralLike(node.arguments[0]) &&
@@ -55,17 +61,23 @@ function readImportSpecifiers(rootDir, file) {
 
 function resolveLocalSpecifier(fromFile, specifier, knownModules) {
   let base;
-  if (specifier.startsWith("@/")) base = `src/${specifier.slice(2)}`;
+  if (specifier.startsWith("@/"))
+    base = path.posix.join("src", specifier.slice(2));
   else if (specifier.startsWith("."))
     base = path.posix.join(path.posix.dirname(fromFile), specifier);
   else return [];
+  base = base.replace(/\/$/, "");
   const fileCandidatesOf = (stem) =>
     PLATFORM_INFIXES.flatMap((infix) =>
       MODULE_EXTENSIONS.map((ext) => stem + infix + ext),
     );
-  const asFile = [base, ...fileCandidatesOf(base)].filter((candidate) =>
-    knownModules.has(candidate),
-  );
+  // TypeScript's bundler resolution maps a .js or .jsx suffix onto the .ts or .tsx file.
+  const typeScriptStem = base.replace(/\.jsx?$/, "");
+  const asFile = [
+    base,
+    ...fileCandidatesOf(base),
+    ...fileCandidatesOf(typeScriptStem),
+  ].filter((candidate) => knownModules.has(candidate));
   if (asFile.length > 0) return asFile;
   return fileCandidatesOf(`${base}/index`).filter((candidate) =>
     knownModules.has(candidate),
@@ -73,7 +85,9 @@ function resolveLocalSpecifier(fromFile, specifier, knownModules) {
 }
 
 function readImportGraph(rootDir) {
-  const modules = listSourceModules(rootDir, "src", []);
+  const modules = ["src", "modules"].flatMap((dir) =>
+    listSourceModules(rootDir, dir, []),
+  );
   const knownModules = new Set(modules);
   const edgesByModule = new Map();
   for (const file of modules) {

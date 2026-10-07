@@ -219,6 +219,63 @@ test("counts the users that reach a component through a re-export outside its fo
   assert.equal(exitCode, 0);
 });
 
+const AMOUNT_SCREEN_FILE =
+  "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.tsx";
+const FIELD_AMOUNT_FILE =
+  "src/screens/transfer/TransferAmountScreen/components/FieldAmount/FieldAmount.tsx";
+const screenRendering = (importLine) =>
+  `${importLine}\n\nexport default function TransferAmountScreen() {\n  return FieldAmount;\n}\n`;
+
+for (const [form, importLine, extraFiles] of [
+  [
+    "an import-equals require",
+    'import FieldAmount = require("./components/FieldAmount/FieldAmount");',
+    {},
+  ],
+  [
+    "a .js suffix naming the .tsx file",
+    'import FieldAmount from "./components/FieldAmount/FieldAmount.js";',
+    {},
+  ],
+  [
+    "an @/ path that steps back with ../",
+    'import FieldAmount from "@/screens/transfer/components/../TransferAmountScreen/components/FieldAmount/FieldAmount";',
+    {},
+  ],
+  [
+    "a folder import with a trailing slash",
+    'import FieldAmount from "./components/FieldAmount/";',
+    {
+      "src/screens/transfer/TransferAmountScreen/components/FieldAmount/index.ts":
+        'export { default } from "./FieldAmount";\n',
+    },
+  ],
+]) {
+  test(`follows ${form} to the component it names`, () => {
+    const { exitCode, errors } = runPlacementCheckOn({
+      [AMOUNT_SCREEN_FILE]: screenRendering(importLine),
+      [FIELD_AMOUNT_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
+      ...extraFiles,
+    });
+    assert.equal(errors, "");
+    assert.equal(exitCode, 0);
+  });
+}
+
+test("counts an importer under modules/ as a user outside the screens folders", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [RECENTS_COMPONENT_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
+    "src/screens/home/HomeScreen/HomeScreen.tsx": moduleImporting(
+      "@/domains/transfer/components/SectionRecents/SectionRecents",
+    ),
+    "modules/recents-widget/index.ts": moduleImporting(
+      "../../src/domains/transfer/components/SectionRecents/SectionRecents",
+    ),
+  });
+  assert.equal(errors, "");
+  assert.equal(exitCode, 0);
+});
+
 test("counts a route that re-exports a domain component as its user", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     "src/domains/account/components/CardBalance/CardBalance.tsx":
