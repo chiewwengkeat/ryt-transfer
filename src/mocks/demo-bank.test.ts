@@ -14,8 +14,8 @@ import {
   startTestTransfer,
   type BankErrorBody,
 } from "@/test/bank-client";
-import { jestBankPorts } from "@/test/jest-bank-ports";
 
+import { bankPorts } from "./bank/ports";
 import type * as BankPorts from "./bank/ports";
 import { pickTransferScenario } from "./demo-bank";
 import type * as DemoBank from "./demo-bank";
@@ -33,7 +33,7 @@ function restartTheApp() {
   jest.isolateModules(() => {
     jest
       .requireActual<typeof BankPorts>("./bank/ports")
-      .bindBankPorts(jestBankPorts);
+      .bindBankPorts(bankPorts());
     restarted = {
       handlers: jest
         .requireActual<typeof DemoBank>("./demo-bank")
@@ -94,10 +94,10 @@ it.each(["transfer.retired", "toString"])(
   "drops a saved pick of %s, which the scenario registry does not hold",
   async (savedScenarioId) => {
     pickTransferScenario("transfer.start_unexpected");
-    const saved = JSON.parse(jestBankPorts.storage.read() ?? "{}") as {
+    const saved = JSON.parse(bankPorts().storage.read() ?? "{}") as {
       scenarioPick: { scenarioId: string };
     };
-    jestBankPorts.storage.write(
+    bankPorts().storage.write(
       JSON.stringify({
         ...saved,
         scenarioPick: { ...saved.scenarioPick, scenarioId: savedScenarioId },
