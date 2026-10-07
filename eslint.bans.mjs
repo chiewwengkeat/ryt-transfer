@@ -45,6 +45,20 @@ export default [
   {
     files: SOURCE_FILES,
     rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ImportExpression",
+          message:
+            "Import statically: the import bans and slice boundaries cannot follow a dynamic import().",
+        },
+        {
+          selector:
+            "CallExpression[callee.name='require']:not([arguments.0.type='Literal'])",
+          message:
+            "Pass require() a string literal: the import bans and slice boundaries cannot follow anything else.",
+        },
+      ],
       "no-console": "error",
       "no-restricted-imports": [
         "error",
