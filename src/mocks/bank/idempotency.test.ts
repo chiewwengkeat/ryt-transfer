@@ -5,6 +5,33 @@ import {
   type BankErrorBody,
 } from "@/test/bank-client";
 
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
+it("keeps a first answer for 24 hours and forgets it at 24 hours", async () => {
+  const answeredAtMs = Date.parse("2026-10-08T10:00:00+08:00");
+  const clock = jest.spyOn(Date, "now").mockReturnValue(answeredAtMs);
+  const lookup = await lookUpTestRecipient();
+  const createUnderOneKey = (minor: number) =>
+    sendToBank<BankErrorBody>("POST", "/transfers", {
+      body: {
+        recipientRef: lookup.recipientRef,
+        amount: { minor, currency: "MYR" },
+      },
+      idempotencyKey: "kept-a-day",
+    });
+  await createUnderOneKey(1_000);
+
+  clock.mockReturnValue(answeredAtMs + 24 * 60 * 60 * 1000 - 1);
+  const stillKept = await createUnderOneKey(2_000);
+  clock.mockReturnValue(answeredAtMs + 24 * 60 * 60 * 1000);
+  const forgotten = await createUnderOneKey(2_000);
+
+  expect(stillKept.body.error.code).toBe("IDEMPOTENCY_KEY_REUSED");
+  expect(forgotten.body.error.code).toBe("RECIPIENT_REF_EXPIRED");
+});
+
 it("refuses a write without an Idempotency-Key, and a key reused for another body", async () => {
   const lookup = await lookUpTestRecipient();
   const transfer = (minor: number) => ({

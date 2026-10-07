@@ -152,6 +152,91 @@ it("re-checks today's limit at approval and ends a short transfer unsuccessful, 
   expect(await readBankBalanceMinor()).toBe(balanceBefore - 300_000);
 });
 
+it("re-checks the balance at approval and ends a transfer it no longer covers unsuccessful, undebited", async () => {
+  const dayMs = 24 * 60 * 60 * 1000;
+  const firstDayMs = Date.parse("2026-10-08T10:00:00+08:00");
+  const clock = jest.spyOn(Date, "now").mockReturnValue(firstDayMs);
+  const { biometricKeyId } = await pairTestPhone();
+  const key = { kind: "biometric" as const, keyId: biometricKeyId };
+  const sendWholeDailyLimitOn = async (dayStartMs: number) => {
+    clock.mockReturnValue(dayStartMs);
+    const spent = await startTestTransfer(500_000);
+    await sendToBank("POST", spent.approvalPath, {
+      body: signTestApproval(spent, key),
+    });
+  };
+  await sendWholeDailyLimitOn(firstDayMs);
+  await sendWholeDailyLimitOn(firstDayMs + dayMs);
+  clock.mockReturnValue(firstDayMs + 2 * dayMs);
+  const first = await startTestTransfer(200_000);
+  const second = await startTestTransfer(200_000);
+  await sendToBank("POST", first.approvalPath, {
+    body: signTestApproval(first, key),
+  });
+  const balanceBeforeShort = await readBankBalanceMinor();
+
+  const short = await sendToBank<ApproveTransferResponse>(
+    "POST",
+    second.approvalPath,
+    { body: signTestApproval(second, key) },
+  );
+
+  expect(short.body.transfer).toMatchObject({
+    status: TransferStatus.Unsuccessful,
+    funds: TransferFunds.NotDebited,
+    failureReason: TransferFailureReason.InsufficientFunds,
+    version: 2,
+  });
+  expect(await readBankBalanceMinor()).toBe(balanceBeforeShort);
+});
+
+it("accepts an approval up to the last millisecond of its 60 seconds, and none at 60", async () => {
+  const createdAtMs = Date.parse("2026-10-08T10:00:00+08:00");
+  const clock = jest.spyOn(Date, "now").mockReturnValue(createdAtMs);
+  const { biometricKeyId } = await pairTestPhone();
+  const key = { kind: "biometric" as const, keyId: biometricKeyId };
+  const inTime = await startTestTransfer(2_550);
+  const late = await startTestTransfer(2_550);
+
+  clock.mockReturnValue(createdAtMs + 59_999);
+  const lastMoment = await sendToBank<ApproveTransferResponse>(
+    "POST",
+    inTime.approvalPath,
+    { body: signTestApproval(inTime, key) },
+  );
+  clock.mockReturnValue(createdAtMs + 60_000);
+  const atSixty = await sendToBank<BankErrorBody>("POST", late.approvalPath, {
+    body: signTestApproval(late, key),
+  });
+
+  expect(lastMoment.body.transfer.status).toBe(TransferStatus.Completed);
+  expect([atSixty.status, atSixty.body.error.code]).toEqual([
+    410,
+    "APPROVAL_EXPIRED",
+  ]);
+});
+
+it("verifies an approval whose signed details carry the transfer's note", async () => {
+  const { biometricKeyId } = await pairTestPhone();
+  const started = await startTestTransfer(2_550, { note: "Lunch" });
+
+  const approved = await sendToBank<ApproveTransferResponse>(
+    "POST",
+    started.approvalPath,
+    {
+      body: signTestApproval(started, {
+        kind: "biometric",
+        keyId: biometricKeyId,
+      }),
+    },
+  );
+
+  expect(approved.body.transfer).toMatchObject({
+    status: TransferStatus.Completed,
+    note: "Lunch",
+  });
+});
+
 it("keeps a transfer approvable when minting its reference fails", async () => {
   const { biometricKeyId } = await pairTestPhone();
   const started = await startTestTransfer(2_550);
@@ -203,10 +288,11 @@ it("approves with the possession key only beside the right PIN, and a resent wro
     started.approvalPath,
     { body: { ...approval, pin: "135790" }, idempotencyKey: "wrong-pin" },
   );
+  // ⛔ The literal, never DEMO_PIN: it is the PIN the demo tells people to type.
   const right = await sendToBank<ApproveTransferResponse>(
     "POST",
     started.approvalPath,
-    { body: { ...approval, pin: DEMO_PIN } },
+    { body: { ...approval, pin: "246810" } },
   );
 
   expect([withoutPin.status, withoutPin.body.error.code]).toEqual([
@@ -249,4 +335,28 @@ it("locks the PIN on the third wrong try, refusing even the right one until unlo
     "PIN_LOCKED",
   ]);
   expect(rightAfterUnlock.body.transfer.status).toBe(TransferStatus.Completed);
+});
+
+it("gives back all three PIN tries once the right PIN arrives", async () => {
+  const { possessionKeyId } = await pairTestPhone();
+  const key = { kind: "possession" as const, keyId: possessionKeyId };
+  const first = await startTestTransfer(2_550);
+  const firstApproval = signTestApproval(first, key);
+  for (const pin of ["111111", "222222", DEMO_PIN]) {
+    await sendToBank("POST", first.approvalPath, {
+      body: { ...firstApproval, pin },
+    });
+  }
+  const second = await startTestTransfer(2_550);
+
+  const wrongAfterRight = await sendToBank<BankErrorBody>(
+    "POST",
+    second.approvalPath,
+    { body: { ...signTestApproval(second, key), pin: "333333" } },
+  );
+
+  expect(wrongAfterRight.body.error).toMatchObject({
+    code: "PIN_INCORRECT",
+    attemptsRemaining: 2,
+  });
 });

@@ -402,6 +402,7 @@ describe("conditions the bank applies itself", () => {
         status: TransferStatus.Unsuccessful,
         funds: TransferFunds.NotDebited,
         failureReason,
+        version: 2,
       });
       expect(await readBankBalanceMinor()).toBe(balanceBefore);
     },
@@ -459,7 +460,7 @@ describe("conditions the bank applies itself", () => {
     const balanceBefore = await readBankBalanceMinor();
     pickTransferScenario("transfer.refunded_after_processing");
 
-    await ready.approve();
+    const { body: approved } = await ready.approve();
     clockAt(T0 + 20_000);
     const { body: failed } = await readTransfer(ready.transferId);
     const balanceWhilePending = await readBankBalanceMinor();
@@ -469,9 +470,13 @@ describe("conditions the bank applies itself", () => {
     expect(failed.transfer).toMatchObject({
       status: TransferStatus.Unsuccessful,
       funds: TransferFunds.RefundPending,
+      version: approved.transfer.version + 1,
     });
     expect(balanceWhilePending).toBe(balanceBefore - 2_550);
-    expect(refunded.transfer.funds).toBe(TransferFunds.Refunded);
+    expect(refunded.transfer).toMatchObject({
+      funds: TransferFunds.Refunded,
+      version: approved.transfer.version + 2,
+    });
     expect(await readBankBalanceMinor()).toBe(balanceBefore);
   });
 });
