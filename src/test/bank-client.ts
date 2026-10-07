@@ -22,16 +22,6 @@ const PHONE_SECRET_KEYS = {
 };
 let writeNumber = 0;
 
-export interface BankErrorBody {
-  error: {
-    code: string;
-    message: string;
-    attemptsRemaining?: number;
-    until?: string;
-    reason?: string;
-  };
-}
-
 const base64Of = (bytes: Iterable<number>) =>
   btoa(String.fromCharCode(...bytes));
 
@@ -153,4 +143,14 @@ export function signTestApproval(
     { format: "der" },
   );
   return { keyId: key.keyId, signature: base64Of(signature) };
+}
+
+export interface BankErrorBody {
+  error: {
+    code: string;
+    message: string;
+    attemptsRemaining?: number;
+    until?: string;
+    reason?: string;
+  };
 }

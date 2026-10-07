@@ -13,10 +13,29 @@ import {
 } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 
 import { bankError, wireMoney, type BankAnswer } from "./answers";
-import { bankTransfersNewestFirst, compareNewestFirst } from "./state";
+import { bankTransfersWithSeededHistory } from "./state";
 
 const PAGE_SIZE = 30;
 const MAX_PAGE_SIZE = 100;
+
+// The one order for history: its pages sort by it and its cursors compare by it.
+function compareNewestFirst(
+  [leftMs, leftId]: [number, string],
+  [rightMs, rightId]: [number, string],
+) {
+  if (leftMs !== rightMs) return rightMs - leftMs;
+  if (leftId === rightId) return 0;
+  return leftId < rightId ? 1 : -1;
+}
+
+export function bankTransfersNewestFirst() {
+  return bankTransfersWithSeededHistory().sort((left, right) =>
+    compareNewestFirst(
+      [left.createdAtMs, left.transfer.transferId],
+      [right.createdAtMs, right.transfer.transferId],
+    ),
+  );
+}
 
 export function getBankTransfer(
   transferId: string,

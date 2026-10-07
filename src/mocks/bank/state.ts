@@ -25,49 +25,6 @@ import type { PendingTransferChange } from "./settlement";
 
 const SNAPSHOT_FORMAT_VERSION = 1;
 
-export interface BankTransferRecord {
-  transfer: Transfer;
-  createdAtMs: number;
-  // Unmasked, so it never goes on the wire: recents and first-transfer checks match on it.
-  counterpartyId: {
-    idType: RecipientIdType;
-    idValue: string;
-    bankCode: string;
-  };
-  approval?: {
-    challenge: string;
-    expiresAtMs: number;
-    signedDetails: Parameters<typeof buildSignedApprovalText>[0];
-  };
-  pendingChange?: { atMs: number; change: PendingTransferChange };
-}
-
-interface BankState {
-  anchorMs: number;
-  balanceMinor: number;
-  transfers: BankTransferRecord[];
-  recipientRefs: Record<
-    string,
-    {
-      expiresAtMs: number;
-      counterpartyId: BankTransferRecord["counterpartyId"];
-      recipient: LookupRecipientResponse["recipient"];
-    }
-  >;
-  firstAnswers: Record<
-    string,
-    { fingerprint: string; answer: BankAnswer; answeredAtMs: number }
-  >;
-  approvalKeys: {
-    keyId: string;
-    kind: "possession" | "biometric";
-    spkiBase64: string;
-    registeredAtMs: number;
-  }[];
-  pinAttemptsRemaining: number;
-  notifications: { sentAt: string; message: string }[];
-}
-
 let loadedState: BankState | undefined;
 // Rebuilt from the anchor on every load rather than saved: the anchor already determines it.
 let seededTransfers: BankTransferRecord[] = [];
@@ -172,21 +129,49 @@ export function notifyCustomer(atMs: number, message: string) {
   bankState().notifications.push({ sentAt: toMalaysiaIso(atMs), message });
 }
 
-// The one order for history: its pages sort by it and its cursors compare by it.
-export function compareNewestFirst(
-  [leftMs, leftId]: [number, string],
-  [rightMs, rightId]: [number, string],
-) {
-  if (leftMs !== rightMs) return rightMs - leftMs;
-  if (leftId === rightId) return 0;
-  return leftId < rightId ? 1 : -1;
+export function bankTransfersWithSeededHistory() {
+  return [...bankState().transfers, ...seededTransfers];
 }
 
-export function bankTransfersNewestFirst() {
-  return [...bankState().transfers, ...seededTransfers].sort((left, right) =>
-    compareNewestFirst(
-      [left.createdAtMs, left.transfer.transferId],
-      [right.createdAtMs, right.transfer.transferId],
-    ),
-  );
+export interface BankTransferRecord {
+  transfer: Transfer;
+  createdAtMs: number;
+  // Unmasked, so it never goes on the wire: recents and first-transfer checks match on it.
+  counterpartyId: {
+    idType: RecipientIdType;
+    idValue: string;
+    bankCode: string;
+  };
+  approval?: {
+    challenge: string;
+    expiresAtMs: number;
+    signedDetails: Parameters<typeof buildSignedApprovalText>[0];
+  };
+  pendingChange?: { atMs: number; change: PendingTransferChange };
+}
+
+interface BankState {
+  anchorMs: number;
+  balanceMinor: number;
+  transfers: BankTransferRecord[];
+  recipientRefs: Record<
+    string,
+    {
+      expiresAtMs: number;
+      counterpartyId: BankTransferRecord["counterpartyId"];
+      recipient: LookupRecipientResponse["recipient"];
+    }
+  >;
+  firstAnswers: Record<
+    string,
+    { fingerprint: string; answer: BankAnswer; answeredAtMs: number }
+  >;
+  approvalKeys: {
+    keyId: string;
+    kind: "possession" | "biometric";
+    spkiBase64: string;
+    registeredAtMs: number;
+  }[];
+  pinAttemptsRemaining: number;
+  notifications: { sentAt: string; message: string }[];
 }

@@ -30,14 +30,6 @@ export enum TransferStep {
   Recovery = "Recovery",
 }
 
-export interface TransferScenario {
-  step: TransferStep;
-  // Read by the bank itself: what it decides goes here, never into an overlay.
-  conditions?: BankConditions;
-  // Given the bank's own handlers, so an overlay can let a write commit and then lose its answer.
-  handlers?: (bankHandlers: RequestHandler[]) => RequestHandler[];
-}
-
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
 
@@ -307,3 +299,11 @@ export const TRANSFER_SCENARIOS = {
 } satisfies Record<string, TransferScenario>;
 
 export type TransferScenarioId = keyof typeof TRANSFER_SCENARIOS;
+
+export interface TransferScenario {
+  step: TransferStep;
+  // Read by the bank itself: what it decides goes here, never into an overlay.
+  conditions?: BankConditions;
+  // Given the bank's own handlers, so an overlay can let a write commit and then lose its answer.
+  handlers?: (bankHandlers: RequestHandler[]) => RequestHandler[];
+}

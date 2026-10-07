@@ -14,12 +14,9 @@ import {
 
 import { bankError, type BankAnswer } from "./answers";
 import { directoryEntryFor, DUITNOW_BANKS, stableHash } from "./directory";
+import { bankTransfersNewestFirst } from "./history";
 import { randomHex } from "./ports";
-import {
-  bankState,
-  bankTransfersNewestFirst,
-  type BankTransferRecord,
-} from "./state";
+import { bankState, type BankTransferRecord } from "./state";
 
 const RECIPIENT_REF_LIFETIME_SECONDS = 600;
 const RECENT_RECIPIENT_COUNT = 10;
