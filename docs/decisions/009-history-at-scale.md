@@ -6,7 +6,7 @@ History has to stay usable over thousands of transfers in one sitting. New trans
 
 ## Decision
 
-History is built for thousands of transfers, and its rendering is measured rather than assumed:
+History is built for thousands of transfers, and the decision is to count its re-renders rather than assume them:
 
 - **Cursor pages of 30.** Each request returns the next 30 transfers, newest first by the bank's timestamp and then id, with an opaque cursor for the page after (`src/domains/transfer/api/list-transfers/list-transfers.type.ts`). A transfer that lands while someone scrolls cannot shift the next page.
 - **Day sections that collapse.** Each day's header shows the date, the day's count and its net amount, and collapses or expands the day's rows. Days arrive expanded. The figures come from the bank: every page carries a summary of each day it touches, covering the whole day, so a day split across two pages never reads short.
