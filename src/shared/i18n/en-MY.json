@@ -24,5 +24,21 @@
   },
   "loader": {
     "label": "Loading"
+  },
+  "view_route_error": {
+    "title": "Something went wrong",
+    "body": "This screen stopped working. If you were sending money, check your transfer history before you send it again.",
+    "retry": "Try again",
+    "back": "Back"
+  },
+  "view_root_error": {
+    "title": "Something went wrong",
+    "body": "The app stopped working. If you were sending money, check your transfer history before you send it again.",
+    "retry": "Try again"
+  },
+  "view_session_ended": {
+    "title": "Your session has ended",
+    "body": "For your security, sign in again to carry on.",
+    "sign_in": "Sign in again"
   }
 }

@@ -1,10 +1,16 @@
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { Stack, router } from "expo-router";
+import { http, HttpResponse } from "msw";
 import { Pressable, Text } from "react-native";
 
-import { TransportError, TransportErrorKind } from "@/shared/http/transport";
+import {
+  requestJson,
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport";
 import { queryClient } from "@/shell/query-client";
 
+import { mswServer } from "./msw-server";
 import { renderRoute } from "./render-route";
 
 it("reports the pathname the user navigated to", async () => {
@@ -61,3 +67,19 @@ it("keeps the app's retry rule, without its backoff", async () => {
 
   expect(queryFn).toHaveBeenCalledTimes(3);
 }, 1000);
+
+// Probed through the shell's own behaviour, so the test outlives whatever the home route shows.
+it("mounts the app's own routes and root layout when given none", async () => {
+  await renderRoute("/");
+  mswServer.use(
+    http.get("*/any-request", () => new HttpResponse(null, { status: 401 })),
+  );
+
+  await act(async () => {
+    await requestJson("/any-request").catch(() => undefined);
+  });
+
+  expect(
+    screen.getByRole("header", { name: "Your session has ended" }),
+  ).toBeOnTheScreen();
+});

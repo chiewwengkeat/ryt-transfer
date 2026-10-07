@@ -1,5 +1,2 @@
-import { Stack } from "expo-router";
-
-export default function RootLayout() {
-  return <Stack />;
-}
+export { default } from "@/shell/ViewRoot/ViewRoot";
+export { default as ErrorBoundary } from "@/shell/ViewRootError/ViewRootError";
