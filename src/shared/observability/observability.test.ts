@@ -3,9 +3,14 @@ import { observedRecords } from "@/test/harness/recording-sink";
 
 import { reportError, setObservabilitySink, trackEvent } from "./observability";
 
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 it("passes an event's amount and outcome to the sink", () => {
   trackEvent("transfer_outcome", {
     scenario: "transfer.sent",
+    outcome: "sent",
     amountMinor: 5000,
     currency: "MYR",
   });
@@ -16,6 +21,7 @@ it("passes an event's amount and outcome to the sink", () => {
       name: "transfer_outcome",
       properties: {
         scenario: "transfer.sent",
+        outcome: "sent",
         amountMinor: 5000,
         currency: "MYR",
       },
@@ -64,11 +70,25 @@ it("reports an error by its name and transport failure, never its message", () =
   ]);
 });
 
+it("drops every property it was not told to allow from a reported error too", () => {
+  reportError(new Error("lost"), {
+    step: "approve",
+    accountNumber: "0123456789",
+    registeredName: "Ahmad bin Ali",
+  });
+
+  expect(observedRecords[0]?.properties).toEqual({ step: "approve" });
+});
+
 it("sends nothing anywhere while no sink is set", () => {
+  const logged = jest
+    .spyOn(console, "info")
+    .mockImplementation(() => undefined);
   setObservabilitySink(null);
 
   trackEvent("transfer_started");
   reportError(new Error("lost"));
 
   expect(observedRecords).toEqual([]);
+  expect(logged).not.toHaveBeenCalled();
 });
