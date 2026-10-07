@@ -86,6 +86,9 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  // clear() leaves each mutation's 5-minute gc timer running, which holds a single-file run open.
+  for (const mutation of mockQueryClient?.getMutationCache().getAll() ?? [])
+    mutation.destroy();
   mockQueryClient?.clear();
   mockQueryClient = undefined;
   // TanStack's online and focus flags outlive a test that left either off, stalling every later retry.

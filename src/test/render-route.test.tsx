@@ -1,4 +1,5 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
+import { useMutation } from "@tanstack/react-query";
 import { Stack, router } from "expo-router";
 import { http, HttpResponse } from "msw";
 import { Pressable, Text } from "react-native";
@@ -10,8 +11,25 @@ import {
 } from "@/shared/http/transport";
 import { queryClient } from "@/shell/query-client";
 
-import { mswServer } from "./msw-server";
+import { setPhoneNetwork } from "./harness/native-doubles";
+import { mswServer, sentRequests } from "./msw-server";
 import { renderRoute } from "./render-route";
+
+function ScreenThatSendsAWrite() {
+  const write = useMutation({
+    mutationFn: () => requestJson("/write", { method: "POST", body: {} }),
+  });
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => {
+        write.mutate();
+      }}
+    >
+      <Text>{write.isSuccess ? "Sent" : "Send"}</Text>
+    </Pressable>
+  );
+}
 
 it("reports the pathname the user navigated to", async () => {
   const view = await renderRoute("/", {
@@ -67,6 +85,20 @@ it("keeps the app's retry rule, without its backoff", async () => {
 
   expect(queryFn).toHaveBeenCalledTimes(3);
 }, 1000);
+
+it("keeps the app's write rule: a write goes once, at once, even offline", async () => {
+  mswServer.use(http.post("*/write", () => HttpResponse.json({})));
+  await renderRoute("/", {
+    appDir: "src/app",
+    overrides: { index: ScreenThatSendsAWrite },
+  });
+  setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+
+  await fireEvent.press(screen.getByRole("button", { name: "Send" }));
+
+  expect(await screen.findByRole("button", { name: "Sent" })).toBeOnTheScreen();
+  expect(sentRequests).toHaveLength(1);
+});
 
 // Probed through the shell's own behaviour, so the test outlives whatever the home route shows.
 it("mounts the app's own routes and root layout when given none", async () => {
