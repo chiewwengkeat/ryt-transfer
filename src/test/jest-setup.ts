@@ -2,6 +2,7 @@
 import "expo-router/testing-library";
 
 import { setObservabilitySink } from "@/shared/observability/observability";
+import "@/shell/translations";
 
 import type * as NativeDoubles from "./harness/native-doubles";
 import { resetNativeDoubles } from "./harness/native-doubles";
