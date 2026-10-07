@@ -1,0 +1,31 @@
+import { useTranslation } from "react-i18next";
+
+import type { TransferScenarioId } from "@/mocks/scenarios/transfer-scenarios";
+import demoEnMY from "@/mocks/switcher/i18n/en-MY.json";
+import { AppLanguage } from "@/shared/i18n/i18n";
+
+export function useDemoTranslation() {
+  const { t, i18n } = useTranslation();
+  // Added on first use: initialising the app's translations drops every bundle added before it.
+  if (!i18n.hasResourceBundle(AppLanguage.English, "demo"))
+    i18n.addResourceBundle(AppLanguage.English, "demo", demoEnMY);
+  // The shell types only its own namespaces' keys, so t refuses every demo: and transfer: key.
+  const translate = t as unknown as (
+    key: string,
+    values?: Record<string, string>,
+  ) => string;
+  return {
+    t: (key: KeyPaths<typeof demoEnMY>, values?: Record<string, string>) =>
+      translate(`demo:${key}`, values),
+    scenarioTitle: (scenarioId: TransferScenarioId) =>
+      translate(
+        `transfer:common.${scenarioId.replace(/^transfer\./, "")}.title`,
+      ),
+  };
+}
+
+type KeyPaths<Strings> = {
+  [Key in keyof Strings & string]: Strings[Key] extends string
+    ? Key
+    : `${Key}.${KeyPaths<Strings[Key]>}`;
+}[keyof Strings & string];

@@ -1,0 +1,29 @@
+{
+  "pill_demo": {
+    "label": "Demo",
+    "open_menu": "Demo menu"
+  },
+  "banner_demo": {
+    "message": "Demo · {{title}}",
+    "clear": "Back to normal"
+  },
+  "bottom_sheet_demo": {
+    "title": "Demo",
+    "close": "Close the demo menu",
+    "demo_only": "Demo only",
+    "unlock_pin_note": "Stands in for the PIN reset in Ryt's own security settings.",
+    "unlock_pin": "Unlock PIN",
+    "normal": "Normal, no scenario",
+    "no_biometrics": "No biometrics",
+    "step": {
+      "start": "Start",
+      "recipient": "Recipient",
+      "amount": "Amount",
+      "review": "Review",
+      "approval": "Approval",
+      "outcome": "Outcome",
+      "recovery": "Recovery"
+    },
+    "reset": "Reset demo"
+  }
+}

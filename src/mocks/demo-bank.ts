@@ -41,6 +41,10 @@ export function clearTransferScenario() {
   saveScenarioPick(NO_SCENARIO_PICK);
 }
 
+export function isDemoPinLocked() {
+  return bankState().pinAttemptsRemaining === 0;
+}
+
 export function unlockDemoPin() {
   bankState().pinAttemptsRemaining = DEMO_PIN_ATTEMPTS;
   persistBankState();
