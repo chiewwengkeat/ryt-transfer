@@ -78,7 +78,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **When:** a transfer they approved earlier still has no final answer from the bank
 - **Money:** not confirmed yet
 - **Shown as:** on the home screen and the review step
-- **Tell them:** their last transfer is still being checked, so they shouldn't send it again — not confirmed yet
+- **Tell them:** their last transfer is still being checked, so they shouldn't send it again, with a reference to quote to support — not confirmed yet
 - **They can:** carry on with a new transfer at their own risk
 - **Never:** offer to send it again
 - **Why:** the earlier transfer may still complete, so a second one could pay twice, and the person decides with that in front of them
@@ -535,7 +535,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **When:** the app was closed after the approval was sent and before its answer was shown
 - **Money:** not confirmed yet
 - **Shown as:** at the next launch, then the result page
-- **Tell them:** their last transfer is being checked, then its outcome — not confirmed yet
+- **Tell them:** their last transfer is being checked, then its outcome, with a reference to quote to support — not confirmed yet
 - **They can:** wait for the outcome
 - **Never:** offer to send it again
 - **Why:** the phone records every approval before sending it, so a closed app still learns how its transfer ended
@@ -545,7 +545,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **When:** checking a transfer, the bank says it has no such transfer (`TRANSFER_NOT_FOUND`); the phone then stops checking it
 - **Money:** not confirmed yet
 - **Shown as:** the result page
-- **Tell them:** their last transfer can't be found, and to check History before sending again — not confirmed yet
+- **Tell them:** their last transfer can't be found, and to check History before sending again, with a reference to quote to support — not confirmed yet
 - **They can:** check History
 - **Never:** offer to send it again
 - **Why:** not found is not the same as not sent, so the person checks History before sending again rather than being told nothing happened
@@ -555,7 +555,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **When:** the bank says their session has ended (401) during a transfer
 - **Money:** not confirmed yet
 - **Shown as:** a full screen of its own, handed to the host app
-- **Tell them:** their session has ended and they need to sign in again
+- **Tell them:** their session has ended and they need to sign in again, with a reference to quote to support
 - **They can:** sign in again
 - **Afterwards:** any transfer still being checked is checked once they are back, and its outcome shown
 - **Why:** signing in is the host app's job, so the transfer keeps its record and finishes checking once the person returns
