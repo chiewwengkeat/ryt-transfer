@@ -30,7 +30,11 @@ export function trackEvent(
   name: string,
   properties: Record<string, unknown> = {},
 ) {
-  sink?.({ type: "event", name, properties: redactProperties(properties) });
+  sendToSinkIgnoringItsFailure({
+    type: "event",
+    name,
+    properties: redactProperties(properties),
+  });
 }
 
 // Never the message: it can quote whatever the code that threw had in hand.
@@ -38,7 +42,7 @@ export function reportError(
   error: unknown,
   properties: Record<string, unknown> = {},
 ) {
-  sink?.({
+  sendToSinkIgnoringItsFailure({
     type: "error",
     name: error instanceof Error ? error.name : typeof error,
     properties: redactProperties(
@@ -52,6 +56,14 @@ export function reportError(
         : properties,
     ),
   });
+}
+
+function sendToSinkIgnoringItsFailure(record: ObservedRecord) {
+  try {
+    sink?.(record);
+  } catch {
+    // Swallowed: a broken sink's throw would replace the caller's own result or failure.
+  }
 }
 
 function redactProperties(properties: Record<string, unknown>) {

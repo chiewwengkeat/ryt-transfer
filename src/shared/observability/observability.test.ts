@@ -95,3 +95,17 @@ it("sends nothing anywhere while no sink is set", () => {
   expect(observedRecords).toEqual([]);
   expect(logged).not.toHaveBeenCalled();
 });
+
+it.each([
+  { what: "an event", observe: () => trackEvent("transfer_started") },
+  { what: "an error", observe: () => reportError(new Error("lost")) },
+])(
+  "never passes a broken sink's failure to the code reporting $what",
+  ({ observe }) => {
+    setObservabilitySink(() => {
+      throw new Error("sink broke");
+    });
+
+    expect(observe).not.toThrow();
+  },
+);

@@ -1,6 +1,7 @@
 import { delay, http, HttpResponse } from "msw";
 
 import { API_BASE_URL } from "@/shared/config/config";
+import { setObservabilitySink } from "@/shared/observability/observability";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 
@@ -143,6 +144,29 @@ it("keeps the 401 when a session-ended listener breaks, and still tells the othe
     name: "Error",
     properties: { boundary: "unauthorized_listener" },
   });
+});
+
+it("keeps the 401 when the observability sink breaks too, and still tells the others", async () => {
+  mswServer.use(
+    http.get(PROBE_URL, () => new HttpResponse(null, { status: 401 })),
+  );
+  setObservabilitySink(() => {
+    throw new Error("sink broke");
+  });
+  const stopBrokenListener = addUnauthorizedListener(() => {
+    throw new Error("listener broke");
+  });
+  const heard = jest.fn();
+  const stopListening = addUnauthorizedListener(heard);
+
+  await expect(requestJson("/probe")).rejects.toMatchObject({
+    kind: TransportErrorKind.Http,
+    status: 401,
+  });
+  stopBrokenListener();
+  stopListening();
+
+  expect(heard).toHaveBeenCalledTimes(1);
 });
 
 it("rejects as network when the network is dead", async () => {
