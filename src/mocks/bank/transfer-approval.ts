@@ -15,7 +15,7 @@ import { lockOrCoolingOffRefusal, transferLimitsAt } from "./account";
 import { tryDemoPin } from "./approval-keys";
 import { bankError, type BankAnswer } from "./answers";
 import { ApprovalOutcome } from "./conditions";
-import { malaysianDate, toMalaysiaIso } from "./malaysia-time";
+import { malaysianIsoDate, toMalaysiaIso } from "./malaysia-time";
 import { randomHex } from "./ports";
 import {
   expireTransfer,
@@ -117,7 +117,7 @@ export function approveBankTransfer(
   const executed = {
     ...record.transfer,
     version: record.transfer.version + 1,
-    reference: `${malaysianDate(nowMs).replace(/-/g, "")}${randomHex(4).toUpperCase()}`,
+    reference: `${malaysianIsoDate(nowMs).replace(/-/g, "")}${randomHex(4).toUpperCase()}`,
     updatedAt: toMalaysiaIso(nowMs),
   };
   // Spent only now: minting the reference can throw, and must leave the transfer approvable.

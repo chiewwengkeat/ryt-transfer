@@ -6,9 +6,8 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 
-import { wireMoney } from "./answers";
 import { directoryEntryFor, DUITNOW_BANKS } from "./directory";
-import { malaysianDate, toMalaysiaIso } from "./malaysia-time";
+import { malaysianIsoDate, toMalaysiaIso } from "./malaysia-time";
 import type { BankTransferRecord } from "./state";
 
 export const DEMO_PIN = "246810";
@@ -95,28 +94,31 @@ export function seedTransferHistory(
   transferCount: number,
   spanDays: number,
 ): BankTransferRecord[] {
-  const random = createSeededRandom(HISTORY_SEED);
-  const digits = (length: number) =>
-    Array.from({ length }, () => Math.floor(random() * 10)).join("");
-  const pick = <T>(list: readonly T[]) =>
-    list[Math.floor(random() * list.length)]!;
+  const nextRandom = createSeededRandom(HISTORY_SEED);
+  const randomDigits = (length: number) =>
+    Array.from({ length }, () => Math.floor(nextRandom() * 10)).join("");
+  const pickRandom = <T>(list: readonly T[]) =>
+    list[Math.floor(nextRandom() * list.length)]!;
 
-  const regulars = Array.from({ length: 30 }, (_, index) => {
+  const regularCounterparties = Array.from({ length: 30 }, (_, index) => {
     const id =
       index % 6 < 3
         ? {
             idType: RecipientIdType.Mobile,
-            idValue: `+601${pick([..."012346789"])}${digits(7)}`,
+            idValue: `+601${pickRandom([..."012346789"])}${randomDigits(7)}`,
           }
         : index % 6 === 3
-          ? { idType: RecipientIdType.Nric, idValue: digits(12) }
+          ? { idType: RecipientIdType.Nric, idValue: randomDigits(12) }
           : index % 6 === 4
             ? {
                 idType: RecipientIdType.AccountNumber,
-                idValue: digits(12),
-                bankCode: pick(DUITNOW_BANKS).bankCode,
+                idValue: randomDigits(12),
+                bankCode: pickRandom(DUITNOW_BANKS).bankCode,
               }
-            : { idType: RecipientIdType.Brn, idValue: `2019${digits(8)}` };
+            : {
+                idType: RecipientIdType.Brn,
+                idValue: `2019${randomDigits(8)}`,
+              };
     const entry = directoryEntryFor(id);
     return {
       counterpartyId: { ...id, bankCode: entry.bankCode },
@@ -130,33 +132,39 @@ export function seedTransferHistory(
   });
 
   const anchorMidnightMs = Date.parse(
-    `${malaysianDate(anchorMs)}T00:00:00+08:00`,
+    `${malaysianIsoDate(anchorMs)}T00:00:00+08:00`,
   );
   return Array.from({ length: transferCount }, () => {
     // Squaring the draw favours the first regulars, so recent recipients repeat.
-    const regular = regulars[Math.floor(random() ** 2 * regulars.length)]!;
+    const regular =
+      regularCounterparties[
+        Math.floor(nextRandom() ** 2 * regularCounterparties.length)
+      ]!;
     const createdAtMs =
       anchorMidnightMs -
-      (1 + Math.floor(random() * spanDays)) * DAY_MS +
-      Math.floor((7 + random() * 16) * HOUR_MS);
+      (1 + Math.floor(nextRandom() * spanDays)) * DAY_MS +
+      Math.floor((7 + nextRandom() * 16) * HOUR_MS);
     const ringgit =
-      random() < 0.85
-        ? 5 + Math.floor(random() * 145)
-        : 150 + Math.floor(random() * 1350);
-    const outcomeDraw = random();
-    const note = random() < 0.4 ? pick(NOTES) : undefined;
+      nextRandom() < 0.85
+        ? 5 + Math.floor(nextRandom() * 145)
+        : 150 + Math.floor(nextRandom() * 1350);
+    const outcomeDraw = nextRandom();
+    const note = nextRandom() < 0.4 ? pickRandom(NOTES) : undefined;
     return {
       transfer: {
-        transferId: `trf_${Math.floor(random() * 2 ** 52).toString(16)}`,
+        transferId: `trf_${Math.floor(nextRandom() * 2 ** 52).toString(16)}`,
         version: 3,
         ...SEEDED_OUTCOMES.find(({ drawBelow }) => outcomeDraw < drawBelow)!
           .outcome,
         counterparty: regular.counterparty,
-        amount: wireMoney(
-          ringgit * 100 + (random() < 0.5 ? 0 : Math.floor(random() * 100)),
-        ),
+        amount: {
+          minor:
+            ringgit * 100 +
+            (nextRandom() < 0.5 ? 0 : Math.floor(nextRandom() * 100)),
+          currency: "MYR",
+        },
         ...(note && { note }),
-        reference: `${malaysianDate(createdAtMs).replace(/-/g, "")}${digits(8)}`,
+        reference: `${malaysianIsoDate(createdAtMs).replace(/-/g, "")}${randomDigits(8)}`,
         createdAt: toMalaysiaIso(createdAtMs),
         updatedAt: toMalaysiaIso(createdAtMs + 3000),
       },

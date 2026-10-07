@@ -5,8 +5,8 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 
-import { bankError, wireMoney, type BankAnswer } from "./answers";
-import { malaysianDate, toMalaysiaIso } from "./malaysia-time";
+import { bankError, type BankAnswer } from "./answers";
+import { malaysianIsoDate, toMalaysiaIso } from "./malaysia-time";
 import { DEMO_CUSTOMER } from "./seed";
 import { activeBankConditions, bankState } from "./state";
 
@@ -14,7 +14,7 @@ const DEFAULT_DAILY_LIMIT_MINOR = 500_000;
 export const PER_TRANSFER_MAX_MINOR = 5_000_000;
 
 export function transferLimitsAt(nowMs: number) {
-  const today = malaysianDate(nowMs);
+  const today = malaysianIsoDate(nowMs);
   // Only transfers made through this bank can fall on today: the seeded history ends before it.
   const usedMinor = bankState()
     .transfers.filter(
@@ -22,7 +22,7 @@ export function transferLimitsAt(nowMs: number) {
         transfer.direction === TransferDirection.Out &&
         (transfer.status === TransferStatus.Processing ||
           transfer.status === TransferStatus.Completed) &&
-        malaysianDate(createdAtMs) === today,
+        malaysianIsoDate(createdAtMs) === today,
     )
     .reduce((sum, { transfer }) => sum + transfer.amount.minor, 0);
   const limitMinor =
@@ -66,7 +66,10 @@ export function lockOrCoolingOffRefusal<
 export function getBankPrimaryAccount(): BankAnswer<GetPrimaryAccountResponse> {
   return {
     status: 200,
-    body: { ...DEMO_CUSTOMER, balance: wireMoney(bankState().balanceMinor) },
+    body: {
+      ...DEMO_CUSTOMER,
+      balance: { minor: bankState().balanceMinor, currency: "MYR" },
+    },
   };
 }
 
@@ -80,11 +83,11 @@ export function getBankTransferLimits({
     status: 200,
     body: {
       daily: {
-        limit: wireMoney(limitMinor),
-        usedToday: wireMoney(usedMinor),
-        remaining: wireMoney(remainingMinor),
+        limit: { minor: limitMinor, currency: "MYR" },
+        usedToday: { minor: usedMinor, currency: "MYR" },
+        remaining: { minor: remainingMinor, currency: "MYR" },
       },
-      perTransferMax: wireMoney(PER_TRANSFER_MAX_MINOR),
+      perTransferMax: { minor: PER_TRANSFER_MAX_MINOR, currency: "MYR" },
     },
   };
 }

@@ -4,8 +4,8 @@ import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfe
 import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { getBankTransfer, listBankTransfers } from "@/mocks/bank/history";
 import {
-  listBankBanks,
   listBankRecentRecipients,
+  listDuitNowBanks,
   lookupBankRecipient,
 } from "@/mocks/bank/recipients";
 import { approveBankTransfer } from "@/mocks/bank/transfer-approval";
@@ -22,7 +22,7 @@ export const transferHandlers = [
     answerBankRead(request, listBankRecentRecipients),
   ),
   http.get(BANK_PATHS.banks, ({ request }) =>
-    answerBankRead(request, listBankBanks),
+    answerBankRead(request, listDuitNowBanks),
   ),
   http.post(BANK_PATHS.transfers, ({ request }) =>
     answerBankWrite(request, createBankTransfer, CreateTransferErrorCode),

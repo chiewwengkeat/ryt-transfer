@@ -44,7 +44,7 @@ it("pages history newest first, thirty at a time, with no gap or repeat", async 
 it("totals every day a page touches over that whole day, the next page's rows included", async () => {
   const { first, second } = await wholeHistory();
   const items = [...first.items, ...second.items];
-  const moved = ({ funds, amount }: Transfer) =>
+  const netMinorMovedBy = ({ funds, amount }: Transfer) =>
     funds === TransferFunds.Credited
       ? amount.minor
       : funds === TransferFunds.Debited || funds === TransferFunds.RefundPending
@@ -59,7 +59,10 @@ it("totals every day a page touches over that whole day, the next page's rows in
       date,
       count: sameDay.length,
       net: {
-        minor: sameDay.reduce((sum, transfer) => sum + moved(transfer), 0),
+        minor: sameDay.reduce(
+          (sum, transfer) => sum + netMinorMovedBy(transfer),
+          0,
+        ),
         currency: "MYR",
       },
     };

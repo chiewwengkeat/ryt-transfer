@@ -14,7 +14,7 @@ const MATRIX = readFileSync(
   "utf8",
 );
 
-const STEPS = [
+const STEP_NAMES = [
   "Start",
   "Recipient",
   "Amount",
@@ -32,8 +32,8 @@ const MONEY_STATES = [
 const REQUIRED_LABELS = ["When", "Money", "Shown as", "Tell them", "They can"];
 const OPTIONAL_LABELS = ["Never", "Afterwards", "Why"];
 
-const [header = "", ...stepChunks] = MATRIX.split(/^## /m);
-const steps = stepChunks.map((chunk) => {
+const [matrixHeader = "", ...stepChunks] = MATRIX.split(/^## /m);
+const parsedSteps = stepChunks.map((chunk) => {
   const [stepName = "", ...sectionChunks] = chunk.split(/^### /m);
   return {
     name: stepName.trim(),
@@ -51,7 +51,7 @@ const steps = stepChunks.map((chunk) => {
     }),
   };
 });
-const sections = steps.flatMap((step) => step.sections);
+const scenarioSections = parsedSteps.flatMap((step) => step.sections);
 
 // Mirrors GitHub's heading anchors, which the index links must match.
 const anchorOf = (heading: string) =>
@@ -61,11 +61,11 @@ const anchorOf = (heading: string) =>
     .replace(/ /g, "-");
 
 it("lists the seven steps in order", () => {
-  expect(steps.map((step) => step.name)).toEqual(STEPS);
+  expect(parsedSteps.map((step) => step.name)).toEqual(STEP_NAMES);
 });
 
 it("ends every step with its catch-all, and puts a catch-all nowhere else", () => {
-  const misplaced = steps.flatMap((step) =>
+  const misplaced = parsedSteps.flatMap((step) =>
     step.sections
       .filter(
         (section, position) =>
@@ -79,7 +79,7 @@ it("ends every step with its catch-all, and puts a catch-all nowhere else", () =
 });
 
 it("gives every scenario a well-formed id of its own", () => {
-  const ids = sections.map((section) => section.id);
+  const ids = scenarioSections.map((section) => section.id);
 
   expect(
     ids.filter((id) => !/^transfer\.[a-z0-9]+(?:_[a-z0-9]+)*$/.test(id)),
@@ -90,9 +90,10 @@ it("gives every scenario a well-formed id of its own", () => {
 });
 
 it("keeps every heading unique, so each has an anchor of its own", () => {
-  const anchors = [...STEPS, ...sections.map((section) => section.heading)].map(
-    anchorOf,
-  );
+  const anchors = [
+    ...STEP_NAMES,
+    ...scenarioSections.map((section) => section.heading),
+  ].map(anchorOf);
 
   expect(
     anchors.filter((anchor, position) => anchors.indexOf(anchor) !== position),
@@ -100,7 +101,7 @@ it("keeps every heading unique, so each has an anchor of its own", () => {
 });
 
 it("labels every scenario with each required label once, and nothing unknown", () => {
-  const mislabelled = sections.flatMap((section) => {
+  const mislabelled = scenarioSections.flatMap((section) => {
     const names = section.labels.map((label) => label.name);
     const problems = [
       ...REQUIRED_LABELS.filter((name) => !names.includes(name)).map(
@@ -124,9 +125,9 @@ it("labels every scenario with each required label once, and nothing unknown", (
 
 it("gives every scenario one of the four money states, each with its glossary phrases", () => {
   const glossaryStates = [
-    ...header.matchAll(/^\| ([a-z ]+) \| \S[^|]* \| \S[^|]* \|$/gm),
+    ...matrixHeader.matchAll(/^\| ([a-z ]+) \| \S[^|]* \| \S[^|]* \|$/gm),
   ].map(([, state]) => state);
-  const outsideTheFour = sections
+  const outsideTheFour = scenarioSections
     .filter(
       (section) =>
         !MONEY_STATES.includes(
@@ -140,7 +141,9 @@ it("gives every scenario one of the four money states, each with its glossary ph
 });
 
 it("links every scenario once from the index, on its own step's line", () => {
-  const indexLines = [...header.matchAll(/^[-*] \*\*([^*]+)\*\* · (.+)$/gm)];
+  const indexLines = [
+    ...matrixHeader.matchAll(/^[-*] \*\*([^*]+)\*\* · (.+)$/gm),
+  ];
   const linkedSteps = indexLines.map(([, stepName = "", links = ""]) => ({
     step: stepName,
     links: [...links.matchAll(/\[([^\]]+)\]\(#([^)]+)\)/g)].map(
@@ -149,7 +152,7 @@ it("links every scenario once from the index, on its own step's line", () => {
   }));
 
   expect(linkedSteps).toEqual(
-    steps.map((step) => ({
+    parsedSteps.map((step) => ({
       step: step.name,
       links: step.sections.map(
         (section) => `${section.heading} #${anchorOf(section.heading)}`,
@@ -165,7 +168,7 @@ it("gives the mock registry exactly the matrix's ids, each under its own step", 
 
   expect(registrySteps).toEqual(
     Object.fromEntries(
-      steps.flatMap((step) =>
+      parsedSteps.flatMap((step) =>
         step.sections.map((section) => [section.id, step.name]),
       ),
     ),
@@ -173,7 +176,7 @@ it("gives the mock registry exactly the matrix's ids, each under its own step", 
 });
 
 it("declares no scenario test for an id the matrix lacks", () => {
-  const matrixIds = sections.map((section) => section.id);
+  const matrixIds = scenarioSections.map((section) => section.id);
   const declaredIds = readdirSync(SOURCE_ROOT, { recursive: true })
     .filter((file) => /\.test\.tsx?$/.test(file))
     .flatMap((file) =>

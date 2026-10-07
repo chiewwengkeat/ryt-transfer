@@ -32,7 +32,7 @@ import {
 
 import type { TransferScenarioId } from "./transfer-scenarios";
 
-const T0 = Date.parse("2026-10-08T10:00:00+08:00");
+const TEST_START_MS = Date.parse("2026-10-08T10:00:00+08:00");
 const HOUR_MS = 60 * 60 * 1000;
 
 afterEach(() => {
@@ -190,12 +190,12 @@ describe("overlays that answer for the connection", () => {
   );
 
   it("says until when maintenance lasts, two hours from when it began", async () => {
-    clockAt(T0);
+    clockAt(TEST_START_MS);
     pickTransferScenario("transfer.under_maintenance");
 
     const { body } = await sendToBank<BankErrorBody>("GET", "/transfer-limits");
 
-    expect(body.error.until).toBe(toMalaysiaIso(T0 + 2 * HOUR_MS));
+    expect(body.error.until).toBe(toMalaysiaIso(TEST_START_MS + 2 * HOUR_MS));
   });
 
   it("fails every request, reads and writes alike, when offline", async () => {
@@ -242,7 +242,7 @@ describe("conditions the bank applies itself", () => {
   ])(
     "%s refuses transfers until the cooling-off ends",
     async (scenarioId, reason, lastsMs) => {
-      clockAt(T0);
+      clockAt(TEST_START_MS);
       pickTransferScenario(scenarioId);
       const transferAt = async (epochMs: number) => {
         clockAt(epochMs);
@@ -255,14 +255,14 @@ describe("conditions the bank applies itself", () => {
         });
       };
 
-      const during = await transferAt(T0 + lastsMs - 1);
-      const after = await transferAt(T0 + lastsMs);
+      const during = await transferAt(TEST_START_MS + lastsMs - 1);
+      const after = await transferAt(TEST_START_MS + lastsMs);
 
       expect(during.status).toBe(403);
       expect(during.body.error).toMatchObject({
         code: "COOLING_OFF",
         reason,
-        until: toMalaysiaIso(T0 + lastsMs),
+        until: toMalaysiaIso(TEST_START_MS + lastsMs),
       });
       expect(after.status).toBe(201);
     },
@@ -313,9 +313,9 @@ describe("conditions the bank applies itself", () => {
   );
 
   it("transfer.approval_key_unknown forgets keys from before it began, until the PIN registers new ones", async () => {
-    clockAt(T0);
+    clockAt(TEST_START_MS);
     const ready = await transferReadyToApprove();
-    clockAt(T0 + 1_000);
+    clockAt(TEST_START_MS + 1_000);
     pickTransferScenario("transfer.approval_key_unknown");
 
     const unknown = await ready.approve();
@@ -427,15 +427,15 @@ describe("conditions the bank applies itself", () => {
   ])(
     "%s debits, then completes twenty seconds later",
     async (scenarioId, underReview) => {
-      clockAt(T0);
+      clockAt(TEST_START_MS);
       const ready = await transferReadyToApprove();
       const balanceBefore = await readBankBalanceMinor();
       pickTransferScenario(scenarioId);
 
       const { body: approved } = await ready.approve();
-      clockAt(T0 + 19_999);
+      clockAt(TEST_START_MS + 19_999);
       const { body: before } = await readTransfer(ready.transferId);
-      clockAt(T0 + 20_000);
+      clockAt(TEST_START_MS + 20_000);
       const { body: after } = await readTransfer(ready.transferId);
 
       expect(approved.transfer).toMatchObject({
@@ -455,16 +455,16 @@ describe("conditions the bank applies itself", () => {
   );
 
   it("transfer.refunded_after_processing fails after processing, then refunds the money", async () => {
-    clockAt(T0);
+    clockAt(TEST_START_MS);
     const ready = await transferReadyToApprove();
     const balanceBefore = await readBankBalanceMinor();
     pickTransferScenario("transfer.refunded_after_processing");
 
     const { body: approved } = await ready.approve();
-    clockAt(T0 + 20_000);
+    clockAt(TEST_START_MS + 20_000);
     const { body: failed } = await readTransfer(ready.transferId);
     const balanceWhilePending = await readBankBalanceMinor();
-    clockAt(T0 + 30_000);
+    clockAt(TEST_START_MS + 30_000);
     const { body: refunded } = await readTransfer(ready.transferId);
 
     expect(failed.transfer).toMatchObject({
@@ -483,7 +483,7 @@ describe("conditions the bank applies itself", () => {
 
 describe("overlays that let the bank commit, then lose or garble its answer", () => {
   it("transfer.confirmation_unanswered answers a resend with the transfer its first, lost request created", async () => {
-    clockAt(T0);
+    clockAt(TEST_START_MS);
     const lookup = await lookUpTestRecipient();
     const body = JSON.stringify({
       recipientRef: lookup.recipientRef,
@@ -498,16 +498,16 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
     pickTransferScenario("transfer.confirmation_unanswered");
 
     await expect(create()).rejects.toThrow();
-    clockAt(T0 + 1_000);
+    clockAt(TEST_START_MS + 1_000);
     await expect(create()).rejects.toThrow();
     clearTransferScenario();
-    clockAt(T0 + 2_000);
+    clockAt(TEST_START_MS + 2_000);
     const answered = (await (await create()).json()) as CreateTransferResponse;
 
     expect(answered.transfer).toMatchObject({
       status: TransferStatus.AwaitingApproval,
       version: 1,
-      createdAt: toMalaysiaIso(T0),
+      createdAt: toMalaysiaIso(TEST_START_MS),
     });
   });
 

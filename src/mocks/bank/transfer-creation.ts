@@ -16,7 +16,7 @@ import {
   PER_TRANSFER_MAX_MINOR,
   transferLimitsAt,
 } from "./account";
-import { bankError, wireMoney, type BankAnswer } from "./answers";
+import { bankError, type BankAnswer } from "./answers";
 import { toMalaysiaIso } from "./malaysia-time";
 import { bankPorts, randomHex } from "./ports";
 import { bankState } from "./state";
@@ -48,10 +48,10 @@ export function createBankTransfer({
   const held = lockOrCoolingOffRefusal(nowMs, CreateTransferErrorCode);
   if (held) return held;
   const state = bankState();
-  const ref = Object.hasOwn(state.recipientRefs, recipientRef)
+  const nameCheck = Object.hasOwn(state.recipientRefs, recipientRef)
     ? state.recipientRefs[recipientRef]
     : undefined;
-  if (!ref || ref.expiresAtMs <= nowMs) {
+  if (!nameCheck || nameCheck.expiresAtMs <= nowMs) {
     return bankError(
       422,
       CreateTransferErrorCode.RecipientRefExpired,
@@ -102,7 +102,7 @@ export function createBankTransfer({
   const challenge = btoa(
     String.fromCharCode(...bankPorts().randomBytes(16)),
   ).replace(/=+$/, "");
-  const { recipient } = ref;
+  const { recipient } = nameCheck;
   const transfer: Transfer = {
     transferId,
     version: 1,
@@ -115,7 +115,7 @@ export function createBankTransfer({
       idValueMasked: recipient.idValueMasked,
       bankName: recipient.bankName,
     },
-    amount: wireMoney(amount.minor),
+    amount: { minor: amount.minor, currency: "MYR" },
     ...(note && { note }),
     createdAt: toMalaysiaIso(nowMs),
     updatedAt: toMalaysiaIso(nowMs),
@@ -123,7 +123,7 @@ export function createBankTransfer({
   state.transfers.push({
     transfer,
     createdAtMs: nowMs,
-    counterpartyId: ref.counterpartyId,
+    counterpartyId: nameCheck.counterpartyId,
     approval: {
       challenge,
       expiresAtMs: nowMs + APPROVAL_WINDOW_SECONDS * 1000,

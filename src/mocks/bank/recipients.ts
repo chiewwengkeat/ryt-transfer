@@ -50,26 +50,6 @@ function recentRecipients() {
     }));
 }
 
-function normaliseRecipientId(idType: RecipientIdType, idValue: string) {
-  const compact = idValue.replace(/[\s-]/g, "").toUpperCase();
-  switch (idType) {
-    case RecipientIdType.Mobile: {
-      const national = /^(?:\+?60|0)(1\d{8,9})$/.exec(compact)?.[1];
-      return national && `+60${national}`;
-    }
-    case RecipientIdType.Nric:
-      return /^\d{12}$/.test(compact) && compact;
-    case RecipientIdType.Passport:
-      return /^[A-Z][A-Z0-9]{5,11}$/.test(compact) && compact;
-    case RecipientIdType.Brn:
-      return /^(?:\d{12}|\d{6,7}[A-Z])$/.test(compact) && compact;
-    case RecipientIdType.ArmyPolice:
-      return /^[A-Z]{1,3}\/?\d{4,8}$/.test(compact) && compact;
-    case RecipientIdType.AccountNumber:
-      return /^\d{8,17}$/.test(compact) && compact;
-  }
-}
-
 export function lookupBankRecipient({
   body,
   nowMs,
@@ -107,7 +87,30 @@ export function lookupBankRecipient({
         "Send an idType and idValue, with a known bankCode for an account number.",
       );
     }
-    const normalised = normaliseRecipientId(idType!, idValue);
+    const compact = idValue.replace(/[\s-]/g, "").toUpperCase();
+    let normalised: string | undefined;
+    switch (idType!) {
+      case RecipientIdType.Mobile: {
+        const national = /^(?:\+?60|0)(1\d{8,9})$/.exec(compact)?.[1];
+        if (national) normalised = `+60${national}`;
+        break;
+      }
+      case RecipientIdType.Nric:
+        if (/^\d{12}$/.test(compact)) normalised = compact;
+        break;
+      case RecipientIdType.Passport:
+        if (/^[A-Z][A-Z0-9]{5,11}$/.test(compact)) normalised = compact;
+        break;
+      case RecipientIdType.Brn:
+        if (/^(?:\d{12}|\d{6,7}[A-Z])$/.test(compact)) normalised = compact;
+        break;
+      case RecipientIdType.ArmyPolice:
+        if (/^[A-Z]{1,3}\/?\d{4,8}$/.test(compact)) normalised = compact;
+        break;
+      case RecipientIdType.AccountNumber:
+        if (/^\d{8,17}$/.test(compact)) normalised = compact;
+        break;
+    }
     if (!normalised) {
       return bankError(
         422,
@@ -116,10 +119,10 @@ export function lookupBankRecipient({
       );
     }
     counterpartyId = {
-      idType: idType!,
+      idType,
       idValue: normalised,
       bankCode: directoryEntryFor({
-        idType: idType!,
+        idType,
         idValue: normalised,
         bankCode,
       }).bankCode,
@@ -168,6 +171,6 @@ export function listBankRecentRecipients(): BankAnswer<ListRecentRecipientsRespo
   };
 }
 
-export function listBankBanks(): BankAnswer<ListBanksResponse> {
+export function listDuitNowBanks(): BankAnswer<ListBanksResponse> {
   return { status: 200, body: DUITNOW_BANKS };
 }

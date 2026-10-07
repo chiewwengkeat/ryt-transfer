@@ -6,6 +6,6 @@ export function toMalaysiaIso(epochMs: number) {
     .replace("Z", "+08:00");
 }
 
-export function malaysianDate(epochMs: number) {
+export function malaysianIsoDate(epochMs: number) {
   return toMalaysiaIso(epochMs).slice(0, 10);
 }

@@ -12,7 +12,7 @@ import {
   type ListTransfersResponse,
 } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 
-import { bankError, wireMoney, type BankAnswer } from "./answers";
+import { bankError, type BankAnswer } from "./answers";
 import { bankTransfersWithSeededHistory } from "./state";
 
 const PAGE_SIZE = 30;
@@ -52,28 +52,16 @@ export function getBankTransfer(
       );
 }
 
-// Money that actually moved: a pending refund has not come back yet, so it still counts.
-function movedMinor(transfer: Transfer) {
-  switch (transfer.funds) {
-    case TransferFunds.Debited:
-    case TransferFunds.RefundPending:
-      return -transfer.amount.minor;
-    case TransferFunds.Credited:
-      return transfer.amount.minor;
-    case TransferFunds.NotDebited:
-    case TransferFunds.Refunded:
-      return 0;
-  }
-}
-
 export function listBankTransfers(
   query: URLSearchParams,
 ): BankAnswer<ListTransfersResponse | ListTransfersErrorResponse> {
-  const invalid = (message: string) =>
+  const refuseAsInvalid = (message: string) =>
     bankError(400, ListTransfersErrorCode.InvalidRequest, message);
   const limit = Number(query.get("limit") ?? PAGE_SIZE);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_PAGE_SIZE) {
-    return invalid(`limit is a whole number from 1 to ${MAX_PAGE_SIZE}.`);
+    return refuseAsInvalid(
+      `limit is a whole number from 1 to ${MAX_PAGE_SIZE}.`,
+    );
   }
   let after: [number, string] | undefined;
   const cursor = query.get("cursor");
@@ -81,14 +69,14 @@ export function listBankTransfers(
     try {
       after = JSON.parse(atob(cursor)) as [number, string];
     } catch {
-      return invalid("This cursor did not come from this list.");
+      return refuseAsInvalid("This cursor did not come from this list.");
     }
     if (
       !Array.isArray(after) ||
       typeof after[0] !== "number" ||
       typeof after[1] !== "string"
     ) {
-      return invalid("This cursor did not come from this list.");
+      return refuseAsInvalid("This cursor did not come from this list.");
     }
   }
 
@@ -114,10 +102,24 @@ export function listBankTransfers(
   for (const { transfer } of listed) {
     const date = dayOf(transfer);
     if (!pageDays.has(date)) continue;
+    // Money that actually moved: a pending refund has not come back yet, so it still counts.
+    let movedMinor = 0;
+    switch (transfer.funds) {
+      case TransferFunds.Debited:
+      case TransferFunds.RefundPending:
+        movedMinor = -transfer.amount.minor;
+        break;
+      case TransferFunds.Credited:
+        movedMinor = transfer.amount.minor;
+        break;
+      case TransferFunds.NotDebited:
+      case TransferFunds.Refunded:
+        break;
+    }
     const day = days.get(date) ?? { count: 0, netMinor: 0 };
     days.set(date, {
       count: day.count + 1,
-      netMinor: day.netMinor + movedMinor(transfer),
+      netMinor: day.netMinor + movedMinor,
     });
   }
 
@@ -132,7 +134,7 @@ export function listBankTransfers(
       days: [...days].map(([date, { count, netMinor }]) => ({
         date,
         count,
-        net: wireMoney(netMinor),
+        net: { minor: netMinor, currency: "MYR" },
       })),
     },
   };

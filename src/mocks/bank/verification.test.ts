@@ -10,13 +10,15 @@ const SIGNED_TEXT = '{"format":"transfer-approval/1","amountMinor":12550}';
 
 const base64Of = (bytes: Iterable<number>) =>
   btoa(String.fromCharCode(...bytes));
-const utf8 = (text: string) => new TextEncoder().encode(text);
+const utf8Bytes = (text: string) => new TextEncoder().encode(text);
 
 const publicKeySpkiBase64 = base64Of([
   ...SPKI_PREFIX,
   ...p256.getPublicKey(SECRET_KEY, false),
 ]);
-const signature = p256.sign(utf8(SIGNED_TEXT), SECRET_KEY, { format: "der" });
+const signature = p256.sign(utf8Bytes(SIGNED_TEXT), SECRET_KEY, {
+  format: "der",
+});
 
 it("accepts a DER signature over the exact signed text", () => {
   expect(
