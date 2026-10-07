@@ -311,21 +311,15 @@ it(
   scenarioTest("transfer.approval_unknown_answer", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
-    await openReviewOfRm100();
+    const view = await openReviewOfRm100();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
 
-    expect(
-      await screen.findByText(
-        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
-      ),
-    ).toBeOnTheScreen();
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
-    expect(
-      screen.getByRole("button", { name: "Back to Home" }),
-    ).toBeOnTheScreen();
     expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
       balanceBeforeMinor - 10_000,
     );
@@ -333,7 +327,7 @@ it(
 );
 
 it(
-  "keeps review open when Back is pressed mid-approval, so the lost answer is told and one intended transfer debits once",
+  "keeps review open when Back is pressed mid-approval, so the outcome is shown and one intended transfer debits once",
   scenarioTest("transfer.approval_unanswered", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
@@ -362,15 +356,10 @@ it(
       "Sending your transfer. The bank's answer comes next.",
     );
     await pressHardwareBack();
+    expect(view.getPathname()).toBe("/transfer/review");
     releaseApproval();
 
-    expect(
-      await screen.findByText(
-        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
-      ),
-    ).toBeOnTheScreen();
-    await pressHardwareBack();
-    expect(view.getPathname()).toBe("/transfer/review");
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
     expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
       balanceBeforeMinor - 10_000,
@@ -447,19 +436,18 @@ it.each<[TransferFlowStep, (stepHeld: Promise<void>) => void]>([
 );
 
 it(
-  "keeps the swipe that would close the whole transfer flow off once the approval's answer is lost",
+  "leaves only Home beneath the result once the approval's answer is lost, so review cannot send it again",
   scenarioTest("transfer.approval_unanswered", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    await openReviewOfRm100("/");
-    const transferButton = await screen.findByRole("button", {
-      name: "Transfer",
-    });
-    expect(readRootTransferScreenGestureEnabled()).not.toBe(false);
+    const view = await openReviewOfRm100("/");
 
-    await fireEvent.press(transferButton);
-    await screen.findByRole("button", { name: "Back to Home" });
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByText("Transfer sent");
+    await pressHardwareBack();
 
-    expect(readRootTransferScreenGestureEnabled()).toBe(false);
+    expect(view.getPathname()).toBe("/");
   }),
 );
 
@@ -487,9 +475,8 @@ it(
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Back to Home" }),
-    );
+    await screen.findByText("Transfer sent");
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 
     expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
   }),
@@ -506,9 +493,8 @@ it("re-reads the balance after something unexpected fails past the approval, so 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Back to Home" }),
-  );
+  await screen.findByText("Transfer sent");
+  await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 
   expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
 });
@@ -521,10 +507,9 @@ it(
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
+    await screen.findByText("Transfer sent");
 
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Back to Home" }),
-    );
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
@@ -542,28 +527,39 @@ it(
   }),
 );
 
-it(
-  "never reopens review after a lost answer, even from the amount step behind it",
-  scenarioTest("transfer.approval_unanswered", async () => {
-    await pairPhoneAsTheDemoLaunchDoes();
-    const view = await openReviewOfRm100();
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Transfer" }),
-    );
-    await screen.findByRole("button", { name: "Back to Home" });
+it("never reopens review while its transfer is being sent, even from the amount step behind it", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  let answerApproval = () => {};
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      () =>
+        new Promise<Response>((resolve) => {
+          answerApproval = () => {
+            resolve(HttpResponse.error());
+          };
+        }),
+    ),
+  );
+  const view = await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText(
+    "Sending your transfer. The bank's answer comes next.",
+  );
 
-    // Review offers no way back after a lost answer, so this stands in for any route that still could.
-    await act(() => {
-      router.back();
-    });
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Review" }),
-    );
+  // Review offers no way back while sending, so this stands in for any route that still could.
+  await act(() => {
+    router.back();
+  });
+  await fireEvent.press(await screen.findByRole("button", { name: "Review" }));
 
-    expect(view.getPathname()).toBe("/transfer/amount");
-    expect(screen.queryByText("This screen stopped working.")).toBeNull();
-  }),
-);
+  expect(view.getPathname()).toBe("/transfer/amount");
+  expect(screen.queryByText("This screen stopped working.")).toBeNull();
+  answerApproval();
+  await screen.findByRole("button", { name: "Done" });
+});
 
 it("never moves on from the recipient step while a transfer is still being created", async () => {
   let releaseCreate: () => void = () => undefined;
@@ -604,27 +600,56 @@ it("never moves on from the recipient step while a transfer is still being creat
   });
 });
 
-it(
-  "never offers to send again when the approval's answer is lost",
-  scenarioTest("transfer.approval_unanswered", async () => {
-    await pairPhoneAsTheDemoLaunchDoes();
-    await openReviewOfRm100();
+it("takes a lost approval answer to the result page, which never offers to send again", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", () => HttpResponse.error()),
+  );
+  const view = await openReviewOfRm100();
 
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Transfer" }),
-    );
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
 
-    expect(
-      await screen.findByText(
-        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
-    expect(
-      screen.getByRole("button", { name: "Back to Home" }),
-    ).toBeOnTheScreen();
-  }),
-);
+  expect(
+    await screen.findByText(
+      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+    ),
+  ).toBeOnTheScreen();
+  expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
+  expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Done" })).toBeOnTheScreen();
+});
+
+it("ignores Android's Back while the transfer is being sent", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  let answerApproval = () => {};
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      () =>
+        new Promise<Response>((resolve) => {
+          answerApproval = () => {
+            resolve(HttpResponse.error());
+          };
+        }),
+    ),
+  );
+  const view = await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText(
+    "Sending your transfer. The bank's answer comes next.",
+  );
+
+  await pressHardwareBack();
+  const pathnameWhileSending = view.getPathname();
+  answerApproval();
+
+  expect(pathnameWhileSending).toBe("/transfer/review");
+  expect(await screen.findByRole("button", { name: "Done" })).toBeOnTheScreen();
+});
 
 it("offers to try again or leave when the bank's answer to the transfer cannot be read", async () => {
   mswServer.use(
@@ -640,7 +665,7 @@ it("offers to try again or leave when the bank's answer to the transfer cannot b
 
   expect(
     await screen.findByText(
-      "Something unexpected stopped the approval before it was sent — no money moved.",
+      "Something unexpected stopped the transfer — no money moved.",
     ),
   ).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
@@ -688,7 +713,7 @@ it("offers to try again or leave when something unexpected fails before the tran
 
   expect(
     await screen.findByText(
-      "Something unexpected stopped the approval before it was sent — no money moved.",
+      "Something unexpected stopped the transfer — no money moved.",
     ),
   ).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
@@ -698,7 +723,7 @@ it("offers to try again or leave when something unexpected fails before the tran
 it("never says no money moved when something unexpected fails after the bank answers the approval", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const balanceBeforeMinor = await readBankBalanceMinor();
-  await openReviewOfRm100();
+  const view = await openReviewOfRm100();
   // Nothing the bank answers can fail past the approval, so a navigation fault stands in.
   jest.spyOn(router, "dismissTo").mockImplementationOnce(() => {
     throw new Error("Test.");
@@ -708,15 +733,10 @@ it("never says no money moved when something unexpected fails after the bank ans
     await screen.findByRole("button", { name: "Transfer" }),
   );
 
-  expect(
-    await screen.findByText(
-      "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
-    ),
-  ).toBeOnTheScreen();
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
+  expect(screen.queryByText(/no money moved/)).toBeNull();
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
-  expect(
-    screen.getByRole("button", { name: "Back to Home" }),
-  ).toBeOnTheScreen();
   expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
     balanceBeforeMinor - 10_000,
   );
@@ -783,7 +803,7 @@ it.each<[string, () => Response]>([
   async (_, answerApproval) => {
     await pairPhoneAsTheDemoLaunchDoes();
     mswServer.use(http.post("*/transfers/:transferId/approve", answerApproval));
-    await openReviewOfRm100();
+    const view = await openReviewOfRm100();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -794,13 +814,12 @@ it.each<[string, () => Response]>([
         "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
       ),
     ).toBeOnTheScreen();
+    expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
     expect(
       screen.queryByText("The transfer was not sent — no money moved."),
     ).toBeNull();
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
-    expect(
-      screen.getByRole("button", { name: "Back to Home" }),
-    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Done" })).toBeOnTheScreen();
     expect(countPostsTo(/\/approve$/)).toBe(1);
   },
 );
@@ -823,7 +842,7 @@ it("never offers to send again when the bank has not answered the approval after
       { once: true },
     ),
   );
-  await openReviewOfRm100();
+  const view = await openReviewOfRm100();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -845,6 +864,7 @@ it("never offers to send again when the bank has not answered the approval after
       "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
     ),
   ).toBeOnTheScreen();
+  expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
   expect(countPostsTo(/\/approve$/)).toBe(1);
   releaseApproval();
@@ -867,7 +887,7 @@ it("never says the transfer was not sent when the session ends as the bank answe
   );
 
   expect(await screen.findByText("Your session has ended")).toBeOnTheScreen();
-  // The ended session hides the app from screen readers, review's notice included.
+  // The ended session hides the app from screen readers, the result's notice included.
   expect(
     screen.getByText(
       "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
@@ -886,7 +906,7 @@ it(
   scenarioTest("transfer.approval_unanswered", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
-    await openReviewOfRm100("/");
+    const view = await openReviewOfRm100("/");
     const transferButton = await screen.findByRole("button", {
       name: "Transfer",
     });
@@ -919,16 +939,11 @@ it(
     // A name check asked at sign-in fails only once its retries are spent; asserting sooner passes either way.
     await act(() => jest.advanceTimersByTimeAsync(15_000));
 
-    expect(
-      screen.getByText(
-        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
-      ),
-    ).toBeOnTheScreen();
+    expect(screen.getByText("Transfer sent")).toBeOnTheScreen();
+    expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
     expect(screen.queryByText(/no money moved/)).toBeNull();
     expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
-    expect(
-      screen.getByRole("button", { name: "Back to Home" }),
-    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Done" })).toBeOnTheScreen();
     expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
       balanceBeforeMinor - 10_000,
     );

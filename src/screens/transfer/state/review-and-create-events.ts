@@ -20,6 +20,12 @@ export function reduceReviewAndCreateEvent(
           idempotencyKey: action.idempotencyKey,
         }
       : flow;
+  if (
+    action.type === TransferFlowActionType.CreateNotSent &&
+    flow.step === TransferFlowStep.Reviewing
+  )
+    // Nothing left the phone, so review keeps a lost create's key and any hold: a spread, never a rebuild.
+    return { ...flow, notice: action.notice };
   if (flow.step !== TransferFlowStep.Creating) return flow;
   switch (action.type) {
     case TransferFlowActionType.Created:

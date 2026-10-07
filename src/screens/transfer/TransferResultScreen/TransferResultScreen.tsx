@@ -22,6 +22,9 @@ export default function TransferResultScreen() {
     transfer.data?.status === TransferStatus.Completed
       ? transfer.data
       : undefined;
+  // Only an approval whose answer never arrived reaches this page while the bank still awaits one.
+  const approvalAnswerLost =
+    transfer.data?.status === TransferStatus.AwaitingApproval;
 
   return (
     <>
@@ -49,7 +52,14 @@ export default function TransferResultScreen() {
             <SectionTransferDetails transfer={completedTransfer} />
           </>
         )}
-        {(transfer.isError || (transfer.data && !completedTransfer)) && (
+        {approvalAnswerLost && (
+          <BannerNotice
+            tone="negative"
+            message={t("common.approval_unanswered.body")}
+          />
+        )}
+        {(transfer.isError ||
+          (transfer.data && !completedTransfer && !approvalAnswerLost)) && (
           <BannerNotice
             tone="negative"
             message={t("common.outcome_unexpected.body")}
