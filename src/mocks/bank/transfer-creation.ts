@@ -9,11 +9,15 @@ import {
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 
-import { PER_TRANSFER_MAX_MINOR, transferLimitsAt } from "./account";
+import {
+  lockOrCoolingOffRefusal,
+  PER_TRANSFER_MAX_MINOR,
+  transferLimitsAt,
+} from "./account";
 import { bankError, wireMoney, type BankAnswer } from "./answers";
 import { toMalaysiaIso } from "./malaysia-time";
 import { bankPorts, randomHex } from "./ports";
-import { activeBankConditions, bankState } from "./state";
+import { bankState } from "./state";
 
 const APPROVAL_WINDOW_SECONDS = 60;
 // No wider: DuitNow carries the note onto the recipient's statement as it is.
@@ -39,25 +43,8 @@ export function createBankTransfer({
       "Send a recipientRef, an amount and an optional note.",
     );
   }
-  const conditions = activeBankConditions();
-  if (conditions.accountLocked) {
-    return bankError(
-      403,
-      CreateTransferErrorCode.AccountLocked,
-      "The account is locked.",
-    );
-  }
-  const { coolingOff, activatedAtMs } = conditions;
-  const coolingOffEndsAtMs =
-    activatedAtMs + (coolingOff?.endsAfterActivationMs ?? 0);
-  if (coolingOff && nowMs < coolingOffEndsAtMs) {
-    return bankError(
-      403,
-      CreateTransferErrorCode.CoolingOff,
-      "Transfers wait out a security cooling-off period.",
-      { until: toMalaysiaIso(coolingOffEndsAtMs), reason: coolingOff.reason },
-    );
-  }
+  const held = lockOrCoolingOffRefusal(nowMs, CreateTransferErrorCode);
+  if (held) return held;
   const state = bankState();
   const ref = state.recipientRefs[recipientRef];
   if (!ref || ref.expiresAtMs <= nowMs) {

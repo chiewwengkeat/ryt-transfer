@@ -3,8 +3,8 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 
-import { wireMoney, type BankAnswer } from "./answers";
-import { malaysianDate } from "./malaysia-time";
+import { bankError, wireMoney, type BankAnswer } from "./answers";
+import { malaysianDate, toMalaysiaIso } from "./malaysia-time";
 import { DEMO_CUSTOMER } from "./seed";
 import { activeBankConditions, bankState } from "./state";
 
@@ -30,6 +30,26 @@ export function transferLimitsAt(nowMs: number) {
     usedMinor,
     remainingMinor: Math.max(0, limitMinor - usedMinor),
   };
+}
+
+export function lockOrCoolingOffRefusal<
+  Codes extends { AccountLocked: string; CoolingOff: string },
+>(nowMs: number, codes: Codes) {
+  const { accountLocked, coolingOff, activatedAtMs } = activeBankConditions();
+  if (accountLocked) {
+    return bankError(403, codes.AccountLocked, "The account is locked.");
+  }
+  const coolingOffEndsAtMs =
+    activatedAtMs + (coolingOff?.endsAfterActivationMs ?? 0);
+  if (coolingOff && nowMs < coolingOffEndsAtMs) {
+    return bankError(
+      403,
+      codes.CoolingOff,
+      "Transfers wait out a security cooling-off period.",
+      { until: toMalaysiaIso(coolingOffEndsAtMs), reason: coolingOff.reason },
+    );
+  }
+  return undefined;
 }
 
 export function getBankPrimaryAccount(): BankAnswer {

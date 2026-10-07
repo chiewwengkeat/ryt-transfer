@@ -293,6 +293,33 @@ describe("conditions the bank applies itself", () => {
     ]);
   });
 
+  it.each<[TransferScenarioId, Partial<BankErrorBody["error"]>]>([
+    ["transfer.account_locked", { code: "ACCOUNT_LOCKED" }],
+    [
+      "transfer.cooling_off_new_phone",
+      { code: "COOLING_OFF", reason: CoolingOffReason.DevicePaired },
+    ],
+    [
+      "transfer.cooling_off_new_account",
+      { code: "COOLING_OFF", reason: CoolingOffReason.NewAccount },
+    ],
+  ])(
+    "%s also refuses an approval arriving after it began, moving no money",
+    async (scenarioId, refusal) => {
+      const ready = await transferReadyToApprove();
+      const balanceBefore = await balanceMinor();
+      pickTransferScenario(scenarioId);
+
+      const refused = await ready.approve();
+      const { body } = await readTransfer(ready.transferId);
+
+      expect(refused.status).toBe(403);
+      expect(refused.body.error).toMatchObject(refusal);
+      expect(body.transfer.funds).toBe(TransferFunds.NotDebited);
+      expect(await balanceMinor()).toBe(balanceBefore);
+    },
+  );
+
   it("transfer.approval_key_unknown forgets keys from before it began, until the PIN registers new ones", async () => {
     clockAt(T0);
     const ready = await transferReadyToApprove();

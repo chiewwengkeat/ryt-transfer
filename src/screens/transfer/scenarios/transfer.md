@@ -218,7 +218,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 
 ### Phone paired less than 12 hours ago
 `transfer.cooling_off_new_phone`
-- **When:** this phone was paired with the account less than 12 hours ago (`COOLING_OFF`)
+- **When:** this phone was paired with the account less than 12 hours ago (`COOLING_OFF`), also when the approval arrives
 - **Money:** no money moved
 - **Shown as:** on the review step
 - **Tell them:** they can send money from a given time — a security wait after pairing this phone
@@ -227,7 +227,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 
 ### Account opened less than an hour ago
 `transfer.cooling_off_new_account`
-- **When:** the account was opened less than an hour ago (`COOLING_OFF`)
+- **When:** the account was opened less than an hour ago (`COOLING_OFF`), also when the approval arrives
 - **Money:** no money moved
 - **Shown as:** on the review step
 - **Tell them:** they can send money from a given time — a security wait after opening their account
@@ -236,7 +236,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 
 ### Account locked
 `transfer.account_locked`
-- **When:** the account is locked (`ACCOUNT_LOCKED`)
+- **When:** the account is locked (`ACCOUNT_LOCKED`), also when the approval arrives
 - **Money:** no money moved
 - **Shown as:** on the review step
 - **Tell them:** their account is locked, and to contact Ryt to unlock it

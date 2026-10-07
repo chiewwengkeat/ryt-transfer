@@ -10,7 +10,7 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { ApprovalOutcome } from "@/mocks/scenarios/transfer-scenarios";
 
-import { transferLimitsAt } from "./account";
+import { lockOrCoolingOffRefusal, transferLimitsAt } from "./account";
 import { refusalOfDemoPin } from "./approval-keys";
 import { bankError, type BankAnswer } from "./answers";
 import { malaysianDate, toMalaysiaIso } from "./malaysia-time";
@@ -67,6 +67,9 @@ export function approveBankTransfer(
       "Send a keyId, a signature and, for the possession key, a pin.",
     );
   }
+  // Before the PIN check, so a locked account answers alike whatever PIN arrives.
+  const held = lockOrCoolingOffRefusal(nowMs, ApproveTransferErrorCode);
+  if (held) return held;
   const key = state.approvalKeys.find(
     (candidate) =>
       candidate.keyId === keyId &&

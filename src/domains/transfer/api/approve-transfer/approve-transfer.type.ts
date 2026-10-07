@@ -1,3 +1,4 @@
+import type { CoolingOffReason } from "../create-transfer/create-transfer.type";
 import type { Transfer } from "../get-transfer/get-transfer.type";
 
 export interface ApproveTransferRequest {
@@ -16,6 +17,8 @@ export enum ApproveTransferErrorCode {
   PinIncorrect = "PIN_INCORRECT",
   PinLocked = "PIN_LOCKED",
   KeyNotRegistered = "KEY_NOT_REGISTERED",
+  CoolingOff = "COOLING_OFF",
+  AccountLocked = "ACCOUNT_LOCKED",
   TransferNotFound = "TRANSFER_NOT_FOUND",
   IdempotencyKeyReused = "IDEMPOTENCY_KEY_REUSED",
   RequestInProgress = "REQUEST_IN_PROGRESS",
@@ -30,9 +33,16 @@ export interface ApproveTransferErrorResponse {
         attemptsRemaining: number;
       }
     | {
+        code: ApproveTransferErrorCode.CoolingOff;
+        message: string;
+        until: string;
+        reason: CoolingOffReason;
+      }
+    | {
         code: Exclude<
           ApproveTransferErrorCode,
-          ApproveTransferErrorCode.PinIncorrect
+          | ApproveTransferErrorCode.PinIncorrect
+          | ApproveTransferErrorCode.CoolingOff
         >;
         message: string;
       };
