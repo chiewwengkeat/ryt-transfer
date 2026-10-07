@@ -1,0 +1,87 @@
+import * as SecureStore from "expo-secure-store";
+
+import { secureStoreEntries } from "@/test/harness/native-doubles";
+
+import {
+  deleteAllSecureRecords,
+  deleteSecureNamespace,
+  deleteSecureRecord,
+  listSecureRecords,
+  readSecureRecord,
+  writeSecureRecord,
+} from "./secure-storage";
+
+const FIRST_PENDING = { namespace: "customer-1", name: "pending.tr-1" };
+const FIRST_KEYS = { namespace: "customer-1", name: "approval-keys" };
+const SECOND_PENDING = { namespace: "customer-2", name: "pending.tr-2" };
+
+it("keeps records to this unlocked phone and never asks for the passcode", async () => {
+  await writeSecureRecord(FIRST_PENDING, "{}");
+
+  const written = [...secureStoreEntries.values()];
+  expect(written).not.toHaveLength(0);
+  expect(written.map(({ options }) => options)).toEqual(
+    written.map(() => ({
+      keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    })),
+  );
+});
+
+it("reads a record back only from the customer it was written for", async () => {
+  await writeSecureRecord(FIRST_PENDING, "first customer's");
+  await writeSecureRecord(SECOND_PENDING, "second customer's");
+
+  expect(await readSecureRecord(FIRST_PENDING)).toBe("first customer's");
+  expect(
+    await readSecureRecord({ ...FIRST_PENDING, namespace: "customer-2" }),
+  ).toBeNull();
+});
+
+it("lists every record it holds, across customers", async () => {
+  await writeSecureRecord(FIRST_PENDING, "{}");
+  await writeSecureRecord(SECOND_PENDING, "{}");
+  await writeSecureRecord(FIRST_KEYS, "{}");
+  await deleteSecureRecord(FIRST_PENDING);
+
+  expect(await listSecureRecords()).toEqual([SECOND_PENDING, FIRST_KEYS]);
+});
+
+it("lists every record when writes overlap", async () => {
+  const pending = ["tr-1", "tr-2", "tr-3"].map((transferId) => ({
+    namespace: "customer-1",
+    name: `pending.${transferId}`,
+  }));
+
+  await Promise.all(pending.map((address) => writeSecureRecord(address, "{}")));
+
+  expect(await listSecureRecords()).toEqual(pending);
+});
+
+it("wipes one customer's records and keeps the other customer's", async () => {
+  await writeSecureRecord(FIRST_PENDING, "{}");
+  await writeSecureRecord(FIRST_KEYS, "{}");
+  await writeSecureRecord(SECOND_PENDING, "{}");
+
+  await deleteSecureNamespace("customer-1");
+
+  expect(await listSecureRecords()).toEqual([SECOND_PENDING]);
+  expect(await readSecureRecord(FIRST_KEYS)).toBeNull();
+});
+
+it("wipes every record it holds, whoever it belongs to", async () => {
+  await writeSecureRecord(FIRST_PENDING, "{}");
+  await writeSecureRecord(SECOND_PENDING, "{}");
+
+  await deleteAllSecureRecords();
+
+  expect(await listSecureRecords()).toEqual([]);
+  expect(await readSecureRecord(SECOND_PENDING)).toBeNull();
+});
+
+it("refuses a namespace that could build another record's key", async () => {
+  await expect(
+    writeSecureRecord({ namespace: "customer.1", name: "pending" }, "{}"),
+  ).rejects.toThrow("namespace");
+
+  expect(await listSecureRecords()).toEqual([]);
+});
