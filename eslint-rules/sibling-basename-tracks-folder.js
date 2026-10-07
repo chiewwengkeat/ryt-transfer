@@ -21,7 +21,7 @@ function moduleStems(entries) {
     .map((p) => p.stem);
 }
 
-function unique(list) {
+function uniqueValues(list) {
   return [...new Set(list)];
 }
 
@@ -79,7 +79,7 @@ module.exports = {
     const tail = "." + [...p.suffixes, p.ext].join(".");
     const entries = dirEntries(p.dir).filter((n) => n !== p.base);
 
-    const report = (node, candidates) => {
+    const reportOrphanSibling = (node, candidates) => {
       const names = candidates.map((c) => c + tail);
       const free = names.filter((n) => !entries.includes(n));
       if (free.length > 0) {
@@ -114,10 +114,10 @@ module.exports = {
     if (p.stem === p.parent) return {};
     if (components.includes(p.stem) || modules.includes(p.stem)) return {};
 
-    const candidates = unique([p.parent, ...components, ...modules]);
+    const candidates = uniqueValues([p.parent, ...components, ...modules]);
     return {
       Program(node) {
-        report(node, candidates);
+        reportOrphanSibling(node, candidates);
       },
     };
   },

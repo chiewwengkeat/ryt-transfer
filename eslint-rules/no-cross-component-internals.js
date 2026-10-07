@@ -63,7 +63,7 @@ function crossesTextually(dir, source) {
   return { target: p.base, owner };
 }
 
-function crosses(file, source) {
+function findCrossedInternal(file, source) {
   const target = resolveModule(file, source);
   if (target) {
     const owner = owningComponentDir(file, target);
@@ -127,7 +127,7 @@ module.exports = {
         for (const mod of moduleSources(node)) {
           const source = asRelativeSource(mod.source);
           if (source === null) continue;
-          const hit = crosses(file, source);
+          const hit = findCrossedInternal(file, source);
           if (!hit) continue;
           context.report({
             node: mod.node,

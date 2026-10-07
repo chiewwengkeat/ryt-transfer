@@ -11,7 +11,7 @@ const isFnExpr = (n) =>
 
 const WRAPPERS = new Set(["memo", "forwardRef"]);
 
-function wrapperName(callee) {
+function memoOrForwardRefName(callee) {
   if (callee.type === "Identifier")
     return WRAPPERS.has(callee.name) ? callee.name : "";
   if (
@@ -24,13 +24,13 @@ function wrapperName(callee) {
 
 /** Taken by POSITION from `arguments[0]`: scanning for the first function picks the
  * comparator out of `memo(Chip, areEqual)`, and the empty name then misplaces `ChipProps`. */
-function wrappedName(d) {
+function componentNameInsideWrapper(d) {
   const first = d.arguments[0];
   if (!first) return "";
   if (isFnExpr(first)) return first.id ? first.id.name : "";
   if (first.type === "Identifier") return first.name;
-  if (first.type === "CallExpression" && wrapperName(first.callee))
-    return wrappedName(first);
+  if (first.type === "CallExpression" && memoOrForwardRefName(first.callee))
+    return componentNameInsideWrapper(first);
   return "";
 }
 
@@ -112,10 +112,10 @@ function componentExport(body) {
     if (d.type === "FunctionDeclaration") {
       return isComponentName(d.id ? d.id.name : "") ? stmt : null;
     }
-    if (d.type === "CallExpression" && wrapperName(d.callee)) {
+    if (d.type === "CallExpression" && memoOrForwardRefName(d.callee)) {
       const inner = d.arguments.find(isFnExpr);
       if (inner && isComponentName(inner.id ? inner.id.name : "")) return stmt;
-      if (isComponentName(wrappedName(d))) return stmt;
+      if (isComponentName(componentNameInsideWrapper(d))) return stmt;
       return null;
     }
     if (isFnExpr(d))
@@ -156,7 +156,7 @@ function componentName(comp) {
   if (d.type === "FunctionDeclaration" || d.type === "ClassDeclaration")
     return d.id ? d.id.name : "";
   if (isFnExpr(d)) return d.id ? d.id.name : "";
-  if (d.type === "CallExpression") return wrappedName(d);
+  if (d.type === "CallExpression") return componentNameInsideWrapper(d);
   if (d.type === "VariableDeclaration") {
     const v = d.declarations.find(
       (x) => x.id.type === "Identifier" && isFnExpr(x.init),

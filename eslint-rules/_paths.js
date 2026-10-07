@@ -2,18 +2,18 @@ const { readdirSync } = require("fs");
 
 const MODULE_EXTS = [".ts", ".tsx", ".js", ".jsx"];
 
-function normalize(filename) {
+function toForwardSlashes(filename) {
   return String(filename).replace(/\\/g, "/");
 }
 
 function filenameOf(context) {
-  return normalize(context.filename);
+  return toForwardSlashes(context.filename);
 }
 
 /** `stem` stops at the FIRST dot so that two rules can read one filename without
  * overlapping: `foo.helper.test.ts` is stem `foo`, suffixes `["helper","test"]`. */
 function parsePath(filename) {
-  const path = normalize(filename);
+  const path = toForwardSlashes(filename);
   const slash = path.lastIndexOf("/");
   const dir = slash < 0 ? "" : path.slice(0, slash);
   const base = path.slice(slash + 1);
@@ -44,8 +44,8 @@ function camelCase(name) {
 
 /** The transform hook-file-kebab-case.js already applies, so two rules never
  * suggest different spellings. Lossy where a word starts with a digit
- * (`useGet3dSecureStatus` -> `use-get3d-secure-status`, but the file is
- * `use-get-3d-secure-status`), so use it to suggest a rename, never to decide one
+ * (`useLast7Days` -> `use-last7-days`, where the file would be
+ * `use-last-7-days`), so use it to suggest a rename, never to decide one
  * is wrong. */
 function kebabCase(name) {
   return name.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()).replace(/^-/, "");
@@ -78,7 +78,7 @@ function stripAffixes(name, affixes = {}) {
  * needs its cases on a real tree (`mkdtempSync`). */
 function dirEntries(dir) {
   try {
-    return readdirSync(normalize(dir));
+    return readdirSync(toForwardSlashes(dir));
   } catch {
     return [];
   }
@@ -90,8 +90,8 @@ function isRelativeSource(source) {
 
 /** Resolves `.` and `..`. No disk. */
 function joinPath(dir, rel) {
-  const out = dir ? normalize(dir).split("/") : [];
-  for (const seg of normalize(rel).split("/")) {
+  const out = dir ? toForwardSlashes(dir).split("/") : [];
+  for (const seg of toForwardSlashes(rel).split("/")) {
     if (seg === "" || seg === ".") continue;
     if (seg === "..") out.pop();
     else out.push(seg);

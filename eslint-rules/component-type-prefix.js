@@ -32,15 +32,15 @@ const TYPES = [
 const ROUTE_DIR = "/src/app/";
 
 /** True when `name` starts with `type` on a PascalCase word boundary, so
- * `Card` matches `CardPayment` and bare `Card` but not `Cardinal`. */
+ * `Card` matches `CardBalance` and bare `Card` but not `Cardinal`. */
 function hasTypePrefix(name, type) {
   if (!name.startsWith(type)) return false;
   const rest = name.slice(type.length);
   return rest === "" || /^[A-Z0-9]/.test(rest);
 }
 
-/** The Type a suffix-style name trails, e.g. `Modal` for `ModalErrorActivation`'s
- * mis-ordered twin `ActivationErrorModal`. Null when the name simply has no Type
+/** The Type a suffix-style name trails, e.g. `BottomSheet` for `BottomSheetPin`'s
+ * mis-ordered twin `PinBottomSheet`. Null when the name simply has no Type
  * anywhere, which needs the generic message instead of a reorder. */
 function trailingType(name, types) {
   return types.find((t) => name.length > t.length && name.endsWith(t)) || null;
