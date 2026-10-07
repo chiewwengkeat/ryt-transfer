@@ -1,17 +1,34 @@
 import { http, HttpResponse } from "msw";
 
-import { mswServer, unhandledRequests } from "./msw-server";
+import { mswServer, sentRequests, unhandledRequests } from "./msw-server";
+
+const PROBE_URL = "https://api.example.test/probe";
 
 it("answers a request through the shared mock server", async () => {
   mswServer.use(
-    http.get("https://api.example.test/accounts/primary", () =>
-      HttpResponse.json({ balanceSen: 123456 }),
-    ),
+    http.get(PROBE_URL, () => HttpResponse.json({ probe: "answered" })),
   );
 
-  const response = await fetch("https://api.example.test/accounts/primary");
+  const response = await fetch(PROBE_URL);
 
-  expect(await response.json()).toEqual({ balanceSen: 123456 });
+  expect(await response.json()).toEqual({ probe: "answered" });
+});
+
+it("records the method, URL, headers and body of each request the test sent", async () => {
+  mswServer.use(http.post(PROBE_URL, () => HttpResponse.json({})));
+
+  await fetch(PROBE_URL, {
+    method: "POST",
+    headers: { "Idempotency-Key": "probe-key" },
+    body: JSON.stringify({ probe: true }),
+  });
+
+  // Only this test's request: the GET the test above sent was cleared after it.
+  expect(sentRequests.map((request) => request.method)).toEqual(["POST"]);
+  const [request] = sentRequests;
+  expect(request?.url).toBe(PROBE_URL);
+  expect(request?.headers.get("Idempotency-Key")).toBe("probe-key");
+  expect(await request?.json()).toEqual({ probe: true });
 });
 
 it("catches a request no handler answers, even for a .json path", async () => {
