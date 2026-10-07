@@ -40,8 +40,33 @@ function bundleTextExceptFor(label, text) {
     exportRunLabel(run) === label ? text : bundleTextWhenEveryGateHolds(run);
 }
 
+function bundledFilesWhenEveryGateHolds({ variant }) {
+  return [
+    "/src/app/_layout.tsx",
+    "/node_modules/.pnpm/react@19.2.0/node_modules/react/index.js",
+    ...(["demo", "development"].includes(variant)
+      ? [
+          "/src/mocks/demo-bank.ts",
+          "/node_modules/.pnpm/msw@2.15.0/node_modules/msw/lib/core/http.mjs",
+        ]
+      : []),
+  ];
+}
+
+function sourceMapExceptFor(label, bundledFiles) {
+  return (run) => [
+    {
+      sources:
+        exportRunLabel(run) === label
+          ? bundledFiles
+          : bundledFilesWhenEveryGateHolds(run),
+    },
+  ];
+}
+
 function fakeExpoExport({
   bundleTextFor = bundleTextWhenEveryGateHolds,
+  sourceMapsFor = (run) => [{ sources: bundledFilesWhenEveryGateHolds(run) }],
   exportResultFor = () => ({ status: 0 }),
 } = {}) {
   const exportCalls = [];
@@ -52,14 +77,17 @@ function fakeExpoExport({
     };
     exportCalls.push({ command, args, options, label: exportRunLabel(run) });
     const outputDir = args[args.indexOf("--output-dir") + 1];
-    fs.mkdirSync(outputDir, { recursive: true });
+    const bundleDir = path.join(outputDir, "_expo/static/js", run.platform);
+    fs.mkdirSync(bundleDir, { recursive: true });
     fs.writeFileSync(path.join(outputDir, "metadata.json"), "{}");
     const bundleText = bundleTextFor(run);
-    if (bundleText !== null) {
-      const bundleDir = path.join(outputDir, "_expo/static/js", run.platform);
-      fs.mkdirSync(bundleDir, { recursive: true });
+    if (bundleText !== null)
       fs.writeFileSync(path.join(bundleDir, "entry.js"), bundleText);
-    }
+    for (const [index, sourceMap] of sourceMapsFor(run).entries())
+      fs.writeFileSync(
+        path.join(bundleDir, `entry-${index}.js.map`),
+        JSON.stringify(sourceMap),
+      );
     return exportResultFor(run);
   };
   return { exportCalls, runCommand };
@@ -102,7 +130,7 @@ test("exports production and demo on both platforms, development and the unset v
   );
 });
 
-test("runs every export with Metro's cache cleared, JavaScript rather than bytecode, and no .env file", () => {
+test("runs every export with Metro's cache cleared, JavaScript rather than bytecode, a source map and no .env file", () => {
   const fake = fakeExpoExport();
 
   checkWith(fake);
@@ -116,6 +144,7 @@ test("runs every export with Metro's cache cleared, JavaScript rather than bytec
     assert.equal(args[0], "export");
     assert.ok(args.includes("--clear"));
     assert.ok(args.includes("--no-bytecode"));
+    assert.ok(args.includes("--source-maps"));
     assert.equal(options.env.EXPO_NO_DOTENV, "1");
     assert.equal(options.cwd, PROJECT_DIR);
   }
@@ -295,6 +324,192 @@ test("counts a marker in any file an export writes, not only its JavaScript", ()
   assert.match(failures[0], /^production android export carries "bank-marker"/);
 });
 
+test("reads markers from the bundle, never from its source map, which keeps the text minify drops", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      bundleTextFor: bundleTextExceptFor("demo android", "bank-marker"),
+      sourceMapsFor: (run) => [
+        {
+          sources: bundledFilesWhenEveryGateHolds(run),
+          sourcesContent: ["bank-marker;msw-marker;trace-marker"],
+        },
+      ],
+    }),
+  );
+
+  assert.equal(failures.length, 1);
+  assert.match(failures[0], /^demo android export lacks "msw-marker"/);
+});
+
+test("fails a production export whose source map lists a mock file, naming it", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      sourceMapsFor: sourceMapExceptFor("production android", [
+        "/src/app/_layout.tsx",
+        "/src/mocks/bank/malaysia-time.ts",
+      ]),
+    }),
+  );
+
+  assert.equal(failures.length, 1);
+  assert.match(
+    failures[0],
+    /^production android export's source map lists files from src\/mocks\/ or msw \(1 found\): \/src\/mocks\/bank\/malaysia-time\.ts;/,
+  );
+});
+
+test("fails the unset-variant export whose source map lists an msw file", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      sourceMapsFor: sourceMapExceptFor("unset android", [
+        "/src/app/_layout.tsx",
+        "/node_modules/.pnpm/@mswjs+interceptors@0.39.2/node_modules/@mswjs/interceptors/lib/node/index.mjs",
+      ]),
+    }),
+  );
+
+  assert.equal(failures.length, 1);
+  assert.match(
+    failures[0],
+    /^unset-variant android export's source map lists files from src\/mocks\/ or msw \(1 found\)/,
+  );
+});
+
+test("names at most ten of the files a production source map lists from src/mocks/ or msw", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      sourceMapsFor: sourceMapExceptFor("production ios", [
+        "/src/app/_layout.tsx",
+        ...Array.from(
+          { length: 12 },
+          (_, index) => `/src/mocks/bank/module-${index}.ts`,
+        ),
+      ]),
+    }),
+  );
+
+  assert.equal(failures.length, 1);
+  assert.match(failures[0], /\(12 found\): .*\/module-9\.ts;/);
+  assert.doesNotMatch(failures[0], /module-10\.ts/);
+});
+
+test("fails a demo export whose source map lists no file from src/mocks/", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      sourceMapsFor: sourceMapExceptFor("demo ios", [
+        "/src/app/_layout.tsx",
+        "/node_modules/.pnpm/msw@2.15.0/node_modules/msw/lib/core/http.mjs",
+      ]),
+    }),
+  );
+
+  assert.equal(failures.length, 1);
+  assert.match(
+    failures[0],
+    /^demo ios export's source map lists no file from src\/mocks\//,
+  );
+});
+
+test("fails a development export whose source map lists no file from msw", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      sourceMapsFor: sourceMapExceptFor("development android", [
+        "/src/app/_layout.tsx",
+        "/src/mocks/demo-bank.ts",
+      ]),
+    }),
+  );
+
+  assert.equal(failures.length, 1);
+  assert.match(
+    failures[0],
+    /^development android export's source map lists no file from msw/,
+  );
+});
+
+test("fails an export that wrote no source map, or one listing nothing under src/app/", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      sourceMapsFor: (run) =>
+        ({
+          "production android": [],
+          "demo ios": [
+            {
+              sources: [
+                "/src/mocks/demo-bank.ts",
+                "/node_modules/msw/lib/core/http.mjs",
+              ],
+            },
+          ],
+        })[exportRunLabel(run)] ?? [
+          { sources: bundledFilesWhenEveryGateHolds(run) },
+        ],
+    }),
+  );
+
+  assert.equal(failures.length, 2);
+  assert.match(
+    failures[0],
+    /^production android export wrote no source map that lists src\/app\//,
+  );
+  assert.match(
+    failures[1],
+    /^demo ios export wrote no source map that lists src\/app\//,
+  );
+});
+
+test("fails an export whose source map lists files from anywhere but the project root", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      sourceMapsFor: sourceMapExceptFor("production android", [
+        "/home/runner/work/app/app/src/app/_layout.tsx",
+        "/home/runner/work/app/app/src/mocks/demo-bank.ts",
+      ]),
+    }),
+  );
+
+  assert.equal(failures.length, 1);
+  assert.match(
+    failures[0],
+    /^production android export wrote no source map that lists src\/app\//,
+  );
+});
+
+test("takes only the project's own src/mocks/ and msw's own packages for the demo layer's files", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      sourceMapsFor: sourceMapExceptFor("production android", [
+        "/src/app/_layout.tsx",
+        "/node_modules/.pnpm/fixtures-kit@1.0.0/node_modules/fixtures-kit/src/mocks/user.js",
+        "/node_modules/.pnpm/msw-storybook-addon@2.0.0/node_modules/msw-storybook-addon/dist/index.mjs",
+        "/node_modules/.pnpm/msw@2.15.0/node_modules/statuses/index.js",
+      ]),
+    }),
+  );
+
+  assert.deepEqual(failures, []);
+});
+
+test("reads the files of every source map an export writes", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      sourceMapsFor: (run) =>
+        exportRunLabel(run) === "demo android"
+          ? [
+              { sources: ["/src/app/_layout.tsx", "/src/mocks/demo-bank.ts"] },
+              {
+                sources: [
+                  "/node_modules/.pnpm/msw@2.15.0/node_modules/msw/lib/core/http.mjs",
+                ],
+              },
+            ]
+          : [{ sources: bundledFilesWhenEveryGateHolds(run) }],
+    }),
+  );
+
+  assert.deepEqual(failures, []);
+});
+
 test("fails an export that does not finish", () => {
   const failures = checkWith(
     fakeExpoExport({
@@ -352,16 +567,21 @@ test("removes every export's output once it has read it", () => {
     );
 });
 
-const SHIPPED_BUNDLE_TEXT_BY_VARIANT = Object.fromEntries(
+const SHIPPED_BUNDLE_BY_VARIANT = Object.fromEntries(
   ["production", "unset", "demo", "development"].map((variant) => [
     variant,
-    BUNDLE_MARKERS.filter(({ carriedBy }) => carriedBy.includes(variant))
-      .map(({ text }) => text)
-      .join(";"),
+    {
+      text: BUNDLE_MARKERS.filter(({ carriedBy }) =>
+        carriedBy.includes(variant),
+      )
+        .map(({ text }) => text)
+        .join(";"),
+      sources: bundledFilesWhenEveryGateHolds({ variant }),
+    },
   ]),
 );
 
-function runCheckInProjectWithStubExpo(t, bundleTextByVariant) {
+function runCheckInProjectWithStubExpo(t, bundleByVariant) {
   const projectDir = fs.mkdtempSync(
     path.join(os.tmpdir(), "production-bundle-cli-"),
   );
@@ -376,7 +596,9 @@ const path = require("node:path");
 const args = process.argv.slice(2);
 const bundleDir = path.join(args[args.indexOf("--output-dir") + 1], "_expo/static/js", args[args.indexOf("--platform") + 1]);
 fs.mkdirSync(bundleDir, { recursive: true });
-fs.writeFileSync(path.join(bundleDir, "entry.js"), ${JSON.stringify(bundleTextByVariant)}[process.env.EXPO_PUBLIC_APP_VARIANT ?? "unset"]);
+const bundle = ${JSON.stringify(bundleByVariant)}[process.env.EXPO_PUBLIC_APP_VARIANT ?? "unset"];
+fs.writeFileSync(path.join(bundleDir, "entry.js"), bundle.text);
+fs.writeFileSync(path.join(bundleDir, "entry.js.map"), JSON.stringify({ sources: bundle.sources }));
 `,
     { mode: 0o755 },
   );
@@ -396,9 +618,12 @@ fs.writeFileSync(path.join(bundleDir, "entry.js"), ${JSON.stringify(bundleTextBy
 
 test("exits 1 when run as CI runs it and a production bundle carries a mock marker", (t) => {
   const result = runCheckInProjectWithStubExpo(t, {
-    ...SHIPPED_BUNDLE_TEXT_BY_VARIANT,
-    production: BUNDLE_MARKERS.find(({ source }) => source === "src/mocks/bank")
-      .text,
+    ...SHIPPED_BUNDLE_BY_VARIANT,
+    production: {
+      ...SHIPPED_BUNDLE_BY_VARIANT.production,
+      text: BUNDLE_MARKERS.find(({ source }) => source === "src/mocks/bank")
+        .text,
+    },
   });
 
   assert.equal(result.status, 1);
@@ -406,10 +631,7 @@ test("exits 1 when run as CI runs it and a production bundle carries a mock mark
 });
 
 test("exits 0 when run as CI runs it and every bundle carries only what its variant should", (t) => {
-  const result = runCheckInProjectWithStubExpo(
-    t,
-    SHIPPED_BUNDLE_TEXT_BY_VARIANT,
-  );
+  const result = runCheckInProjectWithStubExpo(t, SHIPPED_BUNDLE_BY_VARIANT);
 
   assert.equal(result.status, 0, result.stderr);
   assert.match(

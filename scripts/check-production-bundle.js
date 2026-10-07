@@ -101,6 +101,7 @@ function checkProductionBundle({
           platform,
           "--no-bytecode",
           "--clear",
+          "--source-maps",
           "--output-dir",
           outputDir,
         ],
@@ -123,7 +124,10 @@ function checkProductionBundle({
         );
         continue;
       }
-      const outputContents = outputFiles.map((file) => fs.readFileSync(file));
+      // Not the source map: it holds each module's original source, dead branches included.
+      const outputContents = outputFiles
+        .filter((file) => !file.endsWith(".map"))
+        .map((file) => fs.readFileSync(file));
       for (const { source, text, carriedBy } of markers) {
         if (text === "") continue;
         let foundCount = 0;
@@ -144,6 +148,40 @@ function checkProductionBundle({
             `${exportLabel} lacks "${text}" from ${source}, so its absence from the other builds proves nothing. If ${source} no longer uses it, replace it with another string that code uses at runtime — never a constant only a dead branch reads, which minify drops — and that no ${source === RENDER_TRACE ? "other " : ""}app code contains.`,
           );
       }
+
+      // Map paths start at the project root, so a package's own src/mocks/ never matches, and a
+      // map listing no src/app/ file has changed form: its zeros below would prove nothing.
+      const bundledFiles = outputFiles
+        .filter((file) => file.endsWith(".map"))
+        .flatMap((file) => JSON.parse(fs.readFileSync(file, "utf8")).sources);
+      if (!bundledFiles.some((file) => file.startsWith("/src/app/"))) {
+        failures.push(
+          `${exportLabel} wrote no source map that lists src/app/, so the files a map leaves out prove nothing.`,
+        );
+        continue;
+      }
+      const mockFiles = bundledFiles.filter((file) =>
+        file.startsWith("/src/mocks/"),
+      );
+      const mswFiles = bundledFiles.filter((file) =>
+        /\/node_modules\/(msw|@mswjs)\//.test(file),
+      );
+      if (!DEMO_LAYER_VARIANTS.includes(variant)) {
+        const leakedFiles = [...mockFiles, ...mswFiles];
+        if (leakedFiles.length > 0)
+          failures.push(
+            `${exportLabel}'s source map lists files from src/mocks/ or msw (${leakedFiles.length} found): ${leakedFiles.slice(0, 10).join(", ")}; only ${DEMO_LAYER_VARIANTS.join(" and ")} builds may.`,
+          );
+        continue;
+      }
+      if (mockFiles.length === 0)
+        failures.push(
+          `${exportLabel}'s source map lists no file from src/mocks/, so their absence from the other builds' maps proves nothing.`,
+        );
+      if (mswFiles.length === 0)
+        failures.push(
+          `${exportLabel}'s source map lists no file from msw, so their absence from the other builds' maps proves nothing.`,
+        );
     }
   } finally {
     fs.rmSync(outputRoot, { recursive: true, force: true });
