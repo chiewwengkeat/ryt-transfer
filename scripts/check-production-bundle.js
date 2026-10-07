@@ -7,15 +7,17 @@ const DEMO_LAYER_VARIANTS = ["demo", "development"];
 const RENDER_TRACE = "the render trace";
 
 // Strings each group's code uses at runtime: minify drops a constant only a dead branch reads.
+// An export name survives minify too: Metro's CommonJS wrapper writes it as a string.
 const BUNDLE_MARKERS = [
   {
     source: "src/mocks/bank",
     text: "cus_4f7e2a91",
     carriedBy: DEMO_LAYER_VARIANTS,
   },
+  // Not a route path: the scenarios bring those into a bundle that holds no handler.
   {
     source: "src/mocks/handlers",
-    text: "*/transfers/:transferId",
+    text: "transferHandlers",
     carriedBy: DEMO_LAYER_VARIANTS,
   },
   {
@@ -23,7 +25,6 @@ const BUNDLE_MARKERS = [
     text: "transfer.balance_and_limit_shown",
     carriedBy: DEMO_LAYER_VARIANTS,
   },
-  // The store holds no string of its own; the module transform writes its export name as one.
   {
     source: "src/mocks/switcher",
     text: "switcherStore",
