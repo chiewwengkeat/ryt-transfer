@@ -101,4 +101,10 @@ it("finds a matrix id with no strings under the transfer bundle's common, whatev
   expect(findMatrixIdsWithoutStrings({ common })).toEqual([missingId]);
 });
 
-it.todo("gives every matrix id its strings under the transfer bundle's common");
+it("gives every matrix id its strings under the transfer bundle's common", () => {
+  const transferBundle = JSON.parse(
+    readFileSync(`${SOURCE_ROOT}/screens/transfer/i18n/en-MY.json`, "utf8"),
+  ) as Parameters<typeof findMatrixIdsWithoutStrings>[0];
+
+  expect(findMatrixIdsWithoutStrings(transferBundle)).toEqual([]);
+});

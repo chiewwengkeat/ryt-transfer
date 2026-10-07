@@ -1,43 +1,206 @@
 {
   "common": {
+    "balance_and_limit_shown": {
+      "title": "Balance and today's limit shown"
+    },
+    "new_customer_daily_limit": {
+      "title": "New customer's lower daily limit"
+    },
+    "balance_unavailable": {
+      "title": "Balance or limit can't load"
+    },
+    "under_maintenance": {
+      "title": "Transfers under maintenance",
+      "body": "Transfers are unavailable right now."
+    },
+    "offline": {
+      "title": "Offline"
+    },
+    "earlier_transfer_unconfirmed": {
+      "title": "Earlier transfer still being checked"
+    },
+    "start_unexpected": {
+      "title": "Something unexpected while starting"
+    },
     "badly_formed_input": {
+      "title": "Badly formed ID, amount or note",
+      "body": "The bank could not accept the amount or note as entered. Check them, then review again.",
       "mobile": "Enter a Malaysian mobile number, like 012-345 6789.",
       "amount": "Enter an amount in ringgit, with up to two decimal places."
     },
+    "contacts_access_refused": {
+      "title": "Contacts access refused"
+    },
+    "contact_without_mobile": {
+      "title": "Picked contact has no Malaysian mobile number"
+    },
+    "recent_recipient_chosen": {
+      "title": "Recent recipient chosen"
+    },
+    "recipient_unexpected": {
+      "title": "Something unexpected while choosing the recipient"
+    },
     "amount_too_high": {
+      "title": "Amount over the balance or a limit",
       "over_balance": "That is more than your balance of {{amount}}.",
       "over_remaining_today": "That is more than the {{amount}} you can still send today.",
       "over_per_transfer_max": "That is more than {{amount}}, the most you can send in one transfer."
     },
+    "amount_unexpected": {
+      "title": "Something unexpected while entering the amount"
+    },
+    "recipient_found": {
+      "title": "Recipient found"
+    },
     "first_transfer_to_recipient": {
+      "title": "First transfer to this recipient",
       "body": "This is your first transfer to this recipient. Check the name is who you expect."
     },
+    "recipient_not_found": {
+      "title": "Recipient not found"
+    },
+    "name_check_unavailable": {
+      "title": "Name check unavailable"
+    },
+    "too_many_name_checks": {
+      "title": "Too many name checks"
+    },
+    "balance_or_limit_short_at_confirmation": {
+      "title": "Balance or limit short at confirmation",
+      "body": "Your balance or a limit is now too low for this amount."
+    },
+    "cooling_off_new_phone": {
+      "title": "Phone paired less than 12 hours ago"
+    },
+    "cooling_off_new_account": {
+      "title": "Account opened less than an hour ago"
+    },
+    "account_locked": {
+      "title": "Account locked"
+    },
+    "name_check_expired": {
+      "title": "Name check expired",
+      "body": "The recipient check has expired. Confirm the recipient again."
+    },
+    "confirmation_unanswered": {
+      "title": "No answer when confirming",
+      "body": "Ryt could not be reached — no money moved."
+    },
+    "details_changed_after_no_answer": {
+      "title": "Details changed after no answer",
+      "body": "Your details changed after Ryt did not answer. Check them, then confirm this as a new transfer."
+    },
+    "double_tap_ignored": {
+      "title": "Double tap on Transfer"
+    },
     "review_unexpected": {
+      "title": "Something unexpected while reviewing",
       "body": "Something unexpected stopped the transfer — no money moved.",
       "retry": "Try again"
     },
     "biometrics_recognised": {
+      "title": "Face or fingerprint recognised",
       "body": "Sending your transfer. The bank's answer comes next."
     },
     "approval_cancelled": {
+      "title": "Approval cancelled",
       "body": "The transfer was not sent — no money moved."
     },
+    "biometrics_not_recognised": {
+      "title": "Face or fingerprint not recognised",
+      "body": "Your face or fingerprint was not recognised. You can try again, or use your PIN."
+    },
+    "biometrics_locked_out": {
+      "title": "Too many face or fingerprint attempts",
+      "body": "There were too many attempts, so approve with your PIN."
+    },
+    "biometrics_unavailable": {
+      "title": "Face or fingerprint unavailable",
+      "body": "Face or fingerprint approval isn't available, so approve with your PIN."
+    },
+    "biometrics_changed": {
+      "title": "Fingerprints or face changed",
+      "body": "Your fingerprints or face changed. Your PIN approves this transfer and turns face or fingerprint approval back on."
+    },
+    "pin_chosen": {
+      "title": "PIN chosen instead"
+    },
+    "pin_incorrect": {
+      "title": "Incorrect PIN"
+    },
+    "pin_locked": {
+      "title": "PIN locked",
+      "body": "Your PIN is locked. Reset it in the app's security settings."
+    },
+    "approval_key_unknown": {
+      "title": "Approval key unknown to the bank",
+      "body": "Approval needs setting up again on this phone."
+    },
+    "approval_expired": {
+      "title": "Approval window passed",
+      "body": "The approval timed out — no money moved."
+    },
+    "approval_not_verified": {
+      "title": "Approval could not be verified",
+      "body": "The approval couldn't be verified — no money moved."
+    },
+    "balance_or_limit_short_at_approval": {
+      "title": "Balance or limit short at approval",
+      "body": "It was not sent because your balance or limit changed — no money moved."
+    },
+    "fraud_blocked": {
+      "title": "Stopped by the bank's fraud check"
+    },
+    "held_for_review": {
+      "title": "Held for a security check"
+    },
+    "recipient_account_inactive": {
+      "title": "Receiving account inactive"
+    },
+    "rooted_phone": {
+      "title": "Rooted, jailbroken or tampered phone"
+    },
     "approval_unexpected": {
+      "title": "Something unexpected while approving",
       "body": "Something unexpected stopped the approval before it was sent — no money moved."
-    },
-    "approval_unanswered": {
-      "body": "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
-    },
-    "approval_unknown_answer": {
-      "body": "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
     },
     "completed": {
       "title": "Transfer sent",
       "body": "{{amount}} sent to {{name}} — money moved."
     },
+    "processing": {
+      "title": "Transfer processing"
+    },
+    "refunded_after_processing": {
+      "title": "Refunded after processing"
+    },
     "outcome_unexpected": {
+      "title": "Something unexpected after sending",
       "body": "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
       "retry": "Try again"
+    },
+    "approval_unanswered": {
+      "title": "No answer to the approval",
+      "body": "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
+    },
+    "status_unreachable": {
+      "title": "Bank still unreachable"
+    },
+    "app_closed_during_approval": {
+      "title": "App closed during approval"
+    },
+    "last_transfer_not_found": {
+      "title": "Last transfer not found"
+    },
+    "session_ended": {
+      "title": "Session ended"
+    },
+    "approval_unknown_answer": {
+      "title": "Unknown answer to the approval",
+      "body": "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
+    },
+    "recovery_unexpected": {
+      "title": "Something unexpected while checking"
     },
     "transfer_status": {
       "sent": "Successful",
@@ -102,6 +265,7 @@
     "prompt_cancel": "Cancel",
     "home": "Back to Home"
   },
+  "approval": {},
   "result": {
     "title": "Receipt",
     "amount": "Amount",
