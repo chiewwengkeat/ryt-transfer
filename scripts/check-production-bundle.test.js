@@ -226,7 +226,20 @@ test("fails a development export missing the render trace", () => {
   assert.match(failures[0], /^development android export lacks "trace-marker"/);
 });
 
-test("never checks a marker with no text", () => {
+test("refuses a marker other than the render trace's that has no text, before running any export", () => {
+  const fake = fakeExpoExport();
+
+  assert.throws(
+    () =>
+      checkWith(fake, {
+        markers: [{ ...MARKERS[0], text: "" }, ...MARKERS.slice(1)],
+      }),
+    /The marker for the bank has no text/,
+  );
+  assert.equal(fake.exportCalls.length, 0);
+});
+
+test("leaves the render trace's marker unchecked while it has no text", () => {
   const markers = [
     ...MARKERS.slice(0, 2),
     { source: "the render trace", text: "", carriedBy: ["development"] },
@@ -397,5 +410,10 @@ test("exits 0 when run as CI runs it and every bundle carries only what its vari
   );
 
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /6 exports checked, 0 failures/);
+  assert.match(
+    result.stdout,
+    new RegExp(
+      `6 exports checked, ${BUNDLE_MARKERS.filter(({ text }) => text !== "").length} of 7 markers in each, 0 failures`,
+    ),
+  );
 });

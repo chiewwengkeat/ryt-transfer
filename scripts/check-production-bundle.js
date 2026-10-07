@@ -4,6 +4,7 @@ const os = require("node:os");
 const path = require("node:path");
 
 const DEMO_LAYER_VARIANTS = ["demo", "development"];
+const RENDER_TRACE = "the render trace";
 
 // Strings each group's code uses at runtime: minify drops a constant only a dead branch reads.
 const BUNDLE_MARKERS = [
@@ -39,7 +40,7 @@ const BUNDLE_MARKERS = [
     carriedBy: DEMO_LAYER_VARIANTS,
   },
   // Empty until the render trace exists: a placeholder would fail the development export.
-  { source: "the render trace", text: "", carriedBy: ["development"] },
+  { source: RENDER_TRACE, text: "", carriedBy: ["development"] },
 ];
 
 const EXPORT_RUNS = [
@@ -64,6 +65,13 @@ function checkProductionBundle({
   if (unknownPlatformRun)
     throw new Error(
       `Unknown platform "${unknownPlatformRun.platform}": each export must be android or ios, so its counts come from one bundle.`,
+    );
+  const emptyTextMarker = markers.find(
+    ({ source, text }) => text === "" && source !== RENDER_TRACE,
+  );
+  if (emptyTextMarker)
+    throw new Error(
+      `The marker for ${emptyTextMarker.source} has no text, so it would check nothing: only the render trace's may be empty, until the trace exists.`,
     );
 
   const outputRoot = fs.mkdtempSync(
@@ -147,7 +155,7 @@ if (require.main === module) {
   });
   for (const failure of failures) console.error(failure);
   console.log(
-    `production bundle: ${EXPORT_RUNS.length} exports checked, ${failures.length} failures`,
+    `production bundle: ${EXPORT_RUNS.length} exports checked, ${BUNDLE_MARKERS.filter(({ text }) => text !== "").length} of ${BUNDLE_MARKERS.length} markers in each, ${failures.length} failures`,
   );
   process.exitCode = failures.length > 0 ? 1 : 0;
 }
