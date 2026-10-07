@@ -152,4 +152,4 @@ if (require.main === module) {
   process.exitCode = failures.length > 0 ? 1 : 0;
 }
 
-module.exports = { checkProductionBundle };
+module.exports = { BUNDLE_MARKERS, checkProductionBundle };

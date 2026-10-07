@@ -1,9 +1,14 @@
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
 
-const { checkProductionBundle } = require("./check-production-bundle");
+const {
+  BUNDLE_MARKERS,
+  checkProductionBundle,
+} = require("./check-production-bundle");
 
 const PROJECT_DIR = "/project";
 const MARKERS = [
@@ -37,7 +42,7 @@ function bundleTextExceptFor(label, text) {
 
 function fakeExpoExport({
   bundleTextFor = bundleTextWhenEveryGateHolds,
-  exitStatusFor = () => 0,
+  exportResultFor = () => ({ status: 0 }),
 } = {}) {
   const exportCalls = [];
   const runCommand = (command, args, options) => {
@@ -55,7 +60,7 @@ function fakeExpoExport({
       fs.mkdirSync(bundleDir, { recursive: true });
       fs.writeFileSync(path.join(bundleDir, "entry.js"), bundleText);
     }
-    return { status: exitStatusFor(run) };
+    return exportResultFor(run);
   };
   return { exportCalls, runCommand };
 }
@@ -114,6 +119,25 @@ test("runs every export with Metro's cache cleared, JavaScript rather than bytec
     assert.equal(options.env.EXPO_NO_DOTENV, "1");
     assert.equal(options.cwd, PROJECT_DIR);
   }
+});
+
+test("ships one marker with text for each mock group and msw's core, carried by demo and development, and the render trace's carried by development alone", () => {
+  assert.deepEqual(
+    BUNDLE_MARKERS.map(
+      ({ source, carriedBy }) => `${source}: ${carriedBy.join(" and ")}`,
+    ).sort(),
+    [
+      "msw's request-handling core: demo and development",
+      "src/mocks/bank: demo and development",
+      "src/mocks/handlers: demo and development",
+      "src/mocks/scenarios: demo and development",
+      "src/mocks/switcher: demo and development",
+      "src/mocks/transport: demo and development",
+      "the render trace: development",
+    ],
+  );
+  for (const { source, text } of BUNDLE_MARKERS)
+    if (source !== "the render trace") assert.notEqual(text, "", source);
 });
 
 test("passes when production and the unset variant carry no marker and demo and development carry theirs", () => {
@@ -235,10 +259,33 @@ test("fails an export that wrote no JavaScript bundle rather than reading its ze
   );
 });
 
+test("counts a marker in any file an export writes, not only its JavaScript", () => {
+  const fake = fakeExpoExport();
+  const failures = checkWith({
+    runCommand: (command, args, options) => {
+      const exportResult = fake.runCommand(command, args, options);
+      if (fake.exportCalls.at(-1).label === "production android") {
+        const assetsDir = path.join(
+          args[args.indexOf("--output-dir") + 1],
+          "assets",
+        );
+        fs.mkdirSync(assetsDir);
+        fs.writeFileSync(path.join(assetsDir, "3f9c2a"), "bank-marker");
+      }
+      return exportResult;
+    },
+  });
+
+  assert.equal(failures.length, 1);
+  assert.match(failures[0], /^production android export carries "bank-marker"/);
+});
+
 test("fails an export that does not finish", () => {
   const failures = checkWith(
     fakeExpoExport({
-      exitStatusFor: (run) => (exportRunLabel(run) === "demo ios" ? 1 : 0),
+      exportResultFor: (run) => ({
+        status: exportRunLabel(run) === "demo ios" ? 1 : 0,
+      }),
     }),
   );
 
@@ -246,18 +293,109 @@ test("fails an export that does not finish", () => {
   assert.match(failures[0], /^demo ios export did not finish: exit 1/);
 });
 
-test("refuses an unknown platform before running any export", () => {
+test("fails an export that a signal stopped, even when it wrote a bundle", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      exportResultFor: (run) =>
+        exportRunLabel(run) === "demo ios"
+          ? { status: null, signal: "SIGKILL" }
+          : { status: 0 },
+    }),
+  );
+
+  assert.equal(failures.length, 1);
+  assert.match(failures[0], /^demo ios export did not finish/);
+});
+
+test("refuses any platform but android and ios before running any export", () => {
+  for (const platform of ["web", "all"]) {
+    const fake = fakeExpoExport();
+
+    assert.throws(
+      () =>
+        checkWith(fake, {
+          exportRuns: [
+            { variant: "production", platform: "android" },
+            { variant: "production", platform },
+          ],
+        }),
+      new RegExp(`Unknown platform "${platform}"`),
+    );
+    assert.equal(fake.exportCalls.length, 0);
+  }
+});
+
+test("removes every export's output once it has read it", () => {
   const fake = fakeExpoExport();
 
-  assert.throws(
-    () =>
-      checkWith(fake, {
-        exportRuns: [
-          { variant: "production", platform: "android" },
-          { variant: "production", platform: "web" },
-        ],
-      }),
-    /Unknown platform "web"/,
+  checkWith(fake);
+
+  for (const { args } of fake.exportCalls)
+    assert.equal(
+      fs.existsSync(path.dirname(args[args.indexOf("--output-dir") + 1])),
+      false,
+    );
+});
+
+const SHIPPED_BUNDLE_TEXT_BY_VARIANT = Object.fromEntries(
+  ["production", "unset", "demo", "development"].map((variant) => [
+    variant,
+    BUNDLE_MARKERS.filter(({ carriedBy }) => carriedBy.includes(variant))
+      .map(({ text }) => text)
+      .join(";"),
+  ]),
+);
+
+function runCheckInProjectWithStubExpo(t, bundleTextByVariant) {
+  const projectDir = fs.mkdtempSync(
+    path.join(os.tmpdir(), "production-bundle-cli-"),
   );
-  assert.equal(fake.exportCalls.length, 0);
+  t.after(() => fs.rmSync(projectDir, { recursive: true, force: true }));
+  const binDir = path.join(projectDir, "node_modules", ".bin");
+  fs.mkdirSync(binDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(binDir, "expo"),
+    `#!${process.execPath}
+const fs = require("node:fs");
+const path = require("node:path");
+const args = process.argv.slice(2);
+const bundleDir = path.join(args[args.indexOf("--output-dir") + 1], "_expo/static/js", args[args.indexOf("--platform") + 1]);
+fs.mkdirSync(bundleDir, { recursive: true });
+fs.writeFileSync(path.join(bundleDir, "entry.js"), ${JSON.stringify(bundleTextByVariant)}[process.env.EXPO_PUBLIC_APP_VARIANT ?? "unset"]);
+`,
+    { mode: 0o755 },
+  );
+  // A copy inside the project: CI passes no argument, so the default project dir is what it runs.
+  const scriptCopy = path.join(
+    projectDir,
+    "scripts",
+    "check-production-bundle.js",
+  );
+  fs.mkdirSync(path.dirname(scriptCopy));
+  fs.copyFileSync(
+    path.join(__dirname, "check-production-bundle.js"),
+    scriptCopy,
+  );
+  return spawnSync(process.execPath, [scriptCopy], { encoding: "utf8" });
+}
+
+test("exits 1 when run as CI runs it and a production bundle carries a mock marker", (t) => {
+  const result = runCheckInProjectWithStubExpo(t, {
+    ...SHIPPED_BUNDLE_TEXT_BY_VARIANT,
+    production: BUNDLE_MARKERS.find(({ source }) => source === "src/mocks/bank")
+      .text,
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /^production android export carries/m);
+});
+
+test("exits 0 when run as CI runs it and every bundle carries only what its variant should", (t) => {
+  const result = runCheckInProjectWithStubExpo(
+    t,
+    SHIPPED_BUNDLE_TEXT_BY_VARIANT,
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /6 exports checked, 0 failures/);
 });
