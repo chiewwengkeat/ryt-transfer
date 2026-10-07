@@ -1,7 +1,8 @@
 const path = require("node:path");
 
-const { isTestFile } = require("../test-files");
+const { isTestCode } = require("../test-files");
 const { readImportGraph } = require("./import-graph");
+const { findEntriesOutsideTheSliceFolders } = require("./slice-layout");
 
 function findPlacedComponentOrHook(file) {
   const parts = file.split("/");
@@ -85,9 +86,7 @@ function findAppUsersOf(placed, edgesByModule) {
 
 function checkPlacementLadder(rootDir) {
   const edgesByModule = new Map(
-    [...readImportGraph(rootDir)].filter(
-      ([file]) => !isTestFile(file) && !file.startsWith("src/test/"),
-    ),
+    [...readImportGraph(rootDir)].filter(([file]) => !isTestCode(file)),
   );
 
   const placedByPath = new Map();
@@ -99,7 +98,7 @@ function checkPlacementLadder(rootDir) {
     placedByPath.get(placed.path).files.push(file);
   }
 
-  const failures = [];
+  const failures = findEntriesOutsideTheSliceFolders(rootDir);
   for (const placed of placedByPath.values()) {
     const users = findAppUsersOf(placed, edgesByModule);
     if (users.length === 0) {

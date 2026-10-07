@@ -25,19 +25,40 @@ function readImportSpecifiers(rootDir, file) {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest);
   const uses = [];
   const reexports = [];
+  // A name imported only to be exported again makes this file a pass-through, not a user.
+  const specifierOfBinding = new Map();
+  const reexportedBindings = new Set();
+  const referencedBindings = new Set();
   const visit = (node) => {
     if (
       ts.isImportDeclaration(node) &&
       ts.isStringLiteral(node.moduleSpecifier)
     ) {
-      uses.push(node.moduleSpecifier.text);
-    } else if (
-      ts.isExportDeclaration(node) &&
-      node.moduleSpecifier &&
-      ts.isStringLiteral(node.moduleSpecifier)
-    ) {
-      reexports.push(node.moduleSpecifier.text);
-    } else if (
+      const clause = node.importClause;
+      const names = clause?.name ? [clause.name.text] : [];
+      if (clause?.namedBindings && ts.isNamespaceImport(clause.namedBindings))
+        names.push(clause.namedBindings.name.text);
+      else if (clause?.namedBindings)
+        names.push(...clause.namedBindings.elements.map((e) => e.name.text));
+      if (names.length === 0) uses.push(node.moduleSpecifier.text);
+      for (const name of names)
+        specifierOfBinding.set(name, node.moduleSpecifier.text);
+      return;
+    }
+    if (ts.isExportDeclaration(node)) {
+      if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier))
+        reexports.push(node.moduleSpecifier.text);
+      else if (node.exportClause && ts.isNamedExports(node.exportClause))
+        for (const element of node.exportClause.elements)
+          reexportedBindings.add((element.propertyName ?? element.name).text);
+      return;
+    }
+    if (ts.isExportAssignment(node) && ts.isIdentifier(node.expression)) {
+      reexportedBindings.add(node.expression.text);
+      return;
+    }
+    if (ts.isIdentifier(node)) referencedBindings.add(node.text);
+    if (
       ts.isImportEqualsDeclaration(node) &&
       ts.isExternalModuleReference(node.moduleReference) &&
       ts.isStringLiteral(node.moduleReference.expression)
@@ -56,6 +77,11 @@ function readImportSpecifiers(rootDir, file) {
     ts.forEachChild(node, visit);
   };
   visit(source);
+  for (const [name, specifier] of specifierOfBinding) {
+    const reexported = reexportedBindings.has(name);
+    if (reexported) reexports.push(specifier);
+    if (!reexported || referencedBindings.has(name)) uses.push(specifier);
+  }
   return { uses, reexports };
 }
 

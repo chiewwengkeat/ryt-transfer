@@ -17,10 +17,10 @@ import * as tseslint from "typescript-eslint";
 import appCodeBans from "./eslint.bans.mjs";
 import sliceBoundaries, { SOURCE_FILES } from "./eslint.boundaries.mjs";
 import fe from "./eslint-rules/index.js";
-import { TEST_FILES } from "./test-files.js";
+import { TEST_FILES, TEST_HELPER_FILES } from "./test-files.js";
 
 const TSCONFIG_PATH = path.join(import.meta.dirname, "tsconfig.json");
-const TEST_CODE_FILES = [...TEST_FILES, "src/test/**/*.{ts,tsx}"];
+const TEST_CODE_FILES = [...TEST_FILES, ...TEST_HELPER_FILES];
 
 export default defineConfig(
   {

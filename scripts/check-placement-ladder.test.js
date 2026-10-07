@@ -276,6 +276,80 @@ test("counts an importer under modules/ as a user outside the screens folders", 
   assert.equal(exitCode, 0);
 });
 
+test("counts the final importers behind a file that imports a component and exports it again", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    "src/screens/transfer/components/BannerOffline/BannerOffline.tsx":
+      PLACEHOLDER_COMPONENT_SOURCE,
+    "src/screens/transfer/components/index.ts":
+      'import BannerOffline from "./BannerOffline/BannerOffline";\n\nexport { BannerOffline };\n',
+    [AMOUNT_SCREEN_FILE]: moduleImporting("@/screens/transfer/components"),
+  });
+  assert.equal(exitCode, 1);
+  assert.match(
+    errors,
+    /BannerOffline: every user sits in src\/screens\/transfer\/TransferAmountScreen\//,
+  );
+});
+
+test("counts no story or test utility as a user", () => {
+  const receiptSpecifier =
+    "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
+  const { exitCode, errors } = runPlacementCheckOn({
+    [RECEIPT_SECTION]: PLACEHOLDER_COMPONENT_SOURCE,
+    "src/screens/transfer/TransferResultScreen/TransferResultScreen.tsx":
+      moduleImporting(receiptSpecifier),
+    "src/screens/transfer/TransferDetailsScreen/test-utils.tsx":
+      moduleImporting(receiptSpecifier),
+    "src/screens/transfer/TransferDetailsScreen/TransferDetailsScreen.stories.tsx":
+      moduleImporting(receiptSpecifier),
+  });
+  assert.equal(exitCode, 1);
+  assert.match(
+    errors,
+    /belongs in src\/screens\/transfer\/TransferResultScreen\/components\/$/m,
+  );
+});
+
+for (const [entry, file] of [
+  [
+    "a folder in a screens folder that the design does not name",
+    "src/screens/transfer/widgets/BannerOffline/BannerOffline.tsx",
+  ],
+  [
+    "a file directly inside a screens folder",
+    "src/screens/transfer/use-flow-guard.ts",
+  ],
+  [
+    "a folder in a domain that the design does not name",
+    "src/domains/transfer/utils/format-amount.ts",
+  ],
+  [
+    "a scenarios folder outside the transfer screens folder",
+    "src/screens/home/scenarios/home.md",
+  ],
+]) {
+  test(`fails ${entry}`, () => {
+    const { exitCode, errors } = runPlacementCheckOn({
+      [file]: PLACEHOLDER_COMPONENT_SOURCE,
+    });
+    assert.equal(exitCode, 1);
+    assert.match(errors, /: a (screens folder|domain) holds only /);
+  });
+}
+
+test("passes every folder the design names inside a screens folder and a domain", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    "src/screens/transfer/scenarios/transfer.md": "# Scenarios\n",
+    "src/screens/transfer/state/flow-store.ts":
+      "export const flowStore = {};\n",
+    "src/screens/transfer/i18n/en-MY.json": "{}\n",
+    "src/domains/transfer/api/transfer.keys.ts": "export const keys = {};\n",
+    "src/domains/transfer/i18n/en-MY.json": "{}\n",
+  });
+  assert.equal(errors, "");
+  assert.equal(exitCode, 0);
+});
+
 test("counts a route that re-exports a domain component as its user", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     "src/domains/account/components/CardBalance/CardBalance.tsx":

@@ -2,7 +2,7 @@ import path from "node:path";
 
 import boundaries from "eslint-plugin-boundaries";
 
-import { TEST_FILES } from "./test-files.js";
+import { TEST_FILES, TEST_HELPER_FILES } from "./test-files.js";
 
 export const SOURCE_FILES = ["src/**/*.{ts,tsx}"];
 
@@ -175,7 +175,9 @@ export default [
     plugins: { boundaries },
     settings: {
       "boundaries/elements": sliceElements,
-      "boundaries/files": [{ category: "test", pattern: TEST_FILES }],
+      "boundaries/files": [
+        { category: "test", pattern: [...TEST_FILES, ...TEST_HELPER_FILES] },
+      ],
       // require() must count: it is the shell's one way into src/mocks.
       "boundaries/dependency-nodes": [
         "import",
