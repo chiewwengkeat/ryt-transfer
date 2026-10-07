@@ -58,7 +58,7 @@ Colocation first: a piece of code lives as close to its users as possible. Most 
 3. Used by two or more screens folders, or by the shell → `src/domains/<area>/components/<Component>/`, in the area whose data it shows.
 4. Knows nothing about banking → `src/shared/ui/`.
 
-Hooks climb the same ladder in `hooks/` folders. A component that only one other component uses nests in that component's own `components/`. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
+Hooks climb the same ladder in `hooks/` folders, except that a hook that knows nothing about banking and that only the shell uses stays in `src/shell/` until a second user appears. A component that only one other component uses nests in that component's own `components/`. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
 
 `scripts/check-placement-ladder.js` fails a component or hook placed higher than its users need, and the import rules fail one placed too low. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case, the script is the authority, not this summary.
 
@@ -87,6 +87,7 @@ Test a route the way a person uses it, against the mock bank:
 
 Every string the app shows comes from a bundle in English (`en-MY`), Malay (`ms-MY`) and Chinese (`zh-MY`). Malay and Chinese are machine translations, set as they come out, with no human review.
 
+- A slice's bundle has one top-level key per screen, plus `common` for what two or more of its screens share; a scenario's words sit under `common.<name>`. A leaf key is named for its role (`title`, `body_secondary`), never numbered.
 - Every English key has a Malay and a Chinese string, each with the same `{{placeholders}}`.
 - A plural comes as a twin. English has `_one` and `_other`; Malay and Chinese repeat their `_other` string under `_one`. Hermes lacks `Intl.PluralRules`, so i18next reads `_one` for a count of one in every language, and a missing twin shows English.
 - A money state's phrase appears in each language exactly as the matrix's money table gives it.
@@ -120,6 +121,7 @@ Every script sets its variant itself. Those that build also regenerate the nativ
 ## Commits
 
 - Conventional Commits, with a lowercase scope and description: `feat(history): load the next page before the list ends`. Every line stays within 100 characters.
-- One slice per commit: one capability, or one piece of infrastructure, with its tests. Each commit typechecks, lints and passes the tests on its own.
-- A body only when the why is not in the code: at most three numbered points, each naming the problem the change solves. A commit that settles a decision names the option it turned down, and why, in a numbered `Rejected:` point.
+- One slice per commit: one capability, or one piece of infrastructure, with its tests. A slice is committed once it typechecks, lints and passes the tests on its own, and its diff has been reviewed.
+- A body only when the why is not in the code; scaffolding and plain additions carry a subject alone. A body is at most three numbered points, each one to three short sentences naming the problem the change solves. A commit that settles a decision names the option it turned down, and why, in a numbered `Rejected:` point.
+- `main` stays linear: work lands on it in order, never through a merge commit. A pushed commit is never amended or force-pushed; a fix lands as a later commit of its own.
 - No trailers of any kind, `Co-authored-by:` and `Signed-off-by:` included: the `commit-msg` hook refuses a message from which git parses a trailer.
