@@ -497,8 +497,11 @@ for (const [users, tree] of [
     },
   ],
   [
-    "the shell",
-    { "src/shell/ViewLaunchRecovery/ViewLaunchRecovery.tsx": keyboardHookUser },
+    "the shell and one screens folder",
+    {
+      "src/shell/ViewLaunchRecovery/ViewLaunchRecovery.tsx": keyboardHookUser,
+      [AMOUNT_SCREEN_FILE]: keyboardHookUser,
+    },
   ],
   [
     "two domains, which cannot import each other",
@@ -519,6 +522,30 @@ for (const [users, tree] of [
     assert.equal(exitCode, 0);
   });
 }
+
+test("fails a shared hook that only the shell uses, naming src/shell/", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [KEYBOARD_HOOK_FILE]: KEYBOARD_HOOK_SOURCE,
+    "src/shell/ViewLaunchRecovery/ViewLaunchRecovery.tsx": keyboardHookUser,
+  });
+  assert.equal(exitCode, 1);
+  assert.match(
+    errors,
+    /use-keyboard-height\.ts: only the shell uses it .* - it belongs in src\/shell\/$/m,
+  );
+});
+
+test("passes a domain hook that only the shell uses", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    "src/domains/approval/hooks/use-resend-timer.ts":
+      "export function useResendTimer() {\n  return null;\n}\n",
+    "src/shell/OverlayPinSheet/OverlayPinSheet.tsx": moduleImporting(
+      "@/domains/approval/hooks/use-resend-timer",
+    ),
+  });
+  assert.equal(errors, "");
+  assert.equal(exitCode, 0);
+});
 
 test("fails a domain hook that only one domain component uses, naming that component's hooks folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({

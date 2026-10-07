@@ -123,6 +123,16 @@ function checkPlacementLadder(rootDir) {
       );
       continue;
     }
+    if (
+      placed.kind === "hooks" &&
+      placed.container.startsWith("src/shared/") &&
+      users.every((file) => file.startsWith("src/shell/"))
+    ) {
+      failures.push(
+        `${placed.path}: only the shell uses it (${shownUsers}) - it belongs in src/shell/`,
+      );
+      continue;
+    }
 
     const usedOutsideSlices = users.some(
       (file) => !/^src\/(screens|domains|shared)\//.test(file),
