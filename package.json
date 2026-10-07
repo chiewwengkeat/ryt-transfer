@@ -5,6 +5,7 @@
   "private": true,
   "packageManager": "pnpm@12.9.1",
   "scripts": {
+    "prepare": "husky",
     "start": "expo start",
     "typecheck": "tsc --noEmit"
   },
@@ -27,7 +28,10 @@
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
     "@types/react": "~19.2.2",
+    "husky": "9.1.7",
     "typescript": "~6.0.3"
   }
 }
