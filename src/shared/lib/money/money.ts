@@ -1,7 +1,7 @@
 import type { Money, Sen, WireMoney } from "./money.type";
 
 /** Brands a number already in sen, throwing unless a safe integer. It never converts ringgit. */
-export function toSen(value: number): Sen {
+export function toSen(value: number) {
   if (!Number.isSafeInteger(value)) {
     throw new RangeError(`Sen must be a safe integer, not ${value}`);
   }
