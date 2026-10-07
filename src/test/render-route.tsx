@@ -6,21 +6,27 @@ import {
 } from "expo-router/testing-library";
 import { useEffect, type ReactNode } from "react";
 
+// renderRoute's fake timers last one test: left on, they stall the next test's msw delay().
+afterEach(() => {
+  jest.useRealTimers();
+});
+
 export async function renderRoute(
   initialUrl: string,
   routes: MockContextConfig = "src/app",
 ) {
-  const pathnameRecorder = jest.fn<void, [string]>();
+  const recordPathname = jest.fn<void, [string]>();
   function PathnameRecorder({ children }: { children?: ReactNode }) {
     const pathname = usePathname();
     useEffect(() => {
-      pathnameRecorder(pathname);
+      recordPathname(pathname);
     }, [pathname]);
     return children;
   }
 
+  // renderRouter's setup; renderRouter itself calls Testing Library 14's async render
+  // synchronously on SDK 57 and fails.
   jest.useFakeTimers();
-  process.env.EXPO_ROUTER_IMPORT_MODE = "sync";
   const view = await render(
     <ExpoRoot
       context={getMockContext(routes)}
@@ -29,6 +35,6 @@ export async function renderRoute(
     />,
   );
   return Object.assign(view, {
-    getPathname: () => pathnameRecorder.mock.lastCall?.[0],
+    getPathname: () => recordPathname.mock.lastCall?.[0],
   });
 }

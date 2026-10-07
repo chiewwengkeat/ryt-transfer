@@ -26,3 +26,12 @@ it("reports the pathname the user navigated to", async () => {
   expect(screen.getByRole("header", { name: "Details" })).toBeOnTheScreen();
   expect(view.getPathname()).toBe("/details");
 });
+
+// ⛔ Keep this after a test that renders a route: alone, it passes whatever renderRoute leaves on.
+it("hands the next test real timers", async () => {
+  const realTimerFired = await new Promise((resolve) => {
+    setTimeout(() => resolve(true), 1);
+  });
+
+  expect(realTimerFired).toBe(true);
+});
