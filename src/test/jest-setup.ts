@@ -5,6 +5,7 @@ import {
   onlineManager,
   type QueryClient,
 } from "@tanstack/react-query";
+import type * as ContextStubs from "expo-router/build/testing-library/context-stubs";
 
 import { setObservabilitySink } from "@/shared/observability/observability";
 // Ahead of every test, as at launch: loaded with the first route instead, its reinstall wipe would erase keys a
@@ -55,6 +56,25 @@ jest.mock("expo-crypto", () => ({
     "./harness/native-doubles",
   ).randomUUIDDouble,
 }));
+// With overrides, expo-router's test context strips "./" and the extension from its keys, so its ignore rule for
+// ./+native-intent.tsx misses and it rejects the file as an invalid route. That mode never reads the file anyway.
+jest.mock("expo-router/build/testing-library/context-stubs", () => {
+  const actual = jest.requireActual<typeof ContextStubs>(
+    "expo-router/build/testing-library/context-stubs",
+  );
+  return {
+    ...actual,
+    requireContextWithOverrides: (
+      ...args: Parameters<typeof actual.requireContextWithOverrides>
+    ) => {
+      const context = actual.requireContextWithOverrides(...args);
+      const routeKeys = context
+        .keys()
+        .filter((key) => key !== "+native-intent");
+      return Object.assign(context, { keys: () => routeKeys });
+    },
+  };
+});
 // Replaced whole: the library throws as it loads when no native module is registered.
 jest.mock(
   "@sbaiahmed1/react-native-biometrics",
