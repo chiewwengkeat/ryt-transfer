@@ -11,7 +11,7 @@
     "ios": "EXPO_PUBLIC_APP_VARIANT=development expo prebuild --clean --platform ios && EXPO_PUBLIC_APP_VARIANT=development expo run:ios",
     "ios:demo": "EXPO_PUBLIC_APP_VARIANT=demo expo prebuild --clean --platform ios && EXPO_PUBLIC_APP_VARIANT=demo expo run:ios --configuration Release",
     "ios:production": "EXPO_PUBLIC_APP_VARIANT=production expo prebuild --clean --platform ios && EXPO_PUBLIC_APP_VARIANT=production expo run:ios --configuration Release",
-    "lint": "eslint . --max-warnings 0 && prettier --check . && node scripts/check-placement-ladder.js && secretlint \"**/*\"",
+    "lint": "eslint . --max-warnings 0 && git ls-files -z --cached --others --exclude-standard | xargs -0 prettier --check --ignore-unknown --no-error-on-unmatched-pattern && node scripts/check-placement-ladder.js && secretlint \"**/*\"",
     "prepare": "husky",
     "start": "EXPO_PUBLIC_APP_VARIANT=development expo start",
     "test": "jest && node --test \"scripts/**/*.test.js\"",

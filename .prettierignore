@@ -2,5 +2,3 @@ pnpm-lock.yaml
 pnpm-workspace.yaml
 assets/
 src/screens/*/scenarios/
-CLAUDE.local.md
-.claude/
