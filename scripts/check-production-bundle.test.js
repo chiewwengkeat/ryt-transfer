@@ -588,6 +588,33 @@ test("fails an export that a signal stopped, even when it wrote a bundle", () =>
   assert.match(failures[0], /^demo ios export did not finish/);
 });
 
+test("stops an export at its time limit with a signal it cannot trap, and fails it by name", () => {
+  const fake = fakeExpoExport({
+    exportResultFor: (run) =>
+      exportRunLabel(run) === "demo ios"
+        ? {
+            status: null,
+            signal: "SIGKILL",
+            error: Object.assign(new Error("spawnSync expo ETIMEDOUT"), {
+              code: "ETIMEDOUT",
+            }),
+          }
+        : { status: 0 },
+  });
+
+  const failures = checkWith(fake);
+
+  for (const { label, options } of fake.exportCalls) {
+    assert.ok(Number.isFinite(options.timeout) && options.timeout > 0, label);
+    assert.equal(options.killSignal, "SIGKILL", label);
+  }
+  assert.equal(failures.length, 1);
+  assert.match(
+    failures[0],
+    /^demo ios export did not finish within \d+ minutes/,
+  );
+});
+
 test("refuses any platform but android and ios before running any export", () => {
   for (const platform of ["web", "all"]) {
     const fake = fakeExpoExport();

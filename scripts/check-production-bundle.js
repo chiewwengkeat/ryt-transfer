@@ -55,6 +55,10 @@ const EXPORT_RUNS = [
   { variant: "development", platform: "android" },
 ];
 
+// Failures print only after the last export ends, so the production-bundle job's timeout-minutes
+// must outlast every export running to this limit.
+const EXPORT_TIMEOUT_MINUTES = 5;
+
 function checkProductionBundle({
   projectDir,
   runCommand = spawnSync,
@@ -105,8 +109,21 @@ function checkProductionBundle({
           "--output-dir",
           outputDir,
         ],
-        { cwd: projectDir, env, stdio: "inherit" },
+        {
+          cwd: projectDir,
+          env,
+          stdio: "inherit",
+          timeout: EXPORT_TIMEOUT_MINUTES * 60_000,
+          // spawnSync waits on past its timeout for a child that traps SIGTERM.
+          killSignal: "SIGKILL",
+        },
       );
+      if (exportResult.error?.code === "ETIMEDOUT") {
+        failures.push(
+          `${exportLabel} did not finish within ${EXPORT_TIMEOUT_MINUTES} minutes and was stopped.`,
+        );
+        continue;
+      }
       if (exportResult.status !== 0) {
         failures.push(
           `${exportLabel} did not finish: ${exportResult.error ?? `exit ${exportResult.status}`}`,
