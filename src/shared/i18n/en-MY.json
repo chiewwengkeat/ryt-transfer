@@ -21,5 +21,8 @@
     "day_month_year": "{{day}} {{month}} {{year}}",
     "time": "{{hour}}:{{minute}} {{period}}",
     "date_time": "{{date}}, {{time}}"
+  },
+  "loader": {
+    "label": "Loading"
   }
 }
