@@ -1,11 +1,11 @@
-import { formatMoney, parseTypedAmount, parseWireAmount, toSen } from "./money";
+import { formatMoney, parseTypedAmount, parseWireAmount, asSen } from "./money";
 import type { WireMoney } from "./money.type";
 
-describe("toSen", () => {
+describe("asSen", () => {
   it.each([0, 1, -500, 123450, Number.MAX_SAFE_INTEGER])(
     "keeps the safe integer %p as it is",
     (value) => {
-      expect(toSen(value)).toBe(value);
+      expect(asSen(value)).toBe(value);
     },
   );
 
@@ -15,7 +15,7 @@ describe("toSen", () => {
     Number.POSITIVE_INFINITY,
     Number.MAX_SAFE_INTEGER + 1,
   ])("refuses %p, which is not a safe integer", (value) => {
-    expect(() => toSen(value)).toThrow(RangeError);
+    expect(() => asSen(value)).toThrow(RangeError);
   });
 });
 
@@ -49,7 +49,7 @@ describe("formatMoney", () => {
     [-123450, "-RM 1,234.50"],
     [Number.MAX_SAFE_INTEGER, "RM 90,071,992,547,409.91"],
   ])("shows %p sen as %p", (minor, text) => {
-    expect(formatMoney({ minor: toSen(minor), currency: "MYR" })).toBe(text);
+    expect(formatMoney({ minor: asSen(minor), currency: "MYR" })).toBe(text);
   });
 
   it.each([
@@ -59,7 +59,7 @@ describe("formatMoney", () => {
   ])("signs %p sen as %p when zero alone goes unsigned", (minor, text) => {
     expect(
       formatMoney(
-        { minor: toSen(minor), currency: "MYR" },
+        { minor: asSen(minor), currency: "MYR" },
         { signDisplay: "exceptZero" },
       ),
     ).toBe(text);

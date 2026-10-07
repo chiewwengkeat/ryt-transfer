@@ -1,7 +1,7 @@
 import type { Money, Sen, WireMoney } from "./money.type";
 
-/** Brands a number already in sen, throwing unless a safe integer. It never converts ringgit. */
-export function toSen(value: number) {
+/** Brands a number that is already an integer count of sen, and throws on anything else. It never converts ringgit. */
+export function asSen(value: number) {
   if (!Number.isSafeInteger(value)) {
     throw new RangeError(`Sen must be a safe integer, not ${value}`);
   }
@@ -13,7 +13,7 @@ export function parseWireAmount(wire: WireMoney): Money | null {
   if (!Number.isSafeInteger(wire?.minor) || wire.currency !== "MYR") {
     return null;
   }
-  return { minor: toSen(wire.minor), currency: "MYR" };
+  return { minor: asSen(wire.minor), currency: "MYR" };
 }
 
 // Not Intl.NumberFormat: Hermes hands it to the platform, whose output varies across Android versions.
@@ -39,5 +39,5 @@ export function parseTypedAmount(text: string): Money | null {
   const [, ringgit = "", sen = ""] = match;
   const minor = Number(ringgit + sen.padEnd(2, "0"));
   if (ringgit + sen === "" || !Number.isSafeInteger(minor)) return null;
-  return { minor: toSen(minor), currency: "MYR" };
+  return { minor: asSen(minor), currency: "MYR" };
 }
