@@ -1,6 +1,9 @@
 import { setupServer } from "msw/node";
 
-export const mswServer = setupServer();
+import { handlersForActiveScenario } from "@/mocks/demo-bank";
+
+// The bank's handlers are the initial ones, so resetHandlers() after each test brings them back.
+export const mswServer = setupServer(...handlersForActiveScenario());
 
 // Cloned, so a test can still read the body after a handler has consumed the original.
 export const sentRequests: Request[] = [];

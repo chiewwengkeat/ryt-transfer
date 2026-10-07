@@ -10,7 +10,11 @@ module.exports = {
   roots: ["<rootDir>/src"],
   testMatch: TEST_FILES.map((glob) => `<rootDir>/${glob}`),
   globalSetup: "<rootDir>/jest.global-setup.js",
-  setupFilesAfterEnv: ["<rootDir>/src/test/jest-setup.ts"],
+  // The bank's ports first: jest-setup's mock server reaches the bank as it loads.
+  setupFilesAfterEnv: [
+    "<rootDir>/src/test/demo-bank-setup.ts",
+    "<rootDir>/src/test/jest-setup.ts",
+  ],
   // msw/node maps the react-native condition to null, so `node` must follow it.
   testEnvironmentOptions: {
     customExportConditions: ["require", "react-native", "node"],
