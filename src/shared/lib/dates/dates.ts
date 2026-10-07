@@ -43,6 +43,24 @@ export function formatMalaysianDayHeader(malaysianIsoDate: string, now: Date) {
   return formatDayMonthYear(new Date(`${malaysianIsoDate}T00:00:00Z`));
 }
 
+export function formatMalaysianTime(instant: string) {
+  const wallClock = new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS);
+  if (Number.isNaN(wallClock.getTime()))
+    throw new RangeError("Invalid time value");
+  const hour = wallClock.getUTCHours();
+  return t("date.time", {
+    hour: hour % 12 || 12,
+    minute: String(wallClock.getUTCMinutes()).padStart(2, "0"),
+    period: hour < 12 ? t("date.am") : t("date.pm"),
+  });
+}
+
+export function toMalaysianDateKey(instant: string) {
+  return new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS)
+    .toISOString()
+    .slice(0, 10);
+}
+
 function formatDayMonthYear(wallClock: Date) {
   const monthKey = MONTH_KEYS[wallClock.getUTCMonth()];
   if (monthKey === undefined) throw new RangeError("Invalid time value");
