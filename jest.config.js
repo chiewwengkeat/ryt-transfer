@@ -1,11 +1,14 @@
 const expoPreset = require("jest-expo/jest-preset");
 
+const { TEST_FILES } = require("./test-files");
+
 const [presetAllowList, ...presetIgnorePatterns] =
   expoPreset.transformIgnorePatterns;
 
 module.exports = {
   preset: "jest-expo",
   roots: ["<rootDir>/src"],
+  testMatch: TEST_FILES.map((glob) => `<rootDir>/${glob}`),
   globalSetup: "<rootDir>/jest.global-setup.js",
   setupFilesAfterEnv: ["<rootDir>/src/test/jest-setup.ts"],
   // msw/node maps the react-native condition to null, so `node` must follow it.

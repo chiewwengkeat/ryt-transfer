@@ -1,8 +1,7 @@
 const path = require("node:path");
 
+const { isTestFile } = require("../test-files");
 const { readImportGraph } = require("./import-graph");
-
-const TEST_FILE = /(\.(test|spec)\.[jt]sx?$)|(\/__tests__\/)/;
 
 function findPlacedComponentOrHook(file) {
   const parts = file.split("/");
@@ -87,7 +86,7 @@ function findAppUsersOf(placed, edgesByModule) {
 function checkPlacementLadder(rootDir) {
   const edgesByModule = new Map(
     [...readImportGraph(rootDir)].filter(
-      ([file]) => !TEST_FILE.test(file) && !file.startsWith("src/test/"),
+      ([file]) => !isTestFile(file) && !file.startsWith("src/test/"),
     ),
   );
 

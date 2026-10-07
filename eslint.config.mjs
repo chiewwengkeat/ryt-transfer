@@ -17,9 +17,10 @@ import * as tseslint from "typescript-eslint";
 import appCodeBans from "./eslint.bans.mjs";
 import sliceBoundaries, { SOURCE_FILES } from "./eslint.boundaries.mjs";
 import fe from "./eslint-rules/index.js";
+import { TEST_FILES } from "./test-files.js";
 
 const TSCONFIG_PATH = path.join(import.meta.dirname, "tsconfig.json");
-const TEST_FILES = ["src/**/*.test.{ts,tsx}", "src/test/**/*.{ts,tsx}"];
+const TEST_CODE_FILES = [...TEST_FILES, "src/test/**/*.{ts,tsx}"];
 
 export default defineConfig(
   {
@@ -72,7 +73,7 @@ export default defineConfig(
         "error",
         {
           devDependencies: [
-            ...TEST_FILES,
+            ...TEST_CODE_FILES,
             "scripts/**",
             "eslint-rules/**",
             "*.config.{js,mjs,ts}",
@@ -113,7 +114,7 @@ export default defineConfig(
   ...sliceBoundaries,
   ...appCodeBans,
   {
-    files: TEST_FILES,
+    files: TEST_CODE_FILES,
     extends: [
       jest.configs["flat/recommended"],
       testingLibrary.configs["flat/react"],

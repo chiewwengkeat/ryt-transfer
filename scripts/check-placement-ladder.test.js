@@ -172,6 +172,24 @@ test("fails a component whose only importers are tests", () => {
   assert.match(errors, /FieldAmount: no app code uses it/);
 });
 
+test("counts no .spec or __tests__ importer as a user, since Jest runs both as tests", () => {
+  const amountScreenDir = "src/screens/transfer/TransferAmountScreen";
+  const { exitCode, errors } = runPlacementCheckOn({
+    [`${amountScreenDir}/TransferAmountScreen.tsx`]:
+      PLACEHOLDER_COMPONENT_SOURCE,
+    [`${amountScreenDir}/TransferAmountScreen.spec.tsx`]: moduleImporting(
+      "./components/FieldAmount/FieldAmount",
+    ),
+    [`${amountScreenDir}/__tests__/amount-entry.tsx`]: moduleImporting(
+      "../components/FieldAmount/FieldAmount",
+    ),
+    [`${amountScreenDir}/components/FieldAmount/FieldAmount.tsx`]:
+      PLACEHOLDER_COMPONENT_SOURCE,
+  });
+  assert.equal(exitCode, 1);
+  assert.match(errors, /FieldAmount: no app code uses it/);
+});
+
 test("fails a screens-folder hook that one screen uses, naming that screen's hooks folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     "src/screens/transfer/hooks/use-transfer-limits.ts":
