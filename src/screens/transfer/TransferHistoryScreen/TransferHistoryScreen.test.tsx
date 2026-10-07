@@ -1,0 +1,453 @@
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+
+import {
+  TransferDirection,
+  TransferFunds,
+  TransferStatus,
+} from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
+import { mswServer, sentRequests } from "@/test/msw-server";
+import { renderRoute } from "@/test/render-route";
+import {
+  buildHistoryTransfer,
+  failTransferHistoryPages,
+  holdTransferHistoryPages,
+  serveTransferHistoryPages,
+} from "@/test/transfer-history-pages";
+
+const sentTransferHistoryCursors = () =>
+  sentRequests
+    .map(({ url }) => new URL(url))
+    .filter(({ pathname }) => pathname.endsWith("/transfers"))
+    .map(({ searchParams }) => searchParams.get("cursor"));
+
+const LIM_ON_4_OCTOBER = buildHistoryTransfer({
+  registeredName: "Lim Wei Jie",
+  createdAt: "2026-10-04T13:05:00+08:00",
+});
+
+it("lists the first page's transfers under their day, asking the bank once", async () => {
+  await renderRoute("/transfer-history");
+
+  expect(
+    await screen.findByRole("button", {
+      name: "Aisyah Rahman 3:42 pm · Successful -RM 50.00",
+    }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", {
+      name: "5 Oct 2026, 1 transfer, -RM 50.00",
+      expanded: true,
+    }),
+  ).toBeOnTheScreen();
+  expect(sentTransferHistoryCursors()).toEqual([null]);
+});
+
+it("shows the transfers it has at once on a later open, then the newest page in their place", async () => {
+  await renderRoute("/");
+  await act(() => {
+    router.push("/transfer-history");
+  });
+  expect(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+  await act(() => {
+    router.back();
+  });
+  serveTransferHistoryPages([[LIM_ON_4_OCTOBER]]);
+  const releaseFirstPage = holdTransferHistoryPages("first");
+
+  await act(() => {
+    router.push("/transfer-history");
+  });
+
+  expect(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+  releaseFirstPage();
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByRole("button", { name: /^Aisyah Rahman/ }),
+  ).not.toBeOnTheScreen();
+  expect(sentTransferHistoryCursors()).toEqual([null, null]);
+});
+
+it("loads the next page as the list nears its end, with a spinner until it lands", async () => {
+  serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
+  const releaseLaterPages = holdTransferHistoryPages("later");
+  await renderRoute("/transfer-history");
+
+  expect(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+  expect(
+    await screen.findByLabelText("Loading more transfers"),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByRole("button", { name: /^Lim Wei Jie/ }),
+  ).not.toBeOnTheScreen();
+  expect(screen.queryByText("That's everything")).not.toBeOnTheScreen();
+
+  releaseLaterPages();
+
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+  expect(screen.getByText("That's everything")).toBeOnTheScreen();
+  expect(sentTransferHistoryCursors()).toEqual([null, "page-2"]);
+});
+
+it("says it has every transfer once the last page is in", async () => {
+  await renderRoute("/transfer-history");
+
+  expect(await screen.findByText("That's everything")).toBeOnTheScreen();
+  expect(
+    screen.queryByLabelText("Loading more transfers"),
+  ).not.toBeOnTheScreen();
+});
+
+it("says there are no transfers yet when the first page is empty", async () => {
+  serveTransferHistoryPages([[]]);
+  await renderRoute("/transfer-history");
+
+  expect(
+    await screen.findByRole("header", { name: "No transfers yet" }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByText("Transfers you send or receive will show here."),
+  ).toBeOnTheScreen();
+});
+
+it("offers Retry when the next page fails, asks no more by itself, and shows the page once a retry lands", async () => {
+  serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
+  const recoverLaterPages = failTransferHistoryPages("later");
+  await renderRoute("/transfer-history");
+  expect(await screen.findByText("Couldn't load more.")).toBeOnTheScreen();
+  const failedRequestCount = sentTransferHistoryCursors().length;
+
+  await fireEvent.press(
+    screen.getByRole("button", { name: "5 Oct 2026, 1 transfer, -RM 50.00" }),
+  );
+  await act(() => jest.advanceTimersByTimeAsync(1000));
+
+  expect(screen.getByText("Couldn't load more.")).toBeOnTheScreen();
+  expect(sentTransferHistoryCursors()).toHaveLength(failedRequestCount);
+  recoverLaterPages();
+  const releaseLaterPages = holdTransferHistoryPages("later");
+  await fireEvent.press(screen.getByRole("button", { name: "Retry" }));
+  expect(
+    await screen.findByLabelText("Loading more transfers"),
+  ).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Retry" })).not.toBeOnTheScreen();
+  releaseLaterPages();
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+});
+
+it("pulls the newest page in place of the loaded ones", async () => {
+  await renderRoute("/transfer-history");
+  const aisyah = await screen.findByRole("button", { name: /^Aisyah Rahman/ });
+  serveTransferHistoryPages([
+    [
+      buildHistoryTransfer({
+        registeredName: "Lim Wei Jie",
+        createdAt: "2026-10-05T16:10:00+08:00",
+      }),
+      buildHistoryTransfer(),
+    ],
+  ]);
+
+  await fireEvent(aisyah, "refresh");
+
+  expect(
+    await screen.findByRole("button", {
+      name: "5 Oct 2026, 2 transfers, -RM 100.00",
+    }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+  expect(sentTransferHistoryCursors()).toEqual([null, null]);
+});
+
+it("loads no more while a refresh is on its way, then pages on from the new first page", async () => {
+  serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
+  await renderRoute("/transfer-history");
+  const lim = await screen.findByRole("button", { name: /^Lim Wei Jie/ });
+  const releaseFirstPage = holdTransferHistoryPages("first");
+
+  await fireEvent(lim, "refresh");
+  await act(() => jest.advanceTimersByTimeAsync(1000));
+
+  expect(sentTransferHistoryCursors()).toEqual([null, "page-2", null]);
+  releaseFirstPage();
+  await waitFor(() => {
+    expect(sentTransferHistoryCursors()).toEqual([
+      null,
+      "page-2",
+      null,
+      "page-2",
+    ]);
+  });
+});
+
+it("offers Try again when the first page fails, and lists the transfers once it lands", async () => {
+  const recoverFirstPage = failTransferHistoryPages("first");
+  await renderRoute("/transfer-history");
+
+  expect(
+    await screen.findByText("Couldn't load your transfers."),
+  ).toBeOnTheScreen();
+  recoverFirstPage();
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+
+  expect(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+});
+
+it("takes the rows away when a refresh fails, so old ones never pass as current", async () => {
+  await renderRoute("/transfer-history");
+  const aisyah = await screen.findByRole("button", { name: /^Aisyah Rahman/ });
+  const recoverFirstPage = failTransferHistoryPages("first");
+
+  await fireEvent(aisyah, "refresh");
+
+  expect(
+    await screen.findByText("Couldn't load your transfers."),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByRole("button", { name: /^Aisyah Rahman/ }),
+  ).not.toBeOnTheScreen();
+  recoverFirstPage();
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+  expect(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+});
+
+it("hands a 401 to the session-ended view", async () => {
+  failTransferHistoryPages("first", 401);
+  await renderRoute("/transfer-history");
+
+  expect(
+    await screen.findByRole("header", { name: "Your session has ended" }),
+  ).toBeOnTheScreen();
+});
+
+it("collapses a day to its header and expands it again, saying which it is", async () => {
+  await renderRoute("/transfer-history");
+
+  await fireEvent.press(
+    await screen.findByRole("button", {
+      name: "5 Oct 2026, 1 transfer, -RM 50.00",
+      expanded: true,
+    }),
+  );
+
+  expect(
+    screen.getByRole("button", {
+      name: "5 Oct 2026, 1 transfer, -RM 50.00",
+      expanded: false,
+    }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByRole("button", { name: /^Aisyah Rahman/ }),
+  ).not.toBeOnTheScreen();
+
+  await fireEvent.press(
+    screen.getByRole("button", { name: "5 Oct 2026, 1 transfer, -RM 50.00" }),
+  );
+
+  expect(
+    screen.getByRole("button", {
+      name: "5 Oct 2026, 1 transfer, -RM 50.00",
+      expanded: true,
+    }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+});
+
+it("keeps a collapsed day collapsed through a refresh that brings it nothing new, and opens a new day", async () => {
+  await renderRoute("/transfer-history");
+  await fireEvent.press(
+    await screen.findByRole("button", {
+      name: "5 Oct 2026, 1 transfer, -RM 50.00",
+    }),
+  );
+  serveTransferHistoryPages([
+    [
+      buildHistoryTransfer({
+        registeredName: "Lim Wei Jie",
+        createdAt: "2026-10-06T10:20:00+08:00",
+      }),
+      buildHistoryTransfer(),
+    ],
+  ]);
+
+  await fireEvent(
+    screen.getByRole("button", { name: "5 Oct 2026, 1 transfer, -RM 50.00" }),
+    "refresh",
+  );
+
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", {
+      name: "5 Oct 2026, 1 transfer, -RM 50.00",
+      expanded: false,
+    }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByRole("button", { name: /^Aisyah Rahman/ }),
+  ).not.toBeOnTheScreen();
+});
+
+it("opens a collapsed day again when the next page brings rows it did not have", async () => {
+  serveTransferHistoryPages([
+    [buildHistoryTransfer()],
+    [
+      buildHistoryTransfer({
+        registeredName: "Lim Wei Jie",
+        createdAt: "2026-10-05T09:15:00+08:00",
+      }),
+    ],
+  ]);
+  const releaseLaterPages = holdTransferHistoryPages("later");
+  await renderRoute("/transfer-history");
+  await fireEvent.press(
+    await screen.findByRole("button", {
+      name: "5 Oct 2026, 2 transfers, -RM 100.00",
+    }),
+  );
+  expect(
+    screen.queryByRole("button", { name: /^Aisyah Rahman/ }),
+  ).not.toBeOnTheScreen();
+
+  releaseLaterPages();
+
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", {
+      name: "5 Oct 2026, 2 transfers, -RM 100.00",
+      expanded: true,
+    }),
+  ).toBeOnTheScreen();
+});
+
+it("moves a day from Today to Yesterday at Malaysian midnight", async () => {
+  const today = toMalaysianDateKey(new Date().toISOString());
+  serveTransferHistoryPages([
+    [buildHistoryTransfer({ createdAt: `${today}T00:00:00+08:00` })],
+  ]);
+  await renderRoute("/transfer-history");
+  expect(
+    await screen.findByRole("button", {
+      name: "Today, 1 transfer, -RM 50.00",
+    }),
+  ).toBeOnTheScreen();
+  const tomorrow = toMalaysianDateKey(
+    new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  );
+
+  await act(() => {
+    jest.advanceTimersByTime(
+      Date.parse(`${tomorrow}T00:00:00+08:00`) - Date.now(),
+    );
+  });
+
+  expect(
+    screen.getByRole("button", { name: "Yesterday, 1 transfer, -RM 50.00" }),
+  ).toBeOnTheScreen();
+});
+
+it.each([
+  ["a sent transfer", {}, "Successful -RM 50.00"],
+  [
+    "a received transfer",
+    { direction: TransferDirection.In, funds: TransferFunds.Credited },
+    "Received +RM 50.00",
+  ],
+  [
+    "a transfer still processing",
+    { status: TransferStatus.Processing },
+    "Processing -RM 50.00",
+  ],
+  [
+    "a transfer held for a security check",
+    { status: TransferStatus.Processing, underReview: true },
+    "Held for a security check -RM 50.00",
+  ],
+  [
+    "an unsuccessful transfer whose money never left",
+    { status: TransferStatus.Unsuccessful, funds: TransferFunds.NotDebited },
+    "Unsuccessful RM 50.00",
+  ],
+  [
+    "an unsuccessful transfer whose refund is on its way",
+    { status: TransferStatus.Unsuccessful, funds: TransferFunds.RefundPending },
+    "Unsuccessful -RM 50.00",
+  ],
+  [
+    "an unsuccessful transfer whose money came back",
+    { status: TransferStatus.Unsuccessful, funds: TransferFunds.Refunded },
+    "Unsuccessful RM 50.00",
+  ],
+])(
+  "shows %s with its status and the money it moved",
+  async (_, transfer, statusAndAmount) => {
+    serveTransferHistoryPages([[buildHistoryTransfer(transfer)]]);
+    await renderRoute("/transfer-history");
+
+    expect(
+      await screen.findByRole("button", {
+        name: `Aisyah Rahman 3:42 pm · ${statusAndAmount}`,
+      }),
+    ).toBeOnTheScreen();
+  },
+);
+
+it("still lists a transfer whose amount it cannot read", async () => {
+  serveTransferHistoryPages([
+    [buildHistoryTransfer({ amount: { minor: 50.5, currency: "MYR" } })],
+  ]);
+  await renderRoute("/transfer-history");
+
+  expect(
+    await screen.findByRole("button", {
+      name: "Aisyah Rahman 3:42 pm · Successful",
+    }),
+  ).toBeOnTheScreen();
+});
+
+it("pages through the bank's own history, its split day whole from the first page", async () => {
+  // The bank's own history, not the one-row default.
+  mswServer.resetHandlers();
+  const releaseLaterPages = holdTransferHistoryPages("later");
+  await renderRoute("/transfer-history");
+
+  expect(
+    await screen.findByRole("button", {
+      name: "26 Sep 2026, 5 transfers, -RM 801.73",
+    }),
+  ).toBeOnTheScreen();
+  releaseLaterPages();
+
+  await waitFor(() => {
+    expect(screen.getAllByRole("button", { name: / · / })).toHaveLength(45);
+  });
+  expect(screen.getByText("That's everything")).toBeOnTheScreen();
+  expect(sentTransferHistoryCursors()).toEqual([null, expect.any(String)]);
+});
