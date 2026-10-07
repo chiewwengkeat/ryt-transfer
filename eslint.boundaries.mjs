@@ -192,6 +192,7 @@ export default [
         "error",
         { default: "disallow", policies: sliceBoundaries },
       ],
+      "boundaries/no-unknown-dependencies": "error",
       "boundaries/no-unknown-files": "error",
     },
   },

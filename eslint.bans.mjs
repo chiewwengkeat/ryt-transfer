@@ -58,6 +58,11 @@ export default [
           message:
             "Pass require() a string literal: the import bans and slice boundaries cannot follow anything else.",
         },
+        {
+          selector: "TSImportType",
+          message:
+            "Use `import type`: the slice boundaries cannot follow an import() type.",
+        },
       ],
       "no-console": "error",
       "no-restricted-imports": [
