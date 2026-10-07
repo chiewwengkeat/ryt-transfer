@@ -77,5 +77,39 @@
     "reference": "Reference",
     "completed_at": "Completed",
     "done": "Done"
+  },
+  "history": {
+    "title": "Transfer history",
+    "empty": {
+      "title": "No transfers yet",
+      "body": "Transfers you send or receive will show here."
+    },
+    "first_page_failed": "Couldn't load your transfers.",
+    "try_again": "Try again",
+    "day": {
+      "title": "{{day}} ({{count}})",
+      "label_one": "{{day}}, {{count}} transfer, {{net}}",
+      "label_other": "{{day}}, {{count}} transfers, {{net}}",
+      "label_without_net_one": "{{day}}, {{count}} transfer",
+      "label_without_net_other": "{{day}}, {{count}} transfers"
+    },
+    "transfer": {
+      "time_and_status": "{{time}} · {{status}}",
+      "status": {
+        "sent": "Successful",
+        "received": "Received",
+        "processing": "Processing",
+        "held": "Held for a security check",
+        "unsuccessful": "Unsuccessful",
+        "awaiting_approval": "Awaiting approval",
+        "expired": "Expired"
+      }
+    },
+    "footer": {
+      "loading": "Loading more transfers",
+      "failed": "Couldn't load more.",
+      "retry": "Retry",
+      "end": "That's everything"
+    }
   }
 }
