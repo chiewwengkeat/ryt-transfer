@@ -5,9 +5,7 @@ import { useTranslation } from "react-i18next";
 import { reportError } from "@/shared/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
-import TextBody from "@/shared/ui/TextBody/TextBody";
-import TextHeading from "@/shared/ui/TextHeading/TextHeading";
-import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
+import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 
 export default function ViewScreenError({ error, retry }: ErrorBoundaryProps) {
   const { t } = useTranslation();
@@ -16,8 +14,10 @@ export default function ViewScreenError({ error, retry }: ErrorBoundaryProps) {
   }, [error]);
 
   return (
-    <ViewScreenFrame
-      footer={
+    <ViewMessage
+      title={t("view_screen_error.title")}
+      message={t("view_screen_error.body")}
+      actions={
         <>
           <ButtonPrimary
             label={t("view_screen_error.retry")}
@@ -35,9 +35,6 @@ export default function ViewScreenError({ error, retry }: ErrorBoundaryProps) {
           )}
         </>
       }
-    >
-      <TextHeading>{t("view_screen_error.title")}</TextHeading>
-      <TextBody>{t("view_screen_error.body")}</TextBody>
-    </ViewScreenFrame>
+    />
   );
 }
