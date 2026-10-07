@@ -482,7 +482,8 @@ describe("conditions the bank applies itself", () => {
 });
 
 describe("overlays that let the bank commit, then lose or garble its answer", () => {
-  it("transfer.confirmation_unanswered creates the transfer once, however often the answer is lost", async () => {
+  it("transfer.confirmation_unanswered answers a resend with the transfer its first, lost request created", async () => {
+    clockAt(T0);
     const lookup = await lookUpTestRecipient();
     const body = JSON.stringify({
       recipientRef: lookup.recipientRef,
@@ -497,12 +498,17 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
     pickTransferScenario("transfer.confirmation_unanswered");
 
     await expect(create()).rejects.toThrow();
+    clockAt(T0 + 1_000);
     await expect(create()).rejects.toThrow();
     clearTransferScenario();
+    clockAt(T0 + 2_000);
     const answered = (await (await create()).json()) as CreateTransferResponse;
 
-    expect(answered.transfer.status).toBe(TransferStatus.AwaitingApproval);
-    expect(answered.transfer.version).toBe(1);
+    expect(answered.transfer).toMatchObject({
+      status: TransferStatus.AwaitingApproval,
+      version: 1,
+      createdAt: toMalaysiaIso(T0),
+    });
   });
 
   it("transfer.approval_unanswered debits once while every answer is lost", async () => {

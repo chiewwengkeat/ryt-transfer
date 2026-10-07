@@ -19,11 +19,16 @@ import { jestBankPorts } from "@/test/jest-bank-ports";
 import type * as BankPorts from "./bank/ports";
 import { pickTransferScenario } from "./demo-bank";
 import type * as DemoBank from "./demo-bank";
+import type * as SwitcherStore from "./switcher/switcher-store";
 
 // A fresh module registry is a fresh app: nothing survives it but what the bank saved.
 function restartTheApp() {
   let restarted:
-    | { handlers: RequestHandler[]; getResponse: typeof Msw.getResponse }
+    | {
+        handlers: RequestHandler[];
+        getResponse: typeof Msw.getResponse;
+        restoredScenarioId: string | null;
+      }
     | undefined;
   jest.isolateModules(() => {
     jest
@@ -34,14 +39,20 @@ function restartTheApp() {
         .requireActual<typeof DemoBank>("./demo-bank")
         .handlersForActiveScenario(),
       getResponse: jest.requireActual<typeof Msw>("msw").getResponse,
+      restoredScenarioId: jest
+        .requireActual<typeof SwitcherStore>("./switcher/switcher-store")
+        .switcherStore.getState().scenarioId,
     };
   });
-  return async <ResponseBody>(path: string) => {
-    const response = await restarted!.getResponse(
-      restarted!.handlers,
-      new Request(`${BANK_ORIGIN}${path}`),
-    );
-    return (await response!.json()) as ResponseBody;
+  return {
+    restoredScenarioId: restarted!.restoredScenarioId,
+    askBank: async <ResponseBody>(path: string) => {
+      const response = await restarted!.getResponse(
+        restarted!.handlers,
+        new Request(`${BANK_ORIGIN}${path}`),
+      );
+      return (await response!.json()) as ResponseBody;
+    },
   };
 }
 
@@ -59,10 +70,10 @@ it("keeps a completed transfer and its debit across a restart", async () => {
     "/accounts/primary",
   );
 
-  const askRestartedBank = restartTheApp();
+  const { askBank } = restartTheApp();
   const restartedAccount =
-    await askRestartedBank<GetPrimaryAccountResponse>("/accounts/primary");
-  const { transfer } = await askRestartedBank<GetTransferResponse>(
+    await askBank<GetPrimaryAccountResponse>("/accounts/primary");
+  const { transfer } = await askBank<GetTransferResponse>(
     `/transfers/${started.created.transfer.transferId}`,
   );
 
@@ -73,25 +84,31 @@ it("keeps a completed transfer and its debit across a restart", async () => {
 it("keeps the picked scenario across a restart", async () => {
   pickTransferScenario("transfer.start_unexpected");
 
-  const answer = await restartTheApp()<BankErrorBody>("/accounts/primary");
+  const answer =
+    await restartTheApp().askBank<BankErrorBody>("/accounts/primary");
 
   expect(answer.error.code).toBe("NEW_BANK_CODE");
 });
 
-it("drops a saved pick that the scenario registry no longer has", async () => {
-  pickTransferScenario("transfer.start_unexpected");
-  const saved = JSON.parse(jestBankPorts.storage.read() ?? "{}") as {
-    scenarioPick: { scenarioId: string };
-  };
-  jestBankPorts.storage.write(
-    JSON.stringify({
-      ...saved,
-      scenarioPick: { ...saved.scenarioPick, scenarioId: "transfer.retired" },
-    }),
-  );
+it.each(["transfer.retired", "toString"])(
+  "drops a saved pick of %s, which the scenario registry does not hold",
+  async (savedScenarioId) => {
+    pickTransferScenario("transfer.start_unexpected");
+    const saved = JSON.parse(jestBankPorts.storage.read() ?? "{}") as {
+      scenarioPick: { scenarioId: string };
+    };
+    jestBankPorts.storage.write(
+      JSON.stringify({
+        ...saved,
+        scenarioPick: { ...saved.scenarioPick, scenarioId: savedScenarioId },
+      }),
+    );
 
-  const answer =
-    await restartTheApp()<GetPrimaryAccountResponse>("/accounts/primary");
+    const { askBank, restoredScenarioId } = restartTheApp();
+    const answer =
+      await askBank<GetPrimaryAccountResponse>("/accounts/primary");
 
-  expect(answer.balance.currency).toBe("MYR");
-});
+    expect(restoredScenarioId).toBeNull();
+    expect(answer.balance.currency).toBe("MYR");
+  },
+);
