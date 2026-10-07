@@ -1,8 +1,22 @@
 import { http, HttpResponse } from "msw";
 
+import { clearTransferScenario, pickTransferScenario } from "@/mocks/demo-bank";
+
+import { BANK_ORIGIN } from "./bank-client";
 import { mswServer, sentRequests, unhandledRequests } from "./msw-server";
 
 const PROBE_URL = "https://api.example.test/probe";
+
+it("answers each request by the scenario active when it is sent, switched mid-test", async () => {
+  const balanceUrl = `${BANK_ORIGIN}/accounts/primary`;
+
+  pickTransferScenario("transfer.offline");
+  await expect(fetch(balanceUrl)).rejects.toThrow();
+  clearTransferScenario();
+  const reconnected = await fetch(balanceUrl);
+
+  expect(reconnected.status).toBe(200);
+});
 
 it("answers a request through the shared mock server", async () => {
   mswServer.use(

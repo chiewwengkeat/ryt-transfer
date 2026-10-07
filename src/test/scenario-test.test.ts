@@ -8,6 +8,7 @@ it(
   }),
 );
 
+// ⛔ Keep this after the test above: alone, it passes whatever the reset leaves behind.
 it("answers from the bank again once a scenario's test has ended", async () => {
   const response = await fetch(`${BANK_ORIGIN}/accounts/primary`);
 

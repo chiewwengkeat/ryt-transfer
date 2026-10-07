@@ -17,7 +17,6 @@ import { DEMO_PIN } from "@/mocks/bank/seed";
 import {
   clearTransferScenario,
   demoBankNotifications,
-  handlersForActiveScenario,
   pickTransferScenario,
 } from "@/mocks/demo-bank";
 import {
@@ -30,7 +29,6 @@ import {
   startTestTransfer,
   type BankErrorBody,
 } from "@/test/bank-client";
-import { mswServer } from "@/test/msw-server";
 
 import type { TransferScenarioId } from "./transfer-scenarios";
 
@@ -43,17 +41,6 @@ afterEach(() => {
 
 function clockAt(epochMs: number) {
   jest.spyOn(Date, "now").mockReturnValue(epochMs);
-}
-
-function switchToScenario(scenarioId: TransferScenarioId) {
-  pickTransferScenario(scenarioId);
-  mswServer.use(...handlersForActiveScenario());
-}
-
-// The server keeps a scenario's overlays until reset; a phone asks for the handlers per request.
-function switchToNoScenario() {
-  clearTransferScenario();
-  mswServer.resetHandlers();
 }
 
 async function balanceMinor() {
@@ -200,7 +187,7 @@ describe("overlays that answer for the connection", () => {
   ])(
     "%s answers %s %s with %i %s",
     async (scenarioId, method, path, status, code) => {
-      switchToScenario(scenarioId);
+      pickTransferScenario(scenarioId);
 
       const answer = await sendToBank<BankErrorBody>(method, path, {
         body: method === "POST" ? {} : undefined,
@@ -212,7 +199,7 @@ describe("overlays that answer for the connection", () => {
 
   it("says until when maintenance lasts, two hours from when it began", async () => {
     clockAt(T0);
-    switchToScenario("transfer.under_maintenance");
+    pickTransferScenario("transfer.under_maintenance");
 
     const { body } = await sendToBank<BankErrorBody>("GET", "/transfer-limits");
 
@@ -220,7 +207,7 @@ describe("overlays that answer for the connection", () => {
   });
 
   it("fails every request, reads and writes alike, when offline", async () => {
-    switchToScenario("transfer.offline");
+    pickTransferScenario("transfer.offline");
 
     await expect(fetch(`${BANK_ORIGIN}/accounts/primary`)).rejects.toThrow();
     await expect(
@@ -231,7 +218,7 @@ describe("overlays that answer for the connection", () => {
 
 describe("conditions the bank applies itself", () => {
   it("transfer.new_customer_daily_limit lowers today's limit to RM1,000 and enforces it", async () => {
-    switchToScenario("transfer.new_customer_daily_limit");
+    pickTransferScenario("transfer.new_customer_daily_limit");
     const lookup = await lookUpTestRecipient();
 
     const { body: limits } = await sendToBank<GetTransferLimitsResponse>(
@@ -264,7 +251,7 @@ describe("conditions the bank applies itself", () => {
     "%s refuses transfers until the cooling-off ends",
     async (scenarioId, reason, lastsMs) => {
       clockAt(T0);
-      switchToScenario(scenarioId);
+      pickTransferScenario(scenarioId);
       const transferAt = async (epochMs: number) => {
         clockAt(epochMs);
         const lookup = await lookUpTestRecipient();
@@ -290,7 +277,7 @@ describe("conditions the bank applies itself", () => {
   );
 
   it("transfer.account_locked refuses every new transfer", async () => {
-    switchToScenario("transfer.account_locked");
+    pickTransferScenario("transfer.account_locked");
     const lookup = await lookUpTestRecipient();
 
     const refused = await sendToBank<BankErrorBody>("POST", "/transfers", {
@@ -310,7 +297,7 @@ describe("conditions the bank applies itself", () => {
     clockAt(T0);
     const ready = await transferReadyToApprove();
     clockAt(T0 + 1_000);
-    switchToScenario("transfer.approval_key_unknown");
+    pickTransferScenario("transfer.approval_key_unknown");
 
     const unknown = await ready.approve();
     const withoutPin = await sendToBank<BankErrorBody>(
@@ -349,7 +336,7 @@ describe("conditions the bank applies itself", () => {
 
   it("transfer.approval_expired refuses the approval as late and expires the transfer", async () => {
     const ready = await transferReadyToApprove();
-    switchToScenario("transfer.approval_expired");
+    pickTransferScenario("transfer.approval_expired");
 
     const late = await ready.approve();
     const { body } = await readTransfer(ready.transferId);
@@ -363,7 +350,7 @@ describe("conditions the bank applies itself", () => {
 
   it("transfer.approval_not_verified refuses even a correct signature", async () => {
     const ready = await transferReadyToApprove();
-    switchToScenario("transfer.approval_not_verified");
+    pickTransferScenario("transfer.approval_not_verified");
 
     const refused = await ready.approve();
 
@@ -388,7 +375,7 @@ describe("conditions the bank applies itself", () => {
     async (scenarioId, failureReason) => {
       const ready = await transferReadyToApprove();
       const balanceBefore = await balanceMinor();
-      switchToScenario(scenarioId);
+      pickTransferScenario(scenarioId);
 
       const { body } = await ready.approve();
 
@@ -403,7 +390,7 @@ describe("conditions the bank applies itself", () => {
 
   it("transfer.fraud_blocked tells the customer the bank will contact them", async () => {
     const ready = await transferReadyToApprove();
-    switchToScenario("transfer.fraud_blocked");
+    pickTransferScenario("transfer.fraud_blocked");
 
     await ready.approve();
 
@@ -423,7 +410,7 @@ describe("conditions the bank applies itself", () => {
       clockAt(T0);
       const ready = await transferReadyToApprove();
       const balanceBefore = await balanceMinor();
-      switchToScenario(scenarioId);
+      pickTransferScenario(scenarioId);
 
       const { body: approved } = await ready.approve();
       clockAt(T0 + 19_999);
@@ -451,7 +438,7 @@ describe("conditions the bank applies itself", () => {
     clockAt(T0);
     const ready = await transferReadyToApprove();
     const balanceBefore = await balanceMinor();
-    switchToScenario("transfer.refunded_after_processing");
+    pickTransferScenario("transfer.refunded_after_processing");
 
     await ready.approve();
     clockAt(T0 + 20_000);
@@ -483,11 +470,11 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
         headers: { "Idempotency-Key": "lost-create" },
         body,
       });
-    switchToScenario("transfer.confirmation_unanswered");
+    pickTransferScenario("transfer.confirmation_unanswered");
 
     await expect(create()).rejects.toThrow();
     await expect(create()).rejects.toThrow();
-    switchToNoScenario();
+    clearTransferScenario();
     const answered = (await (await create()).json()) as CreateTransferResponse;
 
     expect(answered.transfer.status).toBe(TransferStatus.AwaitingApproval);
@@ -497,12 +484,12 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
   it("transfer.approval_unanswered debits once while every answer is lost", async () => {
     const ready = await transferReadyToApprove();
     const balanceBefore = await balanceMinor();
-    switchToScenario("transfer.approval_unanswered");
+    pickTransferScenario("transfer.approval_unanswered");
 
     await expect(ready.approvalRequest("lost-approval")).rejects.toThrow();
     await expect(ready.approvalRequest("lost-approval")).rejects.toThrow();
     await expect(ready.approvalRequest("another-attempt")).rejects.toThrow();
-    switchToNoScenario();
+    clearTransferScenario();
     const { body } = await readTransfer(ready.transferId);
 
     expect(body.transfer.status).toBe(TransferStatus.Completed);
@@ -512,7 +499,7 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
   it("transfer.status_unreachable commits the approval, then loses every answer, checks included", async () => {
     const ready = await transferReadyToApprove();
     const balanceBefore = await balanceMinor();
-    switchToScenario("transfer.status_unreachable");
+    pickTransferScenario("transfer.status_unreachable");
 
     await expect(ready.approvalRequest("lost-approval")).rejects.toThrow();
     await expect(readTransfer(ready.transferId)).rejects.toThrow();
@@ -527,7 +514,7 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
     async (scenarioId, checkStatus, checkCode) => {
       const ready = await transferReadyToApprove();
       const balanceBefore = await balanceMinor();
-      switchToScenario(scenarioId);
+      pickTransferScenario(scenarioId);
 
       await expect(ready.approvalRequest("lost-approval")).rejects.toThrow();
       const check = await readTransfer(ready.transferId);
@@ -543,7 +530,7 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
   it("transfer.approval_unknown_answer commits the approval but answers with a code the app never learned", async () => {
     const ready = await transferReadyToApprove();
     const balanceBefore = await balanceMinor();
-    switchToScenario("transfer.approval_unknown_answer");
+    pickTransferScenario("transfer.approval_unknown_answer");
 
     const garbled = await ready.approve();
 

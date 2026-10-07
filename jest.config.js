@@ -10,7 +10,6 @@ module.exports = {
   roots: ["<rootDir>/src"],
   testMatch: TEST_FILES.map((glob) => `<rootDir>/${glob}`),
   globalSetup: "<rootDir>/jest.global-setup.js",
-  // The bank's ports first: jest-setup's mock server reaches the bank as it loads.
   setupFilesAfterEnv: [
     "<rootDir>/src/test/demo-bank-setup.ts",
     "<rootDir>/src/test/jest-setup.ts",
