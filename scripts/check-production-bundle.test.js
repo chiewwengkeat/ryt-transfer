@@ -270,6 +270,23 @@ test("refuses a marker other than the render trace's that has no text, before ru
   assert.equal(fake.exportCalls.length, 0);
 });
 
+test("refuses an empty marker carried by development alone when it is not the render trace's", () => {
+  const fake = fakeExpoExport();
+
+  assert.throws(
+    () =>
+      checkWith(fake, {
+        markers: [
+          ...MARKERS.slice(0, 2),
+          { source: "the render trace", text: "", carriedBy: ["development"] },
+          { source: "the dev menu", text: "", carriedBy: ["development"] },
+        ],
+      }),
+    /The marker for the dev menu has no text/,
+  );
+  assert.equal(fake.exportCalls.length, 0);
+});
+
 test("leaves the render trace's marker unchecked while it has no text", () => {
   const markers = [
     ...MARKERS.slice(0, 2),
@@ -407,6 +424,40 @@ test("fails a demo export whose source map lists no file from src/mocks/", () =>
   assert.match(
     failures[0],
     /^demo ios export's source map lists no file from src\/mocks\//,
+  );
+});
+
+test("fails a development export whose source map lists no file from src/mocks/", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      sourceMapsFor: sourceMapExceptFor("development android", [
+        "/src/app/_layout.tsx",
+        "/node_modules/.pnpm/msw@2.15.0/node_modules/msw/lib/core/http.mjs",
+      ]),
+    }),
+  );
+
+  assert.equal(failures.length, 1);
+  assert.match(
+    failures[0],
+    /^development android export's source map lists no file from src\/mocks\//,
+  );
+});
+
+test("fails a demo export whose source map lists no file from msw", () => {
+  const failures = checkWith(
+    fakeExpoExport({
+      sourceMapsFor: sourceMapExceptFor("demo android", [
+        "/src/app/_layout.tsx",
+        "/src/mocks/demo-bank.ts",
+      ]),
+    }),
+  );
+
+  assert.equal(failures.length, 1);
+  assert.match(
+    failures[0],
+    /^demo android export's source map lists no file from msw/,
   );
 });
 
