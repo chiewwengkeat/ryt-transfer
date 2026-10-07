@@ -10,7 +10,7 @@ import ViewRouteError from "./ViewRouteError";
 let screenCrashes = true;
 function ScreenThatCrashes() {
   if (screenCrashes) throw new Error("render failed");
-  return <Text>Transfer details</Text>;
+  return <Text>Details</Text>;
 }
 
 beforeEach(() => {
@@ -28,6 +28,7 @@ it("puts a crashed screen behind Try again, which renders it afresh", async () =
   expect(
     screen.getByRole("header", { name: "Something went wrong" }),
   ).toBeOnTheScreen();
+  expect(screen.getByText("This screen stopped working.")).toBeOnTheScreen();
   expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
   expect(observedRecords).toContainEqual({
     type: "error",
@@ -38,7 +39,7 @@ it("puts a crashed screen behind Try again, which renders it afresh", async () =
   screenCrashes = false;
   await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
 
-  expect(screen.getByText("Transfer details")).toBeOnTheScreen();
+  expect(screen.getByText("Details")).toBeOnTheScreen();
 });
 
 it("offers Back to the screen before the one that crashed", async () => {

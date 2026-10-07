@@ -16,11 +16,7 @@ it("replaces the app when a screen with no boundary of its own crashes, and Try 
     overrides: { index: ScreenWithNoBoundary },
   });
 
-  expect(
-    screen.getByText(
-      "The app stopped working. If you were sending money, check your transfer history before you send it again.",
-    ),
-  ).toBeOnTheScreen();
+  expect(screen.getByText("The app stopped working.")).toBeOnTheScreen();
   expect(observedRecords).toContainEqual({
     type: "error",
     name: "Error",
