@@ -3,6 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "noUncheckedIndexedAccess": true,
+    // TypeScript 6 loads only the type packages listed here; without expo/types, process.env is
+    // `any` on a fresh clone, where Expo has not generated expo-env.d.ts yet.
     "types": ["jest", "expo/types"],
     "paths": {
       "@/*": ["./src/*"]
