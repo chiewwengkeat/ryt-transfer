@@ -24,7 +24,9 @@ export default function ViewRoot() {
   return (
     <QueryClientProvider client={queryClient}>
       <View aria-hidden={sessionEnded} style={styles.app}>
-        <Stack />
+        <Stack>
+          <Stack.Screen name="transfer" options={{ headerShown: false }} />
+        </Stack>
       </View>
       {sessionEnded && (
         <ViewSessionEnded

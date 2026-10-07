@@ -40,5 +40,10 @@
     "title": "Your session has ended",
     "body": "For your security, sign in again to carry on.",
     "sign_in": "Sign in again"
+  },
+  "view_not_found": {
+    "title": "Page not found",
+    "body": "This page does not exist in the app.",
+    "home": "Go to Home"
   }
 }

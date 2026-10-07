@@ -1,6 +1,7 @@
 {
   "home": {
-    "title": "Home"
+    "title": "Home",
+    "transfer": "Transfer"
   },
   "card_balance": {
     "label": "Balance"

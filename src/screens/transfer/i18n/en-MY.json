@@ -6,6 +6,15 @@
     "start_unexpected": {
       "body": "Something unexpected went wrong.",
       "retry": "Try again"
+    },
+    "badly_formed_input": {
+      "mobile": "Enter a Malaysian mobile number, like 012-345 6789."
     }
+  },
+  "recipient": {
+    "title": "Transfer",
+    "mobile_label": "DuitNow mobile number",
+    "mobile_placeholder": "012-345 6789",
+    "continue": "Continue"
   }
 }
