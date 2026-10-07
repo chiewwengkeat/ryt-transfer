@@ -1,15 +1,13 @@
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 
+import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 
 import BannerDemo from "./components/BannerDemo/BannerDemo";
 import BottomSheetDemo from "./components/BottomSheetDemo/BottomSheetDemo";
 import PillDemo from "./components/PillDemo/PillDemo";
 
-interface Props {
-  onResetDemo: () => Promise<void>;
-  onSheetOpenChange: (sheetOpen: boolean) => void;
-}
+type Props = ComponentProps<DemoLayer["OverlayDemo"]>;
 export default function OverlayDemo({ onResetDemo, onSheetOpenChange }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   return (
