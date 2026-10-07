@@ -44,15 +44,16 @@ const config: ExpoConfig = {
   android: {
     package: appId,
     allowBackup: false,
-    // Library manifests request these, and the app uses none: it reads only the contact a person
-    // picks, never draws over other apps or opens shared files, and blocks screenshots outright.
+    // The prebuild template and libraries request these, and the app uses none: it reads only the
+    // contact a person picks and never draws over other apps or opens shared files.
+    // Never block DETECT_SCREEN_CAPTURE: expo-screen-capture listens for screenshots from launch,
+    // imported or not, and without the permission every Android 14+ launch crashes.
     blockedPermissions: [
       "android.permission.WRITE_CONTACTS",
       "android.permission.SYSTEM_ALERT_WINDOW",
       "android.permission.READ_EXTERNAL_STORAGE",
       "android.permission.WRITE_EXTERNAL_STORAGE",
       "android.permission.READ_MEDIA_IMAGES",
-      "android.permission.DETECT_SCREEN_CAPTURE",
     ],
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
