@@ -60,7 +60,8 @@
     "mobile": "Mobile number",
     "amount": "Amount",
     "transfer": "Transfer",
-    "prompt_title": "Approve your transfer",
+    "prompt_title": "Approve transfer",
+    "prompt_subtitle": "{{amount}} to {{name}}",
     "prompt_cancel": "Cancel",
     "home": "Back to Home"
   },

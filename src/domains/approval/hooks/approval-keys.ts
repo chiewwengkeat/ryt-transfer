@@ -60,7 +60,7 @@ export async function saveApprovalKeyIds(keyIds: {
 // Resolves null when nothing was signed: cancelled, not recognised, or no usable biometrics.
 export async function signWithBiometricKey(
   signedText: string,
-  prompt: { title: string; cancel: string },
+  prompt: { title: string; subtitle: string; cancel: string },
 ) {
   const keyId = await readSecureRecord(BIOMETRIC_KEY_ID_RECORD);
   if (keyId === null) return null;
@@ -70,6 +70,8 @@ export async function signWithBiometricKey(
       data: signedText,
       inputEncoding: InputEncoding.UTF8,
       promptTitle: prompt.title,
+      // Android only: on iOS the library hands Face ID the title alone.
+      promptSubtitle: prompt.subtitle,
       cancelButtonText: prompt.cancel,
       biometricStrength: BiometricStrength.Strong,
       disableDeviceFallback: true,

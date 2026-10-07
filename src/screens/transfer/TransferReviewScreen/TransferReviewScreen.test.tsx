@@ -95,6 +95,24 @@ it("asks for a face or fingerprint only, never the phone's passcode", async () =
   ]);
 });
 
+it("states the amount and the recipient's registered name in the face or fingerprint prompt", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const { recipient } = await lookUpTestRecipient(MOBILE);
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText("Transfer sent");
+
+  expect(biometricPromptsShown()).toEqual([
+    expect.objectContaining({
+      promptTitle: "Approve transfer",
+      promptSubtitle: `RM 100.00 to ${recipient.registeredName}`,
+    }),
+  ]);
+});
+
 it("says the transfer was not sent when the face or fingerprint prompt is closed", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const balanceBeforeMinor = await readBankBalanceMinor();
