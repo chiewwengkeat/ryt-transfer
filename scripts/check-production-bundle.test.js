@@ -182,6 +182,7 @@ test("fails a demo export missing a mock marker and says how to choose another",
     /^demo ios export lacks "bank-marker" from the bank, so its absence from the other builds proves nothing/,
   );
   assert.match(failures[0], /never a constant only a dead branch reads/);
+  assert.match(failures[0], /and that no app code contains\.$/);
 });
 
 test("fails a development export missing a mock marker", () => {
@@ -212,7 +213,7 @@ test("fails a demo export that carries the render trace", () => {
   assert.match(failures[0], /^demo android export carries "trace-marker"/);
 });
 
-test("fails a development export missing the render trace", () => {
+test("fails a development export missing the render trace, asking for a string no other app code contains", () => {
   const failures = checkWith(
     fakeExpoExport({
       bundleTextFor: bundleTextExceptFor(
@@ -224,6 +225,7 @@ test("fails a development export missing the render trace", () => {
 
   assert.equal(failures.length, 1);
   assert.match(failures[0], /^development android export lacks "trace-marker"/);
+  assert.match(failures[0], /and that no other app code contains\.$/);
 });
 
 test("refuses a marker other than the render trace's that has no text, before running any export", () => {

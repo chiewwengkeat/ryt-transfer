@@ -141,7 +141,7 @@ function checkProductionBundle({
           );
         if (mustCarry && foundCount === 0)
           failures.push(
-            `${exportLabel} lacks "${text}" from ${source}, so its absence from the other builds proves nothing. If ${source} no longer uses it, replace it with another string that code uses at runtime — never a constant only a dead branch reads, which minify drops — and that no app code contains.`,
+            `${exportLabel} lacks "${text}" from ${source}, so its absence from the other builds proves nothing. If ${source} no longer uses it, replace it with another string that code uses at runtime — never a constant only a dead branch reads, which minify drops — and that no ${source === RENDER_TRACE ? "other " : ""}app code contains.`,
           );
       }
     }
