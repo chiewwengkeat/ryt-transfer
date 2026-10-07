@@ -6,7 +6,10 @@ const { findEntriesOutsideTheSliceFolders } = require("./slice-layout");
 
 function findPlacedComponentOrHook(file) {
   const parts = file.split("/");
-  if (parts[1] !== "screens" && parts[1] !== "domains") return null;
+  const inSlice = parts[1] === "screens" || parts[1] === "domains";
+  // Base components in shared/ui are built before any screen uses them.
+  const inSharedOutsideUi = parts[1] === "shared" && parts[2] !== "ui";
+  if (!inSlice && !inSharedOutsideUi) return null;
   for (let i = parts.length - 2; i >= 2; i -= 1) {
     if (parts[i] === "components" || parts[i] === "hooks") {
       return {
@@ -30,7 +33,7 @@ function findNearestFolderThatHoldsComponents(directory) {
       candidate[3].endsWith("Screen");
     const isComponentFolder = candidate[length - 2] === "components";
     const isSliceFolder =
-      length === 3 && ["screens", "domains"].includes(candidate[1]);
+      length === 3 && ["screens", "domains", "shared"].includes(candidate[1]);
     if (isScreenFolder || isComponentFolder || isSliceFolder)
       return candidate.join("/");
   }
@@ -54,12 +57,11 @@ function findCommonDirectory(files) {
 }
 
 function findAppUsersOf(placed, edgesByModule) {
-  // A route counts as a user through a re-export: the router imports it, not app code.
   const reachableThrough = new Set(placed.files);
   for (let grew = true; grew;) {
     grew = false;
     for (const [file, edges] of edgesByModule) {
-      if (reachableThrough.has(file) || file.startsWith("src/app/")) continue;
+      if (reachableThrough.has(file)) continue;
       if (edges.reexports.some((target) => reachableThrough.has(target))) {
         reachableThrough.add(file);
         grew = true;
@@ -68,20 +70,20 @@ function findAppUsersOf(placed, edgesByModule) {
   }
 
   const users = [];
+  let usedByRoute = false;
   for (const [file, edges] of edgesByModule) {
     const insidePlaced = placed.isFile
       ? file === placed.path
       : file.startsWith(`${placed.path}/`);
-    const viaRoute =
-      file.startsWith("src/app/") &&
-      edges.reexports.some((target) => reachableThrough.has(target));
-    if (
-      !insidePlaced &&
-      (viaRoute || edges.uses.some((target) => reachableThrough.has(target)))
-    )
-      users.push(file);
+    const reaches = (targets) =>
+      targets.some((target) => reachableThrough.has(target));
+    if (insidePlaced) continue;
+    // A route only re-exports a screen, so a route never makes a component's placement right.
+    if (file.startsWith("src/app/"))
+      usedByRoute ||= reaches(edges.uses) || reaches(edges.reexports);
+    else if (reaches(edges.uses)) users.push(file);
   }
-  return users;
+  return { users, usedByRoute };
 }
 
 function checkPlacementLadder(rootDir) {
@@ -100,26 +102,36 @@ function checkPlacementLadder(rootDir) {
 
   const failures = findEntriesOutsideTheSliceFolders(rootDir);
   for (const placed of placedByPath.values()) {
-    const users = findAppUsersOf(placed, edgesByModule);
+    const { users, usedByRoute } = findAppUsersOf(placed, edgesByModule);
     if (users.length === 0) {
       failures.push(
-        `${placed.path}: no app code uses it, and tests do not count - add it in the commit that adds its first user`,
+        usedByRoute
+          ? `${placed.path}: only a route uses it, and a route only re-exports a screen - move it into the screen that renders it`
+          : `${placed.path}: no app code uses it, and tests do not count - add it in the commit that adds its first user`,
+      );
+      continue;
+    }
+
+    const shownUsers =
+      users.slice(0, 3).join(", ") + (users.length > 3 ? ", ..." : "");
+    if (users.every((file) => file.startsWith("src/mocks/"))) {
+      failures.push(
+        `${placed.path}: only the demo layer uses it (${shownUsers}) - it belongs in src/mocks/`,
       );
       continue;
     }
 
     const usedOutsideSlices = users.some(
-      (file) => !/^src\/(screens|domains)\//.test(file),
+      (file) => !/^src\/(screens|domains|shared)\//.test(file),
     );
     const owner = usedOutsideSlices
       ? null
       : findNearestFolderThatHoldsComponents(findCommonDirectory(users));
-    const shownUsers =
-      users.slice(0, 3).join(", ") + (users.length > 3 ? ", ..." : "");
     if (owner === null) {
-      if (
-        !new RegExp(`^src/domains/[^/]+/${placed.kind}$`).test(placed.container)
-      ) {
+      const atWideLevel =
+        placed.container.startsWith("src/shared/") ||
+        new RegExp(`^src/domains/[^/]+/${placed.kind}$`).test(placed.container);
+      if (!atWideLevel) {
         failures.push(
           `${placed.path}: used across screens folders or outside them (${shownUsers}) - it belongs in src/domains/<area>/${placed.kind}/`,
         );

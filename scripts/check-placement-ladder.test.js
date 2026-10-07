@@ -350,34 +350,142 @@ test("passes every folder the design names inside a screens folder and a domain"
   assert.equal(exitCode, 0);
 });
 
-test("counts a route that re-exports a domain component as its user", () => {
+test("fails a component whose only user is a route, since a route re-exports a screen", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     "src/domains/account/components/CardBalance/CardBalance.tsx":
       PLACEHOLDER_COMPONENT_SOURCE,
     "src/app/index.tsx":
       'export { default } from "@/domains/account/components/CardBalance/CardBalance";\n',
   });
-  assert.equal(errors, "");
-  assert.equal(exitCode, 0);
+  assert.equal(exitCode, 1);
+  assert.match(errors, /CardBalance: only a route uses it/);
 });
 
-test("passes a domain component that only the demo layer's own components use", () => {
+const PILL_SCENARIO_FILE =
+  "src/domains/transfer/components/PillScenario/PillScenario.tsx";
+const PILL_SCENARIO_SPECIFIER =
+  "@/domains/transfer/components/PillScenario/PillScenario";
+
+test("fails a domain component that only the demo layer uses, naming src/mocks/", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    "src/domains/transfer/components/PillScenario/PillScenario.tsx":
-      PLACEHOLDER_COMPONENT_SOURCE,
+    [PILL_SCENARIO_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
     "src/mocks/components/BottomSheetScenario/BottomSheetScenario.tsx":
-      moduleImporting(
-        "@/domains/transfer/components/PillScenario/PillScenario",
-      ),
+      moduleImporting(PILL_SCENARIO_SPECIFIER),
+  });
+  assert.equal(exitCode, 1);
+  assert.match(errors, /it belongs in src\/mocks\/$/m);
+});
+
+test("passes a domain component that the demo layer and one screens folder use", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [PILL_SCENARIO_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
+    "src/mocks/components/BottomSheetScenario/BottomSheetScenario.tsx":
+      moduleImporting(PILL_SCENARIO_SPECIFIER),
+    "src/screens/home/HomeScreen/HomeScreen.tsx": moduleImporting(
+      PILL_SCENARIO_SPECIFIER,
+    ),
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
 });
 
-test("ignores shared code, which holds no placement subjects", () => {
+test("ignores shared/ui, where base components wait for their first screen", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     "src/shared/ui/ButtonPrimary/ButtonPrimary.tsx":
       PLACEHOLDER_COMPONENT_SOURCE,
+  });
+  assert.equal(errors, "");
+  assert.equal(exitCode, 0);
+});
+
+const KEYBOARD_HOOK_FILE = "src/shared/hooks/use-keyboard-height.ts";
+const KEYBOARD_HOOK_SOURCE =
+  "export function useKeyboardHeight() {\n  return 0;\n}\n";
+
+test("fails a shared hook that nothing uses", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [KEYBOARD_HOOK_FILE]: KEYBOARD_HOOK_SOURCE,
+  });
+  assert.equal(exitCode, 1);
+  assert.match(errors, /use-keyboard-height\.ts: no app code uses it/);
+});
+
+test("fails a shared hook that one screen uses, naming that screen's hooks folder", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [KEYBOARD_HOOK_FILE]: KEYBOARD_HOOK_SOURCE,
+    [AMOUNT_SCREEN_FILE]: moduleImporting("@/shared/hooks/use-keyboard-height"),
+  });
+  assert.equal(exitCode, 1);
+  assert.match(
+    errors,
+    /belongs in src\/screens\/transfer\/TransferAmountScreen\/hooks\/$/m,
+  );
+});
+
+const keyboardHookUser = moduleImporting("@/shared/hooks/use-keyboard-height");
+const domainHooksUser = moduleImporting(
+  "@/domains/transfer/hooks/use-status-checker",
+  "@/domains/approval/hooks/use-resend-timer",
+);
+
+for (const [users, tree] of [
+  [
+    "two screens folders",
+    {
+      [AMOUNT_SCREEN_FILE]: keyboardHookUser,
+      "src/screens/home/HomeScreen/HomeScreen.tsx": keyboardHookUser,
+    },
+  ],
+  [
+    "the shell",
+    { "src/shell/ViewLaunchRecovery/ViewLaunchRecovery.tsx": keyboardHookUser },
+  ],
+  [
+    "two domains, which cannot import each other",
+    {
+      "src/domains/transfer/hooks/use-status-checker.ts": keyboardHookUser,
+      "src/domains/approval/hooks/use-resend-timer.ts": keyboardHookUser,
+      "src/screens/home/HomeScreen/HomeScreen.tsx": domainHooksUser,
+      "src/shell/OverlayPinSheet/OverlayPinSheet.tsx": domainHooksUser,
+    },
+  ],
+]) {
+  test(`passes a shared hook that ${users} use`, () => {
+    const { exitCode, errors } = runPlacementCheckOn({
+      [KEYBOARD_HOOK_FILE]: KEYBOARD_HOOK_SOURCE,
+      ...tree,
+    });
+    assert.equal(errors, "");
+    assert.equal(exitCode, 0);
+  });
+}
+
+test("fails a domain hook that only one domain component uses, naming that component's hooks folder", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    "src/domains/approval/hooks/use-pin-entry.ts":
+      "export function usePinEntry() {\n  return null;\n}\n",
+    "src/domains/approval/components/BottomSheetPin/BottomSheetPin.tsx":
+      moduleImporting("@/domains/approval/hooks/use-pin-entry"),
+    "src/shell/OverlayPinSheet/OverlayPinSheet.tsx": moduleImporting(
+      "@/domains/approval/components/BottomSheetPin/BottomSheetPin",
+    ),
+  });
+  assert.equal(exitCode, 1);
+  assert.match(
+    errors,
+    /belongs in src\/domains\/approval\/components\/BottomSheetPin\/hooks\/$/m,
+  );
+});
+
+test("counts a type-only import as a user", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [RECEIPT_SECTION]: PLACEHOLDER_COMPONENT_SOURCE,
+    "src/screens/transfer/TransferResultScreen/TransferResultScreen.tsx":
+      moduleImporting(
+        "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails",
+      ),
+    "src/screens/transfer/TransferDetailsScreen/TransferDetailsScreen.tsx":
+      'import type Receipt from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";\n\nexport type Shown = typeof Receipt;\n',
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
