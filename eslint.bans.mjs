@@ -26,6 +26,23 @@ const storageAnywhere = {
 
 export default [
   {
+    files: ["src/**/*.{js,jsx,mjs,cjs}"],
+    languageOptions: {
+      sourceType: "module",
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Program",
+          message:
+            "App code is TypeScript: rename this file to .ts or .tsx, the only files the slice boundaries and import bans check.",
+        },
+      ],
+    },
+  },
+  {
     files: SOURCE_FILES,
     rules: {
       "no-console": "error",
