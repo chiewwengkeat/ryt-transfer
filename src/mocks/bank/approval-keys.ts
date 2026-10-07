@@ -1,6 +1,8 @@
 import {
   RegisterApprovalKeysErrorCode,
+  type RegisterApprovalKeysErrorResponse,
   type RegisterApprovalKeysRequest,
+  type RegisterApprovalKeysResponse,
 } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
 
 import { bankError, type BankAnswer } from "./answers";
@@ -9,22 +11,33 @@ import { DEMO_PIN, DEMO_PIN_ATTEMPTS } from "./seed";
 import { bankState, notifyCustomer } from "./state";
 import { isP256PublicKey } from "./verification";
 
-// Shared by approve and key registration: one PIN, one attempt count, one lock.
-export function refusalOfDemoPin(pin: string): BankAnswer | undefined {
+// One PIN, one attempt count, one lock.
+export function tryDemoPin<
+  PinLocked extends string,
+  PinIncorrect extends string,
+>(pin: string, codes: { PinLocked: PinLocked; PinIncorrect: PinIncorrect }) {
   const state = bankState();
   if (state.pinAttemptsRemaining === 0) {
-    return bankError(423, "PIN_LOCKED", "The PIN is locked.");
+    return bankError(423, codes.PinLocked, "The PIN is locked.");
   }
   if (pin === DEMO_PIN) {
     state.pinAttemptsRemaining = DEMO_PIN_ATTEMPTS;
     return undefined;
   }
   state.pinAttemptsRemaining -= 1;
-  return state.pinAttemptsRemaining === 0
-    ? bankError(423, "PIN_LOCKED", "The PIN is locked.")
-    : bankError(422, "PIN_INCORRECT", "The PIN is incorrect.", {
+  if (state.pinAttemptsRemaining === 0) {
+    return bankError(423, codes.PinLocked, "The PIN is locked.");
+  }
+  return {
+    status: 422,
+    body: {
+      error: {
+        code: codes.PinIncorrect,
+        message: "The PIN is incorrect.",
         attemptsRemaining: state.pinAttemptsRemaining,
-      });
+      },
+    },
+  };
 }
 
 export function registerBankApprovalKeys({
@@ -33,7 +46,9 @@ export function registerBankApprovalKeys({
 }: {
   body: Record<string, unknown>;
   nowMs: number;
-}): BankAnswer {
+}): BankAnswer<
+  RegisterApprovalKeysResponse | RegisterApprovalKeysErrorResponse
+> {
   const { possessionPublicKey, biometricPublicKey, pin } =
     body as Partial<RegisterApprovalKeysRequest>;
   const offeredKeys = [
@@ -66,18 +81,18 @@ export function registerBankApprovalKeys({
         "Approval keys are already on file: changing them needs the PIN.",
       );
     }
-    const refusal = refusalOfDemoPin(pin);
+    const refusal = tryDemoPin(pin, RegisterApprovalKeysErrorCode);
     if (refusal) return refusal;
   }
 
-  const keyIds: Record<string, string> = {};
+  const keyIds: RegisterApprovalKeysResponse = {};
   for (const { kind, spkiBase64 } of keys) {
     const keyId = `key_${randomHex(8)}`;
     state.approvalKeys = [
       ...state.approvalKeys.filter((key) => key.kind !== kind),
       { keyId, kind, spkiBase64: spkiBase64!, registeredAtMs: nowMs },
     ];
-    keyIds[`${kind}KeyId`] = keyId;
+    keyIds[`${kind}KeyId` as const] = keyId;
   }
   if (replacesKeys) {
     notifyCustomer(

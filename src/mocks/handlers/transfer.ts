@@ -1,5 +1,7 @@
 import { http } from "msw";
 
+import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
+import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { getBankTransfer, listBankTransfers } from "@/mocks/bank/history";
 import {
   listBankBanks,
@@ -23,13 +25,15 @@ export const transferHandlers = [
     answerBankRead(request, listBankBanks),
   ),
   http.post(BANK_PATHS.transfers, ({ request }) =>
-    answerBankWrite(request, createBankTransfer),
+    answerBankWrite(request, createBankTransfer, CreateTransferErrorCode),
   ),
   http.post<{ transferId: string }>(
     BANK_PATHS.transferApproval,
     ({ request, params }) =>
-      answerBankWrite(request, (call) =>
-        approveBankTransfer(params.transferId, call),
+      answerBankWrite(
+        request,
+        (call) => approveBankTransfer(params.transferId, call),
+        ApproveTransferErrorCode,
       ),
   ),
   http.get<{ transferId: string }>(BANK_PATHS.transfer, ({ request, params }) =>

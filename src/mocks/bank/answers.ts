@@ -3,18 +3,12 @@ import type { JsonBodyType } from "msw";
 
 import type { WireMoney } from "@/shared/lib/money/money.type";
 
-export interface BankAnswer {
-  status: number;
-  body: JsonBodyType;
-}
-
-export function bankError(
+export function bankError<Code extends string>(
   status: number,
-  code: string,
+  code: Code,
   message: string,
-  extras: Record<string, unknown> = {},
-): BankAnswer {
-  return { status, body: { error: { code, message, ...extras } } };
+) {
+  return { status, body: { error: { code, message } } };
 }
 
 export function httpResponseFrom({ status, body }: BankAnswer) {
@@ -23,4 +17,9 @@ export function httpResponseFrom({ status, body }: BankAnswer) {
 
 export function wireMoney(minor: number): WireMoney {
   return { minor, currency: "MYR" };
+}
+
+export interface BankAnswer<Body extends JsonBodyType = JsonBodyType> {
+  status: number;
+  body: Body;
 }

@@ -1,3 +1,5 @@
+import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import {
   TransferDirection,
   TransferStatus,
@@ -33,8 +35,12 @@ export function transferLimitsAt(nowMs: number) {
 }
 
 export function lockOrCoolingOffRefusal<
-  Codes extends { AccountLocked: string; CoolingOff: string },
->(nowMs: number, codes: Codes) {
+  AccountLocked extends string,
+  CoolingOff extends string,
+>(
+  nowMs: number,
+  codes: { AccountLocked: AccountLocked; CoolingOff: CoolingOff },
+) {
   const { accountLocked, coolingOff, activatedAtMs } = activeBankConditions();
   if (accountLocked) {
     return bankError(403, codes.AccountLocked, "The account is locked.");
@@ -42,17 +48,22 @@ export function lockOrCoolingOffRefusal<
   const coolingOffEndsAtMs =
     activatedAtMs + (coolingOff?.endsAfterActivationMs ?? 0);
   if (coolingOff && nowMs < coolingOffEndsAtMs) {
-    return bankError(
-      403,
-      codes.CoolingOff,
-      "Transfers wait out a security cooling-off period.",
-      { until: toMalaysiaIso(coolingOffEndsAtMs), reason: coolingOff.reason },
-    );
+    return {
+      status: 403,
+      body: {
+        error: {
+          code: codes.CoolingOff,
+          message: "Transfers wait out a security cooling-off period.",
+          until: toMalaysiaIso(coolingOffEndsAtMs),
+          reason: coolingOff.reason,
+        },
+      },
+    };
   }
   return undefined;
 }
 
-export function getBankPrimaryAccount(): BankAnswer {
+export function getBankPrimaryAccount(): BankAnswer<GetPrimaryAccountResponse> {
   return {
     status: 200,
     body: { ...DEMO_CUSTOMER, balance: wireMoney(bankState().balanceMinor) },
@@ -63,7 +74,7 @@ export function getBankTransferLimits({
   nowMs,
 }: {
   nowMs: number;
-}): BankAnswer {
+}): BankAnswer<GetTransferLimitsResponse> {
   const { limitMinor, usedMinor, remainingMinor } = transferLimitsAt(nowMs);
   return {
     status: 200,

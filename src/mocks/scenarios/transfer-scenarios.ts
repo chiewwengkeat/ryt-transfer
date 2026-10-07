@@ -1,7 +1,11 @@
 import { getResponse, http, HttpResponse } from "msw";
 import type { RequestHandler } from "msw";
 
-import { CoolingOffReason } from "@/domains/transfer/api/create-transfer/create-transfer.type";
+import { GetTransferLimitsErrorCode } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
+import {
+  CoolingOffReason,
+  CreateTransferErrorCode,
+} from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { LookupRecipientErrorCode } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { bankError, httpResponseFrom } from "@/mocks/bank/answers";
@@ -58,15 +62,22 @@ const serverErrorAnswer = () =>
   httpResponseFrom(
     bankError(500, "INTERNAL_ERROR", "The bank could not answer."),
   );
-// Typed by hand: inferring it loops through the store's type back to this registry's ids.
-const maintenanceAnswer = (): Response =>
-  httpResponseFrom(
-    bankError(503, "SERVICE_UNAVAILABLE", "Transfers are paused.", {
-      until: toMalaysiaIso(
-        switcherStore.getState().activatedAtMs + 2 * HOUR_MS,
-      ),
-    }),
-  );
+const maintenanceAnswer =
+  (codes: { ServiceUnavailable: string }) =>
+  // Typed by hand: inferring it loops through the store's type back to this registry's ids.
+  (): Response =>
+    httpResponseFrom({
+      status: 503,
+      body: {
+        error: {
+          code: codes.ServiceUnavailable,
+          message: "Transfers are paused.",
+          until: toMalaysiaIso(
+            switcherStore.getState().activatedAtMs + 2 * HOUR_MS,
+          ),
+        },
+      },
+    });
 const errorAnswer = (status: number, code: string, message: string) => () =>
   httpResponseFrom(bankError(status, code, message));
 
@@ -97,8 +108,14 @@ export const TRANSFER_SCENARIOS = {
   "transfer.under_maintenance": {
     step: TransferStep.Start,
     handlers: () => [
-      http.get(BANK_PATHS.transferLimits, maintenanceAnswer),
-      http.post(BANK_PATHS.transfers, maintenanceAnswer),
+      http.get(
+        BANK_PATHS.transferLimits,
+        maintenanceAnswer(GetTransferLimitsErrorCode),
+      ),
+      http.post(
+        BANK_PATHS.transfers,
+        maintenanceAnswer(CreateTransferErrorCode),
+      ),
     ],
   },
   "transfer.offline": {
@@ -174,7 +191,7 @@ export const TRANSFER_SCENARIOS = {
         BANK_PATHS.transfers,
         errorAnswer(
           422,
-          "INSUFFICIENT_FUNDS",
+          CreateTransferErrorCode.InsufficientFunds,
           "The balance is lower than the amount.",
         ),
       ),
@@ -209,7 +226,7 @@ export const TRANSFER_SCENARIOS = {
         BANK_PATHS.transfers,
         errorAnswer(
           422,
-          "RECIPIENT_REF_EXPIRED",
+          CreateTransferErrorCode.RecipientRefExpired,
           "The recipient check has expired: look the recipient up again.",
         ),
       ),

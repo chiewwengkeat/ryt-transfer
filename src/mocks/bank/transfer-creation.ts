@@ -1,6 +1,8 @@
 import {
   CreateTransferErrorCode,
+  type CreateTransferErrorResponse,
   type CreateTransferRequest,
+  type CreateTransferResponse,
 } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import {
   TransferDirection,
@@ -29,7 +31,7 @@ export function createBankTransfer({
 }: {
   body: Record<string, unknown>;
   nowMs: number;
-}): BankAnswer {
+}): BankAnswer<CreateTransferResponse | CreateTransferErrorResponse> {
   const { recipientRef, amount, note } = body as Partial<CreateTransferRequest>;
   if (
     typeof recipientRef !== "string" ||

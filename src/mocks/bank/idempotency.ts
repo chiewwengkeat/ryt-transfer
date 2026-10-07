@@ -6,12 +6,13 @@ const FIRST_ANSWER_KEPT_MS = 24 * 60 * 60 * 1000;
 // Errors are kept too: a resent wrong PIN must replay its 422, not spend another attempt.
 export function answerOncePerKey(
   write: { idempotencyKey: string | null; fingerprint: string; nowMs: number },
+  codes: { InvalidRequest: string; IdempotencyKeyReused: string },
   operate: () => BankAnswer,
 ) {
   if (!write.idempotencyKey) {
     return bankError(
       400,
-      "INVALID_REQUEST",
+      codes.InvalidRequest,
       "Every write needs an Idempotency-Key header.",
     );
   }
@@ -30,7 +31,7 @@ export function answerOncePerKey(
       ? first.answer
       : bankError(
           409,
-          "IDEMPOTENCY_KEY_REUSED",
+          codes.IdempotencyKeyReused,
           "This Idempotency-Key was first sent with a different request.",
         );
   }

@@ -2,9 +2,15 @@ import {
   GetTransferErrorCode,
   TransferFunds,
   TransferStatus,
+  type GetTransferErrorResponse,
+  type GetTransferResponse,
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import { ListTransfersErrorCode } from "@/domains/transfer/api/list-transfers/list-transfers.type";
+import {
+  ListTransfersErrorCode,
+  type ListTransfersErrorResponse,
+  type ListTransfersResponse,
+} from "@/domains/transfer/api/list-transfers/list-transfers.type";
 
 import { bankError, wireMoney, type BankAnswer } from "./answers";
 import { bankTransfersNewestFirst, compareNewestFirst } from "./state";
@@ -12,7 +18,9 @@ import { bankTransfersNewestFirst, compareNewestFirst } from "./state";
 const PAGE_SIZE = 30;
 const MAX_PAGE_SIZE = 100;
 
-export function getBankTransfer(transferId: string): BankAnswer {
+export function getBankTransfer(
+  transferId: string,
+): BankAnswer<GetTransferResponse | GetTransferErrorResponse> {
   const record = bankTransfersNewestFirst().find(
     ({ transfer }) => transfer.transferId === transferId,
   );
@@ -39,7 +47,9 @@ function movedMinor(transfer: Transfer) {
   }
 }
 
-export function listBankTransfers(query: URLSearchParams): BankAnswer {
+export function listBankTransfers(
+  query: URLSearchParams,
+): BankAnswer<ListTransfersResponse | ListTransfersErrorResponse> {
   const invalid = (message: string) =>
     bankError(400, ListTransfersErrorCode.InvalidRequest, message);
   const limit = Number(query.get("limit") ?? PAGE_SIZE);

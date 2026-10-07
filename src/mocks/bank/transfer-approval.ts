@@ -1,7 +1,9 @@
 import { buildSignedApprovalText } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import {
   ApproveTransferErrorCode,
+  type ApproveTransferErrorResponse,
   type ApproveTransferRequest,
+  type ApproveTransferResponse,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import {
   TransferFailureReason,
@@ -11,7 +13,7 @@ import {
 import { ApprovalOutcome } from "@/mocks/scenarios/transfer-scenarios";
 
 import { lockOrCoolingOffRefusal, transferLimitsAt } from "./account";
-import { refusalOfDemoPin } from "./approval-keys";
+import { tryDemoPin } from "./approval-keys";
 import { bankError, type BankAnswer } from "./answers";
 import { malaysianDate, toMalaysiaIso } from "./malaysia-time";
 import { randomHex } from "./ports";
@@ -27,7 +29,7 @@ import { verifyApprovalSignature } from "./verification";
 export function approveBankTransfer(
   transferId: string,
   { body, nowMs }: { body: Record<string, unknown>; nowMs: number },
-): BankAnswer {
+): BankAnswer<ApproveTransferResponse | ApproveTransferErrorResponse> {
   const state = bankState();
   const conditions = activeBankConditions();
   const record = state.transfers.find(
@@ -107,7 +109,7 @@ export function approveBankTransfer(
         "Approving with the possession key needs the PIN.",
       );
     }
-    const refusal = refusalOfDemoPin(pin);
+    const refusal = tryDemoPin(pin, ApproveTransferErrorCode);
     if (refusal) return refusal;
   }
 

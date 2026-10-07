@@ -2,10 +2,14 @@ import {
   TransferDirection,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import type { ListBanksResponse } from "@/domains/transfer/api/list-banks/list-banks.type";
+import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients.type";
 import {
   LookupRecipientErrorCode,
   RecipientIdType,
+  type LookupRecipientErrorResponse,
   type LookupRecipientRequest,
+  type LookupRecipientResponse,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 
 import { bankError, type BankAnswer } from "./answers";
@@ -75,7 +79,7 @@ export function lookupBankRecipient({
 }: {
   body: Record<string, unknown>;
   nowMs: number;
-}): BankAnswer {
+}): BankAnswer<LookupRecipientResponse | LookupRecipientErrorResponse> {
   const request = body as Partial<
     Extract<LookupRecipientRequest, { idType: unknown }> & { recentId: unknown }
   >;
@@ -150,7 +154,7 @@ export function lookupBankRecipient({
   };
 }
 
-export function listBankRecentRecipients(): BankAnswer {
+export function listBankRecentRecipients(): BankAnswer<ListRecentRecipientsResponse> {
   return {
     status: 200,
     body: {
@@ -167,6 +171,6 @@ export function listBankRecentRecipients(): BankAnswer {
   };
 }
 
-export function listBankBanks(): BankAnswer {
+export function listBankBanks(): BankAnswer<ListBanksResponse> {
   return { status: 200, body: DUITNOW_BANKS };
 }
