@@ -5,9 +5,9 @@ const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
 
-const COMPONENT =
+const PLACEHOLDER_COMPONENT_SOURCE =
   "export default function Placeholder() {\n  return null;\n}\n";
-const importing = (...specifiers) =>
+const moduleImporting = (...specifiers) =>
   specifiers
     .map((specifier, i) => `import * as Imported${i} from "${specifier}";\n`)
     .join("");
@@ -37,13 +37,13 @@ const RECEIPT_SECTION =
 
 test("fails a screens-folder component that only one screen uses, naming that screen's folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    [RECEIPT_SECTION]: COMPONENT,
+    [RECEIPT_SECTION]: PLACEHOLDER_COMPONENT_SOURCE,
     "src/screens/transfer/TransferResultScreen/TransferResultScreen.tsx":
-      importing(
+      moduleImporting(
         "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails",
       ),
     "src/screens/transfer/TransferDetailsScreen/TransferDetailsScreen.tsx":
-      COMPONENT,
+      PLACEHOLDER_COMPONENT_SOURCE,
   });
   assert.equal(exitCode, 1);
   assert.match(
@@ -54,28 +54,31 @@ test("fails a screens-folder component that only one screen uses, naming that sc
 
 test("passes a screens-folder component that two screens of that folder use", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    [RECEIPT_SECTION]: COMPONENT,
+    [RECEIPT_SECTION]: PLACEHOLDER_COMPONENT_SOURCE,
     "src/screens/transfer/TransferResultScreen/TransferResultScreen.tsx":
-      importing(
+      moduleImporting(
         "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails",
       ),
     "src/screens/transfer/TransferDetailsScreen/TransferDetailsScreen.tsx":
-      importing("../components/SectionTransferDetails/SectionTransferDetails"),
+      moduleImporting(
+        "../components/SectionTransferDetails/SectionTransferDetails",
+      ),
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
 });
 
-const HISTORY = "src/screens/transfer/TransferHistoryScreen";
+const HISTORY_SCREEN_DIR = "src/screens/transfer/TransferHistoryScreen";
 
 test("fails a screen's component that only a sibling component uses, naming the sibling's folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    [`${HISTORY}/TransferHistoryScreen.tsx`]: importing(
+    [`${HISTORY_SCREEN_DIR}/TransferHistoryScreen.tsx`]: moduleImporting(
       "./components/SectionTransferAccordion/SectionTransferAccordion",
     ),
-    [`${HISTORY}/components/SectionTransferAccordion/SectionTransferAccordion.tsx`]:
-      importing("../ItemTransfer/ItemTransfer"),
-    [`${HISTORY}/components/ItemTransfer/ItemTransfer.tsx`]: COMPONENT,
+    [`${HISTORY_SCREEN_DIR}/components/SectionTransferAccordion/SectionTransferAccordion.tsx`]:
+      moduleImporting("../ItemTransfer/ItemTransfer"),
+    [`${HISTORY_SCREEN_DIR}/components/ItemTransfer/ItemTransfer.tsx`]:
+      PLACEHOLDER_COMPONENT_SOURCE,
   });
   assert.equal(exitCode, 1);
   assert.match(
@@ -86,25 +89,26 @@ test("fails a screen's component that only a sibling component uses, naming the 
 
 test("passes that component once it nests inside the sibling that uses it", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    [`${HISTORY}/TransferHistoryScreen.tsx`]: importing(
+    [`${HISTORY_SCREEN_DIR}/TransferHistoryScreen.tsx`]: moduleImporting(
       "./components/SectionTransferAccordion/SectionTransferAccordion",
     ),
-    [`${HISTORY}/components/SectionTransferAccordion/SectionTransferAccordion.tsx`]:
-      importing("./components/ItemTransfer/ItemTransfer"),
-    [`${HISTORY}/components/SectionTransferAccordion/components/ItemTransfer/ItemTransfer.tsx`]:
-      COMPONENT,
+    [`${HISTORY_SCREEN_DIR}/components/SectionTransferAccordion/SectionTransferAccordion.tsx`]:
+      moduleImporting("./components/ItemTransfer/ItemTransfer"),
+    [`${HISTORY_SCREEN_DIR}/components/SectionTransferAccordion/components/ItemTransfer/ItemTransfer.tsx`]:
+      PLACEHOLDER_COMPONENT_SOURCE,
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
 });
 
-const RECENTS = "src/domains/transfer/components/ListRecents/ListRecents.tsx";
+const RECENTS_COMPONENT_FILE =
+  "src/domains/transfer/components/SectionRecents/SectionRecents.tsx";
 
 test("fails a domain component that one screens folder uses, naming the screen that uses it", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    [RECENTS]: COMPONENT,
-    "src/screens/home/HomeScreen/HomeScreen.tsx": importing(
-      "@/domains/transfer/components/ListRecents/ListRecents",
+    [RECENTS_COMPONENT_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
+    "src/screens/home/HomeScreen/HomeScreen.tsx": moduleImporting(
+      "@/domains/transfer/components/SectionRecents/SectionRecents",
     ),
   });
   assert.equal(exitCode, 1);
@@ -116,12 +120,14 @@ test("fails a domain component that one screens folder uses, naming the screen t
 
 test("passes a domain component that two screens folders use", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    [RECENTS]: COMPONENT,
-    "src/screens/home/HomeScreen/HomeScreen.tsx": importing(
-      "@/domains/transfer/components/ListRecents/ListRecents",
+    [RECENTS_COMPONENT_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
+    "src/screens/home/HomeScreen/HomeScreen.tsx": moduleImporting(
+      "@/domains/transfer/components/SectionRecents/SectionRecents",
     ),
     "src/screens/transfer/TransferRecipientScreen/TransferRecipientScreen.tsx":
-      importing("@/domains/transfer/components/ListRecents/ListRecents"),
+      moduleImporting(
+        "@/domains/transfer/components/SectionRecents/SectionRecents",
+      ),
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
@@ -130,8 +136,8 @@ test("passes a domain component that two screens folders use", () => {
 test("passes a domain component that only the shell uses", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     "src/domains/approval/components/BottomSheetPin/BottomSheetPin.tsx":
-      COMPONENT,
-    "src/shell/pin-sheet-host.tsx": importing(
+      PLACEHOLDER_COMPONENT_SOURCE,
+    "src/shell/OverlayPinSheet/OverlayPinSheet.tsx": moduleImporting(
       "@/domains/approval/components/BottomSheetPin/BottomSheetPin",
     ),
   });
@@ -141,8 +147,8 @@ test("passes a domain component that only the shell uses", () => {
 
 test("fails a screens-folder component used from outside the screens folders, naming the domain level", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    [RECEIPT_SECTION]: COMPONENT,
-    "src/shell/launch-recovery.tsx": importing(
+    [RECEIPT_SECTION]: PLACEHOLDER_COMPONENT_SOURCE,
+    "src/shell/ViewLaunchRecovery/ViewLaunchRecovery.tsx": moduleImporting(
       "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails",
     ),
   });
@@ -151,15 +157,16 @@ test("fails a screens-folder component used from outside the screens folders, na
 });
 
 test("fails a component whose only importers are tests", () => {
-  const field =
+  const fieldAmountDir =
     "src/screens/transfer/TransferAmountScreen/components/FieldAmount";
   const { exitCode, errors } = runPlacementCheckOn({
     "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.tsx":
-      COMPONENT,
+      PLACEHOLDER_COMPONENT_SOURCE,
     "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.test.tsx":
-      importing("./components/FieldAmount/FieldAmount"),
-    [`${field}/FieldAmount.tsx`]: COMPONENT,
-    [`${field}/FieldAmount.test.tsx`]: importing("./FieldAmount"),
+      moduleImporting("./components/FieldAmount/FieldAmount"),
+    [`${fieldAmountDir}/FieldAmount.tsx`]: PLACEHOLDER_COMPONENT_SOURCE,
+    [`${fieldAmountDir}/FieldAmount.test.tsx`]:
+      moduleImporting("./FieldAmount"),
   });
   assert.equal(exitCode, 1);
   assert.match(errors, /FieldAmount: no app code uses it/);
@@ -170,7 +177,7 @@ test("fails a screens-folder hook that one screen uses, naming that screen's hoo
     "src/screens/transfer/hooks/use-transfer-limits.ts":
       "export function useTransferLimits() {\n  return null;\n}\n",
     "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.tsx":
-      importing("@/screens/transfer/hooks/use-transfer-limits"),
+      moduleImporting("@/screens/transfer/hooks/use-transfer-limits"),
   });
   assert.equal(exitCode, 1);
   assert.match(
@@ -182,13 +189,13 @@ test("fails a screens-folder hook that one screen uses, naming that screen's hoo
 test("counts the users that reach a component through a re-export outside its folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     "src/screens/transfer/components/BannerOffline/BannerOffline.tsx":
-      COMPONENT,
+      PLACEHOLDER_COMPONENT_SOURCE,
     "src/screens/transfer/components/index.ts":
       'export { default as BannerOffline } from "./BannerOffline/BannerOffline";\n',
     "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.tsx":
-      importing("@/screens/transfer/components"),
+      moduleImporting("@/screens/transfer/components"),
     "src/screens/transfer/TransferReviewScreen/TransferReviewScreen.tsx":
-      importing("@/screens/transfer/components"),
+      moduleImporting("@/screens/transfer/components"),
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
@@ -196,7 +203,8 @@ test("counts the users that reach a component through a re-export outside its fo
 
 test("counts a route that re-exports a domain component as its user", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    "src/domains/account/components/CardBalance/CardBalance.tsx": COMPONENT,
+    "src/domains/account/components/CardBalance/CardBalance.tsx":
+      PLACEHOLDER_COMPONENT_SOURCE,
     "src/app/index.tsx":
       'export { default } from "@/domains/account/components/CardBalance/CardBalance";\n',
   });
@@ -206,10 +214,12 @@ test("counts a route that re-exports a domain component as its user", () => {
 
 test("passes a domain component that only the demo layer's own components use", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    "src/domains/transfer/components/PillScenario/PillScenario.tsx": COMPONENT,
-    "src/mocks/components/SheetSwitcher/SheetSwitcher.tsx": importing(
-      "@/domains/transfer/components/PillScenario/PillScenario",
-    ),
+    "src/domains/transfer/components/PillScenario/PillScenario.tsx":
+      PLACEHOLDER_COMPONENT_SOURCE,
+    "src/mocks/components/BottomSheetScenario/BottomSheetScenario.tsx":
+      moduleImporting(
+        "@/domains/transfer/components/PillScenario/PillScenario",
+      ),
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
@@ -217,7 +227,8 @@ test("passes a domain component that only the demo layer's own components use", 
 
 test("ignores shared code, which holds no placement subjects", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    "src/shared/ui/ButtonPrimary/ButtonPrimary.tsx": COMPONENT,
+    "src/shared/ui/ButtonPrimary/ButtonPrimary.tsx":
+      PLACEHOLDER_COMPONENT_SOURCE,
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
