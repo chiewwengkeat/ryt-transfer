@@ -9,17 +9,13 @@ interface Props {
   tone?: "warning" | "negative";
 }
 export default function BannerNotice({ message, tone = "warning" }: Props) {
-  // iOS reads no live region, so a banner that appears is announced outright.
+  // Announced outright, which iOS needs; a live region as well could make TalkBack say it twice.
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(message);
   }, [message]);
 
   return (
-    <View
-      accessibilityRole="alert"
-      accessibilityLiveRegion="polite"
-      style={[styles.banner, styles[tone]]}
-    >
+    <View accessibilityRole="alert" style={[styles.banner, styles[tone]]}>
       <TextBody>{message}</TextBody>
     </View>
   );
