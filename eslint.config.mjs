@@ -140,7 +140,10 @@ export default defineConfig(
       "fe/hook-file-kebab-case": "error",
       "fe/hook-filename-matches-export": "error",
       "fe/no-component-fetch-hooks": "error",
-      "fe/no-cross-component-internals": "error",
+      "fe/no-cross-component-internals": [
+        "error",
+        { aliases: { "@/": path.join(import.meta.dirname, "src") } },
+      ],
       "fe/sibling-basename-tracks-folder": "error",
       "fe/singular-role-suffix": "error",
     },

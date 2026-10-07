@@ -153,10 +153,30 @@ test("valid: a package import is never relative", () => {
   });
 });
 
-test("valid: a tsconfig path alias is not resolved — the documented residual", () => {
+const SRC_ALIAS = [{ aliases: { "@/": ROOT + "/src" } }];
+
+test("valid: an @/ alias to a sibling component's own entry file", () => {
   passes({
     filename: LIMIT,
+    options: SRC_ALIAS,
+    code: 'import CardBalance from "@/domains/account/components/CardBalance/CardBalance";',
+  });
+});
+
+test("invalid: an @/ alias reaching a sibling component's internal", () => {
+  reports({
+    filename: LIMIT,
+    options: SRC_ALIAS,
     code: 'import { fmt } from "@/domains/account/components/CardBalance/card-balance.helper";',
+    errors: crossInto("card-balance.helper.ts", "CardBalance"),
+  });
+});
+
+test("valid: an alias the option does not map is left alone", () => {
+  passes({
+    filename: LIMIT,
+    options: SRC_ALIAS,
+    code: 'import { fmt } from "~/domains/account/components/CardBalance/card-balance.helper";',
   });
 });
 

@@ -1,3 +1,5 @@
+const path = require("path");
+
 const {
   MODULE_EXTS,
   dirEntries,
@@ -88,25 +90,44 @@ module.exports = {
         "everything else colocated in it is internal. A nested component folder has its " +
         "own public entry, so reaching it is allowed — reaching past it is not, including " +
         'from the parent folder. Re-exports count: `export { X } from "../Bar/internal"` ' +
-        "reaches in exactly as an import does. Only RELATIVE sources are resolved — " +
-        "`tsconfig` path aliases are not read, so an alias import reaching the same file " +
-        "is invisible to this rule.",
+        "reaches in exactly as an import does. Relative sources are resolved, and so is " +
+        'an alias the `aliases` option maps to a directory (`{ "@/": "/abs/src" }`), ' +
+        "mirroring the tsconfig paths, since an alias import reaches the same files.",
     },
     messages: {
       crossInternals:
         "'{{target}}' is internal to the component folder '{{owner}}/' — only files inside {{owner}}/ may import it. Import {{owner}} itself if its rendered output is what you need; if you genuinely need '{{target}}', then it is not {{owner}}'s alone, so lift it to a shared location both can import. A colocated sibling is part of its component's implementation and gets renamed with it.",
     },
-    schema: [],
+    schema: [
+      {
+        type: "object",
+        properties: {
+          aliases: { type: "object", additionalProperties: { type: "string" } },
+        },
+        additionalProperties: false,
+      },
+    ],
   },
   create(context) {
     const file = filenameOf(context);
-    if (!parsePath(file).dir) return {};
+    const dir = parsePath(file).dir;
+    if (!dir) return {};
+    const aliases = Object.entries((context.options[0] || {}).aliases || {});
+    const asRelativeSource = (source) => {
+      if (isRelativeSource(source)) return source;
+      const alias = aliases.find(([prefix]) => source.startsWith(prefix));
+      if (!alias) return null;
+      const target = joinPath(alias[1], source.slice(alias[0].length));
+      const relative = path.posix.relative(dir, target);
+      return relative.startsWith(".") ? relative : "./" + relative;
+    };
 
     return {
       Program(node) {
         for (const mod of moduleSources(node)) {
-          if (!isRelativeSource(mod.source)) continue;
-          const hit = crosses(file, mod.source);
+          const source = asRelativeSource(mod.source);
+          if (source === null) continue;
+          const hit = crosses(file, source);
           if (!hit) continue;
           context.report({
             node: mod.node,
