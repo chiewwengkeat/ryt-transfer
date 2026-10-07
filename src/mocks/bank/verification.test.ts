@@ -1,19 +1,16 @@
 import { p256 } from "@noble/curves/nist.js";
 
+import { base64Of, P256_SPKI_PREFIX } from "@/test/bank-client";
+
 import { isP256PublicKey, verifyApprovalSignature } from "./verification";
 
 const SECRET_KEY = Uint8Array.from({ length: 32 }, (_, index) => index + 1);
-const SPKI_PREFIX = (
-  "3059301306072a8648ce3d020106082a8648ce3d030107034200".match(/../g) ?? []
-).map((pair) => parseInt(pair, 16));
 const SIGNED_TEXT = '{"format":"transfer-approval/1","amountMinor":12550}';
 
-const base64Of = (bytes: Iterable<number>) =>
-  btoa(String.fromCharCode(...bytes));
 const utf8Bytes = (text: string) => new TextEncoder().encode(text);
 
 const publicKeySpkiBase64 = base64Of([
-  ...SPKI_PREFIX,
+  ...P256_SPKI_PREFIX,
   ...p256.getPublicKey(SECRET_KEY, false),
 ]);
 const signature = p256.sign(utf8Bytes(SIGNED_TEXT), SECRET_KEY, {
@@ -77,6 +74,8 @@ it("recognises a P-256 public key only in its SubjectPublicKeyInfo wrapping", ()
     false,
   );
   expect(
-    isP256PublicKey(base64Of([...SPKI_PREFIX, 0x04, ...new Uint8Array(64)])),
+    isP256PublicKey(
+      base64Of([...P256_SPKI_PREFIX, 0x04, ...new Uint8Array(64)]),
+    ),
   ).toBe(false);
 });

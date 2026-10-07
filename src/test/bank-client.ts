@@ -13,7 +13,7 @@ import {
 
 export const BANK_ORIGIN = "https://bank.example.test";
 
-const SPKI_PREFIX = (
+export const P256_SPKI_PREFIX = (
   "3059301306072a8648ce3d020106082a8648ce3d030107034200".match(/../g) ?? []
 ).map((pair) => parseInt(pair, 16));
 const PHONE_SECRET_KEYS = {
@@ -22,7 +22,7 @@ const PHONE_SECRET_KEYS = {
 };
 let writeNumber = 0;
 
-const base64Of = (bytes: Iterable<number>) =>
+export const base64Of = (bytes: Iterable<number>) =>
   btoa(String.fromCharCode(...bytes));
 
 export async function sendToBank<ResponseBody>(
@@ -67,7 +67,7 @@ export async function readBankUsedTodayMinor() {
 
 export function phonePublicKeySpki(kind: keyof typeof PHONE_SECRET_KEYS) {
   return base64Of([
-    ...SPKI_PREFIX,
+    ...P256_SPKI_PREFIX,
     ...p256.getPublicKey(PHONE_SECRET_KEYS[kind], false),
   ]);
 }
