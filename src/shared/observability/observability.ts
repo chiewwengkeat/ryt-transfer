@@ -14,6 +14,7 @@ const ALLOWED_PROPERTY_NAMES = new Set([
   "errorKind",
   "httpStatus",
   "errorCode",
+  "path",
 ]);
 
 let sink: ObservabilitySink | null = __DEV__

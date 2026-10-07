@@ -105,6 +105,7 @@ it("still drops links after the transfer's screens close on an approval whose an
     type: TransferFlowActionType.Created,
     transferId: "trf_test",
     challenge: "challenge",
+    expiresInSeconds: 60,
   });
   dispatchTransferFlow({
     type: TransferFlowActionType.ApprovalSent,

@@ -1,34 +1,25 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 
-import type {
-  LookupRecipientRequest,
-  LookupRecipientResponse,
-  RecipientIdType,
-} from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import type { Money } from "@/shared/lib/money/money.type";
-
+import { reduceAmountAndNoteEvent } from "./amount-and-note-events";
+import { reduceApprovalEvent } from "./approval-events";
+import { reduceRecipientEvent } from "./recipient-events";
+import { reduceReviewAndCreateEvent } from "./review-and-create-events";
+import {
+  type TransferFlowAction,
+  TransferFlowActionType,
+  type TransferFlowState,
+  TransferFlowStep,
+} from "./transfer-flow.type";
 import { trackTransferStepAndAmount } from "./transfer-funnel";
 
-export enum TransferFlowStep {
-  Editing = "editing",
-  Reviewing = "reviewing",
-  Creating = "creating",
-  Approving = "approving",
-  Submitting = "submitting",
-  Done = "done",
-}
-
-export enum TransferFlowActionType {
-  RecipientChosen = "recipient_chosen",
-  AmountEntered = "amount_entered",
-  Confirmed = "confirmed",
-  Created = "created",
-  ApprovalSent = "approval_sent",
-  NotSent = "not_sent",
-  Completed = "completed",
-  FlowLeft = "flow_left",
-}
+export {
+  ApprovalPath,
+  TransferFlowActionType,
+  TransferFlowScenario,
+  TransferFlowStep,
+  TransferHoldKind,
+} from "./transfer-flow.type";
 
 const STARTING_FLOW: TransferFlowState = {
   step: TransferFlowStep.Editing,
@@ -65,125 +56,27 @@ function reduceTransferFlow(
 ): TransferFlowState {
   switch (action.type) {
     case TransferFlowActionType.RecipientChosen:
-      // Review keeps the person on it while submitting until the answer is lost, so this is the next transfer.
-      if (flow.step === TransferFlowStep.Submitting)
-        return {
-          step: TransferFlowStep.Editing,
-          draft: { recipient: action.recipient },
-        };
-      if (
-        flow.step !== TransferFlowStep.Editing &&
-        flow.step !== TransferFlowStep.Reviewing
-      )
-        return flow;
-      return {
-        step: TransferFlowStep.Editing,
-        draft: { ...flow.draft, recipient: action.recipient },
-      };
-    case TransferFlowActionType.AmountEntered: {
-      if (
-        flow.step !== TransferFlowStep.Editing &&
-        flow.step !== TransferFlowStep.Reviewing
-      )
-        return flow;
-      const { recipient } = flow.draft;
-      if (recipient === undefined) return flow;
-      return {
-        step: TransferFlowStep.Reviewing,
-        draft: { recipient, amount: action.amount },
-      };
-    }
-    // Only from review, so a second tap on Transfer while the first is under way starts nothing.
+      return reduceRecipientEvent(flow, action);
+    case TransferFlowActionType.AmountEntered:
+      return reduceAmountAndNoteEvent(flow, action);
     case TransferFlowActionType.Confirmed:
-      if (flow.step !== TransferFlowStep.Reviewing) return flow;
-      return {
-        step: TransferFlowStep.Creating,
-        draft: flow.draft,
-        lookup: action.lookup,
-        idempotencyKey: action.idempotencyKey,
-      };
     case TransferFlowActionType.Created:
-      if (flow.step !== TransferFlowStep.Creating) return flow;
-      return {
-        step: TransferFlowStep.Approving,
-        draft: flow.draft,
-        lookup: flow.lookup,
-        transferId: action.transferId,
-        challenge: action.challenge,
-      };
+    case TransferFlowActionType.CreateNotSent:
+    case TransferFlowActionType.CreateUnanswered:
+    case TransferFlowActionType.CreateRefusedByHold:
+    case TransferFlowActionType.CreateReturnedToAmount:
+      return reduceReviewAndCreateEvent(flow, action);
+    case TransferFlowActionType.ApprovalPathChosen:
     case TransferFlowActionType.ApprovalSent:
-      if (flow.step !== TransferFlowStep.Approving) return flow;
-      return {
-        step: TransferFlowStep.Submitting,
-        draft: flow.draft,
-        transferId: flow.transferId,
-        attemptKey: action.attemptKey,
-      };
-    case TransferFlowActionType.NotSent:
-      if (
-        flow.step !== TransferFlowStep.Creating &&
-        flow.step !== TransferFlowStep.Approving &&
-        flow.step !== TransferFlowStep.Submitting
-      )
-        return flow;
-      return { step: TransferFlowStep.Reviewing, draft: flow.draft };
-    case TransferFlowActionType.Completed:
-      if (flow.step !== TransferFlowStep.Submitting) return flow;
-      return { step: TransferFlowStep.Done, transferId: flow.transferId };
+    case TransferFlowActionType.ApprovalAttemptRefused:
+    case TransferFlowActionType.ApprovalNotSent:
+    case TransferFlowActionType.ApproveRefusedByHold:
+    case TransferFlowActionType.ApprovalReturnedToAmount:
+    case TransferFlowActionType.ApprovalAnswered:
+    case TransferFlowActionType.AnswerLost:
+      return reduceApprovalEvent(flow, action);
     case TransferFlowActionType.FlowLeft:
       // An approval that left the phone may have moved money, so its record outlives the screens.
       return flow.step === TransferFlowStep.Submitting ? flow : STARTING_FLOW;
   }
 }
-
-type TransferRecipient = Extract<
-  LookupRecipientRequest,
-  { idType: RecipientIdType }
-> & { idType: RecipientIdType.Mobile };
-
-type TransferDraft = { recipient: TransferRecipient; amount: Money };
-
-type TransferFlowState =
-  | { step: TransferFlowStep.Editing; draft: Partial<TransferDraft> }
-  | { step: TransferFlowStep.Reviewing; draft: TransferDraft }
-  | {
-      step: TransferFlowStep.Creating;
-      draft: TransferDraft;
-      lookup: LookupRecipientResponse;
-      idempotencyKey: string;
-    }
-  | {
-      step: TransferFlowStep.Approving;
-      draft: TransferDraft;
-      lookup: LookupRecipientResponse;
-      transferId: string;
-      challenge: string;
-    }
-  | {
-      step: TransferFlowStep.Submitting;
-      draft: TransferDraft;
-      transferId: string;
-      attemptKey: string;
-    }
-  | { step: TransferFlowStep.Done; transferId: string };
-
-type TransferFlowAction =
-  | {
-      type: TransferFlowActionType.RecipientChosen;
-      recipient: TransferRecipient;
-    }
-  | { type: TransferFlowActionType.AmountEntered; amount: Money }
-  | {
-      type: TransferFlowActionType.Confirmed;
-      lookup: LookupRecipientResponse;
-      idempotencyKey: string;
-    }
-  | {
-      type: TransferFlowActionType.Created;
-      transferId: string;
-      challenge: string;
-    }
-  | { type: TransferFlowActionType.ApprovalSent; attemptKey: string }
-  | { type: TransferFlowActionType.NotSent }
-  | { type: TransferFlowActionType.Completed }
-  | { type: TransferFlowActionType.FlowLeft };

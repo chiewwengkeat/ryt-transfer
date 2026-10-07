@@ -11,5 +11,7 @@ export function trackTransferStepAndAmount(
       amountMinor: flow.draft.amount?.minor,
       currency: flow.draft.amount?.currency,
     }),
+    ...("path" in flow && { path: flow.path }),
+    ...("notice" in flow && { scenario: flow.notice }),
   });
 }

@@ -172,8 +172,18 @@ it("reports each step of a sent transfer with its amount, never with the recipie
   ).toEqual([
     { step: "reviewing", amountMinor: 10_000, currency: "MYR" },
     { step: "creating", amountMinor: 10_000, currency: "MYR" },
-    { step: "approving", amountMinor: 10_000, currency: "MYR" },
-    { step: "submitting", amountMinor: 10_000, currency: "MYR" },
+    {
+      step: "approving",
+      amountMinor: 10_000,
+      currency: "MYR",
+      path: "biometric",
+    },
+    {
+      step: "submitting",
+      amountMinor: 10_000,
+      currency: "MYR",
+      path: "biometric",
+    },
     { step: "done" },
     { step: "editing" },
   ]);

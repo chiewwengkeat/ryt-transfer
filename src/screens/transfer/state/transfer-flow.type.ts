@@ -1,0 +1,180 @@
+import type { CoolingOffReason } from "@/domains/transfer/api/create-transfer/create-transfer.type";
+import type {
+  LookupRecipientRequest,
+  LookupRecipientResponse,
+  RecipientIdType,
+} from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import type { Money } from "@/shared/lib/money/money.type";
+
+export enum TransferFlowStep {
+  Editing = "editing",
+  Reviewing = "reviewing",
+  Creating = "creating",
+  Approving = "approving",
+  Submitting = "submitting",
+  Done = "done",
+}
+
+export enum TransferFlowActionType {
+  RecipientChosen = "recipient_chosen",
+  AmountEntered = "amount_entered",
+  Confirmed = "confirmed",
+  Created = "created",
+  CreateNotSent = "create_not_sent",
+  CreateUnanswered = "create_unanswered",
+  CreateRefusedByHold = "create_refused_by_hold",
+  CreateReturnedToAmount = "create_returned_to_amount",
+  ApprovalPathChosen = "approval_path_chosen",
+  ApprovalSent = "approval_sent",
+  ApprovalAttemptRefused = "approval_attempt_refused",
+  ApprovalNotSent = "approval_not_sent",
+  ApproveRefusedByHold = "approve_refused_by_hold",
+  ApprovalReturnedToAmount = "approval_returned_to_amount",
+  ApprovalAnswered = "approval_answered",
+  AnswerLost = "answer_lost",
+  FlowLeft = "flow_left",
+}
+
+export enum ApprovalPath {
+  Biometric = "biometric",
+  Pin = "pin",
+}
+
+export enum TransferHoldKind {
+  AccountLocked = "account_locked",
+  CoolingOff = "cooling_off",
+}
+
+// App code may not import the registry's id type, so these restate its ids; a test holds them to it.
+export enum TransferFlowScenario {
+  BadlyFormedInput = "transfer.badly_formed_input",
+  UnderMaintenance = "transfer.under_maintenance",
+  BalanceOrLimitShortAtConfirmation = "transfer.balance_or_limit_short_at_confirmation",
+  NameCheckExpired = "transfer.name_check_expired",
+  ConfirmationUnanswered = "transfer.confirmation_unanswered",
+  DetailsChangedAfterNoAnswer = "transfer.details_changed_after_no_answer",
+  ReviewUnexpected = "transfer.review_unexpected",
+  ApprovalCancelled = "transfer.approval_cancelled",
+  BiometricsNotRecognised = "transfer.biometrics_not_recognised",
+  BiometricsLockedOut = "transfer.biometrics_locked_out",
+  BiometricsUnavailable = "transfer.biometrics_unavailable",
+  BiometricsChanged = "transfer.biometrics_changed",
+  PinLocked = "transfer.pin_locked",
+  ApprovalKeyUnknown = "transfer.approval_key_unknown",
+  ApprovalExpired = "transfer.approval_expired",
+  ApprovalNotVerified = "transfer.approval_not_verified",
+  BalanceOrLimitShortAtApproval = "transfer.balance_or_limit_short_at_approval",
+  ApprovalUnexpected = "transfer.approval_unexpected",
+}
+
+export type TransferRecipient = Extract<
+  LookupRecipientRequest,
+  { idType: RecipientIdType }
+> & { recentId?: string };
+
+export type TransferDraft = {
+  recipient: TransferRecipient;
+  amount: Money;
+  note?: string;
+};
+
+export type TransferHold =
+  | { kind: TransferHoldKind.AccountLocked }
+  | {
+      kind: TransferHoldKind.CoolingOff;
+      until: string;
+      reason: CoolingOffReason;
+    };
+
+export type TransferFlowState =
+  | {
+      step: TransferFlowStep.Editing;
+      draft: Partial<TransferDraft>;
+      notice?: TransferFlowScenario;
+    }
+  | {
+      step: TransferFlowStep.Reviewing;
+      draft: TransferDraft;
+      notice?: TransferFlowScenario;
+      hold?: TransferHold;
+      // A create whose answer never arrived may have run, so the next Confirm repeats it under the same key.
+      createKeyToReuse?: string;
+    }
+  | {
+      step: TransferFlowStep.Creating;
+      draft: TransferDraft;
+      lookup: LookupRecipientResponse;
+      idempotencyKey: string;
+    }
+  | ({ step: TransferFlowStep.Approving } & ApprovalInProgress)
+  | ({
+      step: TransferFlowStep.Submitting;
+      attemptKey: string;
+    } & ApprovalInProgress)
+  | { step: TransferFlowStep.Done; transferId: string };
+
+export type RecipientEvent = {
+  type: TransferFlowActionType.RecipientChosen;
+  recipient: TransferRecipient;
+};
+
+export type AmountAndNoteEvent = {
+  type: TransferFlowActionType.AmountEntered;
+  amount: Money;
+  note?: string;
+};
+
+export type ReviewAndCreateEvent =
+  | {
+      type: TransferFlowActionType.Confirmed;
+      lookup: LookupRecipientResponse;
+      idempotencyKey: string;
+    }
+  | {
+      type: TransferFlowActionType.Created;
+      transferId: string;
+      challenge: string;
+      expiresInSeconds: number;
+    }
+  | { type: TransferFlowActionType.CreateNotSent; notice: TransferFlowScenario }
+  | {
+      type: TransferFlowActionType.CreateUnanswered;
+      notice: TransferFlowScenario;
+    }
+  | { type: TransferFlowActionType.CreateRefusedByHold; hold: TransferHold }
+  | {
+      type: TransferFlowActionType.CreateReturnedToAmount;
+      notice: TransferFlowScenario;
+    };
+
+export type ApprovalEvent =
+  | { type: TransferFlowActionType.ApprovalPathChosen; path: ApprovalPath }
+  | { type: TransferFlowActionType.ApprovalSent; attemptKey: string }
+  | { type: TransferFlowActionType.ApprovalAttemptRefused }
+  | {
+      type: TransferFlowActionType.ApprovalNotSent;
+      notice: TransferFlowScenario;
+    }
+  | { type: TransferFlowActionType.ApproveRefusedByHold; hold: TransferHold }
+  | {
+      type: TransferFlowActionType.ApprovalReturnedToAmount;
+      notice: TransferFlowScenario;
+    }
+  | { type: TransferFlowActionType.ApprovalAnswered }
+  | { type: TransferFlowActionType.AnswerLost };
+
+export type TransferFlowAction =
+  | RecipientEvent
+  | AmountAndNoteEvent
+  | ReviewAndCreateEvent
+  | ApprovalEvent
+  | { type: TransferFlowActionType.FlowLeft };
+
+type ApprovalInProgress = {
+  draft: TransferDraft;
+  lookup: LookupRecipientResponse;
+  transferId: string;
+  challenge: string;
+  expiresInSeconds: number;
+  path: ApprovalPath;
+};

@@ -28,6 +28,7 @@ import { refreshAccountAndHistoryAfterApproval } from "../state/refresh-after-ap
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
+  TransferFlowScenario,
   TransferFlowStep,
   transferFlowStore,
   useTransferFlow,
@@ -100,7 +101,10 @@ export default function TransferReviewScreen() {
       })
       .catch(() => null);
     if (created === null) {
-      dispatchTransferFlow({ type: TransferFlowActionType.NotSent });
+      dispatchTransferFlow({
+        type: TransferFlowActionType.CreateNotSent,
+        notice: TransferFlowScenario.ReviewUnexpected,
+      });
       setNotSentMessage(t("common.review_unexpected.body"));
       return;
     }
@@ -110,6 +114,7 @@ export default function TransferReviewScreen() {
         type: TransferFlowActionType.Created,
         transferId,
         challenge: created.approval.challenge,
+        expiresInSeconds: created.approval.expiresInSeconds,
       })
     )
       return;
@@ -124,7 +129,10 @@ export default function TransferReviewScreen() {
       amount: draft.amount,
     });
     if (signedApproval === null) {
-      dispatchTransferFlow({ type: TransferFlowActionType.NotSent });
+      dispatchTransferFlow({
+        type: TransferFlowActionType.ApprovalNotSent,
+        notice: TransferFlowScenario.ApprovalCancelled,
+      });
       setNotSentMessage(t("common.approval_cancelled.body"));
       return;
     }
@@ -150,7 +158,10 @@ export default function TransferReviewScreen() {
         error.code !== undefined &&
         APPROVAL_REFUSAL_CODES.has(error.code)
       ) {
-        dispatchTransferFlow({ type: TransferFlowActionType.NotSent });
+        dispatchTransferFlow({
+          type: TransferFlowActionType.ApprovalNotSent,
+          notice: TransferFlowScenario.ApprovalCancelled,
+        });
         setNotSentMessage(t("common.approval_cancelled.body"));
       } else {
         setAnswerLostMessage(
@@ -171,7 +182,7 @@ export default function TransferReviewScreen() {
     // From Home, so Back from the result never reopens a transfer already sent.
     router.dismissTo("/");
     router.push(`/transfer/result/${transferId}`);
-    dispatchTransferFlow({ type: TransferFlowActionType.Completed });
+    dispatchTransferFlow({ type: TransferFlowActionType.ApprovalAnswered });
   };
 
   return (
@@ -207,9 +218,17 @@ export default function TransferReviewScreen() {
                       stepAtFailure === TransferFlowStep.Creating ||
                       stepAtFailure === TransferFlowStep.Approving
                     ) {
-                      dispatchTransferFlow({
-                        type: TransferFlowActionType.NotSent,
-                      });
+                      dispatchTransferFlow(
+                        stepAtFailure === TransferFlowStep.Approving
+                          ? {
+                              type: TransferFlowActionType.ApprovalNotSent,
+                              notice: TransferFlowScenario.ApprovalUnexpected,
+                            }
+                          : {
+                              type: TransferFlowActionType.CreateNotSent,
+                              notice: TransferFlowScenario.ReviewUnexpected,
+                            },
+                      );
                       setNotSentMessage(t("common.approval_unexpected.body"));
                     } else {
                       setAnswerLostMessage(t("common.outcome_unexpected.body"));
