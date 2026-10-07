@@ -89,6 +89,18 @@ it("leaves no record a wipe cannot find when a write stops halfway", async () =>
   expect(await readSecureRecord(FIRST_PENDING)).toBeNull();
 });
 
+it("leaves no record a wipe cannot find when a wipe stops halfway", async () => {
+  await writeSecureRecord(FIRST_PENDING, "{}");
+  jest
+    .spyOn(secureStoreNativeDouble, "deleteValueWithKeyAsync")
+    .mockRejectedValueOnce(new Error("the phone died"));
+
+  await expect(deleteAllSecureRecords()).rejects.toThrow("the phone died");
+  await deleteAllSecureRecords();
+
+  expect(await readSecureRecord(FIRST_PENDING)).toBeNull();
+});
+
 it("wipes one customer's records and keeps the other customer's", async () => {
   await writeSecureRecord(FIRST_PENDING, "{}");
   await writeSecureRecord(FIRST_KEYS, "{}");
@@ -109,6 +121,35 @@ it("wipes every record it holds, whoever it belongs to", async () => {
   expect(await listSecureRecords()).toEqual([]);
   expect(await readSecureRecord(SECOND_PENDING)).toBeNull();
 });
+
+it.each([
+  { records: "every record", wipe: () => deleteAllSecureRecords() },
+  {
+    records: "one customer's records",
+    wipe: () => deleteSecureNamespace("customer-1"),
+  },
+])(
+  "applies a wipe of $records and the writes around it in the order they were asked for",
+  async ({ wipe }) => {
+    await writeSecureRecord(FIRST_KEYS, "keys from before the reinstall");
+
+    await Promise.all([
+      writeSecureRecord(FIRST_PENDING, "{}"),
+      wipe(),
+      writeSecureRecord(FIRST_KEYS, "keys paired just now"),
+    ]);
+
+    expect({
+      pending: await readSecureRecord(FIRST_PENDING),
+      keys: await readSecureRecord(FIRST_KEYS),
+      index: await listSecureRecords(),
+    }).toEqual({
+      pending: null,
+      keys: "keys paired just now",
+      index: [FIRST_KEYS],
+    });
+  },
+);
 
 it("refuses a namespace that could build another record's key", async () => {
   await expect(

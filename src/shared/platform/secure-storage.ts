@@ -49,17 +49,11 @@ export async function listSecureRecords() {
 }
 
 export async function deleteSecureNamespace(namespace: string) {
-  const records = await listSecureRecords();
-  await Promise.all(
-    records
-      .filter((record) => record.namespace === namespace)
-      .map(deleteSecureRecord),
-  );
+  await deleteSecureRecordsInTurn((record) => record.namespace === namespace);
 }
 
 export async function deleteAllSecureRecords() {
-  const records = await listSecureRecords();
-  await Promise.all(records.map(deleteSecureRecord));
+  await deleteSecureRecordsInTurn(() => true);
 }
 
 // One change at a time, record and index together: overlapping ones drop each other's index
@@ -69,6 +63,26 @@ function changeSecureRecordsInTurn(change: () => Promise<void>) {
   // The caller sees a failure; the queue must not, or every later change fails with it.
   pendingSecureChange = turn.catch(() => undefined);
   return turn;
+}
+
+function deleteSecureRecordsInTurn(
+  shouldDelete: (record: SecureRecordAddress) => boolean,
+) {
+  return changeSecureRecordsInTurn(async () => {
+    // Listed inside the turn: listed outside it, a wipe can erase a write asked for after it began.
+    const records = await listSecureRecords();
+    // Not through deleteSecureRecord: it would queue behind this turn and never run. One by one, so a failed
+    // delete ends the turn with none still running.
+    for (const record of records.filter(shouldDelete)) {
+      await SecureStore.deleteItemAsync(
+        secureRecordKey(record),
+        RECORD_OPTIONS,
+      );
+    }
+    await updateSecureIndex((entries) =>
+      entries.filter((entry) => !shouldDelete(entry)),
+    );
+  });
 }
 
 async function updateSecureIndex(
