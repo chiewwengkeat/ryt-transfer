@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { addUnauthorizedListener } from "@/shared/http/transport";
+import "@/shell/app-launch";
 import { queryClient } from "@/shell/query-client";
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
 import "@/shell/translations";
