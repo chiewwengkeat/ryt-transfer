@@ -1,8 +1,86 @@
-import type { InfiniteData, QueryClient } from "@tanstack/react-query";
+import {
+  infiniteQueryOptions,
+  useInfiniteQuery,
+  type InfiniteData,
+  type QueryClient,
+} from "@tanstack/react-query";
 
-import type { Transfer } from "../get-transfer/get-transfer.type";
+import { requestJson } from "@/shared/http/transport";
+import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
+import { parseWireAmount } from "@/shared/lib/money/money";
+import { trackEvent } from "@/shared/observability/observability";
+
+import {
+  TransferFunds,
+  type Transfer,
+} from "../get-transfer/get-transfer.type";
 import { transferKeys } from "../transfer.keys";
 import type { ListTransfersResponse } from "./list-transfers.type";
+
+// As the bank's day net counts it, so a day's rows add up to its header: a pending refund has not come back yet.
+export const MONEY_MOVED_SIGN = {
+  [TransferFunds.NotDebited]: 0,
+  [TransferFunds.Debited]: -1,
+  [TransferFunds.RefundPending]: -1,
+  [TransferFunds.Refunded]: 0,
+  [TransferFunds.Credited]: 1,
+} satisfies Record<TransferFunds, -1 | 0 | 1>;
+
+export const getListTransfersOptions = () =>
+  infiniteQueryOptions({
+    queryKey: transferKeys.history(),
+    queryFn: async ({ pageParam, signal }) => {
+      const search = new URLSearchParams({ limit: "30" });
+      if (pageParam !== null) search.set("cursor", pageParam);
+      const page = await requestJson<ListTransfersResponse>(
+        `/transfers?${search.toString()}`,
+        { signal },
+      );
+      const unreadableAmountCount = [
+        ...page.items.map(({ amount }) => amount),
+        ...page.days.map(({ net }) => net),
+      ].filter((amount) => parseWireAmount(amount) === null).length;
+      if (unreadableAmountCount > 0)
+        trackEvent("transfer_history_unreadable_amounts", {
+          count: unreadableAmountCount,
+        });
+      return page;
+    },
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    // A refetch replays every loaded page, so history refreshes only through its reset.
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+export function useListTransfers() {
+  return useInfiniteQuery({
+    ...getListTransfersOptions(),
+    select: selectTransferHistory,
+  });
+}
+
+// Module-level so its identity holds: TanStack re-runs a new select over every loaded transfer.
+function selectTransferHistory(
+  history: InfiniteData<ListTransfersResponse, string | null>,
+) {
+  const daySummaries: Record<string, ListTransfersResponse["days"][number]> =
+    {};
+  // A day split across two pages comes with its whole-day summary in both: keep one, never add them.
+  for (const page of history.pages)
+    for (const day of page.days) daySummaries[day.date] = day;
+  return {
+    transfers: history.pages.flatMap(({ items }) =>
+      items.map((transfer) => ({
+        ...transfer,
+        malaysianDate: toMalaysianDateKey(transfer.createdAt),
+      })),
+    ),
+    daySummaries,
+  };
+}
 
 // After a transfer: a page fetch already under way would land on pages the new transfer has shifted.
 export async function resetTransferHistory(queryClient: QueryClient) {
