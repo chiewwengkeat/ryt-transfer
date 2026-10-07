@@ -1,7 +1,6 @@
 import { t } from "i18next";
 
-// Malaysia has kept +08:00, with no daylight saving, since 1982: shifting by it and reading UTC getters gives
-// the same text on every phone and in Jest, with no Intl time-zone data.
+// No daylight saving in Malaysia: a fixed shift plus UTC getters reads the same on every phone, with no Intl zone data.
 const MALAYSIA_OFFSET_MS = 8 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MONTH_KEYS = [

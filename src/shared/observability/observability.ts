@@ -1,6 +1,6 @@
 import { TransportError } from "@/shared/http/transport";
 
-// Credentials and personal data never pass; amounts may, in sen.
+// An allow-list, so nothing unvetted reaches a sink: credentials and personal data never pass; amounts may, in sen.
 const ALLOWED_PROPERTY_NAMES = new Set([
   "scenario",
   "step",
@@ -54,7 +54,6 @@ export function reportError(
   });
 }
 
-// An allow-list, so a field nobody vetted, a whole record spread in included, cannot reach a sink.
 function redactProperties(properties: Record<string, unknown>) {
   const allowed: ObservedRecord["properties"] = {};
   for (const [name, value] of Object.entries(properties)) {

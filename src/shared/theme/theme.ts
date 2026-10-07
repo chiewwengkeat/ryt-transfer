@@ -22,5 +22,5 @@ export const typography = {
   label: { fontSize: 16, lineHeight: 24, fontWeight: "600" },
 } as const;
 
-// Android's 48 dp touch target, which also clears iOS's 44 pt.
+// Android's minimum touch target, the larger of the two platforms' minimums.
 export const minTouchTarget = 48;

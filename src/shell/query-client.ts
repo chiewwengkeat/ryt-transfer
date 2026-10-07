@@ -22,7 +22,7 @@ export function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        // A timeout retries like a dropped connection: three tries, about 30 s at worst, before the error shows.
+        // A timeout retries like a dropped connection: on a slow line, a second try often lands.
         retry: (failureCount, error) =>
           failureCount < 2 &&
           error instanceof TransportError &&

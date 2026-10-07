@@ -43,7 +43,7 @@ export function configureTransport(
   authHeaders = options.authHeaders ?? withoutAuthHeaders;
 }
 
-// A 401 means only that the session ended: the shell shows that, so no screen handles it too.
+// A 401 means only that the session ended.
 export function addUnauthorizedListener(listener: () => void) {
   unauthorizedListeners.add(listener);
   return () => {

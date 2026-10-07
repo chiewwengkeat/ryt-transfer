@@ -10,7 +10,7 @@ if (!BUILD_VARIANTS.has(buildVariant)) {
   );
 }
 
-// ⛔ Never gate the demo layer's require() on this: Metro strips only a literal variant comparison.
+// ⛔ Never gate code a build must strip on this: Metro strips only a literal variant comparison.
 export const isProductionBuild = !SWITCHER_VARIANTS.has(buildVariant);
 
 // A reserved name that never resolves: no backend exists, so a production build reaches nothing.
