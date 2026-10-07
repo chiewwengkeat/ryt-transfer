@@ -1,0 +1,33 @@
+name: CI
+
+on: push
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npx --yes pnpm@12.9.1 install --frozen-lockfile
+      - run: npx --yes pnpm@12.9.1 typecheck
+      - run: npx --yes pnpm@12.9.1 lint
+      - run: npx --yes pnpm@12.9.1 test
+      - name: Lint the pushed commit messages
+        env:
+          PUSHED_FROM: ${{ github.event.before }}
+        run: |
+          if [ "$PUSHED_FROM" = "0000000000000000000000000000000000000000" ]; then
+            pushed=$(git rev-list HEAD)
+          else
+            pushed=$(git rev-list "$PUSHED_FROM..HEAD")
+          fi
+          for sha in $pushed; do
+            git log -1 --format=%B "$sha" | node_modules/.bin/commitlint
+          done
