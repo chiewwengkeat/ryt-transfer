@@ -75,6 +75,11 @@ export default [
           message:
             "Use `import type`: the slice boundaries cannot follow an import() type.",
         },
+        {
+          selector: "JSXAttribute[name.name='testID']",
+          message:
+            "Name the element for its users instead (accessibilityRole and accessibilityLabel): tests query by accessible name.",
+        },
       ],
       "no-restricted-globals": [
         "error",

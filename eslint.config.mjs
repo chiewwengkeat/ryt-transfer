@@ -124,6 +124,7 @@ export default defineConfig(
       // require-await; no-floating-promises catches an un-awaited event from its types.
       "testing-library/await-async-events": "off",
       "testing-library/no-await-sync-events": "off",
+      "testing-library/no-test-id-queries": "error",
     },
   },
   {
