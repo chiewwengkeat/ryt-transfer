@@ -37,6 +37,17 @@ const CONSOLE_OUTSIDE_OBSERVABILITY =
   "Report through src/shared/observability/, which redacts personal data before anything is logged.";
 const TEST_ID_INSTEAD_OF_ACCESSIBLE_NAME =
   "Name the element for its users instead (accessibilityRole and accessibilityLabel): tests query by accessible name.";
+const mswRootImport = {
+  name: "msw",
+  allowImportNames: MSW_DEVICE_EXPORTS,
+  allowTypeImports: true,
+  message: `On a device, msw is metro.msw-entry.mjs, which exposes only ${MSW_DEVICE_EXPORTS.join(", ")}: a catch-all passthrough would send real requests from a demo build.`,
+};
+const mswSubpathImport = {
+  group: ["msw/*"],
+  allowTypeImports: true,
+  message: `On a device, msw is metro.msw-entry.mjs, which exposes only ${MSW_DEVICE_EXPORTS.join(", ")}: a subpath goes around it, and msw's own servers send an unmatched request to the real network.`,
+};
 
 export default [
   {
@@ -116,16 +127,7 @@ export default [
       ],
       "@typescript-eslint/no-restricted-imports": [
         "error",
-        {
-          paths: [
-            {
-              name: "msw",
-              allowImportNames: MSW_DEVICE_EXPORTS,
-              allowTypeImports: true,
-              message: `On a device, msw is metro.msw-entry.mjs, which exposes only ${MSW_DEVICE_EXPORTS.join(", ")}: a catch-all passthrough would send real requests from a demo build.`,
-            },
-          ],
-        },
+        { paths: [mswRootImport], patterns: [mswSubpathImport] },
       ],
     },
   },
@@ -157,6 +159,10 @@ export default [
       "no-restricted-imports": [
         "error",
         { patterns: [storageOutsidePlatform, storageAnywhere] },
+      ],
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        { paths: [mswRootImport] },
       ],
     },
   },

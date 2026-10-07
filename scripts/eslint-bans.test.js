@@ -23,6 +23,10 @@ const TEST_ID_BAN = {
   ruleId: "no-restricted-syntax",
   message: /accessibilityLabel/,
 };
+const MSW_BAN = {
+  ruleId: "@typescript-eslint/no-restricted-imports",
+  message: /metro\.msw-entry\.mjs/,
+};
 const SCREEN_DIR = "src/screens/probe/ProbeScreen";
 const VIEW_IMPORT = 'import { View } from "react-native";\n';
 const componentReturning = (imports, element) =>
@@ -74,6 +78,46 @@ const CASES = [
     refused,
     ban: TEST_ID_BAN,
   })),
+  ...[
+    ["a screen", SCREEN_DIR],
+    ["src/mocks/", "src/mocks"],
+  ].flatMap(([where, dir]) =>
+    [
+      ['import { setupServer } from "msw/native";', "msw/native"],
+      ['import { setupServer } from "msw/node";', "msw/node"],
+      ['import { setupWorker } from "msw/browser";', "msw/browser"],
+      ['import { http } from "msw/core/http";', "msw/core/http"],
+      ['import * as experimental from "msw/experimental";', "msw/experimental"],
+      [
+        'export { setupServer } from "msw/native";',
+        "a re-export of msw/native",
+      ],
+      ['import msw = require("msw/native");', "an import-equals of msw/native"],
+      ['import { passthrough } from "msw";', "passthrough from msw"],
+    ].map(([source, what], i) => ({
+      title: `refuses ${what} in ${where}`,
+      file: `${dir}/msw-${i}.ts`,
+      source: `${source}\n`,
+      refused: true,
+      ban: MSW_BAN,
+    })),
+  ),
+  {
+    title: "passes msw's four device names and its types in src/mocks/",
+    file: "src/mocks/msw-device.ts",
+    source:
+      'import { delay, getResponse, http, HttpResponse } from "msw";\nimport type { RequestHandler } from "msw";\nimport type { SetupServerApi } from "msw/node";\n\nexport type Probe = [RequestHandler, SetupServerApi];\nexport const probe = [delay, getResponse, http, HttpResponse];\n',
+    refused: false,
+    ban: MSW_BAN,
+  },
+  {
+    title: "passes msw/node in src/test/",
+    file: "src/test/msw-node.ts",
+    source:
+      'import { setupServer } from "msw/node";\n\nexport const probe = setupServer();\n',
+    refused: false,
+    ban: MSW_BAN,
+  },
 ];
 
 let lintRoot;
