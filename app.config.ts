@@ -12,7 +12,8 @@ const config: ExpoConfig = {
     icon: "./assets/expo.icon",
     bundleIdentifier: "io.github.chiewwengkeat.ryttransfer",
     infoPlist: {
-      NSFaceIDUsageDescription: "$(PRODUCT_NAME) uses Face ID to approve your transfers.",
+      NSFaceIDUsageDescription:
+        "$(PRODUCT_NAME) uses Face ID to approve your transfers.",
     },
   },
   android: {

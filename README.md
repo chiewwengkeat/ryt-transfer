@@ -19,4 +19,6 @@ Expo Go cannot run this app: it carries native modules, biometric key signing am
 
 ```sh
 pnpm typecheck
+pnpm lint    # ESLint, Prettier, the placement-ladder check and the secret scan
+pnpm test
 ```

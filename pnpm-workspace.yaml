@@ -1,5 +1,6 @@
 allowBuilds:
   msw: false
+  unrs-resolver: false
 minimumReleaseAgeExclude:
   - '@expo/cli@57.0.28'
   - '@expo/config-plugins@57.0.10'
@@ -22,4 +23,17 @@ minimumReleaseAgeExclude:
   - expo-screen-capture@57.0.4
   - expo-sqlite@57.0.4
   - react-i18next@17.0.16
+  - '@eslint-react/ast@5.24.6'
+  - '@eslint-react/core@5.24.6'
+  - '@eslint-react/eslint-plugin@5.24.6'
+  - '@eslint-react/eslint@5.24.6'
+  - '@eslint-react/jsx@5.24.6'
+  - '@eslint-react/shared@5.24.6'
+  - '@eslint-react/var@5.24.6'
+  - eslint-plugin-react-dom@5.24.6
+  - eslint-plugin-react-jsx@5.24.6
+  - eslint-plugin-react-naming-convention@5.24.6
+  - eslint-plugin-react-rsc@5.24.6
+  - eslint-plugin-react-web-api@5.24.6
+  - eslint-plugin-react-x@5.24.6
 nodeLinker: isolated
