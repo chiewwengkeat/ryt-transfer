@@ -47,10 +47,9 @@ function isReactClass(d) {
   return base === "Component" || base === "PureComponent";
 }
 
-/** The body statement declaring `name` as a component. Layout order is measured
- * from whatever this returns, so it must be the declaration: keying on the
- * `export default Foo` line instead would put every statement above it, styles
- * included, "before the component". */
+/** Layout order is measured from whatever this returns, so it must be the
+ * declaration: keying on the `export default Foo` line instead would put every
+ * statement above it, styles included, "before the component". */
 function localComponentDecl(body, name) {
   for (const stmt of body) {
     const inner =

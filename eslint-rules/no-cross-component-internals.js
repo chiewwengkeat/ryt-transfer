@@ -27,10 +27,7 @@ function isComponentDir(dir) {
   return dirEntries(dir).includes(lastSegment(dir) + ".tsx");
 }
 
-/** The component folder that owns `target` and does not contain `fromFile`, or
- * null. Only folders below the two paths' common ancestor can qualify — one
- * holding both files is never crossed into — which also keeps the walk to a few
- * readdirs, since dirEntries has no cache. */
+/** Stops at the common ancestor: a folder holding both files is never crossed into. */
 function owningComponentDir(fromFile, target) {
   const stop = commonAncestor(parsePath(fromFile).dir, parsePath(target).dir);
   let dir = parsePath(target).dir;

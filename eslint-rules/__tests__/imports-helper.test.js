@@ -1,7 +1,6 @@
 "use strict";
-// These cases need real TS parsing, so the parser require is top-level and
-// unguarded: if it is missing the file fails to load and node:test reports it,
-// which is what we want — a skipped suite would be a false green.
+// The parser require is unguarded on purpose: a missing parser must fail this
+// file, not skip it to a false green.
 
 const { test } = require("node:test");
 const assert = require("node:assert/strict");

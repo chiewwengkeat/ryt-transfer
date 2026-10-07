@@ -13,8 +13,7 @@ const STORE_AFFIXES = { lead: ["use"], trail: ["Store"] };
 
 /** A type export is not a name a file can be called after, so it must not count
  * toward "sole export" — counting it would silence every hook file that also
- * exports its own return type. `export *` makes the surface unknowable, which is
- * what `unknown` reports. */
+ * exports its own return type. */
 function exportedNames(body) {
   const names = new Set();
   let unknown = false;

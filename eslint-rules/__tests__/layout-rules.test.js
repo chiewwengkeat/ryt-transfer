@@ -1,7 +1,6 @@
 "use strict";
-// The AST-backed rules. These cases need real TS/JSX parsing, so the parser require
-// is top-level and unguarded: if it is missing the file fails to load and node:test
-// reports it, which is what we want — a skipped suite would be a false green.
+// The parser require is unguarded on purpose: a missing parser must fail this
+// file, not skip it to a false green.
 
 const { test } = require("node:test");
 const { RuleTester } = require("eslint");
@@ -9,9 +8,8 @@ const { parser } = require("typescript-eslint");
 
 const layout = require("../component-layout");
 const jsdocLength = require("../component-jsdoc-length");
-// component-type-prefix's other cases live in rules.test.js — they read the
-// filename only. Its filename check reads the AST to find the exported component,
-// so those cases need the parser and live here.
+// component-type-prefix's filename-only cases live in rules.test.js; the ones that
+// need the AST to find the exported component live here.
 const typePrefix = require("../component-type-prefix");
 
 // node:test owns reporting and failure now. RuleTester's own describe/it shims
