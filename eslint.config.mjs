@@ -15,6 +15,8 @@ import testingLibrary from "eslint-plugin-testing-library";
 import globals from "globals";
 import * as tseslint from "typescript-eslint";
 
+import fe from "./eslint-rules/index.js";
+
 const TSCONFIG_PATH = path.join(import.meta.dirname, "tsconfig.json");
 const SOURCE_FILES = ["src/**/*.{ts,tsx}"];
 const TEST_FILES = ["src/**/*.test.{ts,tsx}", "src/test/**/*.{ts,tsx}"];
@@ -361,6 +363,29 @@ export default defineConfig(
       testingLibrary.configs["flat/react"],
     ],
     settings: { jest: { version: 29 } },
+  },
+  {
+    files: SOURCE_FILES,
+    plugins: { fe },
+    rules: {
+      "fe/component-folder-identity": "error",
+      "fe/component-jsdoc-length": [
+        "error",
+        { recognizeAllExportShapes: true },
+      ],
+      "fe/component-layout": ["error", { recognizeAllExportShapes: true }],
+      "fe/component-own-folder": "error",
+      "fe/component-type-prefix": [
+        "error",
+        { requireFilenameMatchesComponent: true },
+      ],
+      "fe/hook-file-kebab-case": "error",
+      "fe/hook-filename-matches-export": "error",
+      "fe/no-component-fetch-hooks": "error",
+      "fe/no-cross-component-internals": "error",
+      "fe/sibling-basename-tracks-folder": "error",
+      "fe/singular-role-suffix": "error",
+    },
   },
   prettier,
 );
