@@ -14,7 +14,9 @@ const VARIANTS: Record<
 };
 // Unset or empty fails closed: a forgotten variable builds an app with no fake bank.
 const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT || "production";
-const variant = VARIANTS[appVariant];
+const variant = Object.hasOwn(VARIANTS, appVariant)
+  ? VARIANTS[appVariant]
+  : undefined;
 if (!variant) {
   throw new Error(
     `EXPO_PUBLIC_APP_VARIANT must be production, demo or development, not "${appVariant}".`,
