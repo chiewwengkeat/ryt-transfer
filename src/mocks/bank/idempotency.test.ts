@@ -57,3 +57,28 @@ it("answers a repeated create with the first transfer rather than a second", asy
 
   expect(repeat).toEqual(first);
 });
+
+it.each(["__proto__", "constructor", "toString", "hasOwnProperty"])(
+  "keeps the first answer under an Idempotency-Key named %s like any other",
+  async (idempotencyKey) => {
+    const lookup = await lookUpTestRecipient();
+    const body = {
+      recipientRef: lookup.recipientRef,
+      amount: { minor: 1_000, currency: "MYR" },
+    };
+
+    const first = await sendToBank<CreateTransferResponse>(
+      "POST",
+      "/transfers",
+      { body, idempotencyKey },
+    );
+    const repeat = await sendToBank<CreateTransferResponse>(
+      "POST",
+      "/transfers",
+      { body, idempotencyKey },
+    );
+
+    expect(first.status).toBe(201);
+    expect(repeat).toEqual(first);
+  },
+);

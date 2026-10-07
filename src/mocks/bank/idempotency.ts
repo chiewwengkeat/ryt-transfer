@@ -22,7 +22,9 @@ export function answerOncePerKey(
     }
   }
 
-  const first = firstAnswers[write.idempotencyKey];
+  const first = Object.hasOwn(firstAnswers, write.idempotencyKey)
+    ? firstAnswers[write.idempotencyKey]
+    : undefined;
   if (first) {
     return first.fingerprint === write.fingerprint
       ? first.answer
@@ -33,10 +35,16 @@ export function answerOncePerKey(
         );
   }
   const answer = operate();
-  firstAnswers[write.idempotencyKey] = {
-    fingerprint: write.fingerprint,
-    answer,
-    answeredAtMs: write.nowMs,
-  };
+  // Defined, not assigned: assigning a key named __proto__ replaces the prototype instead.
+  Object.defineProperty(firstAnswers, write.idempotencyKey, {
+    value: {
+      fingerprint: write.fingerprint,
+      answer,
+      answeredAtMs: write.nowMs,
+    },
+    enumerable: true,
+    writable: true,
+    configurable: true,
+  });
   return answer;
 }

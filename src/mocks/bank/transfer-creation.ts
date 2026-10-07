@@ -46,7 +46,9 @@ export function createBankTransfer({
   const held = lockOrCoolingOffRefusal(nowMs, CreateTransferErrorCode);
   if (held) return held;
   const state = bankState();
-  const ref = state.recipientRefs[recipientRef];
+  const ref = Object.hasOwn(state.recipientRefs, recipientRef)
+    ? state.recipientRefs[recipientRef]
+    : undefined;
   if (!ref || ref.expiresAtMs <= nowMs) {
     return bankError(
       422,

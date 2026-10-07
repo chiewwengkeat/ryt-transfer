@@ -56,6 +56,20 @@ it.each([
   expect([refused.status, refused.body.error.code]).toEqual([422, code]);
 });
 
+it.each(["__proto__", "constructor", "toString"])(
+  "refuses a recipientRef named %s as a name check it never made",
+  async (recipientRef) => {
+    const refused = await sendToBank<BankErrorBody>("POST", "/transfers", {
+      body: { recipientRef, amount: { minor: 1_000, currency: "MYR" } },
+    });
+
+    expect([refused.status, refused.body.error.code]).toEqual([
+      422,
+      "RECIPIENT_REF_EXPIRED",
+    ]);
+  },
+);
+
 it("refuses to create a transfer once the name check is ten minutes old", async () => {
   const lookup = await lookUpTestRecipient();
   jest.spyOn(Date, "now").mockReturnValue(Date.now() + 600_000);
