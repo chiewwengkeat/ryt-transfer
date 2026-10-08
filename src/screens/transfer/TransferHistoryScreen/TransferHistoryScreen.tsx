@@ -16,6 +16,7 @@ import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerOutOfDate from "./components/BannerOutOfDate/BannerOutOfDate";
+import ButtonHeaderBack from "./components/ButtonHeaderBack/ButtonHeaderBack";
 import SectionTransferAccordion from "./components/SectionTransferAccordion/SectionTransferAccordion";
 
 export default function TransferHistoryScreen() {
@@ -33,7 +34,12 @@ export default function TransferHistoryScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: t("history.title") }} />
+      <Stack.Screen
+        options={{
+          title: t("history.title"),
+          headerLeft: () => <ButtonHeaderBack />,
+        }}
+      />
       {transferHistory.isPending && !transferHistory.isPaused ? (
         <Loader />
       ) : transferHistory.data === undefined ? (
