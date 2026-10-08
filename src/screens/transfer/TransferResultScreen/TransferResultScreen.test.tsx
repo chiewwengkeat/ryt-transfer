@@ -259,6 +259,33 @@ it(
   }),
 );
 
+it("moves Home's balance when a transfer whose answer was lost turns out sent while its result page is open", async () => {
+  let bankCommitsApprovals = false;
+  let lostApproval: Request | undefined;
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", ({ request }) => {
+      if (bankCommitsApprovals) return undefined;
+      lostApproval ??= request.clone();
+      return HttpResponse.error();
+    }),
+  );
+  await sendRm100FromHome();
+  await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 });
+  bankCommitsApprovals = true;
+
+  // The bank commits only now, after the refresh the approve call made on losing its answer.
+  await act(async () => {
+    const committed = fetch(lostApproval ?? "");
+    await jest.advanceTimersByTimeAsync(100);
+    await committed;
+  });
+  await act(() => jest.advanceTimersByTimeAsync(20_000));
+  await screen.findByRole("header", { name: "Transfer sent" });
+  await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+
+  expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
+});
+
 it(
   "treats an approval answer the app does not know like no answer, and shows how the transfer ended",
   scenarioTest("transfer.approval_unknown_answer", async () => {
