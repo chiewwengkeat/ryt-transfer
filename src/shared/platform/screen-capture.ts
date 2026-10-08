@@ -9,6 +9,9 @@ import { reportError } from "@/shared/observability/observability";
 
 // One key for every caller: the library lifts a block only once every key that set one is allowed.
 const SCREEN_CAPTURE_KEY = "app";
+// The library tells the phone only of a key it does not hold yet, and a recreated Android activity's window starts
+// unblocked: setting and at once dropping this key reaches the current window, while the key above keeps the block.
+const CURRENT_WINDOW_KEY = "current-window";
 
 // A screen error stands in for a screen without being it, so capture allowed on that screen must not reach it.
 // Counted, so one leaving never clears another still showing.
@@ -33,11 +36,13 @@ export function useScreenErrorShowing() {
 }
 
 export function blockScreenCapture() {
-  return preventScreenCaptureAsync(SCREEN_CAPTURE_KEY).catch(
-    (error: unknown) => {
-      reportError(error, { boundary: "screen_capture" });
-    },
-  );
+  return Promise.all([
+    preventScreenCaptureAsync(SCREEN_CAPTURE_KEY),
+    preventScreenCaptureAsync(CURRENT_WINDOW_KEY),
+    allowScreenCaptureAsync(CURRENT_WINDOW_KEY),
+  ]).catch((error: unknown) => {
+    reportError(error, { boundary: "screen_capture" });
+  });
 }
 
 export function allowScreenCapture() {

@@ -1,12 +1,16 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
+import { AppState } from "react-native";
 
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import {
   ButtonCrashScreen,
   crashTheScreenOfASettledReceipt,
 } from "@/test/harness/crash-on-press";
-import { isScreenCaptureBlocked } from "@/test/harness/native-doubles";
+import {
+  isScreenCaptureBlocked,
+  screenCaptureNativeDouble,
+} from "@/test/harness/native-doubles";
 import { waitPastReceiptSettle } from "@/test/harness/receipt-settle";
 import { renderRoute } from "@/test/render-route";
 import { serveTransferDetails } from "@/test/transfer-details-responses";
@@ -41,6 +45,44 @@ it("blocks capture on Home, lifts it on a receipt only once the screen before it
   expect(blockedOnHome).toBe(true);
   expect(blockedJustBeforeReceiptSettles).toBe(true);
   expect(blockedOnLeaving).toBe(true);
+  expect(isScreenCaptureBlocked()).toBe(true);
+});
+
+it("blocks capture on the new window Android gives Home after a font-size change, once the app is active again", async () => {
+  await renderRoute("/");
+  await screen.findByText("RM 12,845.50");
+  await waitPastReceiptSettle();
+  // The recreated activity's window starts unblocked, while the library still holds its key.
+  void screenCaptureNativeDouble.allowScreenCapture();
+  const blockedOnTheNewWindow = isScreenCaptureBlocked();
+
+  await act(() => {
+    for (const [eventName, listener] of jest.mocked(AppState).addEventListener
+      .mock.calls)
+      if (eventName === "change") {
+        listener("background");
+        listener("active");
+      }
+  });
+
+  expect(blockedOnTheNewWindow).toBe(false);
+  expect(isScreenCaptureBlocked()).toBe(true);
+});
+
+it("blocks capture on the new window Android gives Home when it is reopened after Back", async () => {
+  const view = await renderRoute("/");
+  await screen.findByText("RM 12,845.50");
+  await waitPastReceiptSettle();
+
+  // Back ends the activity, not the process: the root mounts again on a window that starts unblocked, while the
+  // library still holds its key.
+  await view.unmount();
+  void screenCaptureNativeDouble.allowScreenCapture();
+  const blockedOnTheNewWindow = isScreenCaptureBlocked();
+  await renderRoute("/");
+  await screen.findByText("RM 12,845.50");
+
+  expect(blockedOnTheNewWindow).toBe(false);
   expect(isScreenCaptureBlocked()).toBe(true);
 });
 
