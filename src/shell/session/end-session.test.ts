@@ -22,7 +22,7 @@ import { relaunchApp, renderRoute } from "@/test/render-route";
 
 import { endSession } from "./end-session";
 
-it("leaves nothing of the customer's behind — their transfer history, the open transfer, the approval setting and their pending transfers — but keeps the phone's pairing", async () => {
+it("leaves nothing of the customer's behind — their transfer history, the open transfer and their pending transfers — but keeps the phone's pairing and the host app's approval setting", async () => {
   const { customerId } = await queryClient.fetchQuery(
     getPrimaryAccountOptions(),
   );
@@ -58,7 +58,7 @@ it("leaves nothing of the customer's behind — their transfer history, the open
   expect(transferFlowStore.getState()).toEqual(
     transferFlowStore.getInitialState(),
   );
-  expect(approvalSettingsStore.getState().biometricApprovalOn).toBe(true);
+  expect(approvalSettingsStore.getState().biometricApprovalOn).toBe(false);
 });
 
 it("approves the first transfer after signing in again with no setting up, because signing out kept the phone paired", async () => {

@@ -12,6 +12,7 @@ import {
 } from "@/domains/transfer/hooks/pending-transfers";
 import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
+import { biometricPromptsShown } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
@@ -114,6 +115,23 @@ it("keeps no PIN lock past Reset demo, so the next transfer gets its keypad", as
 
   expect(await screen.findByRole("button", { name: "2" })).toBeOnTheScreen();
   expect(screen.getByLabelText("PIN, 0 of 6 digits entered")).toBeOnTheScreen();
+});
+
+it("turns face or fingerprint approval back on with Reset demo after No biometrics was picked", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Demo menu" }),
+  );
+  await fireEvent.press(screen.getByRole("radio", { name: "No biometrics" }));
+
+  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Reset demo" }));
+  await act(() => jest.advanceTimersByTimeAsync(5_000));
+  await sendRm100FromHomeAndReturn();
+
+  expect(biometricPromptsShown()).toHaveLength(1);
+  expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
 });
 
 it("checks an earlier transfer again once they sign back in after the reset, and says it was sent", async () => {
