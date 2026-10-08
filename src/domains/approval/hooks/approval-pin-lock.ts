@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-
 import { reportError } from "@/shared/observability/observability";
 import {
   deleteSecureRecord,
@@ -43,22 +41,11 @@ export async function forgetApprovalPinLock() {
   );
 }
 
-export function useApprovalPinLocked() {
-  const [pinLocked, setPinLocked] = useState(false);
-  useEffect(() => {
-    let mountReadOutdated = false;
-    const hearPinLock = (pinLockedNow: boolean) => {
-      mountReadOutdated = true;
-      setPinLocked(pinLockedNow);
-    };
-    pinLockListeners.add(hearPinLock);
-    void isApprovalPinLocked().then((pinLockedAtMount) => {
-      if (!mountReadOutdated) setPinLocked(pinLockedAtMount);
-    });
-    return () => {
-      mountReadOutdated = true;
-      pinLockListeners.delete(hearPinLock);
-    };
-  }, []);
-  return pinLocked;
+export function subscribeToApprovalPinLock(
+  hearPinLock: (pinLocked: boolean) => void,
+) {
+  pinLockListeners.add(hearPinLock);
+  return () => {
+    pinLockListeners.delete(hearPinLock);
+  };
 }

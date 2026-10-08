@@ -1,13 +1,13 @@
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 
-import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
-
 import {
   forgetApprovalPinLock,
   isApprovalPinLocked,
   rememberApprovalPinLocked,
-  useApprovalPinLocked,
-} from "./approval-pin-lock";
+} from "@/domains/approval/hooks/approval-pin-lock";
+import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
+
+import { useApprovalPinLocked } from "./use-approval-pin-locked";
 
 it("reads a lock the bank set before the reader mounted", async () => {
   await rememberApprovalPinLocked();

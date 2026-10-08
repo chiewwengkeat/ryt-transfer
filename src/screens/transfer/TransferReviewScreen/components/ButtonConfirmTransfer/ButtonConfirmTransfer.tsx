@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AccessibilityInfo } from "react-native";
 
+import { showApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-sheet";
+import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
 import {
   CoolingOffReason,
@@ -31,6 +33,7 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonUsePinInstead from "./components/ButtonUsePinInstead/ButtonUsePinInstead";
 import { settleApprovalAnswer } from "./hooks/settle-approval-answer";
 import { settleCreateFailure } from "./hooks/settle-create-failure";
+import { useApprovalPinLocked } from "./hooks/use-approval-pin-locked";
 import { useSendTransferApproval } from "./hooks/use-send-transfer-approval";
 
 interface Props {
@@ -65,6 +68,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     };
   }, [hold, coolingOffEndsAtMs]);
   const offline = useIsOffline();
+  const approvalPinLocked = useApprovalPinLocked();
 
   const holdReason =
     hold === undefined || hold === liftedHold
@@ -93,6 +97,27 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const confirmedLookup = lookup.data;
 
   const createAndApproveTransfer = async (path: ApprovalPath) => {
+    // ⛔ The bank refuses every PIN while it holds the lock, so a transfer only a PIN could approve is never created.
+    if (
+      approvalPinLocked &&
+      (path === ApprovalPath.Pin ||
+        !approvalSettingsStore.getState().biometricApprovalOn)
+    ) {
+      await showApprovalPinLocked({
+        ...(path === ApprovalPath.Pin
+          ? { message: t("common.pin_chosen.body") }
+          : {
+              message: t("common.biometrics_unavailable.body"),
+              detail: t("common.biometrics_unavailable.turned_off"),
+            }),
+        refusal: t("common.pin_locked.body"),
+      });
+      dispatchTransferFlow({
+        type: TransferFlowActionType.CreateNotSent,
+        notice: TransferFlowScenario.PinLocked,
+      });
+      return;
+    }
     const reviewing = transferFlowStore.getState();
     // A name check run again answers with a new ref, and the bank refuses a kept key sent with another body.
     const idempotencyKey =

@@ -159,6 +159,33 @@ it(
   }),
 );
 
+it("creates no transfer once the bank has locked the PIN, while face or fingerprint approval is off", async () => {
+  await confirmRm100ApprovedByPin();
+  await approveWithPin("111111");
+  await screen.findByText("That PIN is incorrect. You have 2 tries left.");
+  await approveWithPin("111111");
+  await screen.findByText("That PIN is incorrect. You have 1 try left.");
+  await approveWithPin("111111");
+  await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
+  const countCreatesSent = () =>
+    sentRequests.filter(
+      (request) =>
+        request.method === "POST" &&
+        /\/transfers$/.test(new URL(request.url).pathname),
+    ).length;
+  const createsSentBeforeTheLock = countCreatesSent();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText("It's turned off in this app's settings."),
+  ).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "1" })).toBeNull();
+  expect(countCreatesSent()).toBe(createsSentBeforeTheLock);
+});
+
 it("keeps no record to recheck once the bank refuses the PIN, as wrong or as locked", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const {
