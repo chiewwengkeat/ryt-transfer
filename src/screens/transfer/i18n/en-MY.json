@@ -211,7 +211,7 @@
     },
     "approval_unexpected": {
       "title": "Something unexpected while approving",
-      "body": "Something unexpected stopped the approval before it was sent — no money moved."
+      "body": "Something unexpected stopped the approval — no money moved."
     },
     "completed": {
       "title": "Transfer sent",

@@ -798,7 +798,7 @@ it("says the approval was not sent when the phone cannot keep a record of it", a
 
   expect(
     await screen.findByText(
-      "Something unexpected stopped the approval before it was sent — no money moved.",
+      "Something unexpected stopped the approval — no money moved.",
     ),
   ).toBeOnTheScreen();
   const sentPaths = sentRequests.map(
