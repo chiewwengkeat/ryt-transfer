@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { AccessibilityInfo, Platform } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
@@ -1899,6 +1899,76 @@ it("repeats a create whose answer could not be read under its key, and debits on
     await screen.findByText("Transfer sent", {}, { timeout: 10_000 }),
   ).toBeOnTheScreen();
   expect(new Set(idempotencyKeysOfCreatesSent()).size).toBe(1);
+  jest.useRealTimers();
+  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+});
+
+it("sends a fresh create under a new key once the name check run again after Ryt did not answer gives a new reference", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  let createsLost = 0;
+  let forwarding = false;
+  // ⛔ Keep the forward: only a bank that made the first create refuses its key with another reference.
+  mswServer.use(
+    http.post("*/transfers", async ({ request }) => {
+      if (forwarding || createsLost === 3) return undefined;
+      createsLost += 1;
+      forwarding = true;
+      await sendToBank("POST", "/transfers", {
+        body: await request.json(),
+        idempotencyKey: request.headers.get("Idempotency-Key"),
+      });
+      forwarding = false;
+      return HttpResponse.error();
+    }),
+  );
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText(
+    "Ryt could not be reached — no money moved.",
+    {},
+    { timeout: 10_000 },
+  );
+  const [unansweredKey] = idempotencyKeysOfCreatesSent();
+  mswServer.use(
+    http.get(
+      "*/accounts/primary",
+      async () => {
+        await delay(100);
+        return HttpResponse.json(
+          { error: { code: "SESSION_EXPIRED", message: "Test." } },
+          { status: 401 },
+        );
+      },
+      { once: true },
+    ),
+  );
+  await act(() => jest.advanceTimersByTimeAsync(10_500));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Sign in again" }),
+  );
+  // Until the new answer renders, Transfer still sends the earlier one, rightly under the kept key.
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  expect(countSent("POST", "/recipients/lookup")).toBe(2);
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  const creates = sentRequests.filter(
+    (request) =>
+      request.method === "POST" &&
+      new URL(request.url).pathname.endsWith("/transfers"),
+  );
+  const [lostCreate] = creates;
+  const freshCreate = creates.at(-1);
+  const keys = creates.map((request) => request.headers.get("Idempotency-Key"));
+  expect(keys.filter((key) => key !== unansweredKey)).toEqual([keys.at(-1)]);
+  const lostBody = (await lostCreate?.json()) as { recipientRef: string };
+  const freshBody = (await freshCreate?.json()) as { recipientRef: string };
+  expect(freshBody.recipientRef).not.toBe(lostBody.recipientRef);
   jest.useRealTimers();
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
 });

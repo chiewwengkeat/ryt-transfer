@@ -51,6 +51,7 @@ export function reduceReviewAndCreateEvent(
         draft: flow.draft,
         notice: action.notice,
         createKeyToReuse: flow.idempotencyKey,
+        createRecipientRefToReuse: flow.lookup.recipientRef,
       };
     case TransferFlowActionType.CreateRefusedByHold:
       return {

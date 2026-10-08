@@ -99,8 +99,10 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
 
   const createAndApproveTransfer = async () => {
     const reviewing = transferFlowStore.getState();
+    // A name check run again answers with a new ref, and the bank refuses a kept key sent with another body.
     const idempotencyKey =
       (reviewing.step === TransferFlowStep.Reviewing &&
+        reviewing.createRecipientRefToReuse === confirmedLookup.recipientRef &&
         reviewing.createKeyToReuse) ||
       randomUUID();
     if (
