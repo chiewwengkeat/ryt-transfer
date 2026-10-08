@@ -9,6 +9,7 @@ import {
   APPROVAL_REFUSAL_CODES,
   useApproveTransfer,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer";
+import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import type { LookupRecipientResponse } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
@@ -51,7 +52,8 @@ export default function TransferReviewScreen() {
   const approveTransfer = useApproveTransfer();
   const [notSentMessage, setNotSentMessage] = useState<string>();
   // The approval left the phone and no answer proves where it ended, so sending again could pay twice.
-  const [answerLost, setAnswerLost] = useState(false);
+  const [answerLostMessage, setAnswerLostMessage] = useState<string>();
+  const answerLost = answerLostMessage !== undefined;
 
   const sending =
     step === TransferFlowStep.Creating ||
@@ -145,7 +147,16 @@ export default function TransferReviewScreen() {
       ) {
         dispatchTransferFlow({ type: TransferFlowActionType.NotSent });
         setNotSentMessage(t("common.approval_cancelled.body"));
-      } else setAnswerLost(true);
+      } else
+        setAnswerLostMessage(
+          error instanceof TransportError &&
+            error.code !== undefined &&
+            !Object.values<string>(ApproveTransferErrorCode).includes(
+              error.code,
+            )
+            ? t("common.approval_unknown_answer.body")
+            : t("common.approval_unanswered.body"),
+        );
       return;
     }
     void refreshAccountAndHistoryAfterApproval(queryClient);
@@ -207,11 +218,8 @@ export default function TransferReviewScreen() {
         {answerAwaited && (
           <TextBody>{t("common.biometrics_recognised.body")}</TextBody>
         )}
-        {answerLost && (
-          <BannerNotice
-            tone="negative"
-            message={t("common.approval_unanswered.body")}
-          />
+        {answerLostMessage !== undefined && (
+          <BannerNotice tone="negative" message={answerLostMessage} />
         )}
         {notSentMessage !== undefined && (
           <BannerNotice tone="negative" message={notSentMessage} />

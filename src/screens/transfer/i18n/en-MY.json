@@ -32,6 +32,9 @@
     "approval_unanswered": {
       "body": "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
     },
+    "approval_unknown_answer": {
+      "body": "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
+    },
     "completed": {
       "title": "Transfer sent",
       "body": "{{amount}} sent to {{name}} — money moved."

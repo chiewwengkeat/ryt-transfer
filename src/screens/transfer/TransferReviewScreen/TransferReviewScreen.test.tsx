@@ -133,18 +133,31 @@ it("says the transfer was not sent when the face or fingerprint prompt is closed
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
 });
 
-it.each([
-  ["a refusal that proves no money moved", 403, "APPROVAL_INVALID", false],
-  ["a code the app does not know", 400, "NEW_BANK_CODE", true],
-])(
-  "answers %s according to whether money may have moved",
-  async (_, status, code, mayHaveMoved) => {
+it(
+  "says the transfer was not sent when the bank cannot verify the approval",
+  scenarioTest("transfer.approval_not_verified", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    mswServer.use(
-      http.post("*/transfers/:transferId/approve", () =>
-        HttpResponse.json({ error: { code, message: "Test." } }, { status }),
-      ),
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
     );
+
+    expect(
+      await screen.findByText("The transfer was not sent — no money moved."),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
+  }),
+);
+
+it(
+  "never offers to send again when the bank answers the approval with a code the app does not know",
+  scenarioTest("transfer.approval_unknown_answer", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const balanceBeforeMinor = await readBankBalanceMinor();
     await openReviewOfRm100();
 
     await fireEvent.press(
@@ -153,15 +166,16 @@ it.each([
 
     expect(
       await screen.findByText(
-        mayHaveMoved
-          ? "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
-          : "The transfer was not sent — no money moved.",
+        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
       ),
     ).toBeOnTheScreen();
-    expect(screen.queryByRole("button", { name: "Transfer" }) === null).toBe(
-      mayHaveMoved,
-    );
-  },
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Back to Home" }),
+    ).toBeOnTheScreen();
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+  }),
 );
 
 it(
