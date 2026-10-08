@@ -33,7 +33,17 @@ export const getTransferLimitsOptions = () =>
 export function useGetTransferLimits(
   options: { refetchInterval?: number | false } = {},
 ) {
-  return useQuery({ ...getTransferLimitsOptions(), ...options });
+  return useQuery({
+    ...getTransferLimitsOptions(),
+    refetchInterval: ({ state }) => {
+      const until = getTransferLimitsMaintenance(state.error)?.until;
+      const msUntilMaintenanceEnds =
+        until === undefined ? 0 : Date.parse(until) - Date.now();
+      // A time already passed reads nothing more: asking again at once would repeat for as long as the bank gives it.
+      return msUntilMaintenanceEnds > 0 ? msUntilMaintenanceEnds : false;
+    },
+    ...options,
+  });
 }
 
 export function getTransferLimitsMaintenance(error: unknown) {

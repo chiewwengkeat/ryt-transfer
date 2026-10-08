@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
@@ -8,6 +8,15 @@ import { pressHardwareBack } from "@/test/hardware-back";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+
+const LIMITS_OUTSIDE_MAINTENANCE = {
+  daily: {
+    limit: { minor: 500_000, currency: "MYR" },
+    usedToday: { minor: 0, currency: "MYR" },
+    remaining: { minor: 500_000, currency: "MYR" },
+  },
+  perTransferMax: { minor: 5_000_000, currency: "MYR" },
+} satisfies GetTransferLimitsResponse;
 
 it(
   "stops saying how much more can be sent today once maintenance answers a later read, while the amount check keeps the limit already loaded",
@@ -19,15 +28,7 @@ it(
     mswServer.use(
       http.get(
         "*/transfer-limits",
-        () =>
-          HttpResponse.json({
-            daily: {
-              limit: { minor: 500_000, currency: "MYR" },
-              usedToday: { minor: 0, currency: "MYR" },
-              remaining: { minor: 500_000, currency: "MYR" },
-            },
-            perTransferMax: { minor: 5_000_000, currency: "MYR" },
-          } satisfies GetTransferLimitsResponse),
+        () => HttpResponse.json(LIMITS_OUTSIDE_MAINTENANCE),
         { once: true },
       ),
     );
@@ -61,5 +62,39 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(screen.queryByText(/more today/)).toBeNull();
+  }),
+);
+
+it(
+  "asks the bank again at the time it said maintenance ends, and turns Transfer back on once it is over",
+  scenarioTest("transfer.under_maintenance", async () => {
+    const { body: maintenanceAnswer } = await sendToBank<BankErrorBody>(
+      "GET",
+      "/transfer-limits",
+    );
+    await renderRoute("/");
+    await screen.findByText(/^Transfers are unavailable right now, until/);
+    mswServer.use(
+      http.get("*/transfer-limits", () =>
+        HttpResponse.json(LIMITS_OUTSIDE_MAINTENANCE),
+      ),
+    );
+    const msUntilMaintenanceEnds =
+      Date.parse(maintenanceAnswer.error.until ?? "") - Date.now();
+
+    await act(() =>
+      jest.advanceTimersByTimeAsync(msUntilMaintenanceEnds - 1_000),
+    );
+    const pausedJustBeforeThatTime =
+      screen.queryByText(/^Transfers are unavailable right now/) !== null;
+    await act(() => jest.advanceTimersByTimeAsync(2_000));
+
+    expect(pausedJustBeforeThatTime).toBe(true);
+    expect(
+      await screen.findByRole("button", { name: "Transfer", disabled: false }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText("You can send RM 5,000.00 more today"),
+    ).toBeOnTheScreen();
   }),
 );
