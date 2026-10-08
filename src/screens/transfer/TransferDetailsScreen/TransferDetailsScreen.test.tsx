@@ -326,6 +326,7 @@ it.each([
     await openTransferDetails({ ...AISYAH_IN_FULL, ...transfer });
 
     expect(await screen.findByText(status)).toBeOnTheScreen();
+    expect(screen.getByText("Status")).toBeOnTheScreen();
     expect(screen.getByText("Sent to")).toBeOnTheScreen();
     expect(screen.getByText("Sent")).toBeOnTheScreen();
     expect(screen.getByText(SENT_AT)).toBeOnTheScreen();
@@ -371,6 +372,7 @@ it.each([
     await openTransferDetails({ ...AISYAH_IN_FULL, ...transfer });
 
     expect(await screen.findByText(status)).toBeOnTheScreen();
+    expect(screen.getByText("Status")).toBeOnTheScreen();
     expect(screen.getByText(SENT_AT)).toBeOnTheScreen();
     expect(screen.queryByText(SETTLED_AT)).not.toBeOnTheScreen();
   },
@@ -396,6 +398,7 @@ it.each([
     await openTransferDetails({ ...AISYAH_IN_FULL, ...transfer });
 
     expect(await screen.findByText(status)).toBeOnTheScreen();
+    expect(screen.getByText("Status")).toBeOnTheScreen();
     expect(screen.getByText(SENT_AT)).toBeOnTheScreen();
     expect(screen.queryByText(SETTLED_AT)).not.toBeOnTheScreen();
   },
