@@ -101,7 +101,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 `transfer.screen_capture_blocked`
 - **When:** they take a screenshot or record the screen anywhere but a receipt, in the production app
 - **Money:** no money moved
-- **Shown as:** the picture or recording comes out blank; on Android the phone says the app doesn't allow it
+- **Shown as:** the picture or recording comes out blank; on Android 14 and newer the phone may say the app detected the screenshot, and on older Android that the app doesn't allow it
 - **Tell them:** nothing more; the phone's own notice is enough
 - **They can:** carry on; a receipt can still be captured
 - **Why:** a balance, a recipient or the PIN pad on screen can be captured by malware or a screen-sharing scammer
