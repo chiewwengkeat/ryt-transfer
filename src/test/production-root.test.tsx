@@ -18,9 +18,15 @@ afterEach(() => {
 function launchShellBuiltAs(variant: string | undefined) {
   if (variant === undefined) delete process.env.EXPO_PUBLIC_APP_VARIANT;
   else process.env.EXPO_PUBLIC_APP_VARIANT = variant;
-  jest.isolateModules(() => {
-    jest.requireActual("@/shell/app-launch");
-  });
+  const fetchMswIntercepts = globalThis.fetch;
+  try {
+    jest.isolateModules(() => {
+      jest.requireActual("@/shell/app-launch");
+    });
+  } finally {
+    // The launch loads expo afresh through the capture library, and expo installs its own fetch over msw's.
+    globalThis.fetch = fetchMswIntercepts;
+  }
 }
 
 it("boots the app root as a build with no variant does, never loading the fake bank", async () => {
