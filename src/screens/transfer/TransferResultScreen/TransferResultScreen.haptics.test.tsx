@@ -1,10 +1,10 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { mswServer, sentRequests } from "@/test/msw-server";
+import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -22,7 +22,7 @@ async function walkToReviewFromHome() {
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/");
   await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
@@ -35,11 +35,25 @@ async function walkToReviewFromHome() {
   await screen.findByRole("button", { name: "Transfer" });
 }
 
-function transferReadsSent() {
-  return sentRequests.filter(
-    ({ method, url }) =>
-      method === "GET" && /^\/transfers\/[^/]+$/.test(new URL(url).pathname),
-  ).length;
+async function walkToStillUnreachable() {
+  await walkToReviewFromHome();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  await screen.findByRole(
+    "header",
+    { name: "Checking your transfer" },
+    { timeout: 10_000 },
+  );
+  await act(() => jest.advanceTimersByTimeAsync(17_000));
+  await screen.findByRole("header", { name: "Still checking your transfer" });
+}
+
+// On a phone a failing read takes a while to fail, and the page renders while it is in flight.
+function slowTransferReads() {
+  mswServer.use(
+    http.get("*/transfers/:transferId", async () => {
+      await delay(3_000);
+    }),
+  );
 }
 
 it(
@@ -86,22 +100,30 @@ it(
 );
 
 it(
-  "warns once when a processing transfer's status then cannot be reached",
+  "warns once for a processing transfer, and not again when reading it later fails",
   scenarioTest("transfer.processing", async () => {
     await walkToReviewFromHome();
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-    await waitFor(() => {
-      expect(notificationHaptics).toHaveBeenCalled();
-    });
+    await screen.findByRole("header", { name: "Transfer processing" });
 
     mswServer.use(
       http.get("*/transfers/:transferId", () => HttpResponse.error()),
     );
-    await act(() => {
-      focusManager.setFocused(false);
-      focusManager.setFocused(true);
-    });
-    await screen.findByRole("button", { name: "Load the result again" });
+    await act(() => jest.advanceTimersByTimeAsync(32_000));
+
+    expect(
+      screen.getByRole("header", { name: "Transfer processing" }),
+    ).toBeOnTheScreen();
+    expect(notificationHaptics.mock.calls).toEqual([
+      [Haptics.NotificationFeedbackType.Warning],
+    ]);
+  }),
+);
+
+it(
+  "warns once while checking, and not again when the bank turns out unreachable, as the money is still not confirmed",
+  scenarioTest("transfer.status_unreachable", async () => {
+    await walkToStillUnreachable();
 
     expect(notificationHaptics.mock.calls).toEqual([
       [Haptics.NotificationFeedbackType.Warning],
@@ -109,71 +131,61 @@ it(
   }),
 );
 
-it("warns once when an approval lost before the bank then lapses on the page, as the money state stays the same", async () => {
+it(
+  "warns once for a result whose status cannot be reached, and not again as the page reads it again on its own",
+  scenarioTest("transfer.status_unreachable", async () => {
+    await walkToStillUnreachable();
+    slowTransferReads();
+
+    await act(() => jest.advanceTimersByTimeAsync(16_000));
+
+    expect(
+      screen.getByRole("header", { name: "Still checking your transfer" }),
+    ).toBeOnTheScreen();
+    expect(notificationHaptics.mock.calls).toEqual([
+      [Haptics.NotificationFeedbackType.Warning],
+    ]);
+  }),
+);
+
+it(
+  "warns once for a result whose status cannot be reached, and not again when returning to the app reads it again",
+  scenarioTest("transfer.status_unreachable", async () => {
+    await walkToStillUnreachable();
+    slowTransferReads();
+
+    await act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    await act(() => jest.advanceTimersByTimeAsync(1_000));
+
+    expect(
+      screen.getByRole("header", { name: "Still checking your transfer" }),
+    ).toBeOnTheScreen();
+    expect(notificationHaptics.mock.calls).toEqual([
+      [Haptics.NotificationFeedbackType.Warning],
+    ]);
+  }),
+);
+
+it("warns while an approval lost on its way to the bank is checked, then gives an error once its window passes with no money moved", async () => {
   mswServer.use(
-    http.post("*/transfers/:transferId/approve", () => HttpResponse.error(), {
-      once: true,
-    }),
+    http.post("*/transfers/:transferId/approve", () => HttpResponse.error()),
   );
   await walkToReviewFromHome();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  await screen.findByText(/^The bank's answer did not arrive\./);
+  await screen.findByRole(
+    "header",
+    { name: "Checking your transfer" },
+    { timeout: 10_000 },
+  );
 
-  // Back once the approval window has lapsed: returning to the app is what rereads the transfer.
-  jest.setSystemTime(Date.now() + 120_000);
-  await act(() => {
-    focusManager.setFocused(false);
-    focusManager.setFocused(true);
-  });
-  await screen.findByText(/^The result cannot be shown right now\./);
+  await act(() => jest.advanceTimersByTimeAsync(75_000));
+  await screen.findByRole("header", { name: "Transfer not sent" });
 
   expect(notificationHaptics.mock.calls).toEqual([
     [Haptics.NotificationFeedbackType.Warning],
+    [Haptics.NotificationFeedbackType.Error],
   ]);
 });
-
-it(
-  "warns once for a result whose status cannot be reached, and not again when loading it again fails",
-  scenarioTest("transfer.status_unreachable", async () => {
-    await walkToReviewFromHome();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-    const loadAgain = await screen.findByRole("button", {
-      name: "Load the result again",
-    });
-    const readsBeforeLoadingAgain = transferReadsSent();
-
-    await fireEvent.press(loadAgain);
-    // One read and its two retries: only then has loading it again failed.
-    await waitFor(() => {
-      expect(transferReadsSent()).toBe(readsBeforeLoadingAgain + 3);
-    });
-    await screen.findByRole("button", { name: "Load the result again" });
-
-    expect(notificationHaptics.mock.calls).toEqual([
-      [Haptics.NotificationFeedbackType.Warning],
-    ]);
-  }),
-);
-
-it(
-  "warns once for a result whose status cannot be reached, and not again when returning to the app fails to load it",
-  scenarioTest("transfer.status_unreachable", async () => {
-    await walkToReviewFromHome();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-    await screen.findByRole("button", { name: "Load the result again" });
-    const readsBeforeReturning = transferReadsSent();
-
-    await act(() => {
-      focusManager.setFocused(false);
-      focusManager.setFocused(true);
-    });
-    await waitFor(() => {
-      expect(transferReadsSent()).toBe(readsBeforeReturning + 3);
-    });
-    await screen.findByRole("button", { name: "Load the result again" });
-
-    expect(notificationHaptics.mock.calls).toEqual([
-      [Haptics.NotificationFeedbackType.Warning],
-    ]);
-  }),
-);

@@ -55,7 +55,7 @@ export default function TransferResultScreen() {
     outcome !== TransferOutcomeScenario.HeldForReview &&
     outcome !== TransferOutcomeScenario.OutcomeUnexpected;
   const [openedSettled] = useState(outcomeSettled);
-  const scenario = outcomeSettled
+  const latestScenario = outcomeSettled
     ? outcome
     : readFailure === TransferReadFailure.NotFound
       ? TransferOutcomeScenario.LastTransferNotFound
@@ -72,6 +72,15 @@ export default function TransferResultScreen() {
                 TransferOutcomeScenario.AppClosedDuringApproval,
               ].find((reason) => reason === checking) ??
               TransferOutcomeScenario.ApprovalUnanswered)));
+  // A refetch with no data clears the query's error until it answers, which would flip the page back to checking.
+  const readingAgainAfterFailure =
+    transfer.data === undefined &&
+    transfer.isFetching &&
+    transfer.errorUpdateCount > 0;
+  const [heldScenario, setHeldScenario] = useState(latestScenario);
+  if (!readingAgainAfterFailure && heldScenario !== latestScenario)
+    setHeldScenario(latestScenario);
+  const scenario = readingAgainAfterFailure ? heldScenario : latestScenario;
 
   useEffect(() => {
     trackEvent("transfer_outcome", { scenario });

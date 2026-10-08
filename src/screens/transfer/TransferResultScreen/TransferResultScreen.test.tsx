@@ -2,7 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { t } from "i18next";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
@@ -386,6 +386,39 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(buttonsOnTheResultPage()).toEqual(["Check History", "Done"]);
+  }),
+);
+
+it(
+  "keeps an unconfirmed outcome and its way to History, and says nothing new, while returning to the app reads it again",
+  scenarioTest("transfer.recovery_unexpected", async () => {
+    await sendRm100FromHome();
+    await screen.findByRole(
+      "header",
+      { name: "Outcome not confirmed" },
+      { timeout: 10_000 },
+    );
+    const announcements = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockClear();
+    // On a phone a failing read takes a while to fail, and the page renders while it is in flight.
+    mswServer.use(
+      http.get("*/transfers/:transferId", async () => {
+        await delay(3_000);
+      }),
+    );
+
+    await act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    await act(() => jest.advanceTimersByTimeAsync(1_000));
+
+    expect(
+      screen.getByRole("header", { name: "Outcome not confirmed" }),
+    ).toBeOnTheScreen();
+    expect(buttonsOnTheResultPage()).toEqual(["Check History", "Done"]);
+    expect(announcements).not.toHaveBeenCalled();
   }),
 );
 
