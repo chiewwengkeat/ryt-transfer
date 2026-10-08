@@ -33,7 +33,10 @@ export default function ViewRoot() {
           // Stands in for the host app's sign-in: the session is the host's, so a standalone build only resumes.
           onSignIn={() => {
             setSessionEnded(false);
-            void queryClient.invalidateQueries();
+            // An open review keeps the recipient reference it showed; asking again would mint another.
+            void queryClient.invalidateQueries({
+              predicate: ({ queryKey }) => queryKey[0] !== "recipient-lookup",
+            });
           }}
         />
       )}

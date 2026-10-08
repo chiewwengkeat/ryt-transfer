@@ -925,6 +925,51 @@ it(
   }),
 );
 
+it("keeps the recipient review showed after signing in again, so the transfer carries the same reference", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  mswServer.use(
+    http.post(
+      "*/transfers",
+      () =>
+        HttpResponse.json(
+          { error: { code: "SESSION_ENDED", message: "Test." } },
+          { status: 401 },
+        ),
+      { once: true },
+    ),
+  );
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Sign in again" }),
+  );
+  // Lets a name check asked at sign-in answer first; pressing sooner sends the first reference either way.
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText("Transfer sent");
+
+  const recipientRefs = await Promise.all(
+    sentRequests
+      .filter(
+        (request) =>
+          request.method === "POST" &&
+          new URL(request.url).pathname.endsWith("/transfers"),
+      )
+      .map(
+        async (request) =>
+          ((await request.clone().json()) as { recipientRef: string })
+            .recipientRef,
+      ),
+  );
+  expect(recipientRefs).toHaveLength(2);
+  expect(recipientRefs[1]).toBe(recipientRefs[0]);
+});
+
 it(
   "never says money moved when the bank answers that the transfer is still processing",
   scenarioTest("transfer.processing", async () => {
