@@ -1600,6 +1600,41 @@ it.each([
   },
 );
 
+it("offers no PIN instead while review's name check, asked again, is running, and offers it again once it answers", async () => {
+  await openReviewOfRm100();
+  expect(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
+  let releaseNameCheck: () => void = () => undefined;
+  const nameCheckHeld = new Promise<void>((release) => {
+    releaseNameCheck = () => {
+      release();
+    };
+  });
+  mswServer.use(
+    http.post(
+      "*/recipients/lookup",
+      async () => {
+        await nameCheckHeld;
+        return undefined;
+      },
+      { once: true },
+    ),
+  );
+
+  await askOpenReviewsNameCheckAgain();
+
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("button", { name: "Use PIN instead" }),
+    ).toBeNull();
+  });
+  releaseNameCheck();
+  expect(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
+});
+
 it("shows no name-check notice while sending, though review's name check, asked again, fails", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   let releaseApproval: () => void = () => undefined;
@@ -1894,6 +1929,9 @@ it(
     expect(await screen.findByText(holdReason)).toBeOnTheScreen();
     expect(announce).toHaveBeenCalledWith(holdReason);
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Use PIN instead" }),
+    ).toBeNull();
     expect(countSent("POST", "/approve")).toBe(0);
   }),
 );
