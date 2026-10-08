@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
@@ -11,9 +11,11 @@ import {
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
-import { mswServer } from "@/test/msw-server";
+import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+
+import { TransferFlowStep, transferFlowStore } from "../state/transfer-flow";
 
 const MOBILE = "012-345 6789";
 
@@ -32,6 +34,13 @@ async function openReviewOfRm100(startPath: "/" | "/transfer" = "/transfer") {
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   return view;
+}
+
+function countPostsTo(pathname: RegExp) {
+  return sentRequests.filter(
+    (request) =>
+      request.method === "POST" && pathname.test(new URL(request.url).pathname),
+  ).length;
 }
 
 // The swipe is native and never reaches JS, so this reads the setting the root stack hands its transfer screen.
@@ -98,6 +107,43 @@ it(
     await screen.findByText("Transfer sent");
     expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
     // The bank answers after a delay, which the route's fake timers would hold forever.
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+  }),
+);
+
+it(
+  "sends one transfer when Transfer is pressed twice before review can re-render",
+  scenarioTest("transfer.double_tap_ignored", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    await openReviewOfRm100();
+    const transferButton = await screen.findByRole("button", {
+      name: "Transfer",
+    });
+    // fireEvent flushes each press, so a second one would hit a busy button and prove nothing.
+    type PressFiber = {
+      return: PressFiber | null;
+      memoizedProps: { onPress?: () => void } | null;
+    };
+    let fiber: PressFiber | null = (
+      transferButton as unknown as { unstable_fiber: PressFiber }
+    ).unstable_fiber;
+    while (fiber !== null && fiber.memoizedProps?.onPress === undefined)
+      fiber = fiber.return;
+    const pressTransfer = fiber?.memoizedProps?.onPress;
+    if (pressTransfer === undefined)
+      throw new Error("Nothing handles a press on Transfer.");
+
+    await act(() => {
+      pressTransfer();
+      pressTransfer();
+    });
+
+    await screen.findByText("Transfer sent");
+    expect(countPostsTo(/\/transfers$/)).toBe(1);
+    expect(countPostsTo(/\/approve$/)).toBe(1);
+    expect(biometricPromptsShown()).toHaveLength(1);
     jest.useRealTimers();
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
   }),
@@ -338,6 +384,45 @@ it(
     expect(screen.queryByText("This screen stopped working.")).toBeNull();
   }),
 );
+
+it("never moves on from the recipient step while a transfer is still being created", async () => {
+  let releaseCreate: () => void = () => undefined;
+  const createHeld = new Promise<void>((release) => {
+    releaseCreate = () => {
+      release();
+    };
+  });
+  mswServer.use(
+    http.post(
+      "*/transfers",
+      async () => {
+        await createHeld;
+        return HttpResponse.error();
+      },
+      { once: true },
+    ),
+  );
+  const view = await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  // Review offers no way back while sending, so this stands in for any route that still could.
+  await act(() => {
+    router.back();
+    router.back();
+  });
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Continue" }),
+  );
+
+  expect(view.getPathname()).toBe("/transfer");
+  // Review is gone, so only the flow shows the held create failing inside this test rather than in the next one.
+  releaseCreate();
+  await waitFor(() => {
+    expect(transferFlowStore.getState().step).toBe(TransferFlowStep.Reviewing);
+  });
+});
 
 it("never offers to send again when the approval's answer is lost", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
