@@ -176,6 +176,21 @@ it(
 );
 
 it(
+  "holds Review until today's limit loads when maintenance began before it ever did",
+  scenarioTest("transfer.under_maintenance", async () => {
+    await openAmountStep();
+
+    expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Review" })).toBeDisabled();
+    expect(
+      screen.getByText(
+        "You can send once your balance and today's limit have loaded.",
+      ),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it(
   "says sending is paused on a transfer step too, where typing stays open",
   scenarioTest("transfer.offline", async () => {
     await openAmountStep();

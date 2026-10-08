@@ -3,7 +3,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
-import { useGetTransferLimits } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
+import {
+  getTransferLimitsMaintenance,
+  useGetTransferLimits,
+} from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
 import { formatMoney, parseTypedAmount } from "@/shared/lib/money/money";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
@@ -83,7 +86,11 @@ export default function TransferAmountScreen() {
           <ButtonPrimary
             label={t("amount.review")}
             disabledReason={
-              account.isSuccess && limits.isSuccess
+              account.isSuccess &&
+              (limits.isSuccess ||
+                // Maintenance pauses sending, not the limit already loaded: review is where the bank says so.
+                (limits.data !== undefined &&
+                  getTransferLimitsMaintenance(limits.error) !== undefined))
                 ? undefined
                 : t("common.balance_unavailable.disabled_reason")
             }

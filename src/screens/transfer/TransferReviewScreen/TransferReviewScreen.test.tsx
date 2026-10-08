@@ -1409,23 +1409,42 @@ it(
 );
 
 it(
-  "says transfers are unavailable until the time the bank gives when maintenance begins mid-transfer",
+  "goes on to review when maintenance begins after today's limit loaded, and says there until when transfers are unavailable",
   scenarioTest("transfer.under_maintenance", async () => {
-    // Today's limit loaded before the maintenance began, so the amount step lets the transfer on to review.
+    const { body } = await askBankToCreateRm100();
+    // Home's read lands before the maintenance begins; every read after meets it.
     mswServer.use(
-      http.get("*/transfer-limits", () =>
-        HttpResponse.json({
-          daily: {
-            limit: { minor: 500_000, currency: "MYR" },
-            usedToday: { minor: 0, currency: "MYR" },
-            remaining: { minor: 500_000, currency: "MYR" },
-          },
-          perTransferMax: { minor: 5_000_000, currency: "MYR" },
-        } satisfies GetTransferLimitsResponse),
+      http.get(
+        "*/transfer-limits",
+        () =>
+          HttpResponse.json({
+            daily: {
+              limit: { minor: 500_000, currency: "MYR" },
+              usedToday: { minor: 0, currency: "MYR" },
+              remaining: { minor: 500_000, currency: "MYR" },
+            },
+            perTransferMax: { minor: 5_000_000, currency: "MYR" },
+          } satisfies GetTransferLimitsResponse),
+        { once: true },
       ),
     );
-    const { body } = await askBankToCreateRm100();
-    await openReviewOfRm100();
+    await renderRoute("/");
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await fireEvent.changeText(
+      await screen.findByLabelText("DuitNow mobile number"),
+      MOBILE,
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+    await fireEvent.changeText(
+      await screen.findByLabelText("Amount (RM)"),
+      "100",
+    );
+    // Lets the amount step's own read meet the maintenance: before it does, Review is enabled either way.
+    await act(() => jest.advanceTimersByTimeAsync(1_000));
+    expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),

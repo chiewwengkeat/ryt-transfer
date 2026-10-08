@@ -2,8 +2,10 @@ import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
-import { useGetTransferLimits } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
-import { GetTransferLimitsErrorCode } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
+import {
+  getTransferLimitsMaintenance,
+  useGetTransferLimits,
+} from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import {
   TransportError,
   TransportErrorKind,
@@ -28,8 +30,7 @@ export default function CardBalance({ unexpectedScenario }: Props) {
   const limits = useGetTransferLimits({ refetchInterval });
   // Maintenance pauses transfers, not the balance: the balance still shows, and Transfer says why it waits.
   const limitsPausedForMaintenance =
-    limits.error instanceof TransportError &&
-    limits.error.code === GetTransferLimitsErrorCode.ServiceUnavailable;
+    getTransferLimitsMaintenance(limits.error) !== undefined;
   const failure =
     account.error ?? (limitsPausedForMaintenance ? null : limits.error);
 
