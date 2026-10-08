@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
+import { AccessibilityInfo } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
@@ -115,6 +116,31 @@ it(
     expect(view.getPathname()).toBe("/");
   }),
 );
+
+it("moves a screen reader to the outcome once the page has finished opening, not while it opens", async () => {
+  // Jest has no screen reader: the focus request is the nearest thing it can see.
+  const focusRequests = jest.spyOn(AccessibilityInfo, "sendAccessibilityEvent");
+  focusRequests.mockClear();
+  const outcomeFocusRequests = () =>
+    focusRequests.mock.calls.filter(
+      ([target, eventType]) =>
+        eventType === "focus" &&
+        (target as { props?: { children?: unknown } }).props?.children ===
+          "Transfer sent",
+    );
+  await sendRm100FromHome();
+  const heading = await screen.findByRole("header", { name: "Transfer sent" });
+  const focusRequestsWhileOpening = outcomeFocusRequests().length;
+  let resultPage = heading.parent;
+  while (resultPage !== null && resultPage.type !== "RNSScreen")
+    resultPage = resultPage.parent;
+  if (resultPage === null) throw new Error("Result is not a native screen.");
+
+  await fireEvent(resultPage, "appear");
+
+  expect(focusRequestsWhileOpening).toBe(0);
+  expect(outcomeFocusRequests()).toHaveLength(1);
+});
 
 it("leaves out the note and reference rows when the bank sends them empty", async () => {
   mswServer.use(

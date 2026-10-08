@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { type NativeStackNavigationProp, useNavigation } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AccessibilityInfo } from "react-native";
 
@@ -32,6 +33,17 @@ export default function TextOutcome({ scenario, transfer, transferId }: Props) {
     TransferOutcomeScenario.BalanceOrLimitShortAtApproval,
     TransferOutcomeScenario.ApprovalExpired,
   ].includes(scenario);
+  const navigation =
+    useNavigation<NativeStackNavigationProp<Record<string, object>>>();
+  const [pageOpened, setPageOpened] = useState(false);
+  // Asked while the page opens, the heading's focus loses to the reader's own, which lands on the header after.
+  useEffect(
+    () =>
+      navigation.addListener("transitionEnd", ({ data }) => {
+        if (!data.closing) setPageOpened(true);
+      }),
+    [navigation],
+  );
   const outcomeHeading = t(`result.heading.${scenarioName}`);
   const outcomeBody = t(`common.${scenarioName}.body`, {
     amount: transfer && formatMoney(transfer.amount),
@@ -52,7 +64,7 @@ export default function TextOutcome({ scenario, transfer, transferId }: Props) {
 
   return (
     <>
-      <TextHeading autoFocus>{outcomeHeading}</TextHeading>
+      <TextHeading autoFocus={pageOpened}>{outcomeHeading}</TextHeading>
       <TextBody>{outcomeBody}</TextBody>
       {!moneyConfirmed && (
         <TextBody tone="secondary">
