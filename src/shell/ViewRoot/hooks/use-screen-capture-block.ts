@@ -39,14 +39,18 @@ export function useScreenCaptureBlock() {
     [],
   );
 
+  // The crash screen that replaces this root is no receipt, so in production it is blocked even when a receipt crashed.
+  useLayoutEffect(
+    () => () => {
+      if (isProductionBuild) void blockScreenCapture();
+    },
+    [],
+  );
+
   const receiptOnScreen = onReceiptRoute && settledReceiptPathname === pathname;
   const blocked = (isProductionBuild || captureBlockPicked) && !receiptOnScreen;
   // Before paint, so a receipt being left hands over to a screen that is drawn blocked.
   useLayoutEffect(() => {
-    if (!blocked) return;
-    void blockScreenCapture();
-    return () => {
-      void allowScreenCapture();
-    };
+    void (blocked ? blockScreenCapture() : allowScreenCapture());
   }, [blocked]);
 }

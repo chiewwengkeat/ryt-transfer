@@ -1,5 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
+import { useState } from "react";
+import { Pressable, Text } from "react-native";
 
 import { motionDurations } from "@/shared/lib/motion/motion";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
@@ -9,6 +11,22 @@ import {
 } from "@/test/harness/native-doubles";
 import { waitPastReceiptSettle } from "@/test/harness/receipt-settle";
 import { renderRoute } from "@/test/render-route";
+
+function ScreenCrashingOnPress() {
+  const [crashed, setCrashed] = useState(false);
+  // Only on a press: a crash in the first render replaces the app before its guard has run.
+  if (crashed) throw new Error("render failed");
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => {
+        setCrashed(true);
+      }}
+    >
+      <Text>Crash the screen</Text>
+    </Pressable>
+  );
+}
 
 it("blocks capture on Home, lifts it on a receipt only once the screen before it has gone, and blocks it again on leaving", async () => {
   await renderRoute("/");
@@ -70,6 +88,39 @@ it("keeps capture blocked from the recipient step to review, and allows it on th
   await waitFor(() => {
     expect(isScreenCaptureBlocked()).toBe(false);
   });
+});
+
+it("keeps capture blocked when a crash replaces the app on a screen that is no receipt", async () => {
+  await renderRoute("/", {
+    appDir: "src/app",
+    overrides: { index: ScreenCrashingOnPress },
+  });
+
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Crash the screen" }),
+  );
+  await screen.findByText("The app stopped working.");
+  await waitPastReceiptSettle();
+
+  expect(isScreenCaptureBlocked()).toBe(true);
+});
+
+it("blocks capture again when a crash replaces the app on a receipt", async () => {
+  await renderRoute("/transfer-history/transfer-on-screen", {
+    appDir: "src/app",
+    overrides: { "transfer-history/[transferId]": ScreenCrashingOnPress },
+  });
+  await waitFor(() => {
+    expect(isScreenCaptureBlocked()).toBe(false);
+  });
+
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Crash the screen" }),
+  );
+  await screen.findByText("The app stopped working.");
+  await waitPastReceiptSettle();
+
+  expect(isScreenCaptureBlocked()).toBe(true);
 });
 
 it("blurs the app in the iPhone's app switcher from launch, at the default strength", () => {
