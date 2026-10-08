@@ -69,6 +69,15 @@ it.each([
     },
     "was not sent — no money moved.",
   ],
+  [
+    "stopped by the fraud check",
+    {
+      status: TransferStatus.Unsuccessful,
+      funds: TransferFunds.NotDebited,
+      failureReason: TransferFailureReason.FraudBlocked,
+    },
+    "was stopped by the bank to protect you. The bank will contact you about it — no money moved.",
+  ],
 ])(
   "tells Home at launch how a transfer last seen processing ended (%s), until it is dismissed",
   async (_, statusNow, ending) => {

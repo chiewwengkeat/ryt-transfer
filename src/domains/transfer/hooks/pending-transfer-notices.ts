@@ -18,6 +18,7 @@ export enum NextLaunchNotice {
   Completed = "completed",
   Refunded = "refunded",
   Declined = "declined",
+  FraudBlocked = "fraud_blocked",
 }
 
 const NEXT_LAUNCH_NOTICE_OF_OUTCOME: Partial<
@@ -25,7 +26,7 @@ const NEXT_LAUNCH_NOTICE_OF_OUTCOME: Partial<
 > = {
   [TransferOutcomeScenario.Completed]: NextLaunchNotice.Completed,
   [TransferOutcomeScenario.RefundedAfterProcessing]: NextLaunchNotice.Refunded,
-  [TransferOutcomeScenario.FraudBlocked]: NextLaunchNotice.Declined,
+  [TransferOutcomeScenario.FraudBlocked]: NextLaunchNotice.FraudBlocked,
   [TransferOutcomeScenario.RecipientAccountInactive]: NextLaunchNotice.Declined,
   [TransferOutcomeScenario.BalanceOrLimitShortAtApproval]:
     NextLaunchNotice.Declined,
