@@ -232,7 +232,7 @@
     },
     "approval_unanswered": {
       "title": "No answer to the approval",
-      "body": "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
+      "body": "This transfer is being checked, so don't send it again — not confirmed yet."
     },
     "status_unreachable": {
       "title": "Bank still unreachable",
@@ -252,7 +252,7 @@
     },
     "approval_unknown_answer": {
       "title": "Unknown answer to the approval",
-      "body": "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
+      "body": "This transfer is being checked, so don't send it again — not confirmed yet."
     },
     "recovery_unexpected": {
       "title": "Something unexpected while checking",

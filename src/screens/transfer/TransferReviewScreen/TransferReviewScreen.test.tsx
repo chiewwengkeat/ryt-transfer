@@ -672,7 +672,7 @@ it("takes a lost approval answer to the result page, which never offers to send 
 
   expect(
     await screen.findByText(
-      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      "This transfer is being checked, so don't send it again — not confirmed yet.",
       { timeout: 10_000 },
     ),
   ).toBeOnTheScreen();
@@ -952,7 +952,7 @@ it.each<[string, () => Response]>([
 
     expect(
       await screen.findByText(
-        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+        "This transfer is being checked, so don't send it again — not confirmed yet.",
       ),
     ).toBeOnTheScreen();
     expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
@@ -995,14 +995,14 @@ it("never offers to send again when the bank has not answered the approval after
   // ⛔ Never a findBy here: it moves the fake clock while it waits, past the 30 seconds under test.
   expect(
     screen.queryByText(
-      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      "This transfer is being checked, so don't send it again — not confirmed yet.",
     ),
   ).toBeNull();
   await act(() => jest.advanceTimersByTimeAsync(1_500));
 
   expect(
     await screen.findByText(
-      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      "This transfer is being checked, so don't send it again — not confirmed yet.",
     ),
   ).toBeOnTheScreen();
   expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
@@ -1031,7 +1031,7 @@ it("never says the transfer was not sent when the session ends as the bank answe
   // The ended session hides the app from screen readers, the result's notice included.
   expect(
     screen.getByText(
-      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      "This transfer is being checked, so don't send it again — not confirmed yet.",
       { includeHiddenElements: true },
     ),
   ).toBeOnTheScreen();
@@ -1233,7 +1233,7 @@ it.each([
     ).toBeOnTheScreen();
     expect(
       screen.queryByText(
-        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+        "This transfer is being checked, so don't send it again — not confirmed yet.",
       ),
     ).toBeNull();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();

@@ -314,7 +314,7 @@ it("never sends an approval again once the bank has answered it, a server error 
 
   expect(
     await screen.findByText(
-      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      "This transfer is being checked, so don't send it again — not confirmed yet.",
     ),
   ).toBeOnTheScreen();
   expect(approveRequests()).toHaveLength(1);
@@ -330,7 +330,7 @@ it("sends an approval answered by a server error naming no bank code twice more 
 
   expect(
     await screen.findByText(
-      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      "This transfer is being checked, so don't send it again — not confirmed yet.",
       { timeout: 10_000 },
     ),
   ).toBeOnTheScreen();

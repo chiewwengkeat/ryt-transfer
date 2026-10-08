@@ -243,7 +243,7 @@ it(
     ).toBeOnTheScreen();
     expect(
       screen.getByText(
-        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+        "This transfer is being checked, so don't send it again — not confirmed yet.",
       ),
     ).toBeOnTheScreen();
     expect(
