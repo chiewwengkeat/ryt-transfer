@@ -2160,27 +2160,51 @@ it("sends no note when the note is left blank", async () => {
   expect(createBodies[0]).not.toHaveProperty("note");
 });
 
-it("returns to the amount step when the bank cannot accept the amount as entered, and says so there", async () => {
-  mswServer.use(
-    http.post("*/transfers", () =>
-      HttpResponse.json(
-        { error: { code: "AMOUNT_INVALID", message: "Test." } },
-        { status: 422 },
+it.each([
+  [
+    "AMOUNT_INVALID",
+    "Amount (RM)",
+    "The bank could not accept this amount.",
+    "50",
+  ],
+  [
+    "NOTE_INVALID",
+    "Note (optional)",
+    "The bank could not accept this note.",
+    "Dinner",
+  ],
+])(
+  "returns to the amount step when the bank answers Confirm with %s, and says so under that field until it changes",
+  async (code, refusedField, refusal, changedValue) => {
+    mswServer.use(
+      http.post("*/transfers", () =>
+        HttpResponse.json(
+          { error: { code, message: "Test." } },
+          { status: 422 },
+        ),
       ),
-    ),
-  );
-  const view = await openReviewOfRm100();
+    );
+    const view = await openReviewOfRm100("/transfer", "Lunch");
 
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
 
-  expect(
-    await screen.findByText(
-      "The bank could not accept the amount or note as entered. Check them, then review again.",
-    ),
-  ).toBeOnTheScreen();
-  expect(view.getPathname()).toBe("/transfer/amount");
-});
+    expect(await screen.findByHintText(refusal)).toBe(
+      screen.getByLabelText(refusedField),
+    );
+    expect(view.getPathname()).toBe("/transfer/amount");
+    expect(
+      screen.queryByText(
+        "The bank could not accept the amount or note as entered. Check them, then review again.",
+      ),
+    ).toBeNull();
+    await fireEvent.changeText(
+      screen.getByLabelText(refusedField),
+      changedValue,
+    );
+    expect(screen.queryByHintText(refusal)).toBeNull();
+  },
+);
 
 type PressFiber = { memoizedProps: { onPress?: unknown }; return: PressFiber };

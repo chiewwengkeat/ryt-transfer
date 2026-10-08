@@ -8,6 +8,7 @@ import {
   useGetTransferLimits,
 } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
+import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { formatMoney, parseTypedAmount } from "@/shared/lib/money/money";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import FieldText from "@/shared/ui/FieldText/FieldText";
@@ -33,6 +34,11 @@ export default function TransferAmountScreen() {
     "draft" in flow ? flow.draft.note : undefined,
   );
   const [typedNote, setTypedNote] = useState(enteredNote ?? "");
+  const bankRefusal = useTransferFlow((flow) =>
+    flow.step === TransferFlowStep.Editing
+      ? flow.noticeDetail?.code
+      : undefined,
+  );
   const [reviewPressed, setReviewPressed] = useState(false);
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
@@ -66,17 +72,23 @@ export default function TransferAmountScreen() {
   const amountError =
     typedAmount !== "" && amount === null
       ? t("common.badly_formed_input.amount")
-      : amount !== null &&
-          lowestCeiling !== undefined &&
-          amount.minor > lowestCeiling.limit.minor
-        ? lowestCeiling.message
-        : reviewPressed && (amount === null || amount.minor === 0)
-          ? t("amount.amount_missing")
-          : undefined;
+      : bankRefusal === CreateTransferErrorCode.AmountInvalid &&
+          amount?.minor === enteredAmount?.minor
+        ? t("common.badly_formed_input.amount_refused")
+        : amount !== null &&
+            lowestCeiling !== undefined &&
+            amount.minor > lowestCeiling.limit.minor
+          ? lowestCeiling.message
+          : reviewPressed && (amount === null || amount.minor === 0)
+            ? t("amount.amount_missing")
+            : undefined;
   // The bank's own rule: DuitNow carries the note onto the recipient's statement as it is typed.
-  const noteError = /^[A-Za-z0-9 ]*$/.test(typedNote)
-    ? undefined
-    : t("common.badly_formed_input.note");
+  const noteError = !/^[A-Za-z0-9 ]*$/.test(typedNote)
+    ? t("common.badly_formed_input.note")
+    : bankRefusal === CreateTransferErrorCode.NoteInvalid &&
+        typedNote.trim() === (enteredNote ?? "")
+      ? t("common.badly_formed_input.note_refused")
+      : undefined;
 
   return (
     <>

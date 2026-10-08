@@ -63,6 +63,7 @@ export function reduceReviewAndCreateEvent(
         step: TransferFlowStep.Editing,
         draft: flow.draft,
         notice: action.notice,
+        noticeDetail: action.noticeDetail,
       };
   }
 }

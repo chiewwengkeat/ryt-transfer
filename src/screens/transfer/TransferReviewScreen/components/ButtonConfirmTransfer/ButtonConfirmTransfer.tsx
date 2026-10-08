@@ -177,6 +177,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
             dispatchTransferFlow({
               type: TransferFlowActionType.CreateReturnedToAmount,
               notice: TransferFlowScenario.BadlyFormedInput,
+              noticeDetail: { code: refusal.code },
             })
           )
             router.dismissTo("/transfer/amount");

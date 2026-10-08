@@ -34,6 +34,8 @@
       "title": "Badly formed ID, amount or note",
       "body": "The bank could not accept the amount or note as entered. Check them, then review again.",
       "note": "Use only letters A to Z, numbers and spaces.",
+      "amount_refused": "The bank could not accept this amount.",
+      "note_refused": "The bank could not accept this note.",
       "mobile": "Enter a Malaysian mobile number, like 012-345 6789.",
       "nric": "Enter the 12 digits of the NRIC number.",
       "passport": "Enter the passport number: a letter, then 5 to 11 letters or digits.",

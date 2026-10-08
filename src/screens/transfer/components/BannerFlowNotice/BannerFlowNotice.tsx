@@ -18,11 +18,15 @@ export default function BannerFlowNotice({ step }: Props) {
     flow.step === step ? flow.notice : undefined,
   );
   const noticeDetail = useTransferFlow((flow) =>
-    flow.step === step && flow.step === TransferFlowStep.Reviewing
-      ? flow.noticeDetail
-      : undefined,
+    flow.step === step ? flow.noticeDetail : undefined,
   );
   if (notice === undefined) return null;
+  // The field the bank's refusal names says it there, so a banner would say it twice.
+  if (
+    notice === TransferFlowScenario.BadlyFormedInput &&
+    noticeDetail?.code !== undefined
+  )
+    return null;
   const noticeName = notice.replace(
     /^transfer\./,
     "",
