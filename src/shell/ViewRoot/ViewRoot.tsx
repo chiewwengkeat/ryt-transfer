@@ -13,6 +13,7 @@ import { queryClient } from "@/shell/query-client";
 import "@/shell/translations";
 
 import BannerOffline from "./components/BannerOffline/BannerOffline";
+import ViewPinSheetHost from "./components/ViewPinSheetHost/ViewPinSheetHost";
 import ViewSessionEnded from "./components/ViewSessionEnded/ViewSessionEnded";
 import { usePendingTransfersAtLaunch } from "./hooks/use-pending-transfers-at-launch";
 
@@ -43,6 +44,7 @@ export default function ViewRoot() {
             <Stack.Screen name="transfer" options={{ headerShown: false }} />
           </Stack>
           <BannerOffline />
+          <ViewPinSheetHost />
         </ViewBottomSheetHost>
       </View>
       {sessionEnded && (

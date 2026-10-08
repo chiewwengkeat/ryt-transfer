@@ -3,6 +3,7 @@ import {
   createKeysWithOptions,
   deleteKeys,
   InputEncoding,
+  sign,
   signWithOptions,
 } from "@sbaiahmed1/react-native-biometrics";
 
@@ -75,6 +76,24 @@ export async function signWithBiometricKey(
       cancelButtonText: prompt.cancel,
       biometricStrength: BiometricStrength.Strong,
       disableDeviceFallback: true,
+    });
+    return result.success && result.signature !== undefined
+      ? { keyId, signature: result.signature }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+// No prompt: the PIN that travels beside this signature is what the bank checks.
+export async function signWithPossessionKey(signedText: string) {
+  const keyId = await readSecureRecord(POSSESSION_KEY_ID_RECORD);
+  if (keyId === null) return null;
+  try {
+    const result = await sign({
+      keyAlias: POSSESSION_KEY_ALIAS,
+      data: signedText,
+      inputEncoding: InputEncoding.UTF8,
     });
     return result.success && result.signature !== undefined
       ? { keyId, signature: result.signature }

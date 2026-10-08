@@ -2,6 +2,7 @@ import { p256 } from "@noble/curves/nist.js";
 import type {
   CreateKeysOptions,
   SignatureOptions,
+  SignOptions,
 } from "@sbaiahmed1/react-native-biometrics";
 
 import { base64Of, P256_SPKI_PREFIX } from "./bank-client";
@@ -32,6 +33,23 @@ export const biometricsLibraryDouble = {
     const key = phoneKeys.get(options.keyAlias ?? "default");
     if (!nextPromptRecognised || key === undefined)
       return Promise.resolve({ success: false, errorCode: "USER_CANCEL" });
+    const signature = p256.sign(
+      new TextEncoder().encode(options.data),
+      key.secretKey,
+      { format: "der" },
+    );
+    return Promise.resolve({ success: true, signature: base64Of(signature) });
+  },
+  // No prompt, so the library refuses it a key that demands one, as on a phone.
+  sign: (options: SignOptions) => {
+    const key = phoneKeys.get(options.keyAlias ?? "default");
+    if (key === undefined)
+      return Promise.resolve({ success: false, errorCode: "KEY_NOT_FOUND" });
+    if (key.options.requireAuthentication !== false)
+      return Promise.resolve({
+        success: false,
+        errorCode: "KEY_REQUIRES_AUTHENTICATION",
+      });
     const signature = p256.sign(
       new TextEncoder().encode(options.data),
       key.secretKey,

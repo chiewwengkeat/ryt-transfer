@@ -31,6 +31,8 @@ export class ApproveRequestNotSentError extends Error {}
 export function useApproveTransfer() {
   const queryClient = useQueryClient();
   return useMutation({
+    // The variables carry the PIN on that path, so a finished call is dropped once its caller resets it.
+    gcTime: 0,
     mutationFn: async ({
       customerId,
       transferId,
