@@ -52,15 +52,22 @@ afterEach(() => {
 
 const MOBILE = "012-345 6789";
 
+// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
+async function waitForHomeToOfferTransfer() {
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+  });
+}
+
 async function openReviewOfRm100(
   startPath: "/" | "/transfer" = "/transfer",
   note?: string,
 ) {
   const view = await renderRoute(startPath);
-  if (startPath === "/")
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Transfer" }),
-    );
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
     MOBILE,
@@ -1311,6 +1318,7 @@ it(
       "/recipients/recent",
     );
     await renderRoute("/");
+    await waitForHomeToOfferTransfer();
     const [firstRecentButton] = await screen.findAllByRole("button", {
       name: /••••/,
     });
@@ -1701,9 +1709,8 @@ it(
       ),
     );
     await renderRoute("/");
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Transfer" }),
-    );
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await fireEvent.changeText(
       await screen.findByLabelText("DuitNow mobile number"),
       MOBILE,
