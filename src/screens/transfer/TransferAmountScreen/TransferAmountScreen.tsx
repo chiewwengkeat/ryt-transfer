@@ -50,7 +50,7 @@ export default function TransferAmountScreen() {
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
 
-  const amount = parseTypedAmount(typedAmount);
+  const parsedAmount = parseTypedAmount(typedAmount);
   const ceilings = account.data &&
     limits.data && [
       {
@@ -77,16 +77,16 @@ export default function TransferAmountScreen() {
     ceiling.limit.minor < lowest.limit.minor ? ceiling : lowest,
   );
   const amountError =
-    typedAmount !== "" && amount === null
+    typedAmount !== "" && parsedAmount === null
       ? t("common.badly_formed_input.amount")
       : bankRefusal === CreateTransferErrorCode.AmountInvalid &&
-          amount?.minor === enteredAmount?.minor
+          parsedAmount?.minor === enteredAmount?.minor
         ? t("common.badly_formed_input.amount_refused")
-        : amount !== null &&
+        : parsedAmount !== null &&
             lowestCeiling !== undefined &&
-            amount.minor > lowestCeiling.limit.minor
+            parsedAmount.minor > lowestCeiling.limit.minor
           ? lowestCeiling.message
-          : reviewPressed && (amount === null || amount.minor === 0)
+          : reviewPressed && (parsedAmount === null || parsedAmount.minor === 0)
             ? t("amount.amount_missing")
             : undefined;
   // The bank's own rule: DuitNow carries the note onto the recipient's statement as it is typed.
@@ -117,8 +117,8 @@ export default function TransferAmountScreen() {
               if (reviewPushedSinceFocusRef.current) return;
               setReviewPressed(true);
               if (
-                amount === null ||
-                amount.minor === 0 ||
+                parsedAmount === null ||
+                parsedAmount.minor === 0 ||
                 amountError ||
                 noteError
               )
@@ -127,7 +127,7 @@ export default function TransferAmountScreen() {
               if (
                 dispatchTransferFlow({
                   type: TransferFlowActionType.AmountEntered,
-                  amount,
+                  amount: parsedAmount,
                   ...(note !== "" && { note }),
                 })
               ) {
