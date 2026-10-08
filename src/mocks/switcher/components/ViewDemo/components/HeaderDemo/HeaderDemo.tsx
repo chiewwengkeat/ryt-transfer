@@ -35,8 +35,11 @@ export default function HeaderDemo({ appSheetOpen, onOpenMenu }: Props) {
     >
       {scenarioId !== null && (
         <>
+          {/* Capped, as are the controls beside it: at the largest text sizes the header otherwise fills the screen. */}
           <Text
             accessibilityLanguage={i18n.language}
+            maxFontSizeMultiplier={1.5}
+            numberOfLines={3}
             style={styles.scenarioMessage}
           >
             {t("banner_demo.message", { title: scenarioTitle(scenarioId) })}
@@ -48,7 +51,11 @@ export default function HeaderDemo({ appSheetOpen, onOpenMenu }: Props) {
             onPress={clearTransferScenario}
             style={styles.clearButton}
           >
-            <Text aria-hidden style={styles.clearMark}>
+            <Text
+              aria-hidden
+              maxFontSizeMultiplier={1.5}
+              style={styles.clearMark}
+            >
               ✕
             </Text>
           </Pressable>
@@ -61,7 +68,9 @@ export default function HeaderDemo({ appSheetOpen, onOpenMenu }: Props) {
         onPress={onOpenMenu}
         style={styles.menuButton}
       >
-        <Text style={styles.menuLabel}>{t("pill_demo.label")} ▾</Text>
+        <Text maxFontSizeMultiplier={1.5} style={styles.menuLabel}>
+          {t("pill_demo.label")} ▾
+        </Text>
       </Pressable>
     </View>
   );
