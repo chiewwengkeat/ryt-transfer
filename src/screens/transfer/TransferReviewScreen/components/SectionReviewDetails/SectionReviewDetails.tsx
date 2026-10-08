@@ -4,8 +4,8 @@ import { useTranslation } from "react-i18next";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { LookupRecipientErrorCode } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
+  isTransferBeingSent,
   TransferFlowScenario,
-  TransferFlowStep,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
@@ -26,12 +26,7 @@ interface Props {
 export default function SectionReviewDetails({ draft }: Props) {
   const { t } = useTranslation("transfer");
   const lookup = useLookupRecipient(draft.recipient);
-  const sending = useTransferFlow(
-    (flow) =>
-      flow.step === TransferFlowStep.Creating ||
-      flow.step === TransferFlowStep.Approving ||
-      flow.step === TransferFlowStep.Submitting,
-  );
+  const sending = useTransferFlow(isTransferBeingSent);
   const code =
     lookup.error instanceof TransportError ? lookup.error.code : undefined;
   // Never while sending: "no money moved" can be false by then, and a retry mints a new recipient reference.

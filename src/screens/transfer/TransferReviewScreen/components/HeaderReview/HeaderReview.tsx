@@ -4,19 +4,14 @@ import { useTranslation } from "react-i18next";
 import { BackHandler } from "react-native";
 
 import {
-  TransferFlowStep,
+  isTransferBeingSent,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
 
 export default function HeaderReview() {
   const { t } = useTranslation("transfer");
   const navigation = useNavigation();
-  const sending = useTransferFlow(
-    (flow) =>
-      flow.step === TransferFlowStep.Creating ||
-      flow.step === TransferFlowStep.Approving ||
-      flow.step === TransferFlowStep.Submitting,
-  );
+  const sending = useTransferFlow(isTransferBeingSent);
   // Android's Back and the root stack's swipe too, which this stack's options never reach: leaving
   // mid-send strands an approval no screen can answer.
   useEffect(() => {

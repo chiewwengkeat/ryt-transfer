@@ -50,6 +50,14 @@ export function isTransferDraftOpen(flow: TransferFlowState) {
   return "draft" in flow && flow.draft.recipient !== undefined;
 }
 
+export function isTransferBeingSent(flow: TransferFlowState) {
+  return (
+    flow.step === TransferFlowStep.Creating ||
+    flow.step === TransferFlowStep.Approving ||
+    flow.step === TransferFlowStep.Submitting
+  );
+}
+
 function reduceTransferFlow(
   flow: TransferFlowState,
   action: TransferFlowAction,

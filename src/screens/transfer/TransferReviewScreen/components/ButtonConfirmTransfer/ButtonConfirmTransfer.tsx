@@ -19,6 +19,7 @@ import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/look
 import {
   ApprovalPath,
   dispatchTransferFlow,
+  isTransferBeingSent,
   TransferFlowActionType,
   TransferFlowScenario,
   TransferFlowStep,
@@ -49,12 +50,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const lookup = useLookupRecipient(draft.recipient);
   const createTransfer = useCreateTransfer();
   const sendTransferApproval = useSendTransferApproval();
-  const transferBeingSent = useTransferFlow(
-    (flow) =>
-      flow.step === TransferFlowStep.Creating ||
-      flow.step === TransferFlowStep.Approving ||
-      flow.step === TransferFlowStep.Submitting,
-  );
+  const transferBeingSent = useTransferFlow(isTransferBeingSent);
   const hold = useTransferFlow((flow) =>
     flow.step === TransferFlowStep.Reviewing ? flow.hold : undefined,
   );
