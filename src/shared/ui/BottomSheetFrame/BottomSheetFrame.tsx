@@ -90,8 +90,10 @@ export default function BottomSheetFrame({
         exiting={FadeOut}
         style={styles.sheetLayer}
       >
+        {/* Hidden too: TalkBack stops on any pressable view whatever `accessible` says. ✕ and Back still close. */}
         <Pressable
           accessible={false}
+          aria-hidden
           disabled={!dismissable}
           onPress={onClose}
           style={styles.backdrop}

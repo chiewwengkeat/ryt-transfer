@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import {
+  act,
+  fireEvent,
+  isHiddenFromAccessibility,
+  render,
+  screen,
+} from "@testing-library/react-native";
 import { useState } from "react";
 import { BackHandler, DeviceEventEmitter, Text } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -102,6 +108,37 @@ it("opens over the screen and hides the screen from a screen reader", async () =
   expect(
     screen.queryByRole("button", { name: "Choose a bank" }),
   ).not.toBeOnTheScreen();
+});
+
+it("leaves a screen reader no unlabelled stop in an open sheet, its title the first stop in swipe order", async () => {
+  await render(<ScreenWithBankSheet />);
+
+  await openBankSheet();
+
+  // TalkBack's rule, not RNTL's: React Native makes every focusable view clickable on Android, and TalkBack
+  // stops on a clickable view whatever `accessible` says.
+  const screenReaderStopsUnder = (
+    element: typeof screen.container,
+  ): (typeof screen.container)[] => {
+    if (isHiddenFromAccessibility(element)) return [];
+    if (
+      element.props.accessible === true ||
+      element.props.focusable === true ||
+      element.type === "Text" ||
+      element.type === "TextInput"
+    )
+      return [element];
+    return element.children.flatMap((child) =>
+      typeof child === "string" ? [] : screenReaderStopsUnder(child),
+    );
+  };
+  const [firstStop, secondStop, ...laterStops] = screenReaderStopsUnder(
+    screen.container,
+  );
+  expect(firstStop).toHaveAccessibleName("Banks");
+  expect(secondStop).toHaveAccessibleName("Close");
+  expect(laterStops).not.toHaveLength(0);
+  for (const stop of laterStops) expect(stop).toHaveAccessibleName();
 });
 
 it("closes from its close button and gives the screen back", async () => {
