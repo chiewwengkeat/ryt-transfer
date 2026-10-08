@@ -70,7 +70,7 @@ function reduceTransferFlow(
 ): TransferFlowState {
   switch (action.type) {
     case TransferFlowActionType.RecipientChosen:
-      // Review offers no way back while submitting, so this is a new transfer after leaving an unconfirmed one.
+      // Review keeps the person on it while submitting until the answer is lost, so this is the next transfer.
       if (flow.step === TransferFlowStep.Submitting)
         return {
           step: TransferFlowStep.Editing,

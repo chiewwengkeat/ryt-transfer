@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
-import { router, Stack } from "expo-router";
+import { router, Stack, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BackHandler } from "react-native";
@@ -45,6 +45,7 @@ export default function TransferReviewScreen() {
     return flow.draft;
   });
   const step = useTransferFlow((flow) => flow.step);
+  const navigation = useNavigation();
   const queryClient = useQueryClient();
   const lookup = useLookupRecipient(draft.recipient);
   const createTransfer = useCreateTransfer();
@@ -61,17 +62,21 @@ export default function TransferReviewScreen() {
     step === TransferFlowStep.Submitting;
   const answerAwaited = step === TransferFlowStep.Submitting && !answerLost;
   const shownLookup = lookup.data;
-  // No way back while sending, Android's Back key included: the bank's answer shows only here.
+  // No way back while sending: the bank's answer shows only here. The options below cover this stack only; the
+  // root stack's swipe would close the whole flow, and Android's Back key bypasses options.
   useEffect(() => {
     if (!sending) return;
+    const flowScreen = navigation.getParent();
+    flowScreen?.setOptions({ gestureEnabled: false });
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       () => true,
     );
     return () => {
       subscription.remove();
+      flowScreen?.setOptions({ gestureEnabled: true });
     };
-  }, [sending]);
+  }, [navigation, sending]);
 
   const sendTransfer = async (confirmedLookup: LookupRecipientResponse) => {
     setNotSentMessage(undefined);

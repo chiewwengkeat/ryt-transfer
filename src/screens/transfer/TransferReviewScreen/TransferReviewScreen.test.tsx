@@ -16,8 +16,12 @@ import { scenarioTest } from "@/test/scenario-test";
 
 const MOBILE = "012-345 6789";
 
-async function openReviewOfRm100() {
-  const view = await renderRoute("/transfer");
+async function openReviewOfRm100(startPath: "/" | "/transfer" = "/transfer") {
+  const view = await renderRoute(startPath);
+  if (startPath === "/")
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
     MOBILE,
@@ -27,6 +31,31 @@ async function openReviewOfRm100() {
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   return view;
+}
+
+// The swipe is native and never reaches JS, so this reads the setting the root stack hands its transfer screen.
+function readRootTransferScreenGestureEnabled() {
+  type Fiber = {
+    return: Fiber | null;
+    child: Fiber | null;
+    sibling: Fiber | null;
+    memoizedProps: { screenId?: unknown; gestureEnabled?: unknown } | null;
+  };
+  let fiber = (screen.root as unknown as { unstable_fiber: Fiber })
+    .unstable_fiber;
+  while (fiber.return) fiber = fiber.return;
+  const pending = [fiber];
+  for (let next = pending.pop(); next; next = pending.pop()) {
+    const props = next.memoizedProps;
+    if (
+      typeof props?.screenId === "string" &&
+      props.screenId.startsWith("transfer-")
+    )
+      return props.gestureEnabled;
+    if (next.sibling) pending.push(next.sibling);
+    if (next.child) pending.push(next.child);
+  }
+  throw new Error("The root stack holds no transfer screen.");
 }
 
 it(
@@ -220,6 +249,23 @@ it(
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
     jest.useRealTimers();
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+  }),
+);
+
+it(
+  "turns off the swipe that would close the whole transfer flow while the transfer is being sent",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await openReviewOfRm100("/");
+    const transferButton = await screen.findByRole("button", {
+      name: "Transfer",
+    });
+    expect(readRootTransferScreenGestureEnabled()).not.toBe(false);
+
+    await fireEvent.press(transferButton);
+    await screen.findByRole("button", { name: "Back to Home" });
+
+    expect(readRootTransferScreenGestureEnabled()).toBe(false);
   }),
 );
 
