@@ -507,7 +507,7 @@ it("offers to try again or leave when the phone cannot read its approval key", a
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
 });
 
-it("never says no money moved when something unexpected fails after the approval was sent", async () => {
+it("never says no money moved when something unexpected fails after the bank answers the approval", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const balanceBeforeMinor = await readBankBalanceMinor();
   await openReviewOfRm100();
@@ -522,7 +522,7 @@ it("never says no money moved when something unexpected fails after the approval
 
   expect(
     await screen.findByText(
-      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
     ),
   ).toBeOnTheScreen();
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();

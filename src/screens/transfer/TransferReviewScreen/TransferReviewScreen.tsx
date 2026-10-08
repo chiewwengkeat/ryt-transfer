@@ -210,9 +210,7 @@ export default function TransferReviewScreen() {
                       });
                       setNotSentMessage(t("common.approval_unexpected.body"));
                     } else {
-                      setAnswerLostMessage(
-                        t("common.approval_unanswered.body"),
-                      );
+                      setAnswerLostMessage(t("common.outcome_unexpected.body"));
                       void refreshAccountAndHistoryAfterApproval(queryClient);
                     }
                   });
