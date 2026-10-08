@@ -1,7 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 
 import { clearTransferScenario } from "@/test/clear-transfer-scenario";
-import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -28,9 +27,7 @@ it(
       screen.getByText("Something unexpected went wrong."),
     ).toBeOnTheScreen();
 
-    // The scenario's answers stay until it is cleared and its handlers are dropped too.
     clearTransferScenario();
-    mswServer.resetHandlers();
     await fireEvent.press(tryAgainButton);
 
     expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
