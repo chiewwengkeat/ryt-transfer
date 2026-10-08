@@ -166,12 +166,6 @@ it.each([
     "Unsuccessful",
   ],
   [
-    "an unsuccessful transfer whose refund is on its way",
-    { status: TransferStatus.Unsuccessful, funds: TransferFunds.RefundPending },
-    "Unsuccessful — money returned",
-    "Unsuccessful",
-  ],
-  [
     "an unsuccessful transfer whose money came back",
     { status: TransferStatus.Unsuccessful, funds: TransferFunds.Refunded },
     "Unsuccessful — money returned",
@@ -190,6 +184,22 @@ it.each([
     expect(screen.getByText(SETTLED_AT)).toBeOnTheScreen();
   },
 );
+
+it("shows a refund still on its way as Unsuccessful alone, beside when it failed", async () => {
+  await openTransferDetails({
+    ...AISYAH_IN_FULL,
+    status: TransferStatus.Unsuccessful,
+    funds: TransferFunds.RefundPending,
+  });
+
+  expect(await screen.findByText(SETTLED_AT)).toBeOnTheScreen();
+  expect(screen.getAllByText("Unsuccessful")).toHaveLength(2);
+  expect(
+    screen.queryByText(/money moved|money returned|not confirmed yet/),
+  ).not.toBeOnTheScreen();
+  expect(screen.queryByText("Refunded")).not.toBeOnTheScreen();
+  expect(screen.getByText(SENT_AT)).toBeOnTheScreen();
+});
 
 it.each([
   [

@@ -30,7 +30,7 @@ export default function SectionTransferDetails({ transfer }: Props) {
     [TransferStatus.Unsuccessful]: t("history.transfer.status.unsuccessful"),
     [TransferStatus.Expired]: t("history.transfer.status.expired"),
   } satisfies Record<TransferStatus, string>;
-  // The matrix's phrases only: it words no received transfer and no approval still in flight.
+  // No phrase where the matrix has none (received, approval in flight), nor "money returned" before a refund lands.
   const moneyState = received
     ? undefined
     : (
@@ -43,9 +43,7 @@ export default function SectionTransferDetails({ transfer }: Props) {
             transfer.status === TransferStatus.Completed
               ? t("common.section_transfer_details.money.money_moved")
               : t("common.section_transfer_details.money.not_confirmed_yet"),
-          [TransferFunds.RefundPending]: t(
-            "common.section_transfer_details.money.money_returned",
-          ),
+          [TransferFunds.RefundPending]: undefined,
           [TransferFunds.Refunded]: t(
             "common.section_transfer_details.money.money_returned",
           ),
