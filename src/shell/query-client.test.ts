@@ -1,5 +1,9 @@
 import { MutationObserver, QueryObserver } from "@tanstack/react-query";
-import { AppState, type AppStateStatus } from "react-native";
+import {
+  AppState,
+  type AppStateStatus,
+  type NativeEventSubscription,
+} from "react-native";
 
 import {
   TransportError,
@@ -19,10 +23,17 @@ function letPendingFetchesRun() {
   return new Promise((resolve) => setTimeout(resolve, 10));
 }
 
+// ⛔ Skip removed listeners: the double's remove() does nothing, and a removed one turns the reopen tests green.
 function moveAppTo(state: AppStateStatus) {
-  for (const [eventName, listener] of jest.mocked(AppState).addEventListener
-    .mock.calls)
-    if (eventName === "change") listener(state);
+  const { calls, results } = jest.mocked(AppState).addEventListener.mock;
+  calls.forEach(([eventName, listener], index) => {
+    const subscription = results[index]?.value as NativeEventSubscription;
+    if (
+      eventName === "change" &&
+      jest.mocked(subscription).remove.mock.calls.length === 0
+    )
+      listener(state);
+  });
 }
 
 it("holds a read while the phone is offline and sends it once the phone reconnects", async () => {
@@ -97,6 +108,53 @@ it("fetches nothing again when a face or fingerprint prompt closes and the app i
   await letPendingFetchesRun();
 
   expect(queryFn).toHaveBeenCalledTimes(1);
+  stopObserving();
+  client.unmount();
+});
+
+it("keeps polling a read after Android reopens the app from Back", async () => {
+  const client = createQueryClient();
+  client.mount();
+  moveAppTo("background");
+  client.unmount();
+  client.mount();
+  moveAppTo("active");
+  const queryFn = jest.fn(() => Promise.resolve("processing"));
+
+  const stopObserving = new QueryObserver(client, {
+    queryKey: ["transfer"],
+    queryFn,
+    refetchInterval: 1,
+    gcTime: 0,
+  }).subscribe(() => undefined);
+  await letPendingFetchesRun();
+
+  expect(queryFn.mock.calls.length).toBeGreaterThan(1);
+  stopObserving();
+  client.unmount();
+});
+
+it("keeps polling a read after Android reopens the app from Back, active again before the app mounts", async () => {
+  const client = createQueryClient();
+  client.mount();
+  moveAppTo("background");
+  client.unmount();
+  const stateBeforeReopen = AppState.currentState;
+  Object.assign(AppState, { currentState: "active" });
+  moveAppTo("active");
+  client.mount();
+  Object.assign(AppState, { currentState: stateBeforeReopen });
+  const queryFn = jest.fn(() => Promise.resolve("processing"));
+
+  const stopObserving = new QueryObserver(client, {
+    queryKey: ["transfer"],
+    queryFn,
+    refetchInterval: 1,
+    gcTime: 0,
+  }).subscribe(() => undefined);
+  await letPendingFetchesRun();
+
+  expect(queryFn.mock.calls.length).toBeGreaterThan(1);
   stopObserving();
   client.unmount();
 });

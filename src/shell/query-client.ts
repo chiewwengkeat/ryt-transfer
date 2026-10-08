@@ -4,7 +4,7 @@ import {
   type Query,
   QueryClient,
 } from "@tanstack/react-query";
-import { AppState } from "react-native";
+import { AppState, type AppStateStatus } from "react-native";
 
 import {
   TransportError,
@@ -15,18 +15,21 @@ import { addBankReachedAgainListener } from "@/shared/platform/offline";
 
 onlineManager.setEventListener(subscribeToPhoneConnection);
 focusManager.setEventListener((setFocused) => {
-  let backgroundSinceActive = false;
-  // Never on "inactive": a face or fingerprint prompt passes through it, and must refetch nothing.
-  const subscription = AppState.addEventListener("change", (state) => {
+  // Runs again on Android's reopen after Back: focus is still off from that background, and active may come first.
+  let backgroundSinceActive = !focusManager.isFocused();
+  const followAppState = (state: AppStateStatus) => {
     if (state === "background") {
       backgroundSinceActive = true;
       setFocused(false);
     }
+    // Never on "inactive": a face or fingerprint prompt passes through it, and must refetch nothing.
     if (state === "active" && backgroundSinceActive) {
       backgroundSinceActive = false;
       setFocused(true);
     }
-  });
+  };
+  if (AppState.currentState === "active") followAppState("active");
+  const subscription = AppState.addEventListener("change", followAppState);
   return () => {
     subscription.remove();
   };
