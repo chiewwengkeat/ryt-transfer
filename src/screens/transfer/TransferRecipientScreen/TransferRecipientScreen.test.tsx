@@ -1,8 +1,16 @@
-import { fireEvent, screen, userEvent } from "@testing-library/react-native";
+import {
+  act,
+  fireEvent,
+  screen,
+  userEvent,
+} from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { parseTypedAmount } from "@/shared/lib/money/money";
+import { setPhoneNetwork } from "@/test/harness/native-doubles";
+import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -10,6 +18,10 @@ import {
   dispatchTransferFlow,
   TransferFlowActionType,
 } from "../state/transfer-flow";
+
+const UNKNOWN_BANK_CODE = {
+  error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
+};
 
 it.each(["012-345 6789", "60123456789", "+60 12 345 6789"])(
   "takes %s as a DuitNow mobile number and moves on to the amount",
@@ -72,6 +84,12 @@ it.each([
     "Army or police number",
     "T123",
     "Enter the army or police number: 1 to 3 letters, then 4 to 8 digits.",
+  ],
+  [
+    "Account number",
+    "Account number",
+    "1234567",
+    "Enter the account number: 8 to 17 digits.",
   ],
 ])(
   "says what is wrong with a badly formed %s ID, and stays",
@@ -178,6 +196,52 @@ it("says, and announces, that no bank matches a search", async () => {
     await screen.findByText("No bank matches your search."),
   ).toBeOnTheScreen();
   expect(announce).toHaveBeenCalledWith("No bank matches your search.");
+});
+
+it("says something unexpected went wrong in the bank sheet when the banks cannot load, and lists them on Try again", async () => {
+  mswServer.use(
+    http.get("*/banks", () =>
+      HttpResponse.json(UNKNOWN_BANK_CODE, { status: 400 }),
+    ),
+  );
+  await renderRoute("/transfer");
+  await fireEvent.press(
+    await screen.findByRole("radio", { name: "Account number" }),
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Bank" }));
+  const tryAgain = await screen.findByRole("button", { name: "Try again" });
+  const banksUnexpected = screen.getByText("Something unexpected went wrong.");
+
+  mswServer.resetHandlers();
+  await fireEvent.press(tryAgain);
+
+  expect(
+    await screen.findByRole("button", { name: "Public Bank" }),
+  ).toBeOnTheScreen();
+  expect(banksUnexpected).not.toBeOnTheScreen();
+});
+
+it("hides the bank sheet's something-unexpected message while the phone has no connection", async () => {
+  mswServer.use(
+    http.get("*/banks", () =>
+      HttpResponse.json(UNKNOWN_BANK_CODE, { status: 400 }),
+    ),
+  );
+  await renderRoute("/transfer");
+  await fireEvent.press(
+    await screen.findByRole("radio", { name: "Account number" }),
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Bank" }));
+  const banksUnexpected = await screen.findByText(
+    "Something unexpected went wrong.",
+  );
+
+  await act(() => {
+    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+  });
+
+  expect(banksUnexpected).not.toBeOnTheScreen();
+  expect(screen.getByLabelText("Search banks")).toBeOnTheScreen();
 });
 
 it("asks for the account's bank before moving on", async () => {

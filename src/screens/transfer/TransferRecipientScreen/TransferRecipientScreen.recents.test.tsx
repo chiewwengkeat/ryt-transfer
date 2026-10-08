@@ -133,3 +133,42 @@ it(
     expect(view.getPathname()).toBe("/transfer/amount");
   }),
 );
+
+it("lists the recent recipients on Try again after they could not load", async () => {
+  mswServer.use(
+    http.get("*/recipients/recent", () =>
+      HttpResponse.json(UNKNOWN_BANK_CODE, { status: 400 }),
+    ),
+  );
+  await renderRoute("/transfer");
+  const recentsUnexpected = await screen.findByText(
+    "Something unexpected went wrong.",
+  );
+
+  mswServer.resetHandlers();
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+
+  expect(
+    await screen.findAllByRole("button", { name: /••••/ }),
+  ).not.toHaveLength(0);
+  expect(recentsUnexpected).not.toBeOnTheScreen();
+});
+
+it("hides the recipient step's something-unexpected message while the phone has no connection", async () => {
+  mswServer.use(
+    http.get("*/recipients/recent", () =>
+      HttpResponse.json(UNKNOWN_BANK_CODE, { status: 400 }),
+    ),
+  );
+  await renderRoute("/transfer");
+  const recentsUnexpected = await screen.findByText(
+    "Something unexpected went wrong.",
+  );
+
+  await act(() => {
+    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+  });
+
+  expect(recentsUnexpected).not.toBeOnTheScreen();
+  expect(screen.getByLabelText("DuitNow mobile number")).toBeOnTheScreen();
+});
