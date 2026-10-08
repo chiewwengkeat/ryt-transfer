@@ -112,5 +112,12 @@
       "retry": "Retry",
       "end": "That's everything"
     }
+  },
+  "details": {
+    "title": "Transfer details",
+    "not_found": "Couldn't find this transfer.",
+    "back": "Back",
+    "failed": "Couldn't load this transfer.",
+    "try_again": "Try again"
   }
 }

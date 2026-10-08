@@ -93,6 +93,16 @@ export function selectTransferHistory(
   };
 }
 
+export function findTransferInHistory(
+  queryClient: QueryClient,
+  transferId: string,
+) {
+  return queryClient
+    .getQueryData(getListTransfersOptions().queryKey)
+    ?.pages.flatMap(({ items }) => items)
+    .find((transfer) => transfer.transferId === transferId);
+}
+
 // After a transfer: a page fetch already under way would land on pages the new transfer has shifted.
 export async function resetTransferHistory(queryClient: QueryClient) {
   await queryClient.cancelQueries({ queryKey: transferKeys.historyAll });

@@ -4,6 +4,7 @@ import {
   TransferDirection,
   TransferFunds,
   TransferStatus,
+  type GetTransferResponse,
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { MONEY_MOVED_SIGN } from "@/domains/transfer/api/list-transfers/list-transfers";
@@ -113,6 +114,44 @@ export function failTransferHistoryPages(
       failing && isRequestForPages(request, pages)
         ? new HttpResponse(null, { status })
         : undefined,
+    ),
+  );
+  return () => {
+    failing = false;
+  };
+}
+
+// Any other transfer goes on to the bank, which knows none of these fixtures and answers 404.
+export function serveTransferDetails(transfer: Transfer) {
+  mswServer.use(
+    http.get(BANK_PATHS.transfer, ({ params }) =>
+      params.transferId === transfer.transferId
+        ? HttpResponse.json({ transfer } satisfies GetTransferResponse)
+        : undefined,
+    ),
+  );
+}
+
+// Held until the test releases them, then handed on to the handlers beneath this one.
+export function holdTransferDetails() {
+  let release!: () => void;
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  mswServer.use(
+    http.get(BANK_PATHS.transfer, async () => {
+      await released;
+    }),
+  );
+  return release;
+}
+
+// Answered with `status` until the test recovers them, then handed on to the handlers beneath this one.
+export function failTransferDetails(status = 500) {
+  let failing = true;
+  mswServer.use(
+    http.get(BANK_PATHS.transfer, () =>
+      failing ? new HttpResponse(null, { status }) : undefined,
     ),
   );
   return () => {

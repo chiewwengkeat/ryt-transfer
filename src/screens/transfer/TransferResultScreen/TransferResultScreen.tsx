@@ -12,7 +12,7 @@ import TextBody from "@/shared/ui/TextBody/TextBody";
 import TextHeading from "@/shared/ui/TextHeading/TextHeading";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
-import SectionTransferDetails from "./components/SectionTransferDetails/SectionTransferDetails";
+import SectionTransferDetails from "../components/SectionTransferDetails/SectionTransferDetails";
 
 export default function TransferResultScreen() {
   const { t } = useTranslation("transfer");
