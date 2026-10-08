@@ -62,6 +62,16 @@ Hooks climb the same ladder in `hooks/` folders, except that a hook that knows n
 
 `scripts/check-placement-ladder.js` fails a component or hook placed higher than its users need, or one no app code uses, and the import rules fail one placed too low. It checks every component and hook in a `components/` or `hooks/` folder of a screens folder, a domain or shared code; the base components directly in `src/shared/ui/` are exempt, since they are built before any screen uses them. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case of who uses a piece, the script is the authority, not this summary. It cannot tell whether a piece knows about banking, so that call is the reviewer's: a hook that knows nothing about banking and that only the shell uses passes the script in a domain, and still belongs in `src/shell/`.
 
+## Names and file shape
+
+Lint fails a breach of each of these (`eslint.config.mjs`). On an edge case, the rule's own file in `eslint-rules/` is the authority, not this summary.
+
+- A component's name leads with its Type, from a closed list: `{Type}{Purpose}{Feature}{Variant}`, such as `CardBalance` or `ButtonPrimary`. Screens are the exception, each named `<Name>Screen`.
+- A component sits in a folder of its own, named for it: `<Component>/<Component>.tsx`. A file beside it takes the same name with a singular role suffix, such as `<Component>.type.ts`, never `.types.ts`.
+- A component file reads in one order: imports, `Props`, the component, `StyleSheet.create`, then the rest. A JSDoc on the component stays within four lines.
+- A hook file is kebab-case and named for the hook it exports: `use-sign-transfer-approval.ts` exports `useSignTransferApproval`.
+- Only files inside a component's folder import its internal files; code elsewhere imports the component itself.
+
 ## Adding a scenario
 
 The scenario matrix, [`src/screens/transfer/scenarios/transfer.md`](src/screens/transfer/scenarios/transfer.md), is the one description of what can happen while someone sends money. Its header says how to read it and how to change it. A new scenario takes four edits, made in one commit:
