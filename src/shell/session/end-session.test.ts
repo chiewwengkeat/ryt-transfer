@@ -1,6 +1,7 @@
 import type { InfiniteData } from "@tanstack/react-query";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 
-import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { approvalKeysOnFile } from "@/domains/approval/hooks/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
@@ -17,13 +18,14 @@ import {
 import { queryClient } from "@/shell/query-client";
 import { sendToBank } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { relaunchApp, renderRoute } from "@/test/render-route";
 
 import { endSession } from "./end-session";
 
-it("leaves nothing of the customer's behind: their transfer history, the open transfer, the approval setting and the phone's records", async () => {
-  const {
-    body: { customerId },
-  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+it("leaves nothing of the customer's behind — their transfer history, the open transfer, the approval setting and their pending transfers — but keeps the phone's pairing", async () => {
+  const { customerId } = await queryClient.fetchQuery(
+    getPrimaryAccountOptions(),
+  );
   const { body: historyPage } = await sendToBank<ListTransfersResponse>(
     "GET",
     "/transfers",
@@ -52,9 +54,38 @@ it("leaves nothing of the customer's behind: their transfer history, the open tr
 
   expect(cachedHistory()).toEqual([]);
   expect(await listPendingTransfers(customerId)).toEqual([]);
-  expect(await approvalKeysOnFile()).toBe(false);
+  expect(await approvalKeysOnFile()).toBe(true);
   expect(transferFlowStore.getState()).toEqual(
     transferFlowStore.getInitialState(),
   );
   expect(approvalSettingsStore.getState().biometricApprovalOn).toBe(true);
+});
+
+it("approves the first transfer after signing in again with no setting up, because signing out kept the phone paired", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/");
+  await screen.findByText("RM 12,845.50");
+
+  await act(() => endSession());
+  await relaunchApp(view);
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(
+    await screen.findByLabelText("Amount (RM)"),
+    "100",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByRole("header", { name: "Transfer sent" }),
+  ).toBeOnTheScreen();
 });

@@ -6,6 +6,7 @@ import { StyleSheet, View } from "react-native";
 import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { addUnauthorizedListener } from "@/shared/http/transport";
+import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import { demoLayer } from "@/shell/app-launch";
 import { queryClient } from "@/shell/query-client";
@@ -68,8 +69,9 @@ export default function ViewRoot() {
           onResetDemo={async () => {
             // First: endSession's clear() leaves a mounted screen showing its last read, so it reads the reset bank now.
             await queryClient.resetQueries();
-            // The reset bank knows none of this phone's keys. Pairing runs only once endSession has wiped their ids.
             await endSession();
+            // The reset bank knows none of this phone's keys, and pairing skips a phone whose key ids are on file.
+            await deleteAllSecureRecords();
             await deleteApprovalKeys();
             await demoLayer?.pairPhoneAtFirstLaunch();
           }}
