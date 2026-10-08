@@ -1,7 +1,10 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 
 import "@/test/demo-build";
-import { biometricPromptsShown } from "@/test/biometrics-double";
+import {
+  biometricPromptsShown,
+  deviceIntegrityChecksAsked,
+} from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
@@ -52,6 +55,33 @@ it(
     ).toEqual([]);
   }),
 );
+
+it("lets approval go ahead in a demo build with no scenario picked, without asking the phone's own check", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toHaveLength(1);
+  expect(deviceIntegrityChecksAsked()).toBe(0);
+});
+
+it("lets approval go ahead in a demo build once another scenario replaces the rooted phone", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+  await pickDemoScenario("Rooted, jailbroken or tampered phone");
+  await pickDemoScenario("Normal, no scenario");
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toHaveLength(1);
+});
 
 it("shows the refusal with no earlier notice beside it that offers the PIN", async () => {
   await pairPhoneAsTheDemoLaunchDoes();

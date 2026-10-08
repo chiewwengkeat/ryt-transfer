@@ -1,8 +1,10 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 
+import { integrityStandInStore } from "@/domains/approval/hooks/device-integrity-verdict";
 import {
   biometricPromptsShown,
+  cancelNextBiometricPrompt,
   failDeviceIntegrityChecks,
   holdDeviceIntegrityChecks,
   reportDeviceIntegrity,
@@ -46,7 +48,7 @@ async function approveFromReviewOpenedAgain() {
   await screen.findByText("Transfer sent");
 }
 
-it("refuses approval in place of the prompt on a phone that reports root, leaves no way to approve, and sends nothing", async () => {
+it("refuses approval in place of the prompt on a phone that reports root, leaving no way to approve and sending nothing, then approves from review opened again once the phone reports clean", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   reportDeviceIntegrity({
     isRooted: true,
@@ -63,6 +65,47 @@ it("refuses approval in place of the prompt on a phone that reports root, leaves
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
   expect(biometricPromptsShown()).toEqual([]);
   expect(transferWritesSent()).toEqual([]);
+  await pressHardwareBack();
+  reportDeviceIntegrity({});
+  await approveFromReviewOpenedAgain();
+  expect(biometricPromptsShown()).toHaveLength(1);
+  expect(transferWritesSent()).toEqual([
+    "/transfers",
+    expect.stringMatching(/^\/transfers\/[\w-]+\/approve$/),
+  ]);
+});
+
+it("checks the phone afresh at each press, so a phone that reports hooks after a closed prompt is refused", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+  cancelNextBiometricPrompt();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText("The transfer was not sent — no money moved.");
+  reportDeviceIntegrity({
+    hasRuntimeHooks: true,
+    isCompromised: true,
+    riskLevel: "HIGH",
+  });
+
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+  expect(await screen.findByText(PHONE_REFUSAL)).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toHaveLength(1);
+});
+
+it("ignores the demo's rooted-phone stand-in in a production build, and approves on a phone that reports clean", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  integrityStandInStore.setState({ phoneTampered: true });
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toHaveLength(1);
 });
 
 it("waits, showing Transfer busy, for a phone check still running when it is pressed, then refuses", async () => {
@@ -90,9 +133,17 @@ it("waits, showing Transfer busy, for a phone check still running when it is pre
   expect(await screen.findByText(PHONE_REFUSAL)).toBeOnTheScreen();
   expect(biometricPromptsShown()).toEqual([]);
   expect(transferWritesSent()).toEqual([]);
+  await pressHardwareBack();
+  reportDeviceIntegrity({});
+  await approveFromReviewOpenedAgain();
+  expect(biometricPromptsShown()).toHaveLength(1);
+  expect(transferWritesSent()).toEqual([
+    "/transfers",
+    expect.stringMatching(/^\/transfers\/[\w-]+\/approve$/),
+  ]);
 });
 
-it("lets approval go ahead when the phone check gives no clear answer, and records that it did", async () => {
+it("lets approval go ahead when the phone check gives no clear answer, and records that once", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   failDeviceIntegrityChecks();
   await openReviewOfRm100();
@@ -102,11 +153,11 @@ it("lets approval go ahead when the phone check gives no clear answer, and recor
   );
 
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
-  expect(observedRecords).toContainEqual({
-    type: "event",
-    name: "device_integrity_unknown",
-    properties: {},
-  });
+  expect(
+    observedRecords.filter(({ name }) => name === "device_integrity_unknown"),
+  ).toEqual([
+    { type: "event", name: "device_integrity_unknown", properties: {} },
+  ]);
 });
 
 it("lets approval go ahead when the phone check has not answered within 5 seconds, and records that once", async () => {
