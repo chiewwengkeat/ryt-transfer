@@ -317,7 +317,20 @@ it(
 
 it(
   "keeps the receipt of a transfer the bank completed when a later read of it fails",
-  scenarioTest("transfer.outcome_unexpected", async () => {
+  scenarioTest("transfer.completed", async () => {
+    mswServer.use(
+      http.get("*/transfers/:transferId", () =>
+        HttpResponse.json(
+          {
+            error: {
+              code: "NEW_BANK_CODE",
+              message: "A code added after this app was built.",
+            },
+          },
+          { status: 400 },
+        ),
+      ),
+    );
     await sendRm100FromHome();
 
     expect(
