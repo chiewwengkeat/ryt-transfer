@@ -61,6 +61,8 @@ it("keeps no PIN lock past Reset demo, so the next transfer gets its keypad", as
 
   await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
   await fireEvent.press(screen.getByRole("button", { name: "Reset demo" }));
+  // Wait the reset out: its end of session and new pairing would land in the middle of the next transfer.
+  await act(() => jest.advanceTimersByTimeAsync(5_000));
   await fireEvent.press(
     await screen.findByRole("button", { name: "Demo menu" }),
   );
@@ -73,10 +75,8 @@ it("keeps no PIN lock past Reset demo, so the next transfer gets its keypad", as
     "012-987 6543",
   );
   await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await fireEvent.changeText(
-    await screen.findByLabelText("Amount (RM)"),
-    "100",
-  );
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),

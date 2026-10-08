@@ -329,10 +329,12 @@ it("closes the PIN sheet as not sent when the session ends while it waits for th
     ),
   );
 
+  // The app reads again only on its return from the background, never on "active" alone.
   await act(() => {
-    for (const [eventName, listener] of jest.mocked(AppState).addEventListener
-      .mock.calls)
-      if (eventName === "change") listener("active");
+    for (const appState of ["background", "active"] as const)
+      for (const [eventName, listener] of jest.mocked(AppState).addEventListener
+        .mock.calls)
+        if (eventName === "change") listener(appState);
   });
   await fireEvent.press(
     await screen.findByRole("button", { name: "Sign in again" }),

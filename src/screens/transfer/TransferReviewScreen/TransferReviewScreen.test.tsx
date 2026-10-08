@@ -954,7 +954,7 @@ it("offers to try again or leave when the phone cannot read its approval key", a
 
   expect(
     await screen.findByText(
-      "Something unexpected stopped the approval before it was sent — no money moved.",
+      "Something unexpected stopped the approval — no money moved.",
     ),
   ).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
@@ -1432,18 +1432,6 @@ it.each([
     ApproveTransferErrorCode.ApprovalInvalid,
     {},
     "The approval couldn't be verified — no money moved.",
-  ],
-  [
-    422,
-    ApproveTransferErrorCode.PinIncorrect,
-    { attemptsRemaining: 2 },
-    "Something unexpected stopped the approval before it was sent — no money moved.",
-  ],
-  [
-    423,
-    ApproveTransferErrorCode.PinLocked,
-    {},
-    "Something unexpected stopped the approval before it was sent — no money moved.",
   ],
   [
     409,

@@ -225,7 +225,7 @@ it.each([
 
     expect(
       await screen.findByText(
-        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+        "This transfer is being checked, so don't send it again — not confirmed yet.",
       ),
     ).toBeOnTheScreen();
     expect(view.getPathname()).toMatch(RESULT_PATH);
