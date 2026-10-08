@@ -153,6 +153,71 @@ it(
   }),
 );
 
+async function lockThePinWithThreeWrongTries() {
+  await approveWithPin("111111");
+  await screen.findByText("That PIN is incorrect. You have 2 tries left.");
+  await approveWithPin("111111");
+  await screen.findByText("That PIN is incorrect. You have 1 try left.");
+  await approveWithPin("111111");
+  await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
+  await screen.findByRole("button", { name: "Transfer" });
+}
+
+it("keeps the PIN the bank locked for the next transfer, whose Transfer shows the locked words with no keypad", async () => {
+  await confirmRm100ApprovedByPin();
+  await lockThePinWithThreeWrongTries();
+
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+  expect(
+    await screen.findByRole("header", { name: "Approve with your PIN" }),
+  ).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "1" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+  await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+  expect(
+    await screen.findByText(
+      "Your PIN is locked. Reset it in the app's security settings.",
+    ),
+  ).toBeOnTheScreen();
+  expect(approveRequests()).toHaveLength(3);
+});
+
+it("still approves with face or fingerprint while the bank holds the PIN locked", async () => {
+  await confirmRm100ApprovedByPin();
+  await lockThePinWithThreeWrongTries();
+  await act(() => {
+    approvalSettingsStore.setState({ biometricApprovalOn: true });
+  });
+
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toHaveLength(1);
+});
+
+it("asks for no PIN to set approval up again while the bank holds the PIN locked", async () => {
+  await pairPhoneBeforeTheBankForgetsItsKeys();
+  await scenarioTest("transfer.approval_key_unknown", async () => {
+    await confirmRm100Transfer();
+    await screen.findByText("Approval needs setting up again on this phone.");
+    await lockThePinWithThreeWrongTries();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+    expect(
+      await screen.findByRole("header", { name: "Approve with your PIN" }),
+    ).toBeOnTheScreen();
+    expect(screen.queryByRole("button", { name: "1" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+    expect(
+      await screen.findByText(
+        "Your PIN is locked. Reset it in the app's security settings.",
+      ),
+    ).toBeOnTheScreen();
+  })();
+});
+
 async function readWhatTheAppStillHolds() {
   // Lets a finished call's zero-length cache timer run, which drops its variables.
   await act(async () => {

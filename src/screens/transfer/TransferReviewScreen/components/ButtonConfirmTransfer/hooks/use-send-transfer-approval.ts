@@ -10,6 +10,10 @@ import {
   signWithPossessionKey,
 } from "@/domains/approval/hooks/approval-keys";
 import {
+  isApprovalPinLocked,
+  rememberApprovalPinLocked,
+} from "@/domains/approval/hooks/approval-pin-lock";
+import {
   askForApprovalPin,
   closeApprovalPinSheet,
   showApprovalPinLocked,
@@ -109,6 +113,15 @@ export function useSendTransferApproval() {
       });
       let refusal: string | undefined;
       let { pinInHand, keysSetUpAgain = false } = afterSetUp;
+      // No new try at a PIN the bank has locked; a PIN already in hand is one the bank has just accepted.
+      if (pinInHand === undefined && (await isApprovalPinLocked())) {
+        await showApprovalPinLocked({
+          ...words,
+          refusal: t("common.pin_locked.body"),
+        });
+        leaveApprovalNotSent(TransferFlowScenario.PinLocked);
+        return null;
+      }
       for (;;) {
         const pin =
           pinInHand ?? (await askForApprovalPin({ ...words, refusal }));
@@ -146,6 +159,7 @@ export function useSendTransferApproval() {
           dispatchTransferFlow({
             type: TransferFlowActionType.ApprovalAttemptRefused,
           });
+          await rememberApprovalPinLocked();
           await showApprovalPinLocked({
             ...words,
             refusal: t("common.pin_locked.body"),

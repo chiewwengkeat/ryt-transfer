@@ -6,6 +6,10 @@ import {
 } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
 import { registerNewApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import {
+  isApprovalPinLocked,
+  rememberApprovalPinLocked,
+} from "@/domains/approval/hooks/approval-pin-lock";
+import {
   askForApprovalPin,
   showApprovalPinLocked,
 } from "@/domains/approval/hooks/approval-pin-sheet";
@@ -37,7 +41,14 @@ export function useRegisterApprovalKeysAgain() {
           ? (failure.body as RegisterApprovalKeysErrorResponse | undefined)
               ?.error
           : undefined;
-      if (refusal?.code === RegisterApprovalKeysErrorCode.PinLocked) {
+      if (refusal?.code === RegisterApprovalKeysErrorCode.PinLocked)
+        await rememberApprovalPinLocked();
+      // The bank asks for a PIN without saying it is locked, so the lock it reported earlier answers instead.
+      if (
+        refusal?.code === RegisterApprovalKeysErrorCode.PinLocked ||
+        (refusal?.code === RegisterApprovalKeysErrorCode.PinRequired &&
+          (await isApprovalPinLocked()))
+      ) {
         await showApprovalPinLocked({
           ...words,
           refusal: t("common.pin_locked.body"),
