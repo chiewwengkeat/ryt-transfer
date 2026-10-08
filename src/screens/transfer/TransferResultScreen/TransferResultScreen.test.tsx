@@ -650,6 +650,38 @@ it(
   }),
 );
 
+it(
+  "reads the transfer again once a request reaches the bank, before its read at 2 seconds, yet waits for the read at 16 seconds before saying the bank is unreachable",
+  scenarioTest("transfer.status_unreachable", async () => {
+    const view = await sendRm100FromHome();
+    await screen.findByRole(
+      "header",
+      { name: "Checking your transfer" },
+      { timeout: 10_000 },
+    );
+    const transferId = transferIdIn(view.getPathname());
+
+    expect(
+      sentRequests.filter(
+        ({ method, url }) =>
+          method === "GET" && url.endsWith(`/transfers/${transferId}`),
+      ).length,
+    ).toBeGreaterThan(1);
+    await act(() => jest.advanceTimersByTimeAsync(14_000));
+    expect(
+      screen.queryByRole("header", { name: "Still checking your transfer" }),
+    ).toBeNull();
+
+    await act(() => jest.advanceTimersByTimeAsync(3_000));
+
+    expect(
+      await screen.findByRole("header", {
+        name: "Still checking your transfer",
+      }),
+    ).toBeOnTheScreen();
+  }),
+);
+
 it("reports a transfer whose amount the app cannot read, and claims no outcome for it", async () => {
   const { created } = await startTestTransfer(10_000);
   mswServer.use(
