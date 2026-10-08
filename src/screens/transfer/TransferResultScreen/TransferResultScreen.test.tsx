@@ -40,7 +40,7 @@ async function sendRm100FromHome() {
   await pairPhoneAsTheDemoLaunchDoes();
   const view = await renderRoute("/");
   await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
@@ -74,7 +74,7 @@ it(
     const { recipient } = await lookUpTestRecipient("012-345 6789");
     const view = await renderRoute("/");
     await fireEvent.press(
-      await screen.findByRole("button", { name: "Transfer" }),
+      await screen.findByRole("button", { name: "Transfer", disabled: false }),
     );
     await fireEvent.changeText(
       await screen.findByLabelText("DuitNow mobile number"),

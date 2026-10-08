@@ -42,7 +42,7 @@ async function reviewANewTransferWhileAnEarlierOneIsProcessing() {
   );
   await renderRoute("/");
   await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),

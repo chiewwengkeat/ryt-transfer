@@ -25,7 +25,7 @@ jest.mock("@/shell/app-launch", () => ({
 
 async function sendRm100FromHomeAndReturn() {
   await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
@@ -49,7 +49,7 @@ async function startRm100TransferFromHomeUnderNoBiometrics() {
   );
   await fireEvent.press(screen.getByRole("radio", { name: "No biometrics" }));
   await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),

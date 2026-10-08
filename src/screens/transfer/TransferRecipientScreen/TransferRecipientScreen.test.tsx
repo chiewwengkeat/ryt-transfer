@@ -28,7 +28,7 @@ it.each(["012-345 6789", "60123456789", "+60 12 345 6789"])(
   async (typedMobile) => {
     const view = await renderRoute("/");
     await fireEvent.press(
-      await screen.findByRole("button", { name: "Transfer" }),
+      await screen.findByRole("button", { name: "Transfer", disabled: false }),
     );
 
     await fireEvent.changeText(
@@ -298,7 +298,7 @@ it("starts blank after a transfer whose approval left unanswered, and keeps none
   });
   const view = await renderRoute("/");
   await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
 
   const mobileField = await screen.findByLabelText("DuitNow mobile number");
