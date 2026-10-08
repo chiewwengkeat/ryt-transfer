@@ -78,13 +78,19 @@
       "body": "This is your first transfer to this recipient. Check the name is who you expect."
     },
     "recipient_not_found": {
-      "title": "Recipient not found"
+      "title": "Recipient not found",
+      "body": "No DuitNow account was found for this ID.",
+      "change_recipient": "Change the recipient"
     },
     "name_check_unavailable": {
-      "title": "Name check unavailable"
+      "title": "Name check unavailable",
+      "body": "Recipient names can't be confirmed right now.",
+      "retry": "Try again"
     },
     "too_many_name_checks": {
-      "title": "Too many name checks"
+      "title": "Too many name checks",
+      "body": "Too many name checks in a short time. Try again in a minute.",
+      "retry": "Try again"
     },
     "balance_or_limit_short_at_confirmation": {
       "title": "Balance or limit short at confirmation",

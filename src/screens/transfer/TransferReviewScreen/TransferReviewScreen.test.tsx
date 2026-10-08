@@ -1215,3 +1215,67 @@ it("pauses sending on review while the phone reports no connection", async () =>
   });
   expect(transferButton).toBeEnabled();
 });
+
+it(
+  "says no DuitNow account was found for the ID, and leads back to the recipient step",
+  scenarioTest("transfer.recipient_not_found", async () => {
+    const view = await openReviewOfRm100();
+
+    expect(
+      await screen.findByText("No DuitNow account was found for this ID."),
+    ).toBeOnTheScreen();
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Change the recipient" }),
+    );
+
+    expect(view.getPathname()).toBe("/transfer");
+  }),
+);
+
+it(
+  "says recipient names can't be confirmed right now, and never lets the transfer go ahead without one",
+  scenarioTest("transfer.name_check_unavailable", async () => {
+    await openReviewOfRm100();
+
+    expect(
+      await screen.findByText("Recipient names can't be confirmed right now."),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+  }),
+);
+
+it(
+  "asks to try again in a minute after too many name checks",
+  scenarioTest("transfer.too_many_name_checks", async () => {
+    await openReviewOfRm100();
+
+    expect(
+      await screen.findByText(
+        "Too many name checks in a short time. Try again in a minute.",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+  }),
+);
+
+it("says something unexpected stopped the transfer when the name check answers in a way the app does not know", async () => {
+  mswServer.use(
+    http.post("*/recipients/lookup", () =>
+      HttpResponse.json(
+        { error: { code: "NEW_BANK_CODE", message: "Unknown to this app." } },
+        { status: 400 },
+      ),
+    ),
+  );
+  await openReviewOfRm100();
+
+  expect(
+    await screen.findByText(
+      "Something unexpected stopped the transfer — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+});
