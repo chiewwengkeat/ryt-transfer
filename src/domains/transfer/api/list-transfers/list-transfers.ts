@@ -103,18 +103,36 @@ export async function patchTransferInHistory(
   await queryClient.cancelQueries({ queryKey: transferKeys.historyAll });
   queryClient.setQueriesData<InfiniteData<ListTransfersResponse>>(
     { queryKey: transferKeys.historyAll },
-    (history) =>
-      history && {
+    (history) => {
+      const listed = history?.pages
+        .flatMap(({ items }) => items)
+        .find(({ transferId }) => transferId === transfer.transferId);
+      if (!history || !listed || listed.version >= transfer.version)
+        return history;
+      // The bank's day net, kept true until the next reset brings its own figure.
+      const amount = parseWireAmount(transfer.amount);
+      const netMoveMinor = amount
+        ? (MONEY_MOVED_SIGN[transfer.funds] - MONEY_MOVED_SIGN[listed.funds]) *
+          amount.minor
+        : 0;
+      const listedDate = toMalaysianDateKey(listed.createdAt);
+      return {
         ...history,
         pages: history.pages.map((page) => ({
           ...page,
           items: page.items.map((item) =>
-            item.transferId === transfer.transferId &&
-            item.version < transfer.version
-              ? transfer
-              : item,
+            item.transferId === transfer.transferId ? transfer : item,
+          ),
+          days: page.days.map((day) =>
+            day.date === listedDate
+              ? {
+                  ...day,
+                  net: { ...day.net, minor: day.net.minor + netMoveMinor },
+                }
+              : day,
           ),
         })),
-      },
+      };
+    },
   );
 }
