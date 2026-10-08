@@ -90,12 +90,16 @@ async function sendAnotherRm100TransferFromResult() {
   );
 }
 
-// The scenario forgets keys registered before it begins, so the phone pairs a moment earlier.
+// The scenario forgets only keys registered in an earlier millisecond than it began, and a 1 ms
+// timer can fire within the same one, so this waits for the clock itself to move on.
 async function pairPhoneBeforeTheBankForgetsItsKeys() {
   await pairPhoneAsTheDemoLaunchDoes();
-  await new Promise((resolve) => {
-    setTimeout(resolve, 1);
-  });
+  const pairedAtMs = Date.now();
+  while (Date.now() <= pairedAtMs) {
+    await new Promise((resolve) => {
+      setTimeout(resolve, 1);
+    });
+  }
 }
 
 it(
