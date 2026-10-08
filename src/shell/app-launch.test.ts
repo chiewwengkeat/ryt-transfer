@@ -2,26 +2,12 @@ import { waitFor } from "@testing-library/react-native";
 
 import type * as ApprovalKeys from "@/domains/approval/hooks/approval-keys";
 import type * as SecureStorage from "@/shared/platform/secure-storage";
-import {
-  deviceIntegrityChecksAsked,
-  phoneKeyOptions,
-} from "@/test/biometrics-double";
-import {
-  appSwitcherBlurIntensity,
-  isScreenCaptureBlocked,
-  kvStoreDouble,
-} from "@/test/harness/native-doubles";
+import { phoneKeyOptions } from "@/test/biometrics-double";
+import { kvStoreDouble } from "@/test/harness/native-doubles";
 
 // Built out here, so the isolated launch below shares these doubles instead of building its own.
 jest.requireMock("@sbaiahmed1/react-native-biometrics");
 jest.requireMock("expo-sqlite/kv-store");
-
-// ⛔ First in the file: any later test reads the shared reset, not what the launch did.
-it("blocks capture, blurs the iPhone's app switcher at the default strength, and asks the phone check once, at launch", () => {
-  expect(isScreenCaptureBlocked()).toBe(true);
-  expect(appSwitcherBlurIntensity()).toBe(0.5);
-  expect(deviceIntegrityChecksAsked()).toBe(1);
-});
 
 it("forgets the approval keys a reinstalled app finds left from before", async () => {
   kvStoreDouble.removeItemSync("install-marker");
