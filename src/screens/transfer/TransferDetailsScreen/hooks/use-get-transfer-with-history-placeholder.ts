@@ -1,7 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getTransferOptions } from "@/domains/transfer/api/get-transfer/get-transfer";
-import type { Transfer } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import {
+  getTransferOptions,
+  selectTransferWithOutcome,
+} from "@/domains/transfer/api/get-transfer/get-transfer";
 import { findTransferInHistory } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { parseWireAmount } from "@/shared/lib/money/money";
 
@@ -14,15 +16,10 @@ export function useGetTransferWithHistoryPlaceholder(transferId: string) {
       ? historyRow
       : undefined;
   };
-  const parseTransferAmount = (transfer: Transfer) => {
-    const amount = parseWireAmount(transfer.amount);
-    if (!amount) throw new TypeError("The transfer's amount is unreadable.");
-    return { ...transfer, amount };
-  };
   const transferQuery = useQuery({
     ...getTransferOptions(transferId),
     placeholderData: findReadableHistoryRow,
-    select: parseTransferAmount,
+    select: selectTransferWithOutcome,
   });
   // TanStack drops a placeholder once its fetch fails, but a row already on screen stays there.
   const keptHistoryRow = transferQuery.isLoadingError
@@ -33,6 +30,6 @@ export function useGetTransferWithHistoryPlaceholder(transferId: string) {
     transferQuery,
     transfer:
       transferQuery.data ??
-      (keptHistoryRow && parseTransferAmount(keptHistoryRow)),
+      (keptHistoryRow && selectTransferWithOutcome(keptHistoryRow)),
   };
 }
