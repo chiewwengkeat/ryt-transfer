@@ -94,7 +94,7 @@ Every string the production app shows comes from a bundle in English (`en-MY`), 
 - Nothing the person can press offers to send again in a scenario whose **Never** forbids it, in any language. A message may still warn against sending again.
 - When an English string changes, re-translate its Malay and Chinese in the same commit. No check notices a translation left behind by a change to its English.
 
-`src/shell/translations.test.ts` reads the bundles the app registers, and fails on a top-level key defined twice in one namespace, or on a Malay or Chinese plural without its `_one` twin.
+`src/shell/translations.test.ts` reads the bundles the app registers, and fails on a top-level key defined twice in one namespace, or on a Malay or Chinese plural whose `_one` twin is missing or differs from its `_other`.
 
 ## Build variants
 
