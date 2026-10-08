@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 import { formatMalaysianDayHeader } from "@/shared/lib/dates/dates";
@@ -8,7 +8,12 @@ import {
   traceFormatCalls,
   useRenderTrace,
 } from "@/shared/observability/render-trace";
-import { colors, minTouchTarget, spacing } from "@/shared/theme/theme";
+import {
+  colors,
+  minTouchTarget,
+  spacing,
+  typography,
+} from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
 import IconChevron from "./components/IconChevron/IconChevron";
@@ -27,6 +32,7 @@ export default function HeaderTransferDay({
 }: Props) {
   useRenderTrace("header", summary.date);
   const { t, i18n } = useTranslation("transfer");
+  const { fontScale } = useWindowDimensions();
   const dayLabel = traceFormatCalls(formatMalaysianDayHeader)(
     summary.date,
     today,
@@ -58,12 +64,20 @@ export default function HeaderTransferDay({
       style={({ pressed }) => [styles.header, pressed && styles.headerPressed]}
     >
       <IconChevron expanded={expanded} />
-      <View style={styles.title}>
-        <TextBody strong>
-          {t("history.day.title", { day: dayLabel, count: summary.count })}
-        </TextBody>
+      <View style={styles.titleAndNet}>
+        <View
+          style={[
+            styles.title,
+            // Seven ems hold a long word such as "Yesterday": a net that would leave less wraps to its own line.
+            { flexBasis: 7 * typography.body.fontSize * fontScale },
+          ]}
+        >
+          <TextBody strong>
+            {t("history.day.title", { day: dayLabel, count: summary.count })}
+          </TextBody>
+        </View>
+        {netText !== null && <TextBody strong>{netText}</TextBody>}
       </View>
-      {netText !== null && <TextBody strong>{netText}</TextBody>}
     </Pressable>
   );
 }
@@ -80,5 +94,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   headerPressed: { opacity: 0.8 },
-  title: { flex: 1 },
+  titleAndNet: {
+    flex: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    // Moves only a wrapped net: to the header's end, where the amounts below it end.
+    justifyContent: "flex-end",
+    alignItems: "center",
+    columnGap: spacing.sm,
+    rowGap: spacing.xs,
+  },
+  title: { flexGrow: 1, flexShrink: 1 },
 });
