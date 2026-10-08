@@ -24,7 +24,7 @@ it("shows Home in Bahasa Malaysia once it is picked, and still after a relaunch"
   setPhoneLanguage("en");
   const view = await renderRoute("/");
   await fireEvent.press(
-    await screen.findByRole("button", { name: "EN, Language" }),
+    await screen.findByRole("button", { name: "EN, change language" }),
   );
   expect(screen.getByRole("radio", { name: "Phone's language" })).toBeChecked();
   await fireEvent.press(screen.getByRole("radio", { name: "Bahasa Malaysia" }));
@@ -34,7 +34,7 @@ it("shows Home in Bahasa Malaysia once it is picked, and still after a relaunch"
   ).toBeOnTheScreen();
   await relaunchApp(view);
   await fireEvent.press(
-    await screen.findByRole("button", { name: "BM, Bahasa" }),
+    await screen.findByRole("button", { name: "BM, tukar bahasa" }),
   );
   expect(screen.getByRole("radio", { name: "Bahasa Malaysia" })).toBeChecked();
   expect(
@@ -46,11 +46,11 @@ it("follows the phone's language once Phone's language is picked, and still afte
   setPhoneLanguage("zh");
   const view = await renderRoute("/");
   await fireEvent.press(
-    await screen.findByRole("button", { name: "EN, Language" }),
+    await screen.findByRole("button", { name: "EN, change language" }),
   );
   await fireEvent.press(screen.getByRole("radio", { name: "Bahasa Malaysia" }));
   await fireEvent.press(
-    await screen.findByRole("button", { name: "BM, Bahasa" }),
+    await screen.findByRole("button", { name: "BM, tukar bahasa" }),
   );
   await fireEvent.press(screen.getByRole("radio", { name: "Bahasa telefon" }));
 
@@ -73,7 +73,7 @@ it("tells a screen reader that Home's words are in Bahasa Malaysia once it is pi
   );
   await renderRoute("/");
   await fireEvent.press(
-    await screen.findByRole("button", { name: "EN, Language" }),
+    await screen.findByRole("button", { name: "EN, change language" }),
   );
   await fireEvent.press(screen.getByRole("radio", { name: "Bahasa Malaysia" }));
   const tryAgain = await screen.findByRole("button", { name: "Cuba lagi" });
@@ -87,7 +87,9 @@ it("tells a screen reader that Home's words are in Bahasa Malaysia once it is pi
     "accessibilityLanguage",
     "ms-MY",
   );
-  await fireEvent.press(screen.getByRole("button", { name: "BM, Bahasa" }));
+  await fireEvent.press(
+    screen.getByRole("button", { name: "BM, tukar bahasa" }),
+  );
   expect(screen.getByRole("header", { name: "Bahasa" })).toHaveProp(
     "accessibilityLanguage",
     "ms-MY",
@@ -102,15 +104,15 @@ it("forgets the pick when Phone's language is picked while the phone shows the s
   setPhoneLanguage("ms");
   const view = await renderRoute("/");
   await fireEvent.press(
-    await screen.findByRole("button", { name: "EN, Language" }),
+    await screen.findByRole("button", { name: "EN, change language" }),
   );
   await fireEvent.press(screen.getByRole("radio", { name: "Bahasa Malaysia" }));
   await fireEvent.press(
-    await screen.findByRole("button", { name: "BM, Bahasa" }),
+    await screen.findByRole("button", { name: "BM, tukar bahasa" }),
   );
   await fireEvent.press(screen.getByRole("radio", { name: "Bahasa telefon" }));
   await fireEvent.press(
-    await screen.findByRole("button", { name: "BM, Bahasa" }),
+    await screen.findByRole("button", { name: "BM, tukar bahasa" }),
   );
   expect(screen.getByRole("radio", { name: "Bahasa telefon" })).toBeChecked();
   await fireEvent.press(
