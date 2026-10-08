@@ -6,7 +6,9 @@ import { useTranslation } from "react-i18next";
 import { accountKeys } from "@/domains/account/api/account.keys";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
 import {
+  CoolingOffReason,
   CreateTransferErrorCode,
+  type CreateTransferErrorResponse,
   type CreateTransferResponse,
 } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
@@ -17,10 +19,12 @@ import {
   TransferFlowScenario,
   TransferFlowStep,
   transferFlowStore,
+  TransferHoldKind,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
 import { TransportError } from "@/shared/http/transport-error";
+import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 
@@ -41,9 +45,24 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       flow.step === TransferFlowStep.Approving ||
       flow.step === TransferFlowStep.Submitting,
   );
+  const hold = useTransferFlow((flow) =>
+    flow.step === TransferFlowStep.Reviewing ? flow.hold : undefined,
+  );
   const offline = useIsOffline();
   const confirmedLookup = lookup.data;
   if (confirmedLookup === undefined) return null;
+
+  const holdReason =
+    hold?.kind === TransferHoldKind.AccountLocked
+      ? t("common.account_locked.disabled_reason")
+      : hold?.kind === TransferHoldKind.CoolingOff
+        ? t(
+            hold.reason === CoolingOffReason.NewAccount
+              ? "common.cooling_off_new_account.disabled_reason"
+              : "common.cooling_off_new_phone.disabled_reason",
+            { time: formatMalaysianDateTime(hold.until) },
+          )
+        : undefined;
 
   const createAndApproveTransfer = async () => {
     const reviewing = transferFlowStore.getState();
@@ -70,7 +89,27 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
         idempotencyKey,
       });
     } catch (error) {
-      switch (error instanceof TransportError ? error.code : undefined) {
+      const refusal =
+        error instanceof TransportError
+          ? (error.body as CreateTransferErrorResponse | undefined)?.error
+          : undefined;
+      switch (refusal?.code) {
+        case CreateTransferErrorCode.CoolingOff:
+          dispatchTransferFlow({
+            type: TransferFlowActionType.CreateRefusedByHold,
+            hold: {
+              kind: TransferHoldKind.CoolingOff,
+              until: refusal.until,
+              reason: refusal.reason,
+            },
+          });
+          return;
+        case CreateTransferErrorCode.AccountLocked:
+          dispatchTransferFlow({
+            type: TransferFlowActionType.CreateRefusedByHold,
+            hold: { kind: TransferHoldKind.AccountLocked },
+          });
+          return;
         case CreateTransferErrorCode.InsufficientFunds:
         case CreateTransferErrorCode.DailyLimitExceeded:
         case CreateTransferErrorCode.AbovePerTransferMax:
@@ -108,6 +147,9 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
             notice: TransferFlowScenario.UnderMaintenance,
           });
           return;
+        case CreateTransferErrorCode.IdempotencyKeyReused:
+        case CreateTransferErrorCode.InvalidRequest:
+        case CreateTransferErrorCode.RequestInProgress:
         case undefined:
         default:
           dispatchTransferFlow({
@@ -133,7 +175,10 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     <ButtonPrimary
       label={t("review.transfer")}
       loading={sending || lookup.isFetching}
-      disabledReason={offline ? t("common.offline.disabled_reason") : undefined}
+      disabledReason={
+        holdReason ??
+        (offline ? t("common.offline.disabled_reason") : undefined)
+      }
       onPress={() => {
         void createAndApproveTransfer().catch(() => {
           // Before the approval leaves the phone nothing can have moved, so review offers it again.

@@ -11,7 +11,9 @@ import {
   listPendingTransfers,
   PendingTransferStage,
 } from "@/domains/transfer/hooks/pending-transfers";
+import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import {
+  type BankErrorBody,
   lookUpTestRecipient,
   readBankBalanceMinor,
   sendToBank,
@@ -1381,6 +1383,72 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+  }),
+);
+
+async function askBankToCreateRm100() {
+  const { recipientRef } = await lookUpTestRecipient(MOBILE);
+  return sendToBank<BankErrorBody>("POST", "/transfers", {
+    body: { recipientRef, amount: { minor: 10_000, currency: "MYR" } },
+  });
+}
+
+it(
+  "says from when money can be sent while a newly paired phone waits, and holds the transfer",
+  scenarioTest("transfer.cooling_off_new_phone", async () => {
+    const { body } = await askBankToCreateRm100();
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        `You can send money from ${formatMalaysianDateTime(body.error.until ?? "")} — a security wait after pairing this phone.`,
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+    expect(countSent("POST", "/approve")).toBe(0);
+  }),
+);
+
+it(
+  "says from when money can be sent in a new account's first hour, and holds the transfer",
+  scenarioTest("transfer.cooling_off_new_account", async () => {
+    const { body } = await askBankToCreateRm100();
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        `You can send money from ${formatMalaysianDateTime(body.error.until ?? "")} — a security wait after opening your account.`,
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+    expect(countSent("POST", "/approve")).toBe(0);
+  }),
+);
+
+it(
+  "says the account is locked and to contact Ryt, and offers no way around it",
+  scenarioTest("transfer.account_locked", async () => {
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "Your account is locked. Contact Ryt to unlock it.",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+    expect(countSent("POST", "/approve")).toBe(0);
   }),
 );
 
