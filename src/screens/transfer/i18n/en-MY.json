@@ -247,7 +247,8 @@
       "body": "Your last transfer can't be found. Check History before sending it again — not confirmed yet."
     },
     "session_ended": {
-      "title": "Session ended"
+      "title": "Session ended",
+      "reference": "Your last transfer is still being checked. If you contact us, quote this reference: {{reference}}"
     },
     "approval_unknown_answer": {
       "title": "Unknown answer to the approval",

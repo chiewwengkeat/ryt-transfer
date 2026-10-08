@@ -5,6 +5,8 @@ import { BackHandler, StyleSheet, View } from "react-native";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 
+import TextLastTransferReference from "./components/TextLastTransferReference/TextLastTransferReference";
+
 interface Props {
   onSignIn: () => void;
 }
@@ -28,10 +30,13 @@ export default function ViewSessionEnded({ onSignIn }: Props) {
         title={t("view_session_ended.title")}
         message={t("view_session_ended.body")}
         actions={
-          <ButtonPrimary
-            label={t("view_session_ended.sign_in")}
-            onPress={onSignIn}
-          />
+          <>
+            <TextLastTransferReference />
+            <ButtonPrimary
+              label={t("view_session_ended.sign_in")}
+              onPress={onSignIn}
+            />
+          </>
         }
       />
     </View>

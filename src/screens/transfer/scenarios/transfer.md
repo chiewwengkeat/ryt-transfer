@@ -555,7 +555,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **When:** the bank says their session has ended (401) during a transfer
 - **Money:** not confirmed yet
 - **Shown as:** a full screen of its own, handed to the host app
-- **Tell them:** their session has ended and they need to sign in again, with a reference to quote to support
+- **Tell them:** their session has ended and they need to sign in again, with a reference to quote to support while a transfer is being checked
 - **They can:** sign in again
 - **Afterwards:** any transfer still being checked is checked once they are back, and its outcome shown
 - **Why:** signing in is the host app's job, so the transfer keeps its record and finishes checking once the person returns
