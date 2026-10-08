@@ -421,6 +421,12 @@ it(
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
     expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    expect(observedRecords).toContainEqual(
+      expect.objectContaining({
+        name: "transfer_outcome",
+        properties: { scenario: "transfer.approval_unknown_answer" },
+      }),
+    );
     expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
       balanceBeforeMinor - 10_000,
     );
@@ -730,6 +736,12 @@ it("takes a lost approval answer to the result page, which never offers to send 
   expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
   expect(screen.getByRole("button", { name: "Done" })).toBeOnTheScreen();
+  expect(observedRecords).toContainEqual(
+    expect.objectContaining({
+      name: "transfer_outcome",
+      properties: { scenario: "transfer.approval_unanswered" },
+    }),
+  );
 });
 
 it("takes an approval lost as the phone goes offline to the result page, which reads the transfer once the phone is back", async () => {

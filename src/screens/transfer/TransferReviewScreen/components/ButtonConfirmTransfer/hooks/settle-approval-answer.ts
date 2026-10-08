@@ -7,6 +7,7 @@ import {
   ApproveTransferErrorCode,
   type ApproveTransferErrorResponse,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
+import { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
 import {
   type Transfer,
   TransferFailureReason,
@@ -127,7 +128,16 @@ export async function settleApprovalAnswer({
   void refreshAccountAndHistoryAfterApproval(queryClient);
   // From Home, so Back from the result never reopens a transfer already sent.
   router.dismissTo("/");
-  router.push(`/transfer/result/${transferId}`);
+  router.push({
+    pathname: "/transfer/result/[transferId]",
+    params: {
+      transferId,
+      ...(refusal !== undefined &&
+        !Object.values<string>(ApproveTransferErrorCode).includes(
+          refusal.code,
+        ) && { checking: TransferOutcomeScenario.ApprovalUnknownAnswer }),
+    },
+  });
   dispatchTransferFlow({
     type:
       transfer === undefined
