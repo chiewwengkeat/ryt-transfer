@@ -1,9 +1,18 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
-import type { GetTransferResponse } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import {
+  type GetTransferResponse,
+  TransferStatus,
+} from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import {
+  listPendingTransfers,
+  PendingTransferStage,
+  writePendingTransfer,
+} from "@/domains/transfer/hooks/pending-transfers";
 import { requestJson } from "@/shared/http/transport";
-import { sendToBank } from "@/test/bank-client";
+import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
@@ -91,3 +100,41 @@ it(
     ).rejects.toThrow("Unable to find an element with text");
   }),
 );
+
+it("quotes nothing when the session ends while Home still announces how an earlier transfer ended", async () => {
+  const {
+    body: { customerId },
+  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+  const { created, lookup } = await startTestTransfer(10_000);
+  await writePendingTransfer(customerId, {
+    transferId: created.transfer.transferId,
+    idempotencyKey: "approval-key",
+    createdAt: "2026-10-07T01:30:00.000Z",
+    stage: PendingTransferStage.Processing,
+  });
+  mswServer.use(
+    http.get("*/transfers/:transferId", () =>
+      HttpResponse.json({
+        transfer: {
+          ...created.transfer,
+          reference: "20261007C0FFEE00",
+          status: TransferStatus.Completed,
+        },
+      }),
+    ),
+  );
+  await renderRoute("/");
+  await screen.findByText(
+    `Your transfer of RM 100.00 to ${lookup.recipient.registeredName} was sent — money moved.`,
+  );
+  expect(await listPendingTransfers(customerId)).toHaveLength(1);
+
+  await endTheSession();
+
+  expect(
+    await screen.findByRole("header", { name: "Your session has ended" }),
+  ).toBeOnTheScreen();
+  await expect(
+    screen.findByText(/still being checked/, {}, { timeout: 500 }),
+  ).rejects.toThrow("Unable to find an element with text");
+});
