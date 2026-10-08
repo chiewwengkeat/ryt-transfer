@@ -15,12 +15,12 @@ const RECIPIENT_ID_FORMATS: Record<RecipientIdType, RegExp> = {
   [RecipientIdType.Nric]: /^\d{12}$/,
   [RecipientIdType.Passport]: /^[A-Z][A-Z0-9]{5,11}$/,
   [RecipientIdType.Brn]: /^(?:\d{12}|\d{6,7}[A-Z])$/,
-  [RecipientIdType.ArmyPolice]: /^[A-Z]{1,3}\/?\d{4,8}$/,
+  [RecipientIdType.ArmyPolice]: /^[A-Z]{1,3}\d{4,8}$/,
   [RecipientIdType.AccountNumber]: /^\d{8,17}$/,
 };
 
 export function parseRecipientId(idType: RecipientIdType, typedId: string) {
-  const compactId = typedId.replace(/[\s-]/g, "").toUpperCase();
+  const compactId = typedId.replace(/[\s/-]/g, "").toUpperCase();
   const match = RECIPIENT_ID_FORMATS[idType].exec(compactId);
   if (match === null) return null;
   // One form however the number was typed, so the bank sees one recipient.
