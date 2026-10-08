@@ -16,19 +16,19 @@ const RECEIPT_ROUTES = new Set([
 const RECEIPT_SETTLE_MS = 600;
 
 export function useScreenCaptureBlock() {
-  const route = `/${useSegments().join("/")}`;
+  const routePattern = `/${useSegments().join("/")}`;
   const pathname = usePathname();
-  const onReceiptRoute = RECEIPT_ROUTES.has(route);
+  const onReceiptRoute = RECEIPT_ROUTES.has(routePattern);
   const [settledReceiptPathname, setSettledReceiptPathname] = useState<
     string | null
   >(null);
   useEffect(() => {
     if (!onReceiptRoute) return;
-    const settle = setTimeout(() => {
+    const settleTimer = setTimeout(() => {
       setSettledReceiptPathname(pathname);
     }, RECEIPT_SETTLE_MS);
     return () => {
-      clearTimeout(settle);
+      clearTimeout(settleTimer);
       setSettledReceiptPathname(null);
     };
   }, [onReceiptRoute, pathname]);
