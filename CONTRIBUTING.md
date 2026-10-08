@@ -78,7 +78,7 @@ With no scenario picked, the mock bank behaves as a normal bank. Every test star
 Test a route the way a person uses it, against the mock bank:
 
 - `renderRoute(url)` (`src/test/render-route.tsx`) mounts the app's own routes at that URL with their real providers. Every request goes to the mock bank, and a request no handler answers fails the test.
-- `scenarioTest("transfer.<name>", run)` (`src/test/scenario-test.ts`) picks a scenario for one test. Give the id as a string literal: the matrix test finds each scenario's tests by reading that argument, so an id built at runtime counts as no test at all.
+- `scenarioTest("transfer.<name>", run)` (`src/test/scenario-test.ts`) picks a scenario for one test. Give the id as a string literal: the matrix test reads that argument to fail an id the matrix lacks, and an id built at runtime escapes that check.
 - Every scenario in the matrix needs a route test that picks it, renders the route and asserts what the person sees.
 - Query by accessible name, through `accessibilityRole` and `accessibilityLabel`; lint bans `testID`.
 - Assert what a person could observe: text, roles, where they ended up, and the requests that left the app. Never assert on component state or on which module a value passed through.
