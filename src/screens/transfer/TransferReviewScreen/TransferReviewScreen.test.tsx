@@ -43,7 +43,10 @@ afterEach(() => {
 
 const MOBILE = "012-345 6789";
 
-async function openReviewOfRm100(startPath: "/" | "/transfer" = "/transfer") {
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
   const view = await renderRoute(startPath);
   if (startPath === "/")
     await fireEvent.press(
@@ -56,6 +59,8 @@ async function openReviewOfRm100(startPath: "/" | "/transfer" = "/transfer") {
   await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
   await screen.findByText("RM 12,845.50");
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  if (note !== undefined)
+    await fireEvent.changeText(screen.getByLabelText("Note (optional)"), note);
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   return view;
 }
@@ -1713,6 +1718,54 @@ it("never moves a transfer left mid-confirmation, even once another is confirmed
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   jest.useRealTimers();
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 5_000);
+});
+
+function refuseCreatesKeepingTheirBodies() {
+  const createBodies: unknown[] = [];
+  // Refused, so no approval follows: these tests are about what the create carries.
+  mswServer.use(
+    http.post("*/transfers", async ({ request }) => {
+      createBodies.push(await request.json());
+      return HttpResponse.json(
+        { error: { code: "INVALID_REQUEST", message: "Test." } },
+        { status: 400 },
+      );
+    }),
+  );
+  return createBodies;
+}
+
+it("shows the note on review, and sends it to the bank trimmed", async () => {
+  const createBodies = refuseCreatesKeepingTheirBodies();
+  await openReviewOfRm100("/transfer", "  Lunch with Ali  ");
+
+  expect(await screen.findByText("Lunch with Ali")).toBeOnTheScreen();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  await screen.findByText(
+    "Something unexpected stopped the transfer — no money moved.",
+  );
+  expect(createBodies).toEqual([
+    expect.objectContaining({ note: "Lunch with Ali" }),
+  ]);
+});
+
+it("sends no note when the note is left blank", async () => {
+  const createBodies = refuseCreatesKeepingTheirBodies();
+  await openReviewOfRm100("/transfer", "   ");
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  await screen.findByText(
+    "Something unexpected stopped the transfer — no money moved.",
+  );
+  expect(screen.queryByText("Note")).toBeNull();
+  expect(createBodies).toHaveLength(1);
+  expect(createBodies[0]).not.toHaveProperty("note");
 });
 
 it("returns to the amount step when the bank cannot accept the amount as entered, and says so there", async () => {

@@ -39,7 +39,8 @@
       "brn": "Enter the business registration number: 12 digits, or 6 or 7 digits and a letter.",
       "army_police": "Enter the army or police number: 1 to 3 letters, then 4 to 8 digits.",
       "account_number": "Enter the account number: 8 to 17 digits.",
-      "amount": "Enter an amount in ringgit, with up to two decimal places."
+      "amount": "Enter an amount in ringgit, with up to two decimal places.",
+      "note": "Use only letters A to Z, numbers and spaces."
     },
     "contacts_access_refused": {
       "title": "Contacts access refused",
@@ -307,6 +308,7 @@
     "title": "Amount",
     "label": "Amount (RM)",
     "placeholder": "0.00",
+    "note_label": "Note (optional)",
     "amount_missing": "Enter the amount to send.",
     "review": "Review"
   },
@@ -314,6 +316,7 @@
     "title": "Review",
     "recipient_name": "To",
     "amount": "Amount",
+    "note": "Note",
     "transfer": "Transfer",
     "prompt_title": "Approve transfer",
     "prompt_title_ios": "Approve {{amount}} to {{name}}",

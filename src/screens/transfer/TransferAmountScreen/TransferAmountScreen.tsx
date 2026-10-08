@@ -26,6 +26,10 @@ export default function TransferAmountScreen() {
   const [typedAmount, setTypedAmount] = useState(
     enteredAmount === undefined ? "" : (enteredAmount.minor / 100).toFixed(2),
   );
+  const enteredNote = useTransferFlow((flow) =>
+    "draft" in flow ? flow.draft.note : undefined,
+  );
+  const [typedNote, setTypedNote] = useState(enteredNote ?? "");
   const [reviewPressed, setReviewPressed] = useState(false);
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
@@ -66,6 +70,10 @@ export default function TransferAmountScreen() {
         : reviewPressed && (amount === null || amount.minor === 0)
           ? t("amount.amount_missing")
           : undefined;
+  // The bank's own rule: DuitNow carries the note onto the recipient's statement as it is typed.
+  const noteError = /^[A-Za-z0-9 ]*$/.test(typedNote)
+    ? undefined
+    : t("common.badly_formed_input.note");
 
   return (
     <>
@@ -81,11 +89,19 @@ export default function TransferAmountScreen() {
             }
             onPress={() => {
               setReviewPressed(true);
-              if (amount === null || amount.minor === 0 || amountError) return;
+              if (
+                amount === null ||
+                amount.minor === 0 ||
+                amountError ||
+                noteError
+              )
+                return;
+              const note = typedNote.trim();
               if (
                 dispatchTransferFlow({
                   type: TransferFlowActionType.AmountEntered,
                   amount,
+                  ...(note !== "" && { note }),
                 })
               )
                 router.push("/transfer/review");
@@ -105,6 +121,13 @@ export default function TransferAmountScreen() {
           }}
           error={amountError}
           keyboardType="decimal-pad"
+        />
+        <FieldText
+          label={t("amount.note_label")}
+          value={typedNote}
+          onChangeText={setTypedNote}
+          error={noteError}
+          maxLength={30}
         />
       </ViewScreenFrame>
     </>

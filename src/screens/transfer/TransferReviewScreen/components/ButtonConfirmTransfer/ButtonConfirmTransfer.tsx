@@ -103,6 +103,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
         request: {
           recipientRef: confirmedLookup.recipientRef,
           amount: draft.amount,
+          ...(draft.note !== undefined && { note: draft.note }),
         },
         idempotencyKey,
       });

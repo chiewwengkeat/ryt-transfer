@@ -209,6 +209,32 @@ it(
   }),
 );
 
+it(
+  "says what a note may hold when it has a symbol, and holds Review until it is fixed",
+  scenarioTest("transfer.badly_formed_input", async () => {
+    const view = await openAmountStep();
+    await screen.findByText("RM 12,845.50");
+    await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+
+    await fireEvent.changeText(
+      screen.getByLabelText("Note (optional)"),
+      "Lunch!",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+
+    expect(
+      screen.getByHintText("Use only letters A to Z, numbers and spaces."),
+    ).toBeOnTheScreen();
+    expect(view.getPathname()).toBe("/transfer/amount");
+    await fireEvent.changeText(
+      screen.getByLabelText("Note (optional)"),
+      "Lunch",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+    expect(view.getPathname()).toBe("/transfer/review");
+  }),
+);
+
 it("opens the recipient step instead when no recipient is chosen yet", async () => {
   // Mounted past the link guard, which sends this path Home: only the app's own navigation can try it.
   const view = await renderRoute("/transfer/amount", {
