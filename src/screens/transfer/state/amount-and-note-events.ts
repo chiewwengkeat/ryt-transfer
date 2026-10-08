@@ -25,11 +25,13 @@ export function reduceAmountAndNoteEvent(
       amount: action.amount,
       ...(action.note !== undefined && { note: action.note }),
     },
-    ...(flow.step === TransferFlowStep.Reviewing &&
-      flow.createKeyToReuse !== undefined &&
-      (action.amount.minor !== flow.draft.amount.minor ||
-        action.note !== flow.draft.note) && {
-        notice: TransferFlowScenario.DetailsChangedAfterNoAnswer,
-      }),
+    ...(((flow.step === TransferFlowStep.Editing &&
+      flow.detailsChangedAfterNoAnswer) ||
+      (flow.step === TransferFlowStep.Reviewing &&
+        flow.createKeyToReuse !== undefined &&
+        (action.amount.minor !== flow.draft.amount.minor ||
+          action.note !== flow.draft.note))) && {
+      notice: TransferFlowScenario.DetailsChangedAfterNoAnswer,
+    }),
   };
 }

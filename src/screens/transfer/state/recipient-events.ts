@@ -19,8 +19,21 @@ export function reduceRecipientEvent(
     flow.step !== TransferFlowStep.Reviewing
   )
     return flow;
+  const { recipient } = flow.draft;
+  const recipientChanged =
+    recipient?.idType !== action.recipient.idType ||
+    recipient.idValue !== action.recipient.idValue ||
+    recipient.bankCode !== action.recipient.bankCode ||
+    recipient.recentId !== action.recipient.recentId;
   return {
     step: TransferFlowStep.Editing,
     draft: { ...flow.draft, recipient: action.recipient },
+    ...(((flow.step === TransferFlowStep.Reviewing &&
+      flow.createKeyToReuse !== undefined &&
+      recipientChanged) ||
+      (flow.step === TransferFlowStep.Editing &&
+        flow.detailsChangedAfterNoAnswer)) && {
+      detailsChangedAfterNoAnswer: true,
+    }),
   };
 }

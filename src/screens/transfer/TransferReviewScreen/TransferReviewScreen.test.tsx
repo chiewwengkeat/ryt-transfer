@@ -2160,6 +2160,75 @@ it(
   }),
 );
 
+it(
+  "says the details changed after Ryt did not answer on review, not before it, when only the recipient changed",
+  scenarioTest("transfer.details_changed_after_no_answer", async () => {
+    const otherMobile = "019-876 5432";
+    const { recipient } = await lookUpTestRecipient(otherMobile);
+    loseEveryTryOfTheFirstCreate();
+    await openReviewOfRm100();
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByText(
+      "Ryt could not be reached — no money moved.",
+      {},
+      { timeout: 10_000 },
+    );
+
+    await pressHardwareBack();
+    await pressHardwareBack();
+    await fireEvent.changeText(
+      screen.getByLabelText("DuitNow mobile number"),
+      otherMobile,
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByText("RM 12,845.50");
+
+    expect(
+      screen.queryByText(
+        "Your details changed after Ryt did not answer. Check them, then confirm this as a new transfer.",
+      ),
+    ).toBeNull();
+    await pressHardwareBack();
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByText("RM 12,845.50");
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+    expect(
+      await screen.findByText(
+        "Your details changed after Ryt did not answer. Check them, then confirm this as a new transfer.",
+      ),
+    ).toBeOnTheScreen();
+    expect(await screen.findByText(recipient.registeredName)).toBeOnTheScreen();
+  }),
+);
+
+it("reopens review without saying the details changed when the same recipient is chosen again after Ryt did not answer", async () => {
+  loseEveryTryOfTheFirstCreate();
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText(
+    "Ryt could not be reached — no money moved.",
+    {},
+    { timeout: 10_000 },
+  );
+
+  await pressHardwareBack();
+  await pressHardwareBack();
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+
+  expect(await screen.findByText("RM 100.00")).toBeOnTheScreen();
+  expect(
+    screen.queryByText(
+      "Your details changed after Ryt did not answer. Check them, then confirm this as a new transfer.",
+    ),
+  ).toBeNull();
+});
+
 it("reopens review without saying the details changed when nothing changed after Ryt did not answer", async () => {
   const { recipient } = await lookUpTestRecipient(MOBILE);
   loseEveryTryOfTheFirstCreate();

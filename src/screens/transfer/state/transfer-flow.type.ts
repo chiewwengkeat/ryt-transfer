@@ -100,6 +100,8 @@ export type TransferFlowState =
       draft: Partial<TransferDraft>;
       notice?: TransferFlowScenario;
       noticeDetail?: TransferNoticeDetail;
+      // Not a notice: the amount step would show it, and the matrix shows it on review only.
+      detailsChangedAfterNoAnswer?: true;
     }
   | {
       step: TransferFlowStep.Reviewing;
