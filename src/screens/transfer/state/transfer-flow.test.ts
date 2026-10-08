@@ -1,4 +1,7 @@
-import { CoolingOffReason } from "@/domains/transfer/api/create-transfer/create-transfer.type";
+import {
+  CoolingOffReason,
+  CreateTransferErrorCode,
+} from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { asSen } from "@/shared/lib/money/money";
 
@@ -65,6 +68,26 @@ it("returns an unanswered create to review with its key, and a refused one witho
     createKeyToReuse: "create-key",
   });
   expect(transferFlowStore.getState()).not.toHaveProperty("createKeyToReuse");
+});
+
+it("gives a create stopped on review its own notice detail, never an earlier refusal's", () => {
+  confirmTransferOfRm100();
+  dispatchTransferFlow({
+    type: TransferFlowActionType.CreateNotSent,
+    notice: TransferFlowScenario.BalanceOrLimitShortAtConfirmation,
+    noticeDetail: { code: CreateTransferErrorCode.InsufficientFunds },
+  });
+
+  dispatchTransferFlow({
+    type: TransferFlowActionType.CreateNotSent,
+    notice: TransferFlowScenario.ReviewUnexpected,
+  });
+
+  expect(transferFlowStore.getState()).toMatchObject({
+    step: TransferFlowStep.Reviewing,
+    notice: TransferFlowScenario.ReviewUnexpected,
+  });
+  expect(transferFlowStore.getState()).not.toHaveProperty("noticeDetail.code");
 });
 
 it.each([

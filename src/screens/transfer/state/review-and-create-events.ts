@@ -25,7 +25,11 @@ export function reduceReviewAndCreateEvent(
     flow.step === TransferFlowStep.Reviewing
   )
     // Nothing left the phone, so review keeps a lost create's key and any hold: a spread, never a rebuild.
-    return { ...flow, notice: action.notice };
+    return {
+      ...flow,
+      notice: action.notice,
+      noticeDetail: action.noticeDetail,
+    };
   if (flow.step !== TransferFlowStep.Creating) return flow;
   switch (action.type) {
     case TransferFlowActionType.Created:
