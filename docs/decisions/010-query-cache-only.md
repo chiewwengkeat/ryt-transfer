@@ -9,19 +9,20 @@ The bank's data shows on several screens: the balance, the history pages, a tran
 TanStack Query's cache is the only client copy of the bank's data. No normalized store sits beside it:
 
 - **By id and key.** A transfer is referred to by its id and its query key; a screen that needs it reads the cache through that endpoint's own query.
-- **No copies.** The details screen shows the tapped row from the loaded history pages as placeholder data until its own fetch returns. Nothing is copied, so no second copy exists to drift.
+- **No pushed copies.** The details screen shows the tapped row from the loaded history pages as placeholder data until its own fetch returns. Nothing pushes a copy of a row into another cache entry, where it could drift until a fetch lands.
 - **Key and fetcher together.** Each query's key travels with its fetcher through TanStack's `queryOptions`, so invalidating or patching a query cannot name a key that has drifted from it.
-- **One place for retries.** A read retries at most twice, and only after a dropped connection, a timeout or a server error. A write never retries, and never waits offline to be replayed on reconnecting (`src/shell/query-client.ts`, and [006](006-never-sent-twice.md)).
+- **One place for the query client's retries.** It retries a read at most twice, and only after a dropped connection, a timeout or a server error. It never retries a write, and never holds one offline to replay on reconnecting (`src/shell/query-client.ts`); the flow's own resends of a lost answer carry that act's idempotency key ([006](006-never-sent-twice.md)).
 
-Rows built straight from the cache re-render only what changed ([009](009-history-at-scale.md) has the counts). One case costs more. TanStack compares list items by position, so a new transfer at the top makes every shifted row a new object, and the visible rows re-render once. That is cheap under the compiler, and an id-keyed `structuralSharing` function would remove it; the fix is held in reserve and the cost is reported.
+Unchanged rows skip their re-render: TanStack keeps an unchanged transfer as the same object, FlashList's cells re-render only when their row's object or the render function changes, and the compiler keeps the render function stable ([009](009-history-at-scale.md) sets out how the re-renders are counted). One case costs more. TanStack compares list items by position, so a new transfer at the top makes every shifted row a new object, and the visible rows are expected to re-render once, a pass the spike timed at 0.1 to 2.3 ms. An id-keyed `structuralSharing` function would remove it; the decision is to report the cost and hold that fix in reserve.
 
 The cost: keeping screens fresh rests on patching or resetting the right query at each change, a discipline the transfer flow carries rather than a guarantee.
 
 ## Rejected
 
-- **A normalized transfer store.** A write-through layer, an eviction rule and a second owner of freshness, an estimated 150–250 lines plus tests. A history entry is also a snapshot, the recipient as confirmed when the money was sent, so normalizing the recipient would show today's name on last month's record.
-- **An app-wide entity layer, such as `@normy/react-query`.** Every object needs a stable id and every write a normalized response, and by default it normalizes every query by id, which would rewrite the recipient snapshot inside history rows. The library is also before 1.0.
-- **An ids-plus-store list.** The spiked version re-rendered 24 rows on an identical refetch, because its writes did not keep the old objects for unchanged transfers.
+- **A normalized transfer store.** A write-through layer, an eviction rule and a second owner of freshness, an estimated 150–250 lines plus tests.
+- **An app-wide entity layer, such as `@normy/react-query`.** Every object needs a stable id and every write a normalized response, and by default it normalizes every query by id, which would rewrite the recipient in each history row, kept as confirmed when the money was sent, with today's details. The library is also before 1.0.
+- **An ids-plus-store list whose writes keep unchanged transfers' objects.** A transfer arriving at the top would re-render only its own row, at the cost of the write-through layer, the eviction rule and the second owner of freshness above; an id-keyed `structuralSharing` function removes the same cost inside the cache if it ever shows.
+- **Building the id-keyed fix now.** No visible row would re-render when a transfer lands at the top. Chosen instead: the cost is to be reported, and the fix held in reserve.
 - **SWR.** A mapped result is not structurally shared, and its model for writes is weaker.
 - **RTK Query.** A Redux store, for an app with little client state.
 - **No library.** Caching, deduplication, retries and paging written by hand.
