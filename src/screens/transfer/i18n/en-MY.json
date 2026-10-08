@@ -8,8 +8,6 @@
     },
     "balance_unavailable": {
       "title": "Balance or limit can't load",
-      "body": "Your balance couldn't be loaded.",
-      "retry": "Try again",
       "disabled_reason": "You can send once your balance and today's limit have loaded."
     },
     "under_maintenance": {
@@ -70,9 +68,7 @@
       "over_per_transfer_max": "That is more than {{amount}}, the most you can send in one transfer."
     },
     "amount_unexpected": {
-      "title": "Something unexpected while entering the amount",
-      "body": "Something unexpected went wrong.",
-      "retry": "Try again"
+      "title": "Something unexpected while entering the amount"
     },
     "recipient_found": {
       "title": "Recipient found"
