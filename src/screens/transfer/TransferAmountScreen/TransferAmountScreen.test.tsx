@@ -3,6 +3,8 @@ import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
+import { readBankBalanceMinor } from "@/test/bank-client";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -108,6 +110,29 @@ it(
         "That is more than RM 50,000.00, the most you can send in one transfer.",
       ),
     ).toBeOnTheScreen();
+  }),
+);
+
+it(
+  "leaves an amount the limits could not check to the bank, which moves no money for it",
+  scenarioTest("transfer.amount_unexpected", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await openAmountStep();
+    await screen.findByRole("button", { name: "Try again" });
+
+    await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "6000");
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "Something unexpected stopped the transfer — no money moved.",
+      ),
+    ).toBeOnTheScreen();
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(1_284_550);
   }),
 );
 

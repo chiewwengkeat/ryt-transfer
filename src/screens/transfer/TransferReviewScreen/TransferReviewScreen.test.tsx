@@ -741,6 +741,67 @@ it("never says the transfer was not sent when the session ends as the bank answe
   ).toBeNull();
 });
 
+it(
+  "never says money moved when the bank answers that the transfer is still processing",
+  scenarioTest("transfer.processing", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
+    expect(screen.queryByText(/— money moved\./)).toBeNull();
+  }),
+);
+
+it(
+  "never says money moved when the bank finds the balance or limit short as the approval arrives",
+  scenarioTest("transfer.balance_or_limit_short_at_approval", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/— money moved\./)).toBeNull();
+  }),
+);
+
+it(
+  "goes Home from the receipt on Back, and the next transfer starts blank",
+  scenarioTest("transfer.completed", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await openReviewOfRm100("/");
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByText("Transfer sent");
+
+    await pressHardwareBack();
+    expect(view.getPathname()).toBe("/");
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByLabelText("DuitNow mobile number"),
+    ).toHaveDisplayValue("");
+  }),
+);
+
 // ⛔ No INVALID_REQUEST row: that answer is ruled to move to the approval step's catch-all.
 it.each([
   [410, ApproveTransferErrorCode.ApprovalExpired, {}],
