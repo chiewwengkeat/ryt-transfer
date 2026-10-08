@@ -67,3 +67,10 @@ export function reduceApprovalEvent(
       return { step: TransferFlowStep.Done, transferId: flow.transferId };
   }
 }
+
+export function isFlowOnAnotherTransfer(
+  flow: TransferFlowState,
+  transferId: string,
+) {
+  return "transferId" in flow && flow.transferId !== transferId;
+}

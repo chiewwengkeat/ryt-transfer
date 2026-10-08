@@ -20,6 +20,7 @@ import {
 } from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { buildSignedApprovalText } from "@/domains/transfer/api/approve-transfer/approve-transfer";
+import { isFlowOnAnotherTransfer } from "@/screens/transfer/state/approval-events";
 import {
   ApproveTransferErrorCode,
   type ApproveTransferErrorResponse,
@@ -56,7 +57,12 @@ export function useSendTransferApproval() {
   return async (path = ApprovalPath.Biometric) => {
     const approving = transferFlowStore.getState();
     if (approving.step !== TransferFlowStep.Approving) return;
+    const { transferId, lookup, draft } = approving;
+    // ⛔ Any wait here can end with the flow on another transfer, whose flow and sheet this call leaves alone.
+    const onAnotherTransfer = () =>
+      isFlowOnAnotherTransfer(transferFlowStore.getState(), transferId);
     const leaveApprovalNotSent = (notice: TransferFlowScenario) => {
+      if (onAnotherTransfer()) return;
       closeApprovalPinSheet();
       dispatchTransferFlow({
         type: TransferFlowActionType.ApprovalNotSent,
@@ -67,7 +73,6 @@ export function useSendTransferApproval() {
       leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
       return;
     }
-    const { transferId, lookup, draft } = approving;
     const signedText = buildSignedApprovalText({
       transferId,
       challenge: approving.challenge,
@@ -95,9 +100,10 @@ export function useSendTransferApproval() {
         queryClient,
       });
     const setUpApprovalAgain = async (pinInHand?: string) => {
-      dispatchTransferFlow({
-        type: TransferFlowActionType.ApprovalAttemptRefused,
-      });
+      if (!onAnotherTransfer())
+        dispatchTransferFlow({
+          type: TransferFlowActionType.ApprovalAttemptRefused,
+        });
       await forgetPendingTransfer();
       return registerApprovalKeysAgain(pinInHand);
     };
@@ -107,6 +113,7 @@ export function useSendTransferApproval() {
       words: { message: string; detail?: string },
       afterSetUp: { pinInHand?: string; keysSetUpAgain?: boolean } = {},
     ) => {
+      if (onAnotherTransfer()) return null;
       dispatchTransferFlow({
         type: TransferFlowActionType.ApprovalPathChosen,
         path: ApprovalPath.Pin,
@@ -146,9 +153,10 @@ export function useSendTransferApproval() {
             : undefined;
         if (pinRefusal?.code === ApproveTransferErrorCode.PinIncorrect) {
           await forgetPendingTransfer();
-          dispatchTransferFlow({
-            type: TransferFlowActionType.ApprovalAttemptRefused,
-          });
+          if (!onAnotherTransfer())
+            dispatchTransferFlow({
+              type: TransferFlowActionType.ApprovalAttemptRefused,
+            });
           refusal = t("common.pin_incorrect.body", {
             count: pinRefusal.attemptsRemaining,
           });
@@ -156,9 +164,10 @@ export function useSendTransferApproval() {
         }
         if (pinRefusal?.code === ApproveTransferErrorCode.PinLocked) {
           await forgetPendingTransfer();
-          dispatchTransferFlow({
-            type: TransferFlowActionType.ApprovalAttemptRefused,
-          });
+          if (!onAnotherTransfer())
+            dispatchTransferFlow({
+              type: TransferFlowActionType.ApprovalAttemptRefused,
+            });
           await rememberApprovalPinLocked();
           await showApprovalPinLocked({
             ...words,

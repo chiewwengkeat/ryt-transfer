@@ -13,12 +13,14 @@ import {
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { isFlowOnAnotherTransfer } from "@/screens/transfer/state/approval-events";
 import { refreshAccountAndHistoryAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
   TransferFlowScenario,
   TransferHoldKind,
+  transferFlowStore,
 } from "@/screens/transfer/state/transfer-flow";
 import type { ApprovalEvent } from "@/screens/transfer/state/transfer-flow.type";
 import {
@@ -47,7 +49,8 @@ export async function settleApprovalAnswer({
   }
   const returnRefusedApprovalToReview = async (event: ApprovalEvent) => {
     await forgetPendingTransfer();
-    dispatchTransferFlow(event);
+    if (!isFlowOnAnotherTransfer(transferFlowStore.getState(), transferId))
+      dispatchTransferFlow(event);
   };
 
   if (

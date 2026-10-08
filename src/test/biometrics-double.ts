@@ -15,6 +15,7 @@ const keysKilledByEnrolmentChange = new Set<string>();
 const biometricPrompts: SignatureOptions[] = [];
 let nextPromptRecognised = true;
 let nextPromptFailure: string | null = null;
+let nextPromptHeldUntil: Promise<void> | null = null;
 let sensorUnavailableCode: string | null = null;
 
 function signForReal(data: string, secretKey: Uint8Array) {
@@ -51,23 +52,23 @@ export const biometricsLibraryDouble = {
             isDeviceSecure: true,
           },
     ),
-  signWithOptions: (options: SignatureOptions) => {
+  signWithOptions: async (options: SignatureOptions) => {
     const keyAlias = options.keyAlias ?? "default";
     if (keysKilledByEnrolmentChange.has(keyAlias))
-      return Promise.resolve({
-        success: false,
-        errorCode: "BIOMETRY_CURRENT_SET_CHANGED",
-      });
+      return { success: false, errorCode: "BIOMETRY_CURRENT_SET_CHANGED" };
     const key = phoneKeys.get(keyAlias);
     if (key === undefined)
-      return Promise.resolve({ success: false, errorCode: "KEY_NOT_FOUND" });
+      return { success: false, errorCode: "KEY_NOT_FOUND" };
     biometricPrompts.push(options);
+    const heldUntil = nextPromptHeldUntil;
+    nextPromptHeldUntil = null;
+    await heldUntil;
     if (!nextPromptRecognised)
-      return Promise.resolve({ success: false, errorCode: "USER_CANCEL" });
+      return { success: false, errorCode: "USER_CANCEL" };
     if (nextPromptFailure !== null) {
       const errorCode = nextPromptFailure;
       nextPromptFailure = null;
-      return Promise.resolve({ success: false, errorCode });
+      return { success: false, errorCode };
     }
     return signForReal(options.data, key.secretKey);
   },
@@ -99,6 +100,14 @@ export function failNextBiometricPrompt(errorCode: string) {
   nextPromptFailure = errorCode;
 }
 
+export function holdNextBiometricPrompt() {
+  let releasePrompt = () => undefined as void;
+  nextPromptHeldUntil = new Promise<void>((release) => {
+    releasePrompt = release;
+  });
+  return releasePrompt;
+}
+
 export function reportBiometricSensorUnavailable(errorCode: string) {
   sensorUnavailableCode = errorCode;
 }
@@ -124,5 +133,6 @@ export function resetBiometricsDouble() {
   biometricPrompts.splice(0);
   nextPromptRecognised = true;
   nextPromptFailure = null;
+  nextPromptHeldUntil = null;
   sensorUnavailableCode = null;
 }

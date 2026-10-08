@@ -12,11 +12,14 @@ import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
 import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
 import {
   biometricPromptsShown,
+  cancelNextBiometricPrompt,
   changeEnrolledBiometrics,
   failNextBiometricPrompt,
+  holdNextBiometricPrompt,
   reportBiometricSensorUnavailable,
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
@@ -793,6 +796,104 @@ it("lets a lost approval answer change nothing once the person has left it, thou
   expect(await listPendingTransfers(customerId)).toContainEqual(
     expect.objectContaining({ transferId: firstTransferId }),
   );
+});
+
+async function startRm50TransferFromHomeToItsPinSheet() {
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(await screen.findByLabelText("Amount (RM)"), "50");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+  await screen.findByText("Enter your bank PIN to approve this transfer.");
+}
+
+it.each([
+  ["signs", () => undefined],
+  ["is cancelled", cancelNextBiometricPrompt],
+  [
+    "reports a lockout",
+    () => {
+      failNextBiometricPrompt("BIOMETRIC_LOCKOUT");
+    },
+  ],
+])(
+  "leaves a newer transfer alone when the prompt of one the person left %s afterwards, so only the newer one moves",
+  async (_, setPromptAnswer) => {
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    setPromptAnswer();
+    const releasePrompt = holdNextBiometricPrompt();
+    await confirmRm100Transfer();
+    await waitFor(() => {
+      expect(biometricPromptsShown()).toHaveLength(1);
+    });
+
+    // Review offers no way back while approving, so this stands in for any route that still could.
+    await act(() => {
+      router.dismissTo("/");
+    });
+    await startRm50TransferFromHomeToItsPinSheet();
+    await act(async () => {
+      releasePrompt();
+      await jest.advanceTimersByTimeAsync(1_000);
+    });
+    await approveWithPin(DEMO_PIN);
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
+    expect(approveRequests()).toHaveLength(1);
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 5_000);
+  },
+);
+
+it("leaves a newer transfer alone when the refusal of one the person left is settled afterwards", async () => {
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      () =>
+        HttpResponse.json(
+          { error: { code: "APPROVAL_EXPIRED", message: "Test." } },
+          { status: 410 },
+        ),
+      { once: true },
+    ),
+  );
+  let releaseRecordDelete: () => void = () => undefined;
+  const deleteRecordForReal = secureStoreNativeDouble.deleteValueWithKeyAsync;
+  const recordDelete = jest
+    .spyOn(secureStoreNativeDouble, "deleteValueWithKeyAsync")
+    .mockImplementationOnce(async (key) => {
+      await new Promise<void>((release) => {
+        releaseRecordDelete = release;
+      });
+      return deleteRecordForReal(key);
+    });
+  await confirmRm100Transfer();
+  await waitFor(() => {
+    expect(recordDelete).toHaveBeenCalled();
+  });
+
+  // Review offers no way back while sending, so this stands in for any route that still could.
+  await act(() => {
+    router.dismissTo("/");
+  });
+  await startRm50TransferFromHomeToItsPinSheet();
+  await act(async () => {
+    releaseRecordDelete();
+    await jest.advanceTimersByTimeAsync(1_000);
+  });
+  await approveWithPin(DEMO_PIN);
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
 });
 
 it(
