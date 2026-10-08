@@ -9,6 +9,7 @@ import {
 import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
 import { lookUpTestRecipient } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -29,6 +30,12 @@ const LIM_ON_4_OCTOBER = buildHistoryTransfer({
   registeredName: "Lim Wei Jie",
   createdAt: "2026-10-04T13:05:00+08:00",
 });
+const TAN_ON_6_OCTOBER = buildHistoryTransfer({
+  registeredName: "Tan Mei Ling",
+  createdAt: "2026-10-06T09:00:00+08:00",
+});
+const OFFLINE = { isConnected: false, isInternetReachable: false };
+const ONLINE = { isConnected: true, isInternetReachable: true };
 
 it("lists the first page's transfers under their day, asking the bank once", async () => {
   await renderRoute("/transfer-history");
@@ -244,6 +251,47 @@ it("loads no more while a refresh is on its way, then pages on from the new firs
 
   expect(sentTransferHistoryCursors()).toEqual([null, "page-2", null]);
   releaseFirstPage();
+  await waitFor(() => {
+    expect(sentTransferHistoryCursors()).toEqual([
+      null,
+      "page-2",
+      null,
+      "page-2",
+    ]);
+  });
+});
+
+it("asks for the newest page once back online when History opened offline, and shows it", async () => {
+  serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
+  await renderRoute("/");
+  await act(() => {
+    router.push("/transfer-history");
+  });
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+  await act(() => {
+    router.back();
+  });
+  serveTransferHistoryPages([
+    [TAN_ON_6_OCTOBER, buildHistoryTransfer()],
+    [LIM_ON_4_OCTOBER],
+  ]);
+  await act(() => {
+    setPhoneNetwork(OFFLINE);
+  });
+  await act(() => {
+    router.push("/transfer-history");
+  });
+  await act(() => jest.advanceTimersByTimeAsync(5000));
+
+  await act(() => {
+    setPhoneNetwork(ONLINE);
+  });
+
+  expect(
+    await screen.findByRole("button", { name: /^Tan Mei Ling/ }),
+  ).toBeOnTheScreen();
   await waitFor(() => {
     expect(sentTransferHistoryCursors()).toEqual([
       null,

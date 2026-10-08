@@ -81,10 +81,10 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
       onEndReachedThreshold={1}
       onEndReached={() => {
         // Not after a failure, or a failing bank is asked again each time the end shows: the footer's Retry does it.
-        // Not during any fetch: fetchNextPage cancels the one in flight, a refresh included.
+        // Not while any fetch is under way or waiting offline: fetchNextPage cancels it, a refresh included.
         if (
           transferHistory.hasNextPage &&
-          !transferHistory.isFetching &&
+          transferHistory.fetchStatus === "idle" &&
           !transferHistory.isFetchNextPageError
         )
           void transferHistory.fetchNextPage();
