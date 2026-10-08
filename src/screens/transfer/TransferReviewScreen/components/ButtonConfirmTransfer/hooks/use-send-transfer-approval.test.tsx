@@ -1312,6 +1312,61 @@ it("offers the PIN again on the next transfer when face or fingerprint approval 
   ).toBeOnTheScreen();
 });
 
+it("asks for the PIN again, not for a face or fingerprint the bank cannot verify, when the app stopped while setting face or fingerprint approval up again", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  changeEnrolledBiometrics();
+  mswServer.use(
+    http.post("*/approval-keys", () => new Promise<undefined>(() => {}), {
+      once: true,
+    }),
+  );
+  await confirmRm100Transfer();
+  await approveWithPin(DEMO_PIN);
+  await screen.findByText("Transfer sent");
+
+  await sendAnotherRm100TransferFromResult();
+
+  expect(
+    await screen.findByText(
+      "Your fingerprints or face changed. Your PIN approves this transfer and turns face or fingerprint approval back on.",
+    ),
+  ).toBeOnTheScreen();
+  await approveWithPin(DEMO_PIN);
+  await screen.findByText("Transfer sent");
+  await sendAnotherRm100TransferFromResult();
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toHaveLength(1);
+});
+
+it("still approves with face or fingerprint set up again on its own once setting every key up again was left unfinished", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  changeEnrolledBiometrics();
+  await confirmRm100Transfer();
+  await approveWithPin(DEMO_PIN);
+  await screen.findByText("Transfer sent");
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      () =>
+        HttpResponse.json(
+          { error: { code: "KEY_NOT_REGISTERED", message: "Test." } },
+          { status: 409 },
+        ),
+      { once: true },
+    ),
+  );
+  await sendAnotherRm100TransferFromResult();
+  await screen.findByText(
+    "Enter your PIN to set it up and approve this transfer.",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+  await screen.findByText("The transfer was not sent — no money moved.");
+
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+});
+
 it("sets approval up again with the PIN when the bank no longer knows the phone's key, then approves", async () => {
   await pairPhoneBeforeTheBankForgetsItsKeys();
   await scenarioTest("transfer.approval_key_unknown", async () => {

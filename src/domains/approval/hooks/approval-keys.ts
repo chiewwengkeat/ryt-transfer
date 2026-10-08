@@ -30,7 +30,7 @@ export enum BiometricSignOutcome {
   Failed = "failed",
 }
 
-// New keys go in the set not in use, so keys the bank refuses never replace the ones it knows.
+// Each new key goes in the set its kind is not using, so keys the bank refuses never replace the ones it knows.
 const APPROVAL_KEY_SETS = {
   // The aliases phones paired with before there were two sets.
   first: {
@@ -42,7 +42,10 @@ const APPROVAL_KEY_SETS = {
     biometric: "ryt-transfer.approval.biometric.second",
   },
 };
-const APPROVAL_KEY_SET_RECORD = { namespace: "approval", name: "key-set" };
+const APPROVAL_KEY_SET_RECORDS = {
+  possession: { namespace: "approval", name: "key-set" },
+  biometric: { namespace: "approval", name: "biometric-key-set" },
+};
 const POSSESSION_KEY_ID_RECORD = {
   namespace: "approval",
   name: "possession-key-id",
@@ -66,19 +69,24 @@ export async function approvalKeysOnFile() {
   return keyIds.every((keyId) => keyId !== null);
 }
 
-export async function createApprovalKeys(
-  keySet?: keyof typeof APPROVAL_KEY_SETS,
-) {
-  const keyAliases =
-    APPROVAL_KEY_SETS[keySet ?? (await readApprovalKeySetInUse())];
+export async function createApprovalKeys(keySets?: {
+  possession: keyof typeof APPROVAL_KEY_SETS;
+  biometric: keyof typeof APPROVAL_KEY_SETS;
+}) {
   const possessionKey = await createKeysWithOptions({
-    keyAlias: keyAliases.possession,
+    keyAlias:
+      APPROVAL_KEY_SETS[
+        keySets?.possession ?? (await readApprovalKeySetInUse("possession"))
+      ].possession,
     keyType: "ec256",
     requireAuthentication: false,
   });
   const biometricKey = await createKeysWithOptions({
     ...BIOMETRIC_KEY_OPTIONS,
-    keyAlias: keyAliases.biometric,
+    keyAlias:
+      APPROVAL_KEY_SETS[
+        keySets?.biometric ?? (await readApprovalKeySetInUse("biometric"))
+      ].biometric,
   });
   return {
     possessionPublicKey: possessionKey.publicKey,
@@ -94,39 +102,43 @@ export async function saveApprovalKeyIds(
 }
 
 export async function registerNewApprovalKeys(pin?: string) {
-  const newKeySet =
-    (await readApprovalKeySetInUse()) === "first" ? "second" : "first";
+  const newKeySets = {
+    possession: await readApprovalKeySetNotInUse("possession"),
+    biometric: await readApprovalKeySetNotInUse("biometric"),
+  } as const;
   const { possessionKeyId, biometricKeyId } = await registerApprovalKeys(
-    { ...(await createApprovalKeys(newKeySet)), pin },
+    { ...(await createApprovalKeys(newKeySets)), pin },
     randomUUID(),
   );
   if (possessionKeyId === undefined || biometricKeyId === undefined)
     throw new Error("The bank registered only some of the approval keys.");
   // Before the ids: stopped between the two, the phone sends ids the bank has dropped, which sets keys up again.
-  await writeSecureRecord(APPROVAL_KEY_SET_RECORD, newKeySet);
+  await writeSecureRecord(
+    APPROVAL_KEY_SET_RECORDS.possession,
+    newKeySets.possession,
+  );
+  await writeSecureRecord(
+    APPROVAL_KEY_SET_RECORDS.biometric,
+    newKeySets.biometric,
+  );
   await saveApprovalKeyIds({ possessionKeyId, biometricKeyId });
 }
 
 export async function replaceBiometricApprovalKey(pin: string) {
-  const biometricKeyAlias =
-    APPROVAL_KEY_SETS[await readApprovalKeySetInUse()].biometric;
-  try {
-    const { publicKey } = await createKeysWithOptions({
-      ...BIOMETRIC_KEY_OPTIONS,
-      keyAlias: biometricKeyAlias,
-    });
-    const { biometricKeyId } = await registerApprovalKeys(
-      { biometricPublicKey: publicKey, pin },
-      randomUUID(),
-    );
-    if (biometricKeyId === undefined)
-      throw new Error("The bank registered no biometric approval key.");
-    await writeSecureRecord(BIOMETRIC_KEY_ID_RECORD, biometricKeyId);
-  } catch (error) {
-    // Kept, an unregistered key signs what the bank cannot verify; gone, the next transfer offers the PIN again.
-    await deleteKeys(biometricKeyAlias).catch(() => undefined);
-    throw error;
-  }
+  const newKeySet = await readApprovalKeySetNotInUse("biometric");
+  const { publicKey } = await createKeysWithOptions({
+    ...BIOMETRIC_KEY_OPTIONS,
+    keyAlias: APPROVAL_KEY_SETS[newKeySet].biometric,
+  });
+  const { biometricKeyId } = await registerApprovalKeys(
+    { biometricPublicKey: publicKey, pin },
+    randomUUID(),
+  );
+  if (biometricKeyId === undefined)
+    throw new Error("The bank registered no biometric approval key.");
+  // Before the id: stopped between the two, the phone sends an id the bank has dropped, which sets keys up again.
+  await writeSecureRecord(APPROVAL_KEY_SET_RECORDS.biometric, newKeySet);
+  await writeSecureRecord(BIOMETRIC_KEY_ID_RECORD, biometricKeyId);
 }
 
 export async function readBiometricSensorRefusal() {
@@ -156,7 +168,8 @@ export async function signWithBiometricKey(
   }
 
   const result = await signWithOptions({
-    keyAlias: APPROVAL_KEY_SETS[await readApprovalKeySetInUse()].biometric,
+    keyAlias:
+      APPROVAL_KEY_SETS[await readApprovalKeySetInUse("biometric")].biometric,
     data: signedText,
     inputEncoding: InputEncoding.UTF8,
     promptTitle: prompt.title,
@@ -187,7 +200,9 @@ export async function signWithPossessionKey(signedText: string) {
   if (keyId === null) return null;
   try {
     const result = await sign({
-      keyAlias: APPROVAL_KEY_SETS[await readApprovalKeySetInUse()].possession,
+      keyAlias:
+        APPROVAL_KEY_SETS[await readApprovalKeySetInUse("possession")]
+          .possession,
       data: signedText,
       inputEncoding: InputEncoding.UTF8,
     });
@@ -206,8 +221,20 @@ export async function deleteApprovalKeys() {
   }
 }
 
-async function readApprovalKeySetInUse() {
-  return (await readSecureRecord(APPROVAL_KEY_SET_RECORD)) === "second"
+async function readApprovalKeySetInUse(
+  keyKind: keyof typeof APPROVAL_KEY_SET_RECORDS,
+) {
+  const keySetInUse =
+    (await readSecureRecord(APPROVAL_KEY_SET_RECORDS[keyKind])) ??
+    // A phone that switched sets before the biometric key had its own record keeps it in the possession key's set.
+    (await readSecureRecord(APPROVAL_KEY_SET_RECORDS.possession));
+  return keySetInUse === "second" ? "second" : "first";
+}
+
+async function readApprovalKeySetNotInUse(
+  keyKind: keyof typeof APPROVAL_KEY_SET_RECORDS,
+) {
+  return (await readApprovalKeySetInUse(keyKind)) === "first"
     ? "second"
     : "first";
 }
