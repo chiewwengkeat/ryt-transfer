@@ -73,6 +73,18 @@ function TracedCells() {
       unmountLastRow: () => {
         setRows([{ slot: "first", rowKey: "c" }]);
       },
+      showNewKeyThenRedrawIt: () => {
+        setRows([{ slot: "first", rowKey: "d" }]);
+        setTimeout(() => {
+          setRows((current) => [...current]);
+        }, 100);
+      },
+      shiftEveryRowDownOneSlot: () => {
+        setRows([
+          { slot: "first", rowKey: "e" },
+          { slot: "second", rowKey: "d" },
+        ]);
+      },
     },
     () => ({ rowCount: rows.length }),
   );
@@ -113,7 +125,7 @@ async function passTime(milliseconds: number) {
     });
 }
 
-it("counts a cell that redraws its own key as a re-render, and one showing a new key as a first render", async () => {
+it("counts a re-render only for a cell redrawing the key it showed at the start, and a cell showing a new key as a first render", async () => {
   loadRenderTraceBuiltAs("development");
   const { measurements } = await launchWith(MEASURE_LINK);
 
@@ -165,6 +177,36 @@ it("counts a cell that redraws its own key as a re-render, and one showing a new
       },
       formatCalls: 2,
     },
+    {
+      operation: "showNewKeyThenRedrawIt",
+      before: { rowCount: 1 },
+      after: { rowCount: 1 },
+      cells: {
+        header: {
+          mounted: 1,
+          rerenderedCells: 1,
+          rerenders: 2,
+          firstRenders: 0,
+        },
+        row: { mounted: 1, rerenderedCells: 0, rerenders: 0, firstRenders: 1 },
+      },
+      formatCalls: 4,
+    },
+    {
+      operation: "shiftEveryRowDownOneSlot",
+      before: { rowCount: 1 },
+      after: { rowCount: 2 },
+      cells: {
+        header: {
+          mounted: 1,
+          rerenderedCells: 1,
+          rerenders: 1,
+          firstRenders: 0,
+        },
+        row: { mounted: 1, rerenderedCells: 0, rerenders: 0, firstRenders: 2 },
+      },
+      formatCalls: 3,
+    },
   ]);
 });
 
@@ -181,13 +223,13 @@ it("measures once per launch, however often its screen mounts", async () => {
   loadRenderTraceBuiltAs("development");
   const { view, measurements } = await launchWith(MEASURE_LINK);
   await passTime(20_000);
-  expect(measurements()).toHaveLength(3);
+  expect(measurements()).toHaveLength(5);
 
   await view.unmount();
   await render(<TracedCells />);
   await passTime(20_000);
 
-  expect(measurements()).toHaveLength(3);
+  expect(measurements()).toHaveLength(5);
 });
 
 it.each([
