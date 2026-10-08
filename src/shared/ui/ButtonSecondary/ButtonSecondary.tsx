@@ -10,13 +10,18 @@ import {
 
 interface Props {
   label: string;
+  accessibilityLabel?: string;
   onPress: () => void;
 }
-export default function ButtonSecondary({ label, onPress }: Props) {
+export default function ButtonSecondary({
+  label,
+  accessibilityLabel,
+  onPress,
+}: Props) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       onPress={onPress}
       style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
     >

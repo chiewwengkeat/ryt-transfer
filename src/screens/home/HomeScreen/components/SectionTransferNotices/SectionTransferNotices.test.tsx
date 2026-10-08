@@ -117,7 +117,7 @@ it(
   }),
 );
 
-it("names each notice's transfer on its dismiss control, and dismisses only that notice", async () => {
+it("shows Dismiss on each notice's control, names its transfer to screen readers, and dismisses only that notice", async () => {
   const {
     body: { customerId },
   } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
@@ -155,6 +155,7 @@ it("names each notice's transfer on its dismiss control, and dismisses only that
       name: `Dismiss the notice about RM 100.00 to ${recipientName}`,
     }),
   ).toBeOnTheScreen();
+  expect(await screen.findAllByText("Dismiss")).toHaveLength(2);
   await fireEvent.press(
     await screen.findByRole("button", {
       name: `Dismiss the notice about RM 50.00 to ${recipientName}`,

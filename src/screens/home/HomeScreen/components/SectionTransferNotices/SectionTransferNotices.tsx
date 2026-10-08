@@ -34,7 +34,11 @@ export default function SectionTransferNotices() {
               message={t(`next_launch_notices.${notice}`, amountAndName)}
             />
             <ButtonSecondary
-              label={t("next_launch_notices.dismiss", amountAndName)}
+              label={t("next_launch_notices.dismiss")}
+              accessibilityLabel={t(
+                "next_launch_notices.dismiss_notice_about",
+                amountAndName,
+              )}
               onPress={() => {
                 if (customerId === undefined) return;
                 void (async () => {
