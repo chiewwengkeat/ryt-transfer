@@ -90,20 +90,25 @@ it("tells iOS nothing more when the app becomes active, since iOS keeps its wind
 });
 
 it("blocks capture on the new window Android gives Home when it is reopened after Back", async () => {
-  const view = await renderRoute("/");
-  await screen.findByText("RM 12,845.50");
-  await waitPastReceiptSettle();
+  const platformOs = jest.replaceProperty(Platform, "OS", "android");
+  try {
+    const view = await renderRoute("/");
+    await screen.findByText("RM 12,845.50");
+    await waitPastReceiptSettle();
 
-  // Back ends the activity, not the process: the root mounts again on a window that starts unblocked, while the
-  // library still holds its key.
-  await view.unmount();
-  void screenCaptureNativeDouble.allowScreenCapture();
-  const blockedOnTheNewWindow = isScreenCaptureBlocked();
-  await renderRoute("/");
-  await screen.findByText("RM 12,845.50");
+    // Back ends the activity, not the process: the root mounts again on a window that starts unblocked, while the
+    // library still holds its key.
+    await view.unmount();
+    void screenCaptureNativeDouble.allowScreenCapture();
+    const blockedOnTheNewWindow = isScreenCaptureBlocked();
+    await renderRoute("/");
+    await screen.findByText("RM 12,845.50");
 
-  expect(blockedOnTheNewWindow).toBe(false);
-  expect(isScreenCaptureBlocked()).toBe(true);
+    expect(blockedOnTheNewWindow).toBe(false);
+    expect(isScreenCaptureBlocked()).toBe(true);
+  } finally {
+    platformOs.restore();
+  }
 });
 
 it("keeps capture blocked from the recipient step to review, and allows it on the result page of a sent transfer", async () => {
