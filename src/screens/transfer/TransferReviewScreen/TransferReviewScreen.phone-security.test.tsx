@@ -1,22 +1,37 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
+import { http, HttpResponse } from "msw";
 
 import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
+import {
+  TransferFunds,
+  TransferStatus,
+} from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import {
+  PendingTransferStage,
+  writePendingTransfer,
+} from "@/domains/transfer/hooks/pending-transfers";
+import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
   failDeviceIntegrityChecks,
+  failNextBiometricPrompt,
   holdDeviceIntegrityChecks,
   reportDeviceIntegrity,
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { observedRecords } from "@/test/harness/recording-sink";
-import { sentRequests } from "@/test/msw-server";
+import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 
 const PHONE_REFUSAL =
   "This phone's security can't be confirmed, so transfers are off on it.";
+const PIN_OFFER =
+  "Your face or fingerprint was not recognised. You can try again, or use your PIN.";
+const EARLIER_TRANSFER_UNCONFIRMED =
+  /^Your last transfer is still being checked/;
 
 async function openReviewOfRm100() {
   const view = await renderRoute("/transfer");
@@ -71,6 +86,54 @@ it("refuses approval in place of the prompt on a phone that reports root, leavin
     "/transfers",
     expect.stringMatching(/^\/transfers\/[\w-]+\/approve$/),
   ]);
+});
+
+it("shows the refusal alone, with no earlier transfer's warning, no notice that offers the PIN and no Use PIN instead beside it", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const {
+    body: { customerId },
+  } = await sendToBank<{ customerId: string }>("GET", "/accounts/primary");
+  const { created } = await startTestTransfer(10_000);
+  await writePendingTransfer(customerId, {
+    transferId: created.transfer.transferId,
+    idempotencyKey: "approval-key",
+    createdAt: "2026-10-07T01:30:00.000Z",
+    stage: PendingTransferStage.Processing,
+  });
+  mswServer.use(
+    http.get("*/transfers/:transferId", () =>
+      HttpResponse.json({
+        transfer: {
+          ...created.transfer,
+          status: TransferStatus.Processing,
+          funds: TransferFunds.Debited,
+        },
+      }),
+    ),
+  );
+  failNextBiometricPrompt("AUTHENTICATION_FAILED");
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  expect(await screen.findByText(PIN_OFFER)).toBeOnTheScreen();
+  expect(screen.getByText(EARLIER_TRANSFER_UNCONFIRMED)).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
+  reportDeviceIntegrity({
+    isRooted: true,
+    isCompromised: true,
+    riskLevel: "HIGH",
+  });
+
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+  expect(await screen.findByText(PHONE_REFUSAL)).toBeOnTheScreen();
+  expect(screen.queryByText(PIN_OFFER)).toBeNull();
+  expect(screen.queryByText(EARLIER_TRANSFER_UNCONFIRMED)).toBeNull();
+  expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
 });
 
 it("checks the phone afresh at each press, so a phone that reports hooks after a closed prompt is refused", async () => {

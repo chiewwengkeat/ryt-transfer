@@ -42,7 +42,7 @@ export default function TransferReviewScreen() {
           )
         }
       >
-        <BannerEarlierTransferUnconfirmed />
+        {!phoneRefused && <BannerEarlierTransferUnconfirmed />}
         <SectionReviewDetails draft={draft} />
         <TextSendingTransfer />
         {!phoneRefused && (
