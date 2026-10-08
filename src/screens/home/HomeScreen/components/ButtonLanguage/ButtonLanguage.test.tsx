@@ -1,6 +1,5 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import * as Localization from "expo-localization";
-import { changeLanguage } from "i18next";
 import { http, HttpResponse } from "msw";
 
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
@@ -22,12 +21,11 @@ function findAccessibleGroupAround(text: ReturnType<typeof screen.getByText>) {
   return element;
 }
 
-// The app's language lives in i18next, which outlasts a test.
-afterEach(async () => {
+afterEach(() => {
   jest.restoreAllMocks();
-  await changeLanguage(AppLanguage.English);
 });
 
+// ⛔ Read the first frame after a relaunch with getBy: a findBy waits, so a language applied late passes too.
 it("shows Home in Bahasa Malaysia once it is picked, and still after a relaunch", async () => {
   setPhoneLanguage("en");
   const view = await renderRoute("/");
@@ -42,7 +40,7 @@ it("shows Home in Bahasa Malaysia once it is picked, and still after a relaunch"
   ).toBeOnTheScreen();
   await relaunchApp(view);
   await fireEvent.press(
-    await screen.findByRole("button", { name: "BM, tukar bahasa" }),
+    screen.getByRole("button", { name: "BM, tukar bahasa" }),
   );
   expect(screen.getByRole("radio", { name: "Bahasa Malaysia" })).toBeChecked();
   expect(
@@ -64,7 +62,7 @@ it("follows the phone's language once Phone's language is picked, and still afte
 
   expect(await screen.findByRole("button", { name: "转账" })).toBeOnTheScreen();
   await relaunchApp(view);
-  expect(await screen.findByRole("button", { name: "转账" })).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "转账" })).toBeOnTheScreen();
 });
 
 it("tells a screen reader that Home's words are in Bahasa Malaysia once it is picked", async () => {
@@ -170,5 +168,35 @@ it("forgets the pick when Phone's language is picked while the phone shows the s
   setPhoneLanguage("zh");
   await relaunchApp(view);
 
-  expect(await screen.findByRole("button", { name: "转账" })).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "转账" })).toBeOnTheScreen();
+});
+
+it("reads each language's row in that language, and the control and Phone's language in the app's", async () => {
+  await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "EN, change language" }),
+  );
+  await fireEvent.press(screen.getByRole("radio", { name: "中文" }));
+  const control = await screen.findByRole("button", {
+    name: "中文, 更改语言",
+  });
+  expect(control).toHaveProp("accessibilityLanguage", "zh-MY");
+  await fireEvent.press(control);
+
+  expect(screen.getByRole("radio", { name: "手机语言" })).toHaveProp(
+    "accessibilityLanguage",
+    "zh-MY",
+  );
+  expect(screen.getByRole("radio", { name: "English" })).toHaveProp(
+    "accessibilityLanguage",
+    "en-MY",
+  );
+  expect(screen.getByRole("radio", { name: "Bahasa Malaysia" })).toHaveProp(
+    "accessibilityLanguage",
+    "ms-MY",
+  );
+  expect(screen.getByRole("radio", { name: "中文" })).toHaveProp(
+    "accessibilityLanguage",
+    "zh-MY",
+  );
 });
