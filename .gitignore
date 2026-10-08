@@ -39,6 +39,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+/modules/*/android/build/
 
 # Claude Code plugin telemetry
 .claude/self-learning/telemetry/
