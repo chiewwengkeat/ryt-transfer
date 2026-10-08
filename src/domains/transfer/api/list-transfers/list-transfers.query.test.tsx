@@ -4,6 +4,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
 import type { ReactNode } from "react";
 
 import {
@@ -11,7 +12,8 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { API_BASE_URL } from "@/shared/config/config";
-import { sentRequests } from "@/test/msw-server";
+import { observedRecords } from "@/test/harness/recording-sink";
+import { mswServer, sentRequests } from "@/test/msw-server";
 
 import {
   askForNextTransferHistoryPage,
@@ -20,6 +22,7 @@ import {
   resetTransferHistory,
   useListTransfers,
 } from "./list-transfers";
+import type { ListTransfersResponse } from "./list-transfers.type";
 
 // The query run against the Jest bank, its cache writes included; list-transfers.test.ts seeds the cache by hand. A
 // new suite is named for what fills its cache.
@@ -95,6 +98,38 @@ it("keeps each page exactly as the bank sent it, amounts still on the wire", asy
   const response = await fetch(`${API_BASE_URL}/transfers?limit=30`);
 
   expect(history.pages).toEqual([await response.json()]);
+});
+
+it("reports a page's unreadable amounts, a row's and a day's alike, as one unreadable_amount at the history boundary", async () => {
+  const response = await fetch(`${API_BASE_URL}/transfers?limit=30`);
+  const bankPage = (await response.json()) as ListTransfersResponse;
+  mswServer.use(
+    http.get(`${API_BASE_URL}/transfers`, () =>
+      HttpResponse.json({
+        ...bankPage,
+        items: bankPage.items.map((transfer, index) =>
+          index === 0
+            ? { ...transfer, amount: { ...transfer.amount, minor: 50.5 } }
+            : transfer,
+        ),
+        days: bankPage.days.map((day, index) =>
+          index === 0 ? { ...day, net: { ...day.net, currency: "SGD" } } : day,
+        ),
+      }),
+    ),
+  );
+
+  await createTestQueryClient().fetchInfiniteQuery(getListTransfersOptions());
+
+  expect(
+    observedRecords.filter(({ name }) => name === "unreadable_amount"),
+  ).toEqual([
+    {
+      type: "event",
+      name: "unreadable_amount",
+      properties: { boundary: "transfer_history", count: 2 },
+    },
+  ]);
 });
 
 it("keeps every transfer and day summary it already had when the next page lands", async () => {

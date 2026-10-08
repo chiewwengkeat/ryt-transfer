@@ -41,7 +41,8 @@ export const getListTransfersOptions = () =>
         ...page.days.map(({ net }) => net),
       ].filter((amount) => parseWireAmount(amount) === null).length;
       if (unreadableAmountCount > 0)
-        trackEvent("transfer_history_unreadable_amounts", {
+        trackEvent("unreadable_amount", {
+          boundary: "transfer_history",
           count: unreadableAmountCount,
         });
       const unreadableTimeCount = page.items.filter(
