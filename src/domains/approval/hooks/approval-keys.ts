@@ -57,7 +57,7 @@ export async function saveApprovalKeyIds(
   await writeSecureRecord(BIOMETRIC_KEY_ID_RECORD, keyIds.biometricKeyId);
 }
 
-// Resolves null when nothing was signed, for any reason.
+// Resolves null when nothing was signed, but a failed read of the key record rejects.
 export async function signWithBiometricKey(
   signedText: string,
   prompt: { title: string; subtitle: string; cancel: string },
