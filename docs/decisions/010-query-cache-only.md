@@ -10,7 +10,7 @@ TanStack Query's cache holds the bank's data; the transfer flow keeps only a few
 
 - **By id and key.** A transfer is referred to by its id and its query key; a screen that needs it reads the cache through that endpoint's own query.
 - **No pushed copies.** The details screen shows the tapped row from the loaded history pages as placeholder data until its own fetch returns. Nothing pushes a copy of a row into another cache entry, where it could drift until a fetch lands.
-- **Key and fetcher together.** Each query's key travels with its fetcher through TanStack's `queryOptions`, so invalidating or patching a query cannot name a key that has drifted from it.
+- **Key and fetcher together.** Each domain's query keys come from one factory, `api/<area>.keys.ts`, and each query's options, built with TanStack's `queryOptions`, take their key from it and carry it with the fetcher. Patching or invalidating names a query's options or a prefix from the same factory, so neither can name a key that has drifted from the query's.
 - **One place for the query client's retries.** It retries a read at most twice, and only after a dropped connection, a timeout or a server error. It never retries a write, and never holds one offline to replay on reconnecting (`src/shell/query-client.ts`); the flow's own resends of a lost answer carry that act's idempotency key ([006](006-never-sent-twice.md)).
 
 Unchanged rows skip their re-render: TanStack keeps an unchanged transfer as the same object, FlashList's cells re-render only when their row's object, the render function or the list's `extraData` changes, and the compiler keeps the render function stable ([009](009-history-at-scale.md) sets out how the re-renders are counted). One case costs more. TanStack compares list items by position, so a new transfer at the top makes every shifted row a new object, and the visible rows are expected to re-render once, a pass that is cheap under the compiler. An id-keyed `structuralSharing` function would remove it; the decision is to report the cost and hold that fix in reserve.
@@ -28,4 +28,4 @@ The cost: keeping screens fresh rests on patching or resetting the right query a
 - **No library.** Caching, deduplication, retries and paging written by hand.
 - **Pushing a copy into the details cache when a row is pressed.** One copy per tap, which can drift until the details fetch lands.
 - **Pushing every loaded row into its own cache entry.** A copy of every row loaded, and the most write paths.
-- **A query-key factory library.** No release since 25 February 2024, and `queryOptions` keeps each key with its fetcher without one.
+- **A query-key factory library.** No release since 25 February 2024, and a plain factory per domain, with `queryOptions`, keeps each key with its fetcher without one.
