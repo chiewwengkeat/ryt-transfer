@@ -195,7 +195,22 @@ export default function TransferReviewScreen() {
                 label={t("review.transfer")}
                 loading={sending}
                 onPress={() => {
-                  void sendTransfer(shownLookup);
+                  void sendTransfer(shownLookup).catch(() => {
+                    // Nothing can move money before the approval leaves the phone; after, a failure may hide a debit.
+                    const stepAtFailure = transferFlowStore.getState().step;
+                    if (
+                      stepAtFailure === TransferFlowStep.Creating ||
+                      stepAtFailure === TransferFlowStep.Approving
+                    ) {
+                      dispatchTransferFlow({
+                        type: TransferFlowActionType.NotSent,
+                      });
+                      setNotSentMessage(t("common.approval_unexpected.body"));
+                    } else
+                      setAnswerLostMessage(
+                        t("common.approval_unanswered.body"),
+                      );
+                  });
                 }}
               />
             )

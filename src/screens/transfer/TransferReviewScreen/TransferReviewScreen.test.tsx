@@ -10,6 +10,7 @@ import {
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
+import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -341,4 +342,74 @@ it("never offers to send again when the approval's answer is lost", async () => 
   expect(
     screen.getByRole("button", { name: "Back to Home" }),
   ).toBeOnTheScreen();
+});
+
+it("offers to try again or leave when the bank's answer to the transfer cannot be read", async () => {
+  mswServer.use(
+    http.post("*/transfers", () => HttpResponse.json({}, { status: 201 }), {
+      once: true,
+    }),
+  );
+  const view = await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      "Something unexpected stopped the approval before it was sent — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+  await pressHardwareBack();
+  expect(view.getPathname()).toBe("/transfer/amount");
+});
+
+it("offers to try again or leave when the phone cannot read its approval key", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  await openReviewOfRm100();
+  jest
+    .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
+    .mockRejectedValueOnce(new Error("Test."));
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      "Something unexpected stopped the approval before it was sent — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+  jest.useRealTimers();
+  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
+});
+
+it("never says no money moved when something unexpected fails after the approval was sent", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  await openReviewOfRm100();
+  // Nothing the bank answers can fail past the approval, so a navigation fault stands in.
+  jest.spyOn(router, "dismissTo").mockImplementationOnce(() => {
+    throw new Error("Test.");
+  });
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+  expect(
+    screen.getByRole("button", { name: "Back to Home" }),
+  ).toBeOnTheScreen();
+  jest.useRealTimers();
+  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
 });

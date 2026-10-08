@@ -29,6 +29,9 @@
     "approval_cancelled": {
       "body": "The transfer was not sent — no money moved."
     },
+    "approval_unexpected": {
+      "body": "Something unexpected stopped the approval before it was sent — no money moved."
+    },
     "approval_unanswered": {
       "body": "The bank's answer did not arrive. Check History before sending this again — not confirmed yet."
     },
