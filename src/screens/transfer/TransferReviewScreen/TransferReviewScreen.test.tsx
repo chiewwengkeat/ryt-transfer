@@ -568,6 +568,30 @@ it("offers to try again or leave when the phone cannot read its approval key", a
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
 });
 
+it("offers to try again or leave when something unexpected fails before the transfer is sent", async () => {
+  await openReviewOfRm100();
+  jest
+    .spyOn(
+      jest.requireMock<{ randomUUID: () => string }>("expo-crypto"),
+      "randomUUID",
+    )
+    .mockImplementationOnce(() => {
+      throw new Error("Test.");
+    });
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      "Something unexpected stopped the approval before it was sent — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+  expect(countPostsTo(/\/transfers$/)).toBe(0);
+});
+
 it("never says no money moved when something unexpected fails after the bank answers the approval", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const balanceBeforeMinor = await readBankBalanceMinor();

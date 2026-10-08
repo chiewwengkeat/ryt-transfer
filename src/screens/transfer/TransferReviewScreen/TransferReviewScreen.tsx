@@ -199,9 +199,11 @@ export default function TransferReviewScreen() {
                 loading={sending}
                 onPress={() => {
                   void sendTransfer(shownLookup).catch(() => {
-                    // Nothing can move money before the approval leaves the phone; after, a failure may hide a debit.
+                    // Nothing can move money before the approval leaves the phone or once the bank refuses it;
+                    // otherwise a failure may hide a debit.
                     const stepAtFailure = transferFlowStore.getState().step;
                     if (
+                      stepAtFailure === TransferFlowStep.Reviewing ||
                       stepAtFailure === TransferFlowStep.Creating ||
                       stepAtFailure === TransferFlowStep.Approving
                     ) {
