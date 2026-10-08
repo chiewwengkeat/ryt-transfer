@@ -23,7 +23,8 @@
       "notice": "You're offline. Sending is paused until Ryt can be reached."
     },
     "earlier_transfer_unconfirmed": {
-      "title": "Earlier transfer still being checked"
+      "title": "Earlier transfer still being checked",
+      "body": "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: {{reference}}"
     },
     "start_unexpected": {
       "title": "Something unexpected while starting",

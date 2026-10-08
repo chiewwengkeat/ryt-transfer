@@ -5,7 +5,12 @@
     "transfer_history": "Transfer history"
   },
 
-  "next_launch_notices": {},
+  "next_launch_notices": {
+    "completed": "Your transfer of {{amount}} to {{name}} was sent — money moved.",
+    "refunded": "Your transfer of {{amount}} to {{name}} didn't go through. The money is being, or has been, returned to you automatically.",
+    "declined": "Your transfer of {{amount}} to {{name}} was not sent — no money moved.",
+    "dismiss": "Dismiss"
+  },
 
   "recents": {}
 }

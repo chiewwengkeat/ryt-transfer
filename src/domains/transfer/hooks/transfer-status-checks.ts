@@ -1,4 +1,4 @@
-import type { QueryClient } from "@tanstack/react-query";
+import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import {
@@ -14,6 +14,7 @@ import {
   useGetTransfer,
 } from "../api/get-transfer/get-transfer";
 import { GetTransferErrorCode } from "../api/get-transfer/get-transfer.type";
+import { refreshPendingTransferNotices } from "./pending-transfer-notices";
 import {
   clearPendingTransfer,
   PendingTransferStage,
@@ -35,6 +36,7 @@ export function useTransferStatusCheck(
   transferId: string,
   customerId: string | undefined,
 ) {
+  const queryClient = useQueryClient();
   const [openedAtMs] = useState(Date.now);
   const transfer = useGetTransfer(transferId, {
     retry: 0,
@@ -71,10 +73,13 @@ export function useTransferStatusCheck(
               PendingTransferStage.Processing,
             )
           : undefined;
-    recordChange?.catch((error: unknown) => {
+    void (async () => {
+      await recordChange;
+      await refreshPendingTransferNotices(queryClient, customerId);
+    })().catch((error: unknown) => {
       reportError(error, { boundary: "pending_transfer" });
     });
-  }, [customerId, transferId, outcome, readFailure]);
+  }, [customerId, transferId, outcome, readFailure, queryClient]);
 
   return {
     transfer,

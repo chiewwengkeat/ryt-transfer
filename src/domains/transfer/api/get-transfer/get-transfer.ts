@@ -82,13 +82,15 @@ export function useGetTransfer(
 ) {
   return useQuery({
     ...getTransferOptions(transferId),
-    select: (transfer) => {
-      const amount = parseWireAmount(transfer.amount);
-      if (!amount) throw new TypeError("The transfer's amount is unreadable.");
-      return { ...transfer, amount, outcome: outcomeOfTransfer(transfer) };
-    },
+    select: selectTransferWithOutcome,
     ...options,
   });
+}
+
+export function selectTransferWithOutcome(transfer: Transfer) {
+  const amount = parseWireAmount(transfer.amount);
+  if (!amount) throw new TypeError("The transfer's amount is unreadable.");
+  return { ...transfer, amount, outcome: outcomeOfTransfer(transfer) };
 }
 
 // Null while the bank still awaits the approval: it has no outcome to give yet.

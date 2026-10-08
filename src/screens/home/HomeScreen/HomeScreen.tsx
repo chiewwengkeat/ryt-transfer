@@ -7,6 +7,7 @@ import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 import ButtonStartTransfer from "./components/ButtonStartTransfer/ButtonStartTransfer";
 import ButtonTransferHistory from "./components/ButtonTransferHistory/ButtonTransferHistory";
 import SectionRecentRecipientsHome from "./components/SectionRecentRecipientsHome/SectionRecentRecipientsHome";
+import SectionTransferNotices from "./components/SectionTransferNotices/SectionTransferNotices";
 
 export default function HomeScreen() {
   const { t } = useTranslation("home");
@@ -14,6 +15,7 @@ export default function HomeScreen() {
     <>
       <Stack.Screen options={{ title: t("home.title") }} />
       <ViewScreenFrame footer={<ButtonStartTransfer />}>
+        <SectionTransferNotices />
         <CardBalance unexpectedScenario="start_unexpected" />
         <ButtonTransferHistory />
         <SectionRecentRecipientsHome />

@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import BannerEarlierTransferUnconfirmed from "@/domains/transfer/components/BannerEarlierTransferUnconfirmed/BannerEarlierTransferUnconfirmed";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
@@ -22,6 +23,7 @@ export default function TransferReviewScreen() {
     <>
       <HeaderReview />
       <ViewScreenFrame footer={<ButtonConfirmTransfer draft={draft} />}>
+        <BannerEarlierTransferUnconfirmed />
         <SectionReviewDetails draft={draft} />
         <TextSendingTransfer />
         <BannerFlowNotice step={TransferFlowStep.Reviewing} />
