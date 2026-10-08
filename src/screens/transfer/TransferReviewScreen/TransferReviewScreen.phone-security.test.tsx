@@ -109,6 +109,36 @@ it("lets approval go ahead when the phone check gives no clear answer, and recor
   });
 });
 
+it("lets approval go ahead when the phone check has not answered within 5 seconds, and records that once", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  holdDeviceIntegrityChecks();
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(4_999);
+  });
+  const transferJustBeforeFiveSeconds = screen.getByRole("button", {
+    name: "Transfer",
+  });
+  const promptsJustBeforeFiveSeconds = biometricPromptsShown();
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(1);
+  });
+
+  expect(transferJustBeforeFiveSeconds).toBeBusy();
+  expect(promptsJustBeforeFiveSeconds).toEqual([]);
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toHaveLength(1);
+  expect(
+    observedRecords.filter(({ name }) => name === "device_integrity_unknown"),
+  ).toEqual([
+    { type: "event", name: "device_integrity_unknown", properties: {} },
+  ]);
+});
+
 it.each([
   ["Android's Back", pressHardwareBack],
   // Jest cannot press the native header; Android's header Back pops review as this does.
