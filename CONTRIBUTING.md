@@ -68,7 +68,7 @@ The scenario matrix, [`src/screens/transfer/scenarios/transfer.md`](src/screens/
 
 1. Its section in the matrix, written as the header says.
 2. Its id in `TRANSFER_SCENARIOS` (`src/mocks/scenarios/transfer-scenarios.ts`), under the same step, with what makes the mock bank behave that way: `conditions` change the bank's own state, `handlers` lay answers over the bank's, and an entry with neither is either the normal bank's own behaviour or caused on the phone or by what the person does. The matrix test, `src/test/scenarios/transfer-matrix.test.ts`, fails until the registry and the matrix hold the same ids under the same steps.
-3. Its words, in all three languages, under `common.<name>` in the flow's bundles, where `<name>` is the id after `transfer.`.
+3. Its words under `common.<name>` in the flow's bundles, where `<name>` is the id after `transfer.`.
 4. Its route test, as below.
 
 With no scenario picked, the mock bank behaves as a normal bank. Every test starts that way, with the bank reset before it, and a scenario changes only what its entry names.
@@ -85,10 +85,10 @@ Test a route the way a person uses it, against the mock bank:
 
 ## Translations
 
-Every string the production app shows comes from a bundle in English (`en-MY`), Malay (`ms-MY`) and Chinese (`zh-MY`), except the language names: each is a constant in its own script, never a translation key, so it reads the same whichever language is picked. Malay and Chinese are machine translations, set as they come out, with no human review.
+Every string the production app shows comes from a bundle named by its language's code in `AppLanguage` (`src/shared/i18n/i18n.ts`): `en-MY` for English, `ms-MY` for Malay and `zh-MY` for Chinese. A Malay or Chinese string is a machine translation, set as it comes out, with no human review.
 
 - A slice's bundle has one top-level key per screen, plus `common` for what two or more of its screens share; a scenario's words sit under `common.<name>`. A leaf key is named for its role (`title`, `body_secondary`), never numbered.
-- Every English key has a Malay and a Chinese string, each with the same `{{placeholders}}`.
+- A Malay or Chinese bundle has every key of the English bundle beside it, and each of its strings keeps the English string's `{{placeholders}}`.
 - A plural comes as a twin. English has `_one` and `_other`; Malay and Chinese repeat their `_other` string under `_one`. Hermes lacks `Intl.PluralRules`, so i18next reads `_one` for a count of one in every language, and a missing twin shows English.
 - A money state's phrase appears in each language exactly as the matrix's money table gives it.
 - Nothing the person can press offers to send again in a scenario whose **Never** forbids it, in any language. A message may still warn against sending again.
