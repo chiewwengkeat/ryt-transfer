@@ -69,7 +69,7 @@ it("approves the first transfer after signing in again with no setting up, becau
   await act(() => endSession());
   await relaunchApp(view);
   await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),

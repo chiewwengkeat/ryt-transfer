@@ -39,12 +39,16 @@ it(
   }),
 );
 
-it("offers Transfer only once the balance and today's limit have loaded", async () => {
+it("keeps Transfer unavailable, saying why, until the balance and today's limit have loaded", async () => {
+  const loadingReason =
+    "You can send once your balance and today's limit have loaded.";
   await renderRoute("/");
 
-  expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+  expect(screen.getByText(loadingReason)).toBeOnTheScreen();
   await screen.findByText("RM 12,845.50");
   expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+  expect(screen.queryByText(loadingReason)).toBeNull();
 });
 
 it(
