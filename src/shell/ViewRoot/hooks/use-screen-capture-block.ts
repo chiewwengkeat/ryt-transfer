@@ -1,6 +1,6 @@
 import { usePathname, useSegments } from "expo-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 
 import { isProductionBuild } from "@/shared/config/config";
 import {
@@ -66,9 +66,10 @@ export function useScreenCaptureBlock() {
   // Before paint, so a receipt being left hands over to a screen that is drawn blocked.
   useLayoutEffect(() => {
     void (blocked ? blockScreenCapture() : allowScreenCapture());
-    if (!blocked) return;
+    if (!blocked || Platform.OS !== "android") return;
     // Android recreates the activity, on a window without the block, after a font-size change or a reopen from Back,
-    // and blocked stays as it was: the app becoming active is the cue to block the window it now has.
+    // and blocked stays as it was: the app becoming active is the cue to block the window it now has. iOS keeps its
+    // window, and each block there adds a screen-recording observer that only allowing capture removes.
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") void blockScreenCapture();
     });

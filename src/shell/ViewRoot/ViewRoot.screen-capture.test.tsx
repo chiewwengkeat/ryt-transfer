@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { AppState } from "react-native";
+import { AppState, type NativeEventSubscription, Platform } from "react-native";
 
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import {
@@ -48,25 +48,53 @@ it("blocks capture on Home, lifts it on a receipt only once the screen before it
   expect(isScreenCaptureBlocked()).toBe(true);
 });
 
+// ⛔ Skip removed listeners: the double's remove() does nothing, and an earlier test's Android listener would block.
+function moveAppToBackgroundAndBack() {
+  const { calls, results } = jest.mocked(AppState).addEventListener.mock;
+  calls.forEach(([eventName, listener], index) => {
+    const subscription = results[index]?.value as NativeEventSubscription;
+    if (
+      eventName === "change" &&
+      jest.mocked(subscription).remove.mock.calls.length === 0
+    ) {
+      listener("background");
+      listener("active");
+    }
+  });
+}
+
 it("blocks capture on the new window Android gives Home after a font-size change, once the app is active again", async () => {
+  const platformOs = jest.replaceProperty(Platform, "OS", "android");
+  try {
+    await renderRoute("/");
+    await screen.findByText("RM 12,845.50");
+    await waitPastReceiptSettle();
+    // The recreated activity's window starts unblocked, while the library still holds its key.
+    void screenCaptureNativeDouble.allowScreenCapture();
+    const blockedOnTheNewWindow = isScreenCaptureBlocked();
+
+    await act(moveAppToBackgroundAndBack);
+
+    expect(blockedOnTheNewWindow).toBe(false);
+    expect(isScreenCaptureBlocked()).toBe(true);
+  } finally {
+    platformOs.restore();
+  }
+});
+
+it("tells iOS nothing more when the app becomes active, since iOS keeps its window and each block there adds a recording observer", async () => {
   await renderRoute("/");
   await screen.findByText("RM 12,845.50");
   await waitPastReceiptSettle();
-  // The recreated activity's window starts unblocked, while the library still holds its key.
-  void screenCaptureNativeDouble.allowScreenCapture();
-  const blockedOnTheNewWindow = isScreenCaptureBlocked();
+  const blocksSent = jest.spyOn(
+    screenCaptureNativeDouble,
+    "preventScreenCapture",
+  );
 
-  await act(() => {
-    for (const [eventName, listener] of jest.mocked(AppState).addEventListener
-      .mock.calls)
-      if (eventName === "change") {
-        listener("background");
-        listener("active");
-      }
-  });
+  await act(moveAppToBackgroundAndBack);
 
-  expect(blockedOnTheNewWindow).toBe(false);
   expect(isScreenCaptureBlocked()).toBe(true);
+  expect(blocksSent).not.toHaveBeenCalled();
 });
 
 it("blocks capture on the new window Android gives Home when it is reopened after Back", async () => {
