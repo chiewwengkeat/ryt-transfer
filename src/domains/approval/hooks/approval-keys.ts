@@ -224,11 +224,10 @@ export async function deleteApprovalKeys() {
 async function readApprovalKeySetInUse(
   keyKind: keyof typeof APPROVAL_KEY_SET_RECORDS,
 ) {
-  const keySetInUse =
-    (await readSecureRecord(APPROVAL_KEY_SET_RECORDS[keyKind])) ??
-    // A phone that switched sets before the biometric key had its own record keeps it in the possession key's set.
-    (await readSecureRecord(APPROVAL_KEY_SET_RECORDS.possession));
-  return keySetInUse === "second" ? "second" : "first";
+  return (await readSecureRecord(APPROVAL_KEY_SET_RECORDS[keyKind])) ===
+    "second"
+    ? "second"
+    : "first";
 }
 
 async function readApprovalKeySetNotInUse(
