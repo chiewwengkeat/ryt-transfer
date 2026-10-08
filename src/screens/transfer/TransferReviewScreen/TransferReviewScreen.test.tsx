@@ -1475,6 +1475,218 @@ it("treats a key the bank says was used for other details as something unexpecte
   expect(countSent("POST", "/transfers")).toBe(1);
 });
 
+function idempotencyKeysOfCreatesSent() {
+  return sentRequests
+    .filter(
+      (request) =>
+        request.method === "POST" &&
+        new URL(request.url).pathname.endsWith("/transfers"),
+    )
+    .map((request) => request.headers.get("Idempotency-Key"));
+}
+
+it(
+  "repeats an unanswered confirmation under its key, says Ryt could not be reached, and repeats it again when tried",
+  scenarioTest("transfer.confirmation_unanswered", async () => {
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "Ryt could not be reached — no money moved.",
+        {},
+        { timeout: 10_000 },
+      ),
+    ).toBeOnTheScreen();
+    const [unansweredKey] = idempotencyKeysOfCreatesSent();
+    expect(unansweredKey).toEqual(expect.any(String));
+    expect(idempotencyKeysOfCreatesSent()).toEqual(
+      Array(3).fill(unansweredKey),
+    );
+    // The lost answers left the app offline until the amount step's balance poll gets through.
+    await waitFor(
+      () => {
+        expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+      },
+      { timeout: 15_000 },
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+    expect(
+      await screen.findByText(
+        "Ryt could not be reached — no money moved.",
+        {},
+        { timeout: 10_000 },
+      ),
+    ).toBeOnTheScreen();
+    expect(idempotencyKeysOfCreatesSent()).toEqual(
+      Array(6).fill(unansweredKey),
+    );
+  }),
+);
+
+it("goes on with the transfer the bank made once a repeat gets the answer that was lost, and debits once", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  mswServer.use(
+    http.post(
+      "*/transfers",
+      async ({ request }) => {
+        await sendToBank("POST", "/transfers", {
+          body: await request.json(),
+          idempotencyKey: request.headers.get("Idempotency-Key"),
+        });
+        return HttpResponse.error();
+      },
+      { once: true },
+    ),
+  );
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText("Transfer sent", {}, { timeout: 10_000 }),
+  ).toBeOnTheScreen();
+  expect(new Set(idempotencyKeysOfCreatesSent()).size).toBe(1);
+  jest.useRealTimers();
+  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+});
+
+it(
+  "confirms changed details as a new transfer after Ryt did not answer",
+  scenarioTest("transfer.details_changed_after_no_answer", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    // Every try of the first confirmation: its Transfer and both repeats.
+    mswServer.use(
+      ...Array.from({ length: 3 }, () =>
+        http.post("*/transfers", () => HttpResponse.error(), { once: true }),
+      ),
+    );
+    await openReviewOfRm100();
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByText(
+      "Ryt could not be reached — no money moved.",
+      {},
+      { timeout: 10_000 },
+    );
+    const [unansweredKey] = idempotencyKeysOfCreatesSent();
+
+    await pressHardwareBack();
+    await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "50");
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+
+    expect(
+      await screen.findByText(
+        "Your details changed after Ryt did not answer. Check them, then confirm this as a new transfer.",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
+    await waitFor(
+      () => {
+        expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+      },
+      { timeout: 15_000 },
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    expect(idempotencyKeysOfCreatesSent().at(-1)).not.toBe(unansweredKey);
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 5_000);
+  }),
+);
+
+it(
+  "starts one transfer when Transfer is tapped twice, and debits once",
+  scenarioTest("transfer.double_tap_ignored", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    await openReviewOfRm100();
+    const transferButton = await screen.findByRole("button", {
+      name: "Transfer",
+    });
+
+    await fireEvent.press(transferButton);
+    await fireEvent.press(transferButton);
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    expect(countSent("POST", "/transfers")).toBe(1);
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+  }),
+);
+
+it("never moves a transfer left mid-confirmation, even once another is confirmed", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  let answerLeftTransfer = () => {};
+  const leftTransferAnswered = new Promise<void>((resolve) => {
+    answerLeftTransfer = resolve;
+  });
+  let answerNewTransfer = () => {};
+  const newTransferAnswered = new Promise<void>((resolve) => {
+    answerNewTransfer = resolve;
+  });
+  // Each holds one create in flight, then falls through to the bank.
+  mswServer.use(
+    http.post(
+      "*/transfers",
+      async () => {
+        await leftTransferAnswered;
+      },
+      { once: true },
+    ),
+    http.post(
+      "*/transfers",
+      async () => {
+        await newTransferAnswered;
+      },
+      { once: true },
+    ),
+  );
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  // Review offers no way out while confirming, so this stands in for any route that still could.
+  await act(() => {
+    router.dismissTo("/");
+  });
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    MOBILE,
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "50");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await act(async () => {
+    answerLeftTransfer();
+    await jest.advanceTimersByTimeAsync(1_000);
+  });
+  answerNewTransfer();
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  jest.useRealTimers();
+  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 5_000);
+});
+
 it("returns to the amount step when the bank cannot accept the amount as entered, and says so there", async () => {
   mswServer.use(
     http.post("*/transfers", () =>

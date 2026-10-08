@@ -4,7 +4,10 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
-import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
+import {
+  isCreateTransferUnanswered,
+  useCreateTransfer,
+} from "@/domains/transfer/api/create-transfer/create-transfer";
 import {
   CoolingOffReason,
   CreateTransferErrorCode,
@@ -78,6 +81,14 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       })
     )
       return;
+    // The reducer matches the step, not the attempt: a late answer to an abandoned create would move the next one.
+    const isThisCreateStillAwaited = () => {
+      const flow = transferFlowStore.getState();
+      return (
+        flow.step === TransferFlowStep.Creating &&
+        flow.idempotencyKey === idempotencyKey
+      );
+    };
 
     let created: CreateTransferResponse;
     try {
@@ -89,6 +100,14 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
         idempotencyKey,
       });
     } catch (error) {
+      if (!isThisCreateStillAwaited()) return;
+      if (isCreateTransferUnanswered(error)) {
+        dispatchTransferFlow({
+          type: TransferFlowActionType.CreateUnanswered,
+          notice: TransferFlowScenario.ConfirmationUnanswered,
+        });
+        return;
+      }
       const refusal =
         error instanceof TransportError
           ? (error.body as CreateTransferErrorResponse | undefined)?.error
@@ -147,9 +166,15 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
             notice: TransferFlowScenario.UnderMaintenance,
           });
           return;
+        // The bank is still on the first request under this key, so a repeat of it later gets that one's answer.
+        case CreateTransferErrorCode.RequestInProgress:
+          dispatchTransferFlow({
+            type: TransferFlowActionType.CreateUnanswered,
+            notice: TransferFlowScenario.ConfirmationUnanswered,
+          });
+          return;
         case CreateTransferErrorCode.IdempotencyKeyReused:
         case CreateTransferErrorCode.InvalidRequest:
-        case CreateTransferErrorCode.RequestInProgress:
         case undefined:
         default:
           dispatchTransferFlow({
@@ -159,6 +184,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
           return;
       }
     }
+    if (!isThisCreateStillAwaited()) return;
     if (
       !dispatchTransferFlow({
         type: TransferFlowActionType.Created,
