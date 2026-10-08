@@ -40,6 +40,7 @@ import { settleCreateFailure } from "./hooks/settle-create-failure";
 import { settleUnexpectedConfirmFailure } from "./hooks/settle-unexpected-confirm-failure";
 import { useApprovalPinLocked } from "./hooks/use-approval-pin-locked";
 import { usePhoneCheckBeforeApproval } from "./hooks/use-phone-check-before-approval";
+import { useReviewLeaveWatch } from "./hooks/use-review-leave-watch";
 import { useSendTransferApproval } from "./hooks/use-send-transfer-approval";
 
 interface Props {
@@ -75,6 +76,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const approvalPinLocked = useApprovalPinLocked();
   const { checkingPhone, checkPhoneAllowsThisApproval } =
     usePhoneCheckBeforeApproval();
+  const startWatchingForReviewLeave = useReviewLeaveWatch();
 
   const holdReason =
     hold === undefined || hold === liftedHold
@@ -103,24 +105,27 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const confirmedLookup = lookup.data;
 
   const createAndApproveTransfer = async (path: ApprovalPath) => {
-    if (!(await checkPhoneAllowsThisApproval())) return;
-    if (approvalPinLocked) {
-      const sensorRefusalOutcome = (await readBiometricSensorRefusal())
-        ?.outcome;
-      // ⛔ The bank refuses every PIN while it holds the lock, so a transfer only a PIN could approve is never created.
-      if (
-        path === ApprovalPath.Pin ||
+    const hasLeftReviewSincePress = startWatchingForReviewLeave();
+    if (!(await checkPhoneAllowsThisApproval(hasLeftReviewSincePress))) return;
+    const sensorRefusalOutcome = approvalPinLocked
+      ? (await readBiometricSensorRefusal())?.outcome
+      : undefined;
+    // ⛔ Read after every wait: once review is left the press is void, so nothing is created or prompted behind them.
+    if (hasLeftReviewSincePress()) return;
+    // ⛔ The bank refuses every PIN while it holds the lock, so a transfer only a PIN could approve is never created.
+    if (
+      approvalPinLocked &&
+      (path === ApprovalPath.Pin ||
         !approvalSettingsStore.getState().biometricApprovalOn ||
         sensorRefusalOutcome === BiometricSignOutcome.NotSetUp ||
-        sensorRefusalOutcome === BiometricSignOutcome.NoSensor
-      ) {
-        await showApprovalPinLocked(t("common.pin_locked.body"));
-        dispatchTransferFlow({
-          type: TransferFlowActionType.CreateNotSent,
-          notice: TransferFlowScenario.PinLocked,
-        });
-        return;
-      }
+        sensorRefusalOutcome === BiometricSignOutcome.NoSensor)
+    ) {
+      await showApprovalPinLocked(t("common.pin_locked.body"));
+      dispatchTransferFlow({
+        type: TransferFlowActionType.CreateNotSent,
+        notice: TransferFlowScenario.PinLocked,
+      });
+      return;
     }
     const reviewing = transferFlowStore.getState();
     // A name check run again answers with a new ref, and the bank refuses a kept key sent with another body.
@@ -175,6 +180,13 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       })
     )
       return;
+    if (hasLeftReviewSincePress()) {
+      dispatchTransferFlow({
+        type: TransferFlowActionType.ApprovalNotSent,
+        notice: TransferFlowScenario.ApprovalCancelled,
+      });
+      return;
+    }
     await sendTransferApproval(path);
   };
   const transferDisabledReason =
