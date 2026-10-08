@@ -71,7 +71,7 @@ The scenario matrix, [`src/screens/transfer/scenarios/transfer.md`](src/screens/
 3. Its words, in all three languages, under `common.<name>` in the flow's bundles, where `<name>` is the id after `transfer.`.
 4. Its route test, as below.
 
-With no scenario picked, the mock bank behaves as a normal bank. Every test starts that way, with the bank reset before it, and a scenario changes only what its entry names. In development and demo builds, the Demo menu picks one scenario at a time, and its Normal entry goes back to the normal bank without clearing what the bank holds.
+With no scenario picked, the mock bank behaves as a normal bank. Every test starts that way, with the bank reset before it, and a scenario changes only what its entry names.
 
 ## Adding a test
 
@@ -98,7 +98,7 @@ Every string the production app shows comes from a bundle in English (`en-MY`), 
 
 ## Build variants
 
-`EXPO_PUBLIC_APP_VARIANT` picks the build: `development`, `demo` or `production`. Unset or empty means `production`, so a build with no variant fails closed. Development and demo carry the mock bank and the Demo menu. Production carries neither and calls an API address that never resolves.
+`EXPO_PUBLIC_APP_VARIANT` picks the build: `development`, `demo` or `production`. Unset or empty means `production`, so a build with no variant fails closed. Development and demo carry the mock bank. Production does not, and calls an API address that never resolves.
 
 | Variant       | Metro        | iOS                   | Android                   | An Android APK, with no device  |
 | ------------- | ------------ | --------------------- | ------------------------- | ------------------------------- |
