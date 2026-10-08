@@ -21,6 +21,7 @@ import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import SectionTransferDetails from "../components/SectionTransferDetails/SectionTransferDetails";
+import IconTransferCompleted from "./components/IconTransferCompleted/IconTransferCompleted";
 import TextOutcome from "./components/TextOutcome/TextOutcome";
 import {
   MONEY_STATE_BY_OUTCOME,
@@ -119,6 +120,9 @@ export default function TransferResultScreen() {
           }).duration(motionDurations.screenContentEntrance)}
           style={styles.outcome}
         >
+          {scenario === TransferOutcomeScenario.Completed && (
+            <IconTransferCompleted />
+          )}
           <TextOutcome
             scenario={scenario}
             transfer={transfer.data}

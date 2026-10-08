@@ -4,6 +4,7 @@ import { Easing } from "react-native-reanimated";
 export const motionDurations = {
   screenTransition: 220,
   screenContentEntrance: 250,
+  successMark: 400,
 };
 
 // Material Design 3's standard easing.
