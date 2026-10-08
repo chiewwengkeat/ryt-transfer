@@ -21,17 +21,15 @@ const PHONE_METRICS = {
 
 function ScreenWithBankSheet({
   dismissable = true,
-  onSheetOpenChange,
 }: {
   dismissable?: boolean;
-  onSheetOpenChange?: (sheetOpen: boolean) => void;
 }) {
   const [bankSheetOpen, setBankSheetOpen] = useState(false);
   const [branchSheetOpen, setBranchSheetOpen] = useState(false);
   const [bankSearch, setBankSearch] = useState("");
   return (
     <SafeAreaProvider initialMetrics={PHONE_METRICS}>
-      <ViewBottomSheetHost onSheetOpenChange={onSheetOpenChange}>
+      <ViewBottomSheetHost>
         <ButtonPrimary
           label="Choose a bank"
           onPress={() => {
@@ -235,18 +233,6 @@ it("keeps a sheet that may not be dismissed open on VoiceOver's escape gesture, 
 
   expect(screen.getByRole("header", { name: "Banks" })).toBeOnTheScreen();
   expect(escapeOutsideTheSheet).not.toHaveBeenCalled();
-});
-
-it("tells its mounter when a sheet opens and when the last one closes", async () => {
-  const onSheetOpenChange = jest.fn<void, [boolean]>();
-  await render(<ScreenWithBankSheet onSheetOpenChange={onSheetOpenChange} />);
-
-  await openBankSheet();
-  const reportedWhileOpen = onSheetOpenChange.mock.lastCall;
-  await fireEvent.press(screen.getByRole("button", { name: "Close" }));
-
-  expect(reportedWhileOpen).toEqual([true]);
-  expect(onSheetOpenChange).toHaveBeenLastCalledWith(false);
 });
 
 it("hands what is typed in its search field to its owner", async () => {

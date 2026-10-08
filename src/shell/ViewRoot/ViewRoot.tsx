@@ -27,7 +27,6 @@ export default function ViewRoot() {
   usePendingTransfersAtLaunch();
   useScreenCaptureBlock();
   const [sessionEnded, setSessionEnded] = useState(false);
-  const [demoSheetOpen, setDemoSheetOpen] = useState(false);
   const [navigatorMounts, setNavigatorMounts] = useState(0);
   useEffect(
     () =>
@@ -60,7 +59,7 @@ export default function ViewRoot() {
 
   const appWithSessionEndedView = (
     <>
-      <View aria-hidden={sessionEnded || demoSheetOpen} style={styles.app}>
+      <View aria-hidden={sessionEnded} style={styles.app}>
         <ViewBottomSheetHost>
           <Stack key={navigatorMounts} screenOptions={screenTransitionOptions}>
             <Stack.Screen name="transfer" options={{ headerShown: false }} />
@@ -70,7 +69,7 @@ export default function ViewRoot() {
         </ViewBottomSheetHost>
       </View>
       {sessionEnded && (
-        <View aria-hidden={demoSheetOpen} style={styles.layer}>
+        <View style={styles.layer}>
           <ViewSessionEnded
             // Stands in for the host app's sign-in: the session is the host's, so a standalone build only resumes.
             onSignIn={() => {
@@ -101,7 +100,6 @@ export default function ViewRoot() {
             // Remounts every screen: endSession's clear() leaves their reads on removed queries, which no later answer reaches.
             setNavigatorMounts((mounts) => mounts + 1);
           }}
-          onSheetOpenChange={setDemoSheetOpen}
         >
           {appWithSessionEndedView}
         </demoLayer.ViewDemo>

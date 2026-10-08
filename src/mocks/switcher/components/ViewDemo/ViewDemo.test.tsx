@@ -73,10 +73,7 @@ function ScreenShowingItsTopInset() {
 async function renderDemoAroundAnApp({ appSheetOpen = false } = {}) {
   await render(
     <SafeAreaProvider initialMetrics={PHONE_METRICS}>
-      <ViewDemo
-        onResetDemo={() => Promise.resolve()}
-        onSheetOpenChange={jest.fn()}
-      >
+      <ViewDemo onResetDemo={() => Promise.resolve()}>
         <ViewBottomSheetHost>
           <ScreenShowingItsTopInset />
           {appSheetOpen && (

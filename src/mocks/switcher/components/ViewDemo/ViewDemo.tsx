@@ -12,15 +12,11 @@ import BottomSheetDemo from "./components/BottomSheetDemo/BottomSheetDemo";
 import HeaderDemo from "./components/HeaderDemo/HeaderDemo";
 
 type Props = ComponentProps<DemoLayer["ViewDemo"]>;
-export default function ViewDemo({
-  children,
-  onResetDemo,
-  onSheetOpenChange,
-}: Props) {
+export default function ViewDemo({ children, onResetDemo }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const insets = useSafeAreaInsets();
   return (
-    <ViewBottomSheetHost onSheetOpenChange={onSheetOpenChange}>
+    <ViewBottomSheetHost>
       <HeaderDemo
         onOpenMenu={() => {
           setMenuOpen(true);

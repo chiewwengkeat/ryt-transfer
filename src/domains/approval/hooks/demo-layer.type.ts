@@ -9,7 +9,6 @@ export interface DemoLayer {
   ViewDemo: ComponentType<{
     children: ReactNode;
     onResetDemo: () => Promise<void>;
-    onSheetOpenChange: (sheetOpen: boolean) => void;
   }>;
   subscribeToBiometricsOff: (
     onChange: (biometricsOff: boolean) => void,
