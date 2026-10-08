@@ -4,7 +4,7 @@
 
 A transfer needs proof that the account holder approved this transfer, to this recipient, for this amount, on their own phone. A biometric prompt that answers only yes or no proves none of that: it ties nothing to the transfer, and Expo's local-authentication module, for one, reports the same success for the phone's passcode as for a fingerprint. That passcode is often known to family, and it is all a phone asks before someone adds a fingerprint of their own.
 
-Bank Negara Malaysia's Risk Management in Technology policy (RMiT) expects the code that authorises a transfer to be generated on the payer's device, with more than one factor, and to be specific to the confirmed recipient and amount. It forbids the app from storing a PIN, which the bank verifies centrally, and where biometrics alone authenticate a customer, it expects the bank to detect a change to the biometrics a device approves with. Some phones have no biometrics at all.
+Bank Negara Malaysia's Risk Management in Technology policy (RMiT) expects the code that authorises a transfer to be generated on the payer's device, with more than one factor, and to be specific to the confirmed recipient and amount. It forbids the app from storing a PIN, which the bank verifies centrally, and where biometrics alone authenticate a transaction, as when an app relies on the phone's own biometric check, it expects the bank to detect a change to the biometrics a device approves with. Some phones have no biometrics at all.
 
 ## Decision
 
@@ -15,7 +15,7 @@ Each transfer is approved by a signature the bank checks, never by a yes-or-no p
 - **A changed fingerprint or face ends the biometric key.** The app notices when signing fails, explains, takes the PIN once, approves the current transfer through the PIN path and registers a new biometric key with the same PIN. The bank records the change and notifies the customer.
 - **Approval is a step on the review screen**, the system's biometric prompt or the PIN sheet over review, not a route of its own, so no URL or back entry leads into a half-approved transfer.
 - **The signing library sits behind an adapter.** `@sbaiahmed1/react-native-biometrics` is pinned to an exact version, and the adapter always asks for EC P-256 and strong biometrics: without the strong setting, an iPhone key survives a newly added face or fingerprint.
-- **The mock bank verifies every signature** with `@noble/curves` (`src/mocks/bank/verification.ts`), so a tampered amount is refused in the demo and in tests as the bank would refuse it.
+- **The mock bank verifies every signature** with `@noble/curves` (`src/mocks/bank/verification.ts`), so a tampered amount is refused wherever the mock bank answers, as the bank would refuse it.
 - **The Demo menu never approves.** "No biometrics" sends approval down the PIN path, which still signs with the hardware key and still needs the PIN the bank checks; "Unlock PIN", shown only while the demo PIN is locked and marked as demo-only, unlocks it; the rooted-phone entry makes approval refuse. So no build approves a transfer without a real biometric or the PIN.
 
 ## Rejected
@@ -33,4 +33,4 @@ Each transfer is approved by a signature the bank checks, never by a yes-or-no p
 - **A shared modal route for approval.** Any flow could reuse it, but it would need the same guarding as a screen of its own, its result would have to reach the caller through shared state, and the 60-second challenge would no longer live within one screen.
 - **A Demo menu that fakes approval results.** The demo build would approve transfers with no real authentication.
 - **A Demo menu that never touches approval.** A reviewer on a real phone would have to remove their own fingerprints to see the PIN fallback.
-- **A mock bank that trusts any signature.** A demo would pass a transfer the real bank would refuse, where checking each signature for real shows a tampered amount refused on screen.
+- **A mock bank that trusts any signature.** A demo would pass a transfer the real bank would refuse, where checking each signature for real refuses a tampered amount as the bank would.
