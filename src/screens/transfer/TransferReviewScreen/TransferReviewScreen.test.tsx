@@ -430,6 +430,24 @@ it(
   }),
 );
 
+it("re-reads the balance after something unexpected fails past the approval, so Home shows the debit the bank made", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100("/");
+  // Nothing the bank answers can fail past the approval, so a navigation fault stands in.
+  jest.spyOn(router, "dismissTo").mockImplementationOnce(() => {
+    throw new Error("Test.");
+  });
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Back to Home" }),
+  );
+
+  expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
+});
+
 it(
   "starts the next transfer blank after going Home from an approval whose answer was lost",
   scenarioTest("transfer.approval_unanswered", async () => {
