@@ -6,7 +6,7 @@ The transfer flow runs across several screens, and several of its steps wait on 
 
 ## Decision
 
-The transfer flow is a plain typed reducer. It is in one state at a time — editing, reviewing, creating, approving, submitting, checking, done — each holding only what that step needs, and it rejects any transition its current state does not allow. A confirmation that arrives outside reviewing is ignored, and going back to edit discards the transfer's idempotency key ([006](006-never-sent-twice.md)).
+The transfer flow is a plain typed reducer. It is in one state at a time — editing, reviewing, creating, approving, submitting, done — each holding only what that step needs, and it rejects any transition its current state does not allow. A confirmation that arrives outside reviewing is ignored, and going back to edit discards the transfer's idempotency key ([006](006-never-sent-twice.md)).
 
 The reducer lives in a zustand store. A component subscribes to the slice it shows and re-renders only when that slice changes, and code outside React reads the store directly: the deep-link handler drops a link that arrives mid-transfer. `src/mocks/switcher/switcher-store.ts`, read by the mock bank outside React, is the same pattern at its smallest.
 
