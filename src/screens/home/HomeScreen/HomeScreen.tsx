@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
+import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import ButtonLanguage from "./components/ButtonLanguage/ButtonLanguage";
@@ -22,7 +23,10 @@ export default function HomeScreen() {
       />
       <ViewScreenFrame footer={<ButtonStartTransfer />}>
         <SectionTransferNotices />
-        <CardBalance unexpectedScenario="start_unexpected" />
+        <CardBalance
+          unexpectedScenario="start_unexpected"
+          onScenarioShown={trackScenarioShown}
+        />
         <ButtonTransferHistory />
         <SectionRecentRecipientsHome />
       </ViewScreenFrame>

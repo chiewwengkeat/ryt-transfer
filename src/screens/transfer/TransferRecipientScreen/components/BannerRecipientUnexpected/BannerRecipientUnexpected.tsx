@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
-import { useTrackScenarioShown } from "@/shared/observability/observability";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 
 interface Props {

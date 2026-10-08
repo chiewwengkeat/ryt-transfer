@@ -13,15 +13,13 @@ import {
   askForApprovalPin,
   showApprovalPinLocked,
 } from "@/domains/approval/hooks/approval-pin-sheet";
+import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
 import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
-import {
-  reportError,
-  trackScenarioShown,
-} from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability";
 
 export function useRegisterApprovalKeysAgain() {
   const { t } = useTranslation("transfer");

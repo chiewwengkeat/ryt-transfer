@@ -9,8 +9,11 @@ import {
 } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
 import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
+import {
+  trackScenarioShown,
+  useTrackScenarioShown,
+} from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { formatMoney, parseTypedAmount } from "@/shared/lib/money/money";
-import { useTrackScenarioShown } from "@/shared/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import FieldText from "@/shared/ui/FieldText/FieldText";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
@@ -154,7 +157,10 @@ export default function TransferAmountScreen() {
         }
       >
         <BannerFlowNotice step={TransferFlowStep.Editing} />
-        <CardBalance unexpectedScenario="amount_unexpected" />
+        <CardBalance
+          unexpectedScenario="amount_unexpected"
+          onScenarioShown={trackScenarioShown}
+        />
         <FieldText
           label={t("amount.label")}
           placeholder={t("amount.placeholder")}

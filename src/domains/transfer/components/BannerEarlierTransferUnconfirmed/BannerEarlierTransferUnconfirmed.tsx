@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 
-import { useTrackScenarioShown } from "@/shared/observability/observability";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 
 import { usePendingTransferNotices } from "../../hooks/pending-transfer-notices";
+import { useTrackScenarioShown } from "../../hooks/use-track-scenario-shown";
 
 export default function BannerEarlierTransferUnconfirmed() {
   const { t } = useTranslation("transfer");

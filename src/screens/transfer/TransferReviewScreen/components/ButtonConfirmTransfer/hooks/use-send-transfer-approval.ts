@@ -27,6 +27,7 @@ import {
   type ApproveTransferRequest,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
+import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import {
   ApprovalPath,
   dispatchTransferFlow,
@@ -41,10 +42,7 @@ import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
-import {
-  reportError,
-  trackScenarioShown,
-} from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability";
 
 import { settleApprovalAnswer } from "./settle-approval-answer";
 import { useRegisterApprovalKeysAgain } from "./use-register-approval-keys-again";

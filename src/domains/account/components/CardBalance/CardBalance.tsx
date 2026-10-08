@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -11,7 +12,6 @@ import {
   TransportErrorKind,
 } from "@/shared/http/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
-import { useTrackScenarioShown } from "@/shared/observability/observability";
 import { useIsOffline } from "@/shared/platform/offline";
 import { colors, typography } from "@/shared/theme/theme";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
@@ -21,8 +21,12 @@ import TextBody from "@/shared/ui/TextBody/TextBody";
 
 interface Props {
   unexpectedScenario: "start_unexpected" | "amount_unexpected";
+  onScenarioShown: (scenario: string) => void;
 }
-export default function CardBalance({ unexpectedScenario }: Props) {
+export default function CardBalance({
+  unexpectedScenario,
+  onScenarioShown,
+}: Props) {
   const { t, i18n } = useTranslation("account");
   // Only a request that reaches the bank ends offline, so the card keeps asking while it lasts.
   const refetchInterval = useIsOffline() ? 10_000 : false;
@@ -43,15 +47,17 @@ export default function CardBalance({ unexpectedScenario }: Props) {
               (failure.status ?? 0) >= 500))
         ? "balance_unavailable"
         : unexpectedScenario;
-  useTrackScenarioShown(
+  const shownScenario =
     failureScenario !== undefined
       ? `transfer.${failureScenario}`
       : limitsPausedForMaintenance
         ? "transfer.under_maintenance"
         : account.data !== undefined && limits.isSuccess
           ? "transfer.balance_and_limit_shown"
-          : undefined,
-  );
+          : undefined;
+  useEffect(() => {
+    if (shownScenario !== undefined) onScenarioShown(shownScenario);
+  }, [shownScenario, onScenarioShown]);
 
   if (failureScenario !== undefined) {
     return (

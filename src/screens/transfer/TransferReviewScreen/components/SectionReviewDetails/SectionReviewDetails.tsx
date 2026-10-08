@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { LookupRecipientErrorCode } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import {
   isTransferBeingSent,
   TransferFlowScenario,
@@ -10,7 +11,6 @@ import {
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
 import { TransportError } from "@/shared/http/transport-error";
-import { useTrackScenarioShown } from "@/shared/observability/observability";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import Card from "@/shared/ui/Card/Card";

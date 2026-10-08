@@ -7,7 +7,7 @@ import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-reci
 import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
-import { useTrackScenarioShown } from "@/shared/observability/observability";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
