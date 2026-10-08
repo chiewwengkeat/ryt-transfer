@@ -336,7 +336,10 @@ it("flags a money message without its state's phrase, in each language", () => {
   expect(
     findMoneyMessagesWithoutTheirPhrase(sections, {
       [AppLanguage.English]: {
-        approval_cancelled: { body: "Approval cancelled. No money moved." },
+        approval_cancelled: {
+          title: "Approval cancelled",
+          body: "Approval cancelled. No money moved.",
+        },
         completed: { body: "No money moved." },
       },
       [AppLanguage.Malay]: {
