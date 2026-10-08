@@ -73,7 +73,10 @@ function ScreenShowingItsTopInset() {
 async function renderDemoAroundAnApp({ appSheetOpen = false } = {}) {
   await render(
     <SafeAreaProvider initialMetrics={PHONE_METRICS}>
-      <ViewDemo onResetDemo={() => Promise.resolve()}>
+      <ViewDemo
+        appSheetOpen={appSheetOpen}
+        onResetDemo={() => Promise.resolve()}
+      >
         <ViewBottomSheetHost>
           <ScreenShowingItsTopInset />
           {appSheetOpen && (
@@ -179,10 +182,15 @@ it("takes its own place above the app, never drawing over it, so the app pads fo
   ).not.toHaveStyle({ position: "absolute" });
 });
 
-it("opens the Demo menu while an app sheet is open, leaving the sheet open beneath it but out of a screen reader's reach", async () => {
+it("opens the Demo menu by touch over an open app sheet, leaving the sheet open beneath it but out of a screen reader's reach", async () => {
   await renderDemoAroundAnApp({ appSheetOpen: true });
 
-  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
+  await fireEvent.press(
+    screen.getByRole("button", {
+      name: "Demo menu",
+      includeHiddenElements: true,
+    }),
+  );
 
   expect(
     screen.getByRole("button", { name: "Close the demo menu" }),

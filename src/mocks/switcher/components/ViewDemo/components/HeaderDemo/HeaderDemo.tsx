@@ -14,9 +14,10 @@ import {
 } from "@/shared/theme/theme";
 
 interface Props {
+  appSheetOpen: boolean;
   onOpenMenu: () => void;
 }
-export default function HeaderDemo({ onOpenMenu }: Props) {
+export default function HeaderDemo({ appSheetOpen, onOpenMenu }: Props) {
   const { t, scenarioTitle } = useDemoTranslation();
   const { i18n } = useTranslation();
   const scenarioId = useStore(switcherStore, (pick) => pick.scenarioId);
@@ -24,6 +25,8 @@ export default function HeaderDemo({ onOpenMenu }: Props) {
 
   return (
     <View
+      // Above the app, this would take a screen reader's first focus from an open sheet.
+      aria-hidden={appSheetOpen}
       style={[
         styles.header,
         { paddingTop: top },

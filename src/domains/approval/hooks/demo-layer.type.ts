@@ -7,6 +7,7 @@ export interface DemoLayer {
   demoSend: Send;
   pairPhoneAtFirstLaunch: () => Promise<void>;
   ViewDemo: ComponentType<{
+    appSheetOpen: boolean;
     children: ReactNode;
     onResetDemo: () => Promise<void>;
   }>;

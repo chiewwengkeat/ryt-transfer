@@ -1,6 +1,8 @@
 import {
   createContext,
   Fragment,
+  useEffect,
+  useEffectEvent,
   useMemo,
   useState,
   type ReactNode,
@@ -9,8 +11,12 @@ import { StyleSheet, View } from "react-native";
 
 interface Props {
   children: ReactNode;
+  onSheetOpenChange?: (sheetOpen: boolean) => void;
 }
-export default function ViewBottomSheetHost({ children }: Props) {
+export default function ViewBottomSheetHost({
+  children,
+  onSheetOpenChange,
+}: Props) {
   const [openSheets, setOpenSheets] = useState<
     { sheetId: string; sheet: ReactNode }[]
   >([]);
@@ -35,9 +41,17 @@ export default function ViewBottomSheetHost({ children }: Props) {
     [],
   );
 
+  const sheetOpen = openSheets.length > 0;
+  const reportSheetOpen = useEffectEvent(() => {
+    onSheetOpenChange?.(sheetOpen);
+  });
+  useEffect(() => {
+    reportSheetOpen();
+  }, [sheetOpen]);
+
   return (
     <BottomSheetHostContext value={sheetHost}>
-      <View aria-hidden={openSheets.length > 0} style={styles.layer}>
+      <View aria-hidden={sheetOpen} style={styles.layer}>
         {children}
       </View>
       {openSheets.map(({ sheetId, sheet }) => (

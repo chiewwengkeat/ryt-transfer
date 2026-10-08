@@ -140,6 +140,33 @@ it("draws a screen's sheet over the app and hides the screen behind it from scre
   ).toBeOnTheScreen();
 });
 
+it("hides the Demo header from screen readers while a screen's sheet is open, so the sheet is what they meet first", async () => {
+  await renderDemoRoot();
+  await pickDemoScenario("Transfers under maintenance");
+
+  await fireEvent.press(screen.getByRole("button", { name: "Choose a bank" }));
+  const scenarioWhileSheetOpen = screen.queryByText(
+    "Demo · Transfers under maintenance",
+  );
+  const backToNormalWhileSheetOpen = screen.queryByRole("button", {
+    name: "Back to normal",
+  });
+  const menuWhileSheetOpen = screen.queryByRole("button", {
+    name: "Demo menu",
+  });
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Close the banks" }),
+  );
+
+  expect(scenarioWhileSheetOpen).not.toBeOnTheScreen();
+  expect(backToNormalWhileSheetOpen).not.toBeOnTheScreen();
+  expect(menuWhileSheetOpen).not.toBeOnTheScreen();
+  expect(
+    screen.getByText("Demo · Transfers under maintenance"),
+  ).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Demo menu" })).toBeOnTheScreen();
+});
+
 it("stops a transfer's approval before any face or fingerprint prompt while No biometrics is picked", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/transfer");

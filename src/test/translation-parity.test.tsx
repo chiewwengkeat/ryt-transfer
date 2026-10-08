@@ -151,7 +151,9 @@ it("registers every English key in Malay and Chinese, with English's placeholder
         insets: { top: 0, right: 0, bottom: 0, left: 0 },
       }}
     >
-      <ViewDemo onResetDemo={jest.fn()}>{null}</ViewDemo>
+      <ViewDemo appSheetOpen={false} onResetDemo={jest.fn()}>
+        {null}
+      </ViewDemo>
     </SafeAreaProvider>,
   );
 

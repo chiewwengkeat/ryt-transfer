@@ -27,6 +27,7 @@ export default function ViewRoot() {
   usePendingTransfersAtLaunch();
   useScreenCaptureBlock();
   const [sessionEnded, setSessionEnded] = useState(false);
+  const [appSheetOpen, setAppSheetOpen] = useState(false);
   const [navigatorMounts, setNavigatorMounts] = useState(0);
   useEffect(
     () =>
@@ -60,7 +61,10 @@ export default function ViewRoot() {
   const appWithSessionEndedView = (
     <>
       <View aria-hidden={sessionEnded} style={styles.app}>
-        <ViewBottomSheetHost>
+        <ViewBottomSheetHost
+          // Production has no Demo header to hide, so its root need not re-render as sheets open.
+          onSheetOpenChange={demoLayer === null ? undefined : setAppSheetOpen}
+        >
           <Stack key={navigatorMounts} screenOptions={screenTransitionOptions}>
             <Stack.Screen name="transfer" options={{ headerShown: false }} />
           </Stack>
@@ -89,6 +93,7 @@ export default function ViewRoot() {
       ) : (
         // Outside the session-ended view, so a reviewer who picked an ended session can still return to normal.
         <demoLayer.ViewDemo
+          appSheetOpen={appSheetOpen}
           onResetDemo={async () => {
             // First: endSession's clear() leaves a mounted screen showing its last read, so it reads the reset bank now.
             await queryClient.resetQueries();
