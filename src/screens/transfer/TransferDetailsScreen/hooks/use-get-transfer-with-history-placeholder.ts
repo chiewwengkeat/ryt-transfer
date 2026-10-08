@@ -8,9 +8,11 @@ import { parseWireAmount } from "@/shared/lib/money/money";
 export function useGetTransferWithHistoryPlaceholder(transferId: string) {
   const queryClient = useQueryClient();
   const findReadableHistoryRow = () => {
-    const listed = findTransferInHistory(queryClient, transferId);
+    const historyRow = findTransferInHistory(queryClient, transferId);
     // The select runs on a placeholder too, and its throw would show as a failure while the fetch is on its way.
-    return listed && parseWireAmount(listed.amount) ? listed : undefined;
+    return historyRow && parseWireAmount(historyRow.amount)
+      ? historyRow
+      : undefined;
   };
   const parseTransferAmount = (transfer: Transfer) => {
     const amount = parseWireAmount(transfer.amount);

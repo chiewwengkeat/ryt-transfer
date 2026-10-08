@@ -75,7 +75,7 @@ function useRenderMeasurementFromLaunchLink(
         await waitUntilCommitsSettle();
         if (unmounted) return;
         const before = latestInputsRef.current.describeState();
-        const cells: Record<
+        const countsByCellKind: Record<
           string,
           {
             mounted: number;
@@ -85,7 +85,7 @@ function useRenderMeasurementFromLaunchLink(
           }
         > = {};
         const countsFor = (cellKind: string) =>
-          (cells[cellKind] ??= {
+          (countsByCellKind[cellKind] ??= {
             mounted: 0,
             rerenderedCells: 0,
             rerenders: 0,
@@ -104,15 +104,15 @@ function useRenderMeasurementFromLaunchLink(
         measuredCommits = null;
         if (unmounted) return;
 
-        const rerenderedCells = new Set<string>();
+        const rerenderedKindsAndKeys = new Set<string>();
         for (const { cellKind, cellKey, rerender } of commits) {
-          const cell = `${cellKind}\n${cellKey}`;
+          const kindAndKey = `${cellKind}\n${cellKey}`;
           if (!rerender) countsFor(cellKind).firstRenders += 1;
-          else if (shownAtStart.has(cell)) {
+          else if (shownAtStart.has(kindAndKey)) {
             countsFor(cellKind).rerenders += 1;
-            if (!rerenderedCells.has(cell))
+            if (!rerenderedKindsAndKeys.has(kindAndKey))
               countsFor(cellKind).rerenderedCells += 1;
-            rerenderedCells.add(cell);
+            rerenderedKindsAndKeys.add(kindAndKey);
           }
         }
         console.info(
@@ -120,7 +120,7 @@ function useRenderMeasurementFromLaunchLink(
             operation,
             before,
             after: latestInputsRef.current.describeState(),
-            cells,
+            cells: countsByCellKind,
             formatCalls: formatCallCount - formatCallsAtStart,
           })}`,
         );

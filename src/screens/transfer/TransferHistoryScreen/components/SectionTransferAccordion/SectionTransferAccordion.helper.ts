@@ -10,7 +10,7 @@ const collapsedDayHeaderRows = new WeakMap<
 >();
 
 // One object per summary and flag: a header's cell redraws only when its day's summary or open state changes.
-export function getTransferDayHeaderRow(
+export function reuseTransferDayHeaderRow(
   summary: DaySummary,
   expanded: boolean,
 ) {

@@ -27,10 +27,14 @@ export default function HeaderTransferDay({
 }: Props) {
   useRenderTrace("header", summary.date);
   const { t } = useTranslation("transfer");
-  const day = traceFormatCalls(formatMalaysianDayHeader)(summary.date, today);
-  const net = parseWireAmount(summary.net);
+  const dayLabel = traceFormatCalls(formatMalaysianDayHeader)(
+    summary.date,
+    today,
+  );
+  const parsedNet = parseWireAmount(summary.net);
   const netText =
-    net && traceFormatCalls(formatMoney)(net, { signDisplay: "exceptZero" });
+    parsedNet &&
+    traceFormatCalls(formatMoney)(parsedNet, { signDisplay: "exceptZero" });
 
   return (
     <Pressable
@@ -38,8 +42,15 @@ export default function HeaderTransferDay({
       accessibilityState={{ expanded }}
       accessibilityLabel={
         netText === null
-          ? t("history.day.label_without_net", { day, count: summary.count })
-          : t("history.day.label", { day, count: summary.count, net: netText })
+          ? t("history.day.label_without_net", {
+              day: dayLabel,
+              count: summary.count,
+            })
+          : t("history.day.label", {
+              day: dayLabel,
+              count: summary.count,
+              net: netText,
+            })
       }
       onPress={onToggle}
       style={({ pressed }) => [styles.header, pressed && styles.headerPressed]}
@@ -47,7 +58,7 @@ export default function HeaderTransferDay({
       <IconChevron expanded={expanded} />
       <View style={styles.title}>
         <TextBody strong>
-          {t("history.day.title", { day, count: summary.count })}
+          {t("history.day.title", { day: dayLabel, count: summary.count })}
         </TextBody>
       </View>
       {netText !== null && <TextBody strong>{netText}</TextBody>}

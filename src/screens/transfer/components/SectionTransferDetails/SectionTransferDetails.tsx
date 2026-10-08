@@ -18,9 +18,9 @@ interface Props {
 export default function SectionTransferDetails({ transfer }: Props) {
   const { t } = useTranslation("transfer");
   const statusWord = useTransferStatusWord(transfer);
-  const received = transfer.direction === TransferDirection.In;
+  const isReceived = transfer.direction === TransferDirection.In;
   // No phrase where the matrix has none (received, approval in flight), nor "money returned" before a refund lands.
-  const moneyState = received
+  const moneyState = isReceived
     ? undefined
     : (
         {
@@ -80,7 +80,7 @@ export default function SectionTransferDetails({ transfer }: Props) {
       />
       <RowDetail
         label={
-          received
+          isReceived
             ? t("common.section_transfer_details.received_from")
             : t("common.section_transfer_details.sent_to")
         }
@@ -109,7 +109,7 @@ export default function SectionTransferDetails({ transfer }: Props) {
       {sentAt !== undefined && (
         <RowDetail
           label={
-            received
+            isReceived
               ? t("common.section_transfer_details.received_at")
               : t("common.section_transfer_details.sent_at")
           }

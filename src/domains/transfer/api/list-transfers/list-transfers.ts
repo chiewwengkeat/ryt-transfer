@@ -30,10 +30,10 @@ export const getListTransfersOptions = () =>
   infiniteQueryOptions({
     queryKey: transferKeys.history(),
     queryFn: async ({ pageParam, signal }) => {
-      const search = new URLSearchParams({ limit: "30" });
-      if (pageParam !== null) search.set("cursor", pageParam);
+      const searchParams = new URLSearchParams({ limit: "30" });
+      if (pageParam !== null) searchParams.set("cursor", pageParam);
       const page = await requestJson<ListTransfersResponse>(
-        `/transfers?${search.toString()}`,
+        `/transfers?${searchParams.toString()}`,
         { signal },
       );
       const unreadableAmountCount = [
@@ -147,18 +147,23 @@ export async function patchTransferInHistory(
   queryClient.setQueriesData<InfiniteData<ListTransfersResponse>>(
     { queryKey: transferKeys.historyAll },
     (history) => {
-      const listed = history?.pages
+      const listedTransfer = history?.pages
         .flatMap(({ items }) => items)
         .find(({ transferId }) => transferId === transfer.transferId);
-      if (!history || !listed || listed.version >= transfer.version)
+      if (
+        !history ||
+        !listedTransfer ||
+        listedTransfer.version >= transfer.version
+      )
         return history;
       // The bank's day net, kept true until the next reset brings its own figure.
-      const amount = parseWireAmount(transfer.amount);
-      const netMoveMinor = amount
-        ? (MONEY_MOVED_SIGN[transfer.funds] - MONEY_MOVED_SIGN[listed.funds]) *
-          amount.minor
+      const parsedAmount = parseWireAmount(transfer.amount);
+      const netMoveMinor = parsedAmount
+        ? (MONEY_MOVED_SIGN[transfer.funds] -
+            MONEY_MOVED_SIGN[listedTransfer.funds]) *
+          parsedAmount.minor
         : 0;
-      const listedDate = toMalaysianDateKey(listed.createdAt);
+      const listedDate = toMalaysianDateKey(listedTransfer.createdAt);
       return {
         ...history,
         pages: history.pages.map((page) => ({

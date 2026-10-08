@@ -1,4 +1,4 @@
-import { getTransferDayHeaderRow } from "./SectionTransferAccordion.helper";
+import { reuseTransferDayHeaderRow } from "./SectionTransferAccordion.helper";
 
 const daySummary = {
   date: "2026-10-05",
@@ -7,22 +7,22 @@ const daySummary = {
 };
 
 it("hands back the same header row while a day's summary and open state stay the same", () => {
-  expect(getTransferDayHeaderRow(daySummary, true)).toBe(
-    getTransferDayHeaderRow(daySummary, true),
+  expect(reuseTransferDayHeaderRow(daySummary, true)).toBe(
+    reuseTransferDayHeaderRow(daySummary, true),
   );
-  expect(getTransferDayHeaderRow(daySummary, false)).toBe(
-    getTransferDayHeaderRow(daySummary, false),
+  expect(reuseTransferDayHeaderRow(daySummary, false)).toBe(
+    reuseTransferDayHeaderRow(daySummary, false),
   );
 });
 
 it("makes a new header row when the day's summary or its open state changes", () => {
-  expect(getTransferDayHeaderRow(daySummary, false)).not.toBe(
-    getTransferDayHeaderRow(daySummary, true),
+  expect(reuseTransferDayHeaderRow(daySummary, false)).not.toBe(
+    reuseTransferDayHeaderRow(daySummary, true),
   );
-  expect(getTransferDayHeaderRow({ ...daySummary }, true)).not.toBe(
-    getTransferDayHeaderRow(daySummary, true),
+  expect(reuseTransferDayHeaderRow({ ...daySummary }, true)).not.toBe(
+    reuseTransferDayHeaderRow(daySummary, true),
   );
-  expect(getTransferDayHeaderRow(daySummary, false)).toEqual({
+  expect(reuseTransferDayHeaderRow(daySummary, false)).toEqual({
     summary: daySummary,
     expanded: false,
   });

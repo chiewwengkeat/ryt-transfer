@@ -15,7 +15,7 @@ import ItemTransfer from "./components/ItemTransfer/ItemTransfer";
 import ViewTransferHistoryFooter from "./components/ViewTransferHistoryFooter/ViewTransferHistoryFooter";
 import { useMalaysianToday } from "./hooks/use-malaysian-today";
 import { useTransferHistoryRenderMeasurement } from "./hooks/use-transfer-history-render-measurement";
-import { getTransferDayHeaderRow } from "./SectionTransferAccordion.helper";
+import { reuseTransferDayHeaderRow } from "./SectionTransferAccordion.helper";
 
 interface Props {
   transferHistory: ReturnType<typeof useListTransfers>;
@@ -40,7 +40,9 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
     const expanded =
       collapsedAt === undefined || dayTransfers.length > collapsedAt;
     const summary = transferHistory.data?.daySummaries[date];
-    const header = summary ? [getTransferDayHeaderRow(summary, expanded)] : [];
+    const header = summary
+      ? [reuseTransferDayHeaderRow(summary, expanded)]
+      : [];
     return expanded ? [...header, ...dayTransfers] : header;
   });
   const listRef = useRef<FlashListRef<(typeof dataItems)[number]>>(null);
@@ -57,10 +59,10 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
       : 0;
   };
 
-  const toggleTransferDay = (date: string, expanded: boolean) => {
+  const toggleTransferDay = (date: string, wasExpanded: boolean) => {
     setCollapsedDayRowCounts((counts) => ({
       ...counts,
-      [date]: expanded ? countLoadedTransfersOn(date) : undefined,
+      [date]: wasExpanded ? countLoadedTransfersOn(date) : undefined,
     }));
   };
 

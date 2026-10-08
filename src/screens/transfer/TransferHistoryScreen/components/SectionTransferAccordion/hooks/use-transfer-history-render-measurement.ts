@@ -24,7 +24,7 @@ function useTransferHistoryRenderMeasurementInDevelopment(
     FlashListRef<unknown>,
     "scrollToTop" | "scrollToEnd"
   > | null>,
-  toggleTransferDay: (date: string, expanded: boolean) => void,
+  toggleTransferDay: (date: string, wasExpanded: boolean) => void,
 ) {
   const queryClient = useQueryClient();
   const transfers = transferHistory.data?.transfers ?? [];

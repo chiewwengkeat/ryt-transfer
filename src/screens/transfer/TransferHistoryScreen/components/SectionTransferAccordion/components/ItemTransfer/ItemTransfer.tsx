@@ -23,7 +23,7 @@ export default function ItemTransfer({ transfer }: Props) {
   useRenderTrace("row", transfer.transferId);
   const { t } = useTranslation("transfer");
   const statusWord = useTransferStatusWord(transfer);
-  const amount = parseWireAmount(transfer.amount);
+  const parsedAmount = parseWireAmount(transfer.amount);
   const moneyMovedSign = MONEY_MOVED_SIGN[transfer.funds];
   const transferTime = traceFormatCalls(formatMalaysianTime)(
     transfer.createdAt,
@@ -52,12 +52,15 @@ export default function ItemTransfer({ transfer }: Props) {
               })}
         </TextBody>
       </View>
-      {amount && (
+      {parsedAmount && (
         <TextBody strong>
           {moneyMovedSign === 0
-            ? traceFormatCalls(formatMoney)(amount)
+            ? traceFormatCalls(formatMoney)(parsedAmount)
             : traceFormatCalls(formatMoney)(
-                { ...amount, minor: asSen(moneyMovedSign * amount.minor) },
+                {
+                  ...parsedAmount,
+                  minor: asSen(moneyMovedSign * parsedAmount.minor),
+                },
                 { signDisplay: "exceptZero" },
               )}
         </TextBody>
