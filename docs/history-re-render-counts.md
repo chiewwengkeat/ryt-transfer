@@ -6,9 +6,9 @@ mid-range phone and React's profiler does not run in release builds.
 
 ## The numbers
 
-Measured at commit `f054c18`: app data cleared once, then three cold launches, identical line for line. "Mounted" is
-what FlashList had rendered when the operation began: the screen plus the margin it draws beyond it, 18 rows and 3 day
-headers here.
+Measured at commit `f054c18`, before the rebase that landed it as `59331b8`, whose history code is the same. App data
+was cleared once, then three cold launches came out identical line for line. "Mounted" is what FlashList had rendered
+when the operation began: the screen plus the margin it draws beyond it, 18 rows and 3 day headers here.
 
 | Operation                                  | Rows redrawn (of mounted) | Day headers redrawn (of mounted) | Cells newly shown  | Format calls | Earlier spike |
 | ------------------------------------------ | ------------------------- | -------------------------------- | ------------------ | ------------ | ------------- |
