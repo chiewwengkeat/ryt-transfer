@@ -810,6 +810,24 @@ it(
 );
 
 it(
+  "reports the PIN locked, not why the PIN was wanted, when the phone locks face and fingerprint while the bank holds the PIN locked",
+  scenarioTest("transfer.biometrics_locked_out", async () => {
+    failNextBiometricPrompt("BIOMETRIC_LOCKOUT");
+    await openReviewOfRm100();
+    await act(rememberApprovalPinLocked);
+
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+    expect(
+      await screen.findByRole("header", { name: "PIN locked" }),
+    ).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+    expect(reportedScenarios()).toContain("transfer.pin_locked");
+    expect(reportedScenarios()).not.toContain("transfer.biometrics_locked_out");
+  }),
+);
+
+it(
   "turns a key that cannot sign after Android's own lockout recovery into the PIN sheet, which approves",
   scenarioTest("transfer.biometrics_locked_out", async () => {
     failNextBiometricPrompt("KEY_USER_NOT_AUTHENTICATED");

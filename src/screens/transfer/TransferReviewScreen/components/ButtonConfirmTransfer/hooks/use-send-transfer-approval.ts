@@ -125,13 +125,13 @@ export function useSendTransferApproval() {
       });
       let refusal: string | undefined;
       let { pinInHand, keysSetUpAgain = false } = afterSetUp;
-      if (pinInHand === undefined) trackScenarioShown(scenario);
       // No new try at a PIN the bank has locked; a PIN already in hand is one the bank has just accepted.
       if (pinInHand === undefined && (await isApprovalPinLocked())) {
         await showApprovalPinLocked(t("common.pin_locked.body"));
         leaveApprovalNotSent(TransferFlowScenario.PinLocked);
         return null;
       }
+      if (pinInHand === undefined) trackScenarioShown(scenario);
       for (;;) {
         const pin =
           pinInHand ?? (await askForApprovalPin({ ...words, refusal }));
