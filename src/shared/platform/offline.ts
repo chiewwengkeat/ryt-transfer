@@ -7,6 +7,7 @@ import { subscribeToPhoneConnection } from "./network";
 let phoneConnected = true;
 let lastRequestFoundNoNetwork = false;
 const offlineListeners = new Set<() => void>();
+const bankReachedAgainListeners = new Set<() => void>();
 let stopReadingPhoneConnection = () => {};
 
 function subscribeToOfflineChanges(onChange: () => void) {
@@ -43,4 +44,13 @@ export function reportRequestOutcome(failure?: TransportErrorKind) {
   if (foundNoNetwork === lastRequestFoundNoNetwork) return;
   lastRequestFoundNoNetwork = foundNoNetwork;
   for (const listener of offlineListeners) listener();
+  if (!foundNoNetwork)
+    for (const listener of bankReachedAgainListeners) listener();
+}
+
+export function addBankReachedAgainListener(listener: () => void) {
+  bankReachedAgainListeners.add(listener);
+  return () => {
+    bankReachedAgainListeners.delete(listener);
+  };
 }

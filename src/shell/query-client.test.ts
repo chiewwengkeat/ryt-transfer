@@ -5,6 +5,7 @@ import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
+import { reportRequestOutcome } from "@/shared/platform/offline";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 
 import { createQueryClient } from "./query-client";
@@ -151,5 +152,63 @@ it.each([
     ).rejects.toBe(error);
 
     expect(queryFn).toHaveBeenCalledTimes(attempts);
+  },
+);
+
+it("reads a query that failed for lack of network again once a request reaches the bank", async () => {
+  const client = createQueryClient();
+  client.mount();
+  const queryFn = jest
+    .fn<Promise<string>, []>()
+    .mockRejectedValueOnce(new TransportError(TransportErrorKind.Network))
+    .mockResolvedValue("balance");
+  const observer = new QueryObserver(client, {
+    queryKey: ["balance"],
+    queryFn,
+    retry: false,
+    gcTime: 0,
+  });
+  const stopObserving = observer.subscribe(() => undefined);
+  await letPendingFetchesRun();
+  reportRequestOutcome(TransportErrorKind.Network);
+
+  reportRequestOutcome();
+  await letPendingFetchesRun();
+
+  expect(observer.getCurrentResult().data).toBe("balance");
+  stopObserving();
+  client.unmount();
+});
+
+it.each([
+  {
+    failure: "a refusal",
+    error: new TransportError(TransportErrorKind.Http, 404),
+  },
+  {
+    failure: "a timeout",
+    error: new TransportError(TransportErrorKind.Timeout),
+  },
+])(
+  "leaves a query that failed with $failure alone once a request reaches the bank again",
+  async ({ error }) => {
+    const client = createQueryClient();
+    client.mount();
+    const queryFn = jest.fn(() => Promise.reject(error));
+    const stopObserving = new QueryObserver(client, {
+      queryKey: ["balance"],
+      queryFn,
+      retry: false,
+      gcTime: 0,
+    }).subscribe(() => undefined);
+    await letPendingFetchesRun();
+    reportRequestOutcome(TransportErrorKind.Network);
+
+    reportRequestOutcome();
+    await letPendingFetchesRun();
+
+    expect(queryFn).toHaveBeenCalledTimes(1);
+    stopObserving();
+    client.unmount();
   },
 );

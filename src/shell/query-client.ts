@@ -10,6 +10,7 @@ import {
   TransportErrorKind,
 } from "@/shared/http/transport-error";
 import { subscribeToPhoneConnection } from "@/shared/platform/network";
+import { addBankReachedAgainListener } from "@/shared/platform/offline";
 
 onlineManager.setEventListener(subscribeToPhoneConnection);
 focusManager.setEventListener((setFocused) => {
@@ -31,7 +32,7 @@ focusManager.setEventListener((setFocused) => {
 });
 
 export function createQueryClient() {
-  return new QueryClient({
+  const client = new QueryClient({
     defaultOptions: {
       queries: {
         // A timeout retries like a dropped connection: on a slow line, a second try often lands.
@@ -47,6 +48,19 @@ export function createQueryClient() {
       mutations: { retry: 0, networkMode: "always" },
     },
   });
+  // React Query re-reads on the phone's reconnect, which never comes when only requests found no network.
+  addBankReachedAgainListener(() => {
+    void client.refetchQueries(
+      {
+        type: "active",
+        predicate: ({ state }) =>
+          state.error instanceof TransportError &&
+          state.error.kind === TransportErrorKind.Network,
+      },
+      { cancelRefetch: false },
+    );
+  });
+  return client;
 }
 
 export const queryClient = createQueryClient();
