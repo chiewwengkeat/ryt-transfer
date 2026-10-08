@@ -1,10 +1,16 @@
-import { fireEvent, screen, userEvent } from "@testing-library/react-native";
+import {
+  act,
+  fireEvent,
+  screen,
+  userEvent,
+} from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import { readBankBalanceMinor } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { pressHardwareBack } from "@/test/hardware-back";
 import { mswServer } from "@/test/msw-server";
 import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
 import { renderRoute } from "@/test/render-route";
@@ -138,6 +144,32 @@ it("moves on to review with an amount within the balance and both limits", async
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "5000");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
 
+  expect(view.getPathname()).toBe("/transfer/review");
+});
+
+it("opens one review when Review is pressed twice before the step redraws, and opens it again after Back", async () => {
+  const view = await openAmountStep();
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  let fiber = (
+    screen.getByRole("button", { name: "Review" }) as unknown as {
+      unstable_fiber: PressFiber;
+    }
+  ).unstable_fiber;
+  while (typeof fiber.memoizedProps.onPress !== "function")
+    fiber = fiber.return;
+  const pressReview = fiber.memoizedProps.onPress as () => void;
+
+  // ⛔ Not two fireEvent.press calls: their acts overlap. In one act both presses land before the redraw.
+  await act(() => {
+    pressReview();
+    pressReview();
+  });
+  await screen.findByRole("button", { name: "Transfer" });
+  await pressHardwareBack();
+
+  expect(view.getPathname()).toBe("/transfer/amount");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   expect(view.getPathname()).toBe("/transfer/review");
 });
 
@@ -296,3 +328,5 @@ it("opens the recipient step instead when no recipient is chosen yet", async () 
   ).toBeOnTheScreen();
   expect(view.getPathname()).toBe("/transfer");
 });
+
+type PressFiber = { memoizedProps: { onPress?: unknown }; return: PressFiber };

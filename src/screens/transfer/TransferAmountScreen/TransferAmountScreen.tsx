@@ -1,5 +1,5 @@
-import { router, Stack } from "expo-router";
-import { useState } from "react";
+import { router, Stack, useFocusEffect } from "expo-router";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
@@ -40,6 +40,13 @@ export default function TransferAmountScreen() {
       : undefined,
   );
   const [reviewPressed, setReviewPressed] = useState(false);
+  // A ref, not state: two presses before a redraw read the same state, and each would push a review.
+  const reviewPushedSinceFocusRef = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      reviewPushedSinceFocusRef.current = false;
+    }, []),
+  );
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
 
@@ -107,6 +114,7 @@ export default function TransferAmountScreen() {
                 : t("common.balance_unavailable.disabled_reason")
             }
             onPress={() => {
+              if (reviewPushedSinceFocusRef.current) return;
               setReviewPressed(true);
               if (
                 amount === null ||
@@ -122,8 +130,10 @@ export default function TransferAmountScreen() {
                   amount,
                   ...(note !== "" && { note }),
                 })
-              )
+              ) {
+                reviewPushedSinceFocusRef.current = true;
                 router.push("/transfer/review");
+              }
             }}
           />
         }
