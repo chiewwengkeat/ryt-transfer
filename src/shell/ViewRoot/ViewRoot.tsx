@@ -6,6 +6,7 @@ import { StyleSheet, View } from "react-native";
 import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
+import type { transferKeys } from "@/domains/transfer/api/transfer.keys";
 import { addUnauthorizedListener } from "@/shared/http/transport";
 import { screenTransitionOptions } from "@/shared/lib/motion/motion";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
@@ -118,6 +119,9 @@ const styles = StyleSheet.create({
 function readAgainEveryReadButAnAnsweredNameCheck() {
   void queryClient.invalidateQueries({
     predicate: ({ queryKey, state }) =>
-      queryKey[0] !== "recipient-lookup" || state.data === undefined,
+      queryKey[0] !==
+        ("recipient-lookup" satisfies ReturnType<
+          typeof transferKeys.lookup
+        >[0]) || state.data === undefined,
   });
 }
