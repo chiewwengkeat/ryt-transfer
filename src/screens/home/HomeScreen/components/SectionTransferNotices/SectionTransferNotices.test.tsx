@@ -199,6 +199,7 @@ it("checks a pending transfer again once they sign back in, and tells Home how i
   bankAnswer.transfer = {
     ...bankAnswer.transfer,
     status: TransferStatus.Completed,
+    version: bankAnswer.transfer.version + 1,
   };
 
   await act(() => {

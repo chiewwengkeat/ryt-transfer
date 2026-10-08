@@ -84,8 +84,11 @@ it("checks the earlier transfer again once they sign back in on review, and stop
   bankAnswer.transfer = {
     ...bankAnswer.transfer,
     status: TransferStatus.Completed,
+    version: bankAnswer.transfer.version + 1,
   };
 
+  // Review's own reads land first: a focus refetch joins a read in flight rather than sending one.
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
   await act(() => {
     focusManager.setFocused(false);
     focusManager.setFocused(true);
