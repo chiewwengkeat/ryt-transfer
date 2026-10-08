@@ -71,8 +71,9 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     if (holdReason !== undefined)
       AccessibilityInfo.announceForAccessibility(holdReason);
   }, [holdReason]);
+  // Not the data: a name check that fails on a later run keeps the earlier answer's data.
+  if (!lookup.isSuccess) return null;
   const confirmedLookup = lookup.data;
-  if (confirmedLookup === undefined) return null;
 
   const createAndApproveTransfer = async () => {
     const reviewing = transferFlowStore.getState();

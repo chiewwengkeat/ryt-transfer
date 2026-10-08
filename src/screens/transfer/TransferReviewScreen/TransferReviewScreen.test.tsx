@@ -1269,6 +1269,47 @@ it(
   }),
 );
 
+it.each([
+  [
+    "NAME_ENQUIRY_UNAVAILABLE",
+    503,
+    "Recipient names can't be confirmed right now.",
+  ],
+  ["RECIPIENT_NOT_FOUND", 404, "No DuitNow account was found for this ID."],
+])(
+  "stops offering Transfer once the name check run again after signing in answers %s",
+  async (code, status, message) => {
+    const { recipient } = await lookUpTestRecipient(MOBILE);
+    mswServer.use(
+      http.post(
+        "*/transfers",
+        () =>
+          HttpResponse.json(
+            { error: { code: "SESSION_EXPIRED", message: "Test." } },
+            { status: 401 },
+          ),
+        { once: true },
+      ),
+    );
+    await openReviewOfRm100();
+    await screen.findByText(recipient.registeredName);
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    mswServer.use(
+      http.post("*/recipients/lookup", () =>
+        HttpResponse.json({ error: { code, message: "Test." } }, { status }),
+      ),
+    );
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Sign in again" }),
+    );
+
+    expect(await screen.findByText(message)).toBeOnTheScreen();
+    expect(screen.queryByText(recipient.registeredName)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+  },
+);
+
 it("says something unexpected stopped the transfer when the name check answers in a way the app does not know", async () => {
   mswServer.use(
     http.post("*/recipients/lookup", () =>
