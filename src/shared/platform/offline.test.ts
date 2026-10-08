@@ -2,8 +2,13 @@ import { act, renderHook } from "@testing-library/react-native";
 
 import { TransportErrorKind } from "@/shared/http/transport-error";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
+import { observedRecords } from "@/test/harness/recording-sink";
 
-import { reportRequestOutcome, useIsOffline } from "./offline";
+import {
+  addBankReachedAgainListener,
+  reportRequestOutcome,
+  useIsOffline,
+} from "./offline";
 
 const NO_CONNECTION = { isConnected: false, isInternetReachable: false };
 const CONNECTED = { isConnected: true, isInternetReachable: true };
@@ -99,4 +104,26 @@ it("opens the next reader online when the connection came back while nobody was 
   });
 
   expect(readings).not.toContain(true);
+});
+
+it("reports a listener that throws once a request reaches the bank again, and still runs the rest, rather than fail that request", () => {
+  const listenerAfterTheFailingOne = jest.fn();
+  const stopFailingListener = addBankReachedAgainListener(() => {
+    throw new TypeError("undefined is not a function");
+  });
+  const stopListenerAfterTheFailingOne = addBankReachedAgainListener(
+    listenerAfterTheFailingOne,
+  );
+  reportRequestOutcome(TransportErrorKind.Network);
+
+  reportRequestOutcome();
+  stopFailingListener();
+  stopListenerAfterTheFailingOne();
+
+  expect(listenerAfterTheFailingOne).toHaveBeenCalledTimes(1);
+  expect(observedRecords).toContainEqual({
+    type: "error",
+    name: "TypeError",
+    properties: { boundary: "bank_reached_again_listener" },
+  });
 });

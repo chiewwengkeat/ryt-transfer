@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 import { TransportErrorKind } from "@/shared/http/transport-error";
+import { reportError } from "@/shared/observability/observability";
 
 import { subscribeToPhoneConnection } from "./network";
 
@@ -44,8 +45,17 @@ export function reportRequestOutcome(failure?: TransportErrorKind) {
   if (foundNoNetwork === lastRequestFoundNoNetwork) return;
   lastRequestFoundNoNetwork = foundNoNetwork;
   for (const listener of offlineListeners) listener();
-  if (!foundNoNetwork)
-    for (const listener of bankReachedAgainListeners) listener();
+  if (foundNoNetwork) return;
+  for (const listener of bankReachedAgainListeners) {
+    try {
+      listener();
+    } catch (listenerFailure) {
+      // Reported, not thrown: this runs inside the request that got through, whose caller is owed the bank's answer.
+      reportError(listenerFailure, {
+        boundary: "bank_reached_again_listener",
+      });
+    }
+  }
 }
 
 export function addBankReachedAgainListener(listener: () => void) {
