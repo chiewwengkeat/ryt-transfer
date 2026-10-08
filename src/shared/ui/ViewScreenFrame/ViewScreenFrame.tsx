@@ -1,11 +1,17 @@
 import {
   useEffect,
   useId,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { colors, spacing } from "@/shared/theme/theme";
@@ -16,6 +22,8 @@ interface Props {
 }
 export default function ViewScreenFrame({ children, footer }: Props) {
   const { bottom } = useSafeAreaInsets();
+  const frameRef = useRef<View>(null);
+  const [frameTopInWindow, setFrameTopInWindow] = useState(0);
   const frameId = useId();
   const [measuredFooterHeight, setMeasuredFooterHeight] = useState(0);
   const footerHeight = footer === undefined ? 0 : measuredFooterHeight;
@@ -32,32 +40,48 @@ export default function ViewScreenFrame({ children, footer }: Props) {
   }, [frameId, footerHeight]);
 
   return (
-    <View style={styles.frame}>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[
-          styles.content,
-          footer === undefined && { paddingBottom: spacing.lg + bottom },
-        ]}
+    <View
+      ref={frameRef}
+      onLayout={() => {
+        frameRef.current?.measureInWindow((_x, y) => {
+          setFrameTopInWindow(y);
+        });
+      }}
+      style={styles.frame}
+    >
+      <KeyboardAvoidingView
+        behavior="padding"
+        // The keyboard's top is a window position, and it covers the footer's inset padding: neither needs clearing.
+        keyboardVerticalOffset={frameTopInWindow - bottom}
+        style={styles.keyboardClear}
       >
-        {children}
-      </ScrollView>
-      {footer !== undefined && (
-        <View
-          onLayout={(event) => {
-            setMeasuredFooterHeight(event.nativeEvent.layout.height);
-          }}
-          style={[styles.footer, { paddingBottom: spacing.md + bottom }]}
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[
+            styles.content,
+            footer === undefined && { paddingBottom: spacing.lg + bottom },
+          ]}
         >
-          {footer}
-        </View>
-      )}
+          {children}
+        </ScrollView>
+        {footer !== undefined && (
+          <View
+            onLayout={(event) => {
+              setMeasuredFooterHeight(event.nativeEvent.layout.height);
+            }}
+            style={[styles.footer, { paddingBottom: spacing.md + bottom }]}
+          >
+            {footer}
+          </View>
+        )}
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   frame: { flex: 1, backgroundColor: colors.background },
+  keyboardClear: { flex: 1 },
   content: { gap: spacing.md, padding: spacing.md },
   footer: {
     gap: spacing.sm,
