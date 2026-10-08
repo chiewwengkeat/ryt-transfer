@@ -5,6 +5,7 @@ import { http, HttpResponse } from "msw";
 import { AppState } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import { rememberApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-lock";
 import { approvalPinSheetStore } from "@/domains/approval/hooks/approval-pin-sheet";
 import {
   approvalSettingsStore,
@@ -186,25 +187,22 @@ it.each([
     () => {
       approvalSettingsStore.setState({ biometricApprovalOn: false });
     },
-    "It's turned off in this app's settings.",
   ],
   [
     "nothing is enrolled",
     () => {
       reportBiometricSensorUnavailable("BIOMETRY_NOT_ENROLLED");
     },
-    "No face or fingerprint is set up on this phone.",
   ],
   [
     "the phone has no usable sensor",
     () => {
       reportBiometricSensorUnavailable("BIOMETRY_NOT_AVAILABLE");
     },
-    "This phone has no face or fingerprint sensor the app can use.",
   ],
 ])(
-  "creates no transfer once the bank has locked the PIN, and says why only the PIN could approve, when %s",
-  async (_, leaveOnlyThePinToApprove, reason) => {
+  "creates no transfer that only the PIN could approve once the bank has locked the PIN, when %s",
+  async (_, leaveOnlyThePinToApprove) => {
     await openReviewOfRm100();
     await fireEvent.press(
       screen.getByRole("button", { name: "Use PIN instead" }),
@@ -228,7 +226,9 @@ it.each([
       await screen.findByRole("button", { name: "Transfer" }),
     );
 
-    expect(await screen.findByText(reason)).toBeOnTheScreen();
+    expect(
+      await screen.findByRole("header", { name: "PIN locked" }),
+    ).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "1" })).toBeNull();
     expect(countCreatesSent()).toBe(createsSentBeforeTheLock);
   },
@@ -271,7 +271,7 @@ it("keeps the PIN the bank locked for the next transfer, whose Transfer shows th
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
 
   expect(
-    await screen.findByRole("header", { name: "Approve with your PIN" }),
+    await screen.findByRole("header", { name: "PIN locked" }),
   ).toBeOnTheScreen();
   expect(screen.queryByRole("button", { name: "1" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
@@ -307,7 +307,7 @@ it("asks for no PIN to set approval up again while the bank holds the PIN locked
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
 
     expect(
-      await screen.findByRole("header", { name: "Approve with your PIN" }),
+      await screen.findByRole("header", { name: "PIN locked" }),
     ).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "1" })).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Close" }));
@@ -318,6 +318,89 @@ it("asks for no PIN to set approval up again while the bank holds the PIN locked
     ).toBeOnTheScreen();
   })();
 });
+
+it.each([
+  [
+    "the bank locks the PIN chosen instead as it is tried",
+    async () => {
+      mswServer.use(
+        http.post(
+          "*/transfers/:transferId/approve",
+          () =>
+            HttpResponse.json(
+              { error: { code: "PIN_LOCKED", message: "Test." } },
+              { status: 423 },
+            ),
+          { once: true },
+        ),
+      );
+      await openReviewOfRm100();
+      await fireEvent.press(
+        screen.getByRole("button", { name: "Use PIN instead" }),
+      );
+      await approveWithPin(DEMO_PIN);
+    },
+  ],
+  [
+    "the fingerprints or face changed",
+    async () => {
+      await openReviewOfRm100();
+      await act(rememberApprovalPinLocked);
+      changeEnrolledBiometrics();
+      await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    },
+  ],
+  [
+    "the bank no longer knows the phone's key",
+    async () => {
+      mswServer.use(
+        http.post(
+          "*/transfers/:transferId/approve",
+          () =>
+            HttpResponse.json(
+              { error: { code: "KEY_NOT_REGISTERED", message: "Test." } },
+              { status: 409 },
+            ),
+          { once: true },
+        ),
+      );
+      await openReviewOfRm100();
+      await act(rememberApprovalPinLocked);
+      await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    },
+  ],
+  [
+    "only the PIN could approve the next transfer",
+    async () => {
+      await openReviewOfRm100();
+      await act(() => {
+        approvalSettingsStore.setState({ biometricApprovalOn: false });
+      });
+      await act(rememberApprovalPinLocked);
+      await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    },
+  ],
+])(
+  "shows only that the PIN is locked and where to reset it, nothing about entering it, when %s",
+  async (_, meetTheLockedPin) => {
+    await meetTheLockedPin();
+
+    expect(
+      await screen.findByRole("header", { name: "PIN locked" }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "Your PIN is locked. Reset it in the app's security settings.",
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryAllByText(
+        /approve with your PIN|enter your (bank )?PIN|your PIN approves/i,
+      ),
+    ).toEqual([]);
+    expect(screen.queryByRole("button", { name: "1" })).toBeNull();
+  },
+);
 
 it("opens the keypad again once the host app reports the PIN reset", async () => {
   mswServer.use(

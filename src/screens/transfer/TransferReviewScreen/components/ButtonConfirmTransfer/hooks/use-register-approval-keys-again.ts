@@ -64,10 +64,7 @@ export function useRegisterApprovalKeysAgain() {
         (refusal?.code === RegisterApprovalKeysErrorCode.PinRequired &&
           (await isApprovalPinLocked()))
       ) {
-        await showApprovalPinLocked({
-          ...words,
-          refusal: t("common.pin_locked.body"),
-        });
+        await showApprovalPinLocked(t("common.pin_locked.body"));
         return { notice: TransferFlowScenario.PinLocked } as const;
       }
       if (failedUnexpectedly)

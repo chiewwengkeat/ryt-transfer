@@ -103,31 +103,14 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     if (approvalPinLocked) {
       const sensorRefusalOutcome = (await readBiometricSensorRefusal())
         ?.outcome;
-      const biometricsUnavailableDetail = !approvalSettingsStore.getState()
-        .biometricApprovalOn
-        ? "turned_off"
-        : sensorRefusalOutcome === BiometricSignOutcome.NotSetUp
-          ? "not_set_up"
-          : sensorRefusalOutcome === BiometricSignOutcome.NoSensor
-            ? "no_sensor"
-            : undefined;
-      const pinOnlyWords =
-        path === ApprovalPath.Pin
-          ? { message: t("common.pin_chosen.body") }
-          : biometricsUnavailableDetail === undefined
-            ? undefined
-            : {
-                message: t("common.biometrics_unavailable.body"),
-                detail: t(
-                  `common.biometrics_unavailable.${biometricsUnavailableDetail}`,
-                ),
-              };
       // ⛔ The bank refuses every PIN while it holds the lock, so a transfer only a PIN could approve is never created.
-      if (pinOnlyWords !== undefined) {
-        await showApprovalPinLocked({
-          ...pinOnlyWords,
-          refusal: t("common.pin_locked.body"),
-        });
+      if (
+        path === ApprovalPath.Pin ||
+        !approvalSettingsStore.getState().biometricApprovalOn ||
+        sensorRefusalOutcome === BiometricSignOutcome.NotSetUp ||
+        sensorRefusalOutcome === BiometricSignOutcome.NoSensor
+      ) {
+        await showApprovalPinLocked(t("common.pin_locked.body"));
         dispatchTransferFlow({
           type: TransferFlowActionType.CreateNotSent,
           notice: TransferFlowScenario.PinLocked,

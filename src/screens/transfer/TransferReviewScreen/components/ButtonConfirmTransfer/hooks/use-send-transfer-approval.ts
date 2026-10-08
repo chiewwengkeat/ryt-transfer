@@ -128,10 +128,7 @@ export function useSendTransferApproval() {
       if (pinInHand === undefined) trackScenarioShown(scenario);
       // No new try at a PIN the bank has locked; a PIN already in hand is one the bank has just accepted.
       if (pinInHand === undefined && (await isApprovalPinLocked())) {
-        await showApprovalPinLocked({
-          ...words,
-          refusal: t("common.pin_locked.body"),
-        });
+        await showApprovalPinLocked(t("common.pin_locked.body"));
         leaveApprovalNotSent(TransferFlowScenario.PinLocked);
         return null;
       }
@@ -178,10 +175,7 @@ export function useSendTransferApproval() {
           // Remembered even once left: the bank's lock holds for every transfer, the newer one's included.
           await rememberApprovalPinLocked();
           if (noLongerOnThisTransfer()) return null;
-          await showApprovalPinLocked({
-            ...words,
-            refusal: t("common.pin_locked.body"),
-          });
+          await showApprovalPinLocked(t("common.pin_locked.body"));
           leaveApprovalNotSent(TransferFlowScenario.PinLocked);
           return null;
         }

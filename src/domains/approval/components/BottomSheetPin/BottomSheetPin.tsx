@@ -52,12 +52,18 @@ export default function BottomSheetPin({
 
   return (
     <BottomSheetFrame
-      title={t("bottom_sheet_pin.title")}
+      title={t(
+        pinLocked ? "bottom_sheet_pin.title_locked" : "bottom_sheet_pin.title",
+      )}
       closeLabel={t("bottom_sheet_pin.close")}
       dismissable={!sending}
       onClose={onClose}
     >
-      <TextBody>{message}</TextBody>
+      {pinLocked ? (
+        <BannerNotice tone="negative" message={message} />
+      ) : (
+        <TextBody>{message}</TextBody>
+      )}
       {detail !== undefined && <TextBody>{detail}</TextBody>}
       {refusal !== undefined && (
         <BannerNotice tone="negative" message={refusal} />

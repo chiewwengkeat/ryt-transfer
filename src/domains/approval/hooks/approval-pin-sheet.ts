@@ -42,12 +42,12 @@ export function askForApprovalPin(words: ApprovalPinSheetWords) {
   });
 }
 
-export function showApprovalPinLocked(words: ApprovalPinSheetWords) {
+export function showApprovalPinLocked(message: string) {
   return new Promise<void>((resolve) => {
     approvalPinSheetStore.setState(
       {
         step: ApprovalPinSheetStep.PinLocked,
-        ...words,
+        message,
         answer: () => {
           approvalPinSheetStore.setState(CLOSED_SHEET, true);
           resolve();

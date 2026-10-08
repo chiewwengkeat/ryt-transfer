@@ -1,6 +1,7 @@
 {
   "bottom_sheet_pin": {
     "title": "Approve with your PIN",
+    "title_locked": "PIN locked",
     "close": "Close",
     "approve": "Approve",
     "enter_every_digit": "Enter all {{length}} digits of your PIN.",
