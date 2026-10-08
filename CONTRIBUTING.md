@@ -23,13 +23,13 @@ The app is cut into vertical slices of two kinds:
 
 A screens folder and a domain about the same thing share a singular name, as `src/screens/transfer/` and `src/domains/transfer/` do. Around the slices:
 
-| Folder        | Holds                                                                                                                                |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `src/app/`    | The routes, kept thin: a screen's route re-exports the screen and an `ErrorBoundary`.                                                |
-| `src/shell/`  | The app's root: its providers, the query client, the translation bundles it registers, and the only code that may load `src/mocks/`. |
-| `src/shared/` | Code that knows nothing about banking: UI, theme, i18n, HTTP, config, platform wrappers, observability, plain helpers.               |
-| `src/mocks/`  | The mock bank and its scenarios, for development and demo builds only.                                                               |
-| `src/test/`   | The test harness.                                                                                                                    |
+| Folder        | Holds                                                                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/`    | The routes, kept thin: a screen's route re-exports the screen and an `ErrorBoundary`.                                                           |
+| `src/shell/`  | The app's root: its views, its providers, the query client, the translation bundles it registers, and the only code that may load `src/mocks/`. |
+| `src/shared/` | Code that knows nothing about banking: UI, theme, i18n, HTTP, config, platform wrappers, observability, plain helpers.                          |
+| `src/mocks/`  | The mock bank and its scenarios, for development and demo builds only.                                                                          |
+| `src/test/`   | The test harness.                                                                                                                               |
 
 ### Adding a slice
 
@@ -58,7 +58,7 @@ Colocation first: a piece of code lives as close to its users as possible. Most 
 3. Used by two or more screens folders, or by the shell → `src/domains/<area>/components/<Component>/`, in the area whose data it shows.
 4. Knows nothing about banking → `src/shared/ui/`.
 
-Hooks climb the same ladder in `hooks/` folders, except that a hook that knows nothing about banking and that only the shell uses stays in `src/shell/` until code outside the shell uses it. A component that only one other component uses nests in that component's own `components/`. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
+Hooks climb the same ladder in `hooks/` folders, except that a hook that knows nothing about banking and that only the shell uses stays in `src/shell/` until code outside the shell uses it. A component that only one other component uses nests in that component's own `components/`. The views the shell is built from, which the root layout and the not-found route re-export the way a screen's route re-exports its screen, sit in `src/shell/<Component>/`, and a component only one of them uses nests inside it. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
 
 `scripts/check-placement-ladder.js` fails a component or hook placed higher than its users need, or one no app code uses, and the import rules fail one placed too low. It checks every component and hook in a `components/` or `hooks/` folder of a screens folder, a domain or shared code; the base components directly in `src/shared/ui/` are exempt, since they are built before any screen uses them. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case of who uses a piece, the script is the authority, not this summary. It cannot tell whether a piece knows about banking, so that call is the reviewer's: a hook that knows nothing about banking and that only the shell uses passes the script in a domain, and still belongs in `src/shell/`.
 
