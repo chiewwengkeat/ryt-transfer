@@ -13,4 +13,5 @@ export interface DemoLayer {
   subscribeToBiometricsOff: (
     onChange: (biometricsOff: boolean) => void,
   ) => () => void;
+  subscribeToScenarioChange: (onChange: () => void) => () => void;
 }

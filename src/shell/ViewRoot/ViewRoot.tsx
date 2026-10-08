@@ -38,6 +38,13 @@ export default function ViewRoot() {
       }),
     [],
   );
+  useEffect(
+    () =>
+      demoLayer?.subscribeToScenarioChange(
+        readAgainEveryReadButAnAnsweredNameCheck,
+      ),
+    [],
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -56,12 +63,7 @@ export default function ViewRoot() {
             // Stands in for the host app's sign-in: the session is the host's, so a standalone build only resumes.
             onSignIn={() => {
               setSessionEnded(false);
-              // A name check that answered keeps the reference it showed: asking again would mint another.
-              void queryClient.invalidateQueries({
-                predicate: ({ queryKey, state }) =>
-                  queryKey[0] !== "recipient-lookup" ||
-                  state.data === undefined,
-              });
+              readAgainEveryReadButAnAnsweredNameCheck();
             }}
           />
         </View>
@@ -91,3 +93,11 @@ const styles = StyleSheet.create({
   app: { flex: 1 },
   layer: { ...StyleSheet.absoluteFill, pointerEvents: "box-none" },
 });
+
+// A name check that answered keeps the reference it showed: asking again would mint another.
+function readAgainEveryReadButAnAnsweredNameCheck() {
+  void queryClient.invalidateQueries({
+    predicate: ({ queryKey, state }) =>
+      queryKey[0] !== "recipient-lookup" || state.data === undefined,
+  });
+}

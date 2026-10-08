@@ -44,6 +44,29 @@ async function lockThePinOnAnRm100TransferUnderNoBiometrics() {
   await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
 }
 
+it("shows on Home what a pick changes, and what returning to Normal changes back, without the app leaving the screen", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/");
+  await screen.findByText(/more today/);
+
+  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
+  await fireEvent.press(
+    screen.getByRole("radio", { name: "Transfers under maintenance" }),
+  );
+  expect(
+    await screen.findByText(/^Transfers are unavailable right now, until/),
+  ).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
+  await fireEvent.press(
+    screen.getByRole("radio", { name: "Normal, no scenario" }),
+  );
+
+  expect(await screen.findByText(/more today/)).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: "Transfer", disabled: false }),
+  ).toBeOnTheScreen();
+});
+
 it("gives the next transfer its PIN keypad back once Unlock PIN has unlocked the PIN the bank locked", async () => {
   await lockThePinOnAnRm100TransferUnderNoBiometrics();
 
