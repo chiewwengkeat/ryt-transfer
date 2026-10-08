@@ -17,7 +17,7 @@ import {
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 const STILL_BEING_CHECKED =
@@ -46,8 +46,9 @@ async function launchWithATransferLastSeenProcessing(
   mswServer.use(
     http.get("*/transfers/:transferId", () => HttpResponse.json(bankAnswer)),
   );
-  await renderRoute("/");
+  const view = await renderRoute("/");
   return {
+    view,
     customerId,
     bankAnswer,
     recipientName: lookup.recipient.registeredName,
@@ -120,6 +121,24 @@ it(
     );
   }),
 );
+
+it("keeps quoting the bank's reference a launch's check found, after a later launch's read of the transfer fails", async () => {
+  const { view } = await launchWithATransferLastSeenProcessing({
+    status: TransferStatus.Processing,
+    funds: TransferFunds.Debited,
+  });
+  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+  mswServer.use(
+    http.get(
+      "*/transfers/:transferId",
+      () => new HttpResponse(null, { status: 503 }),
+    ),
+  );
+
+  await relaunchApp(view);
+
+  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+});
 
 it("shows Dismiss on each notice's control, names its transfer to screen readers, and dismisses only that notice", async () => {
   const {

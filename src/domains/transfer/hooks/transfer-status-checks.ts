@@ -15,6 +15,7 @@ import {
   getTransferOptions,
   isSettledTransferOutcome,
   outcomeOfTransfer,
+  type TransferOutcomeScenario,
   useGetTransfer,
 } from "../api/get-transfer/get-transfer";
 import { GetTransferErrorCode } from "../api/get-transfer/get-transfer.type";
@@ -22,7 +23,7 @@ import { refreshPendingTransferNotices } from "./pending-transfer-notices";
 import {
   clearPendingTransfer,
   PendingTransferStage,
-  updatePendingTransferStage,
+  updatePendingTransfer,
 } from "./pending-transfers";
 
 // The schedule is each read's retry, front-loaded while the bank's answer is likeliest to land.
@@ -62,6 +63,7 @@ export function useTransferStatusCheck(
   const [unansweredReads, setUnansweredReads] = useState(0);
   const readFailure = classifyTransferReadFailure(transfer.error);
   const outcome = transfer.data?.outcome;
+  const reference = transfer.data?.reference;
 
   // Read by read: the query's error count cannot say whether its read on opening, not a scheduled one, failed.
   useEffect(() => {
@@ -88,24 +90,22 @@ export function useTransferStatusCheck(
 
   useEffect(() => {
     if (customerId === undefined) return;
-    const recordChange =
-      readFailure === TransferReadFailure.NotFound ||
-      isSettledTransferOutcome(outcome)
-        ? clearPendingTransfer(customerId, transferId)
-        : outcome !== undefined && outcome !== null
-          ? updatePendingTransferStage(
-              customerId,
-              transferId,
-              PendingTransferStage.Processing,
-            )
-          : undefined;
     void (async () => {
-      await recordChange;
-      await refreshPendingTransferNotices(queryClient, customerId);
+      if (readFailure === TransferReadFailure.NotFound) {
+        await clearPendingTransfer(customerId, transferId);
+        await refreshPendingTransferNotices(queryClient, customerId);
+      } else
+        await settlePendingTransfer({
+          queryClient,
+          customerId,
+          transferId,
+          outcome,
+          reference,
+        });
     })().catch((error: unknown) => {
       reportError(error, { boundary: "pending_transfer" });
     });
-  }, [customerId, transferId, outcome, readFailure, queryClient]);
+  }, [customerId, transferId, outcome, reference, readFailure, queryClient]);
 
   return {
     transfer,
@@ -125,22 +125,62 @@ export async function checkPendingTransferOnce(
   transferId: string,
 ) {
   try {
-    const outcome = outcomeOfTransfer(
-      await queryClient.fetchQuery({
-        ...getTransferOptions(transferId),
-        retry: 0,
-      }),
-    );
-    if (outcome !== null && !isSettledTransferOutcome(outcome))
-      await updatePendingTransferStage(
+    const transfer = await queryClient.fetchQuery({
+      ...getTransferOptions(transferId),
+      retry: 0,
+    });
+    const outcome = outcomeOfTransfer(transfer);
+    if (!isSettledTransferOutcome(outcome))
+      await recordUnsettledPendingTransfer(
         customerId,
         transferId,
-        PendingTransferStage.Processing,
+        outcome,
+        transfer.reference,
       );
   } catch (error) {
     if (classifyTransferReadFailure(error) === TransferReadFailure.NotFound)
       await clearPendingTransfer(customerId, transferId);
   }
+}
+
+// Unlike checkPendingTransferOnce, a settled outcome clears the record rather than keeping it for Home to announce.
+export async function settlePendingTransfer({
+  queryClient,
+  customerId,
+  transferId,
+  outcome,
+  reference,
+}: {
+  queryClient: QueryClient;
+  customerId: string;
+  transferId: string;
+  outcome?: TransferOutcomeScenario | null;
+  reference?: string;
+}) {
+  if (isSettledTransferOutcome(outcome))
+    await clearPendingTransfer(customerId, transferId);
+  else
+    await recordUnsettledPendingTransfer(
+      customerId,
+      transferId,
+      outcome,
+      reference,
+    );
+  await refreshPendingTransferNotices(queryClient, customerId);
+}
+
+function recordUnsettledPendingTransfer(
+  customerId: string,
+  transferId: string,
+  outcome: TransferOutcomeScenario | null | undefined,
+  reference: string | undefined,
+) {
+  return updatePendingTransfer(customerId, transferId, {
+    ...(reference !== undefined && { reference }),
+    // An outcome named means the bank holds the approval, so the next launch warns on Home rather than reopening Result.
+    ...(outcome !== undefined &&
+      outcome !== null && { stage: PendingTransferStage.Processing }),
+  });
 }
 
 function classifyTransferReadFailure(error: unknown) {

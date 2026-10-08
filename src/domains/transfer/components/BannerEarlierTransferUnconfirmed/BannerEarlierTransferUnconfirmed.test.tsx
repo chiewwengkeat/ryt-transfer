@@ -11,8 +11,9 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 const STILL_BEING_CHECKED =
@@ -64,6 +65,50 @@ it(
     expect(
       await screen.findByRole("button", { name: "Transfer" }),
     ).toBeOnTheScreen();
+  }),
+);
+
+it(
+  "quotes the bank's reference that the result page quoted, after a relaunch whose read of the transfer fails",
+  scenarioTest("transfer.processing", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer", disabled: false }),
+    );
+    await fireEvent.changeText(
+      await screen.findByLabelText("DuitNow mobile number"),
+      "012-345 6789",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+    await fireEvent.changeText(
+      await screen.findByLabelText("Amount (RM)"),
+      "100",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    const quotedOnResult = await screen.findByText(
+      /^If you contact us, quote this reference: \d{8}[\dA-F]{8}$/,
+    );
+    const reference = String(quotedOnResult.props.children).replace(
+      "If you contact us, quote this reference: ",
+      "",
+    );
+    const stillBeingChecked = `Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: ${reference}`;
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    expect(await screen.findByText(stillBeingChecked)).toBeOnTheScreen();
+    mswServer.use(
+      http.get(
+        "*/transfers/:transferId",
+        () => new HttpResponse(null, { status: 503 }),
+      ),
+    );
+
+    await relaunchApp(view);
+
+    expect(await screen.findByText(stillBeingChecked)).toBeOnTheScreen();
   }),
 );
 

@@ -16,7 +16,7 @@ import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 const STILL_CHECKED =
@@ -85,6 +85,36 @@ it(
 
     expect(
       await screen.findByText(`${STILL_CHECKED} ${body.transfer.reference}`),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it(
+  "quotes the bank's reference that the result page quoted when the session ends after a relaunch whose read of the transfer fails",
+  scenarioTest("transfer.processing", async () => {
+    const view = await sendRm100FromHomeToTheResultPage();
+    const quotedOnResult = await screen.findByText(
+      /^If you contact us, quote this reference: \d{8}[\dA-F]{8}$/,
+    );
+    const reference = String(quotedOnResult.props.children).replace(
+      "If you contact us, quote this reference: ",
+      "",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    await screen.findByText(/still being checked/);
+    mswServer.use(
+      http.get(
+        "*/transfers/:transferId",
+        () => new HttpResponse(null, { status: 503 }),
+      ),
+    );
+    await relaunchApp(view);
+    await screen.findByText(/still being checked/);
+
+    await endTheSession();
+
+    expect(
+      await screen.findByText(`${STILL_CHECKED} ${reference}`),
     ).toBeOnTheScreen();
   }),
 );

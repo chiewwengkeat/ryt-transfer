@@ -17,7 +17,9 @@ export default function BannerEarlierTransferUnconfirmed() {
     <BannerNotice
       message={t("common.earlier_transfer_unconfirmed.body", {
         reference:
-          newestUnconfirmed.transfer?.reference ?? newestUnconfirmed.transferId,
+          newestUnconfirmed.reference ??
+          newestUnconfirmed.transfer?.reference ??
+          newestUnconfirmed.transferId,
       })}
     />
   );

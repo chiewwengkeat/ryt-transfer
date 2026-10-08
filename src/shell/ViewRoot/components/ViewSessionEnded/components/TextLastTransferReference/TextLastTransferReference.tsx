@@ -26,11 +26,10 @@ export default function TextLastTransferReference() {
     listPendingTransfers(customerId)
       .then((records) => {
         const [lastChecked] = records
-          .map(({ transferId, createdAt }) => ({
-            transferId,
-            createdAt,
+          .map((record) => ({
+            ...record,
             transfer: queryClient.getQueryData(
-              getTransferOptions(transferId).queryKey,
+              getTransferOptions(record.transferId).queryKey,
             ),
           }))
           // A record can outlast its check: one whose money the bank has confirmed is not being checked.
@@ -46,7 +45,9 @@ export default function TextLastTransferReference() {
           );
         if (lastChecked)
           setReference(
-            lastChecked.transfer?.reference ?? lastChecked.transferId,
+            lastChecked.reference ??
+              lastChecked.transfer?.reference ??
+              lastChecked.transferId,
           );
       })
       .catch((error: unknown) => {

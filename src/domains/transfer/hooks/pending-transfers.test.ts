@@ -10,7 +10,7 @@ import {
   discardOtherCustomersPendingTransfers,
   listPendingTransfers,
   PendingTransferStage,
-  updatePendingTransferStage,
+  updatePendingTransfer,
   writePendingTransfer,
 } from "./pending-transfers";
 
@@ -54,19 +54,34 @@ it("keeps one record per transfer, holding the key of its latest write", async (
 it("moves a transfer to the stage it reached, and never brings back a cleared one", async () => {
   await writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_1"));
 
-  await updatePendingTransferStage(
-    FIRST_CUSTOMER,
-    "trf_1",
-    PendingTransferStage.Processing,
-  );
-  await updatePendingTransferStage(
-    FIRST_CUSTOMER,
-    "trf_cleared",
-    PendingTransferStage.Processing,
-  );
+  await updatePendingTransfer(FIRST_CUSTOMER, "trf_1", {
+    stage: PendingTransferStage.Processing,
+  });
+  await updatePendingTransfer(FIRST_CUSTOMER, "trf_cleared", {
+    stage: PendingTransferStage.Processing,
+  });
 
   expect(await listPendingTransfers(FIRST_CUSTOMER)).toEqual([
     { ...approvingRecord("trf_1"), stage: PendingTransferStage.Processing },
+  ]);
+});
+
+it("keeps the bank's reference with a transfer through a later change of stage", async () => {
+  await writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_1"));
+
+  await updatePendingTransfer(FIRST_CUSTOMER, "trf_1", {
+    reference: "20261008601D507E",
+  });
+  await updatePendingTransfer(FIRST_CUSTOMER, "trf_1", {
+    stage: PendingTransferStage.Processing,
+  });
+
+  expect(await listPendingTransfers(FIRST_CUSTOMER)).toEqual([
+    {
+      ...approvingRecord("trf_1"),
+      stage: PendingTransferStage.Processing,
+      reference: "20261008601D507E",
+    },
   ]);
 });
 
@@ -74,11 +89,9 @@ it("never brings back a transfer wiped while its stage was being moved", async (
   await writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_1"));
 
   await Promise.all([
-    updatePendingTransferStage(
-      FIRST_CUSTOMER,
-      "trf_1",
-      PendingTransferStage.Processing,
-    ),
+    updatePendingTransfer(FIRST_CUSTOMER, "trf_1", {
+      stage: PendingTransferStage.Processing,
+    }),
     deleteAllSecureRecords(),
   ]);
 

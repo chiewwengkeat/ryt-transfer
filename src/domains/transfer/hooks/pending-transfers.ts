@@ -39,15 +39,18 @@ export async function listPendingTransfers(customerId: string) {
   );
 }
 
-export async function updatePendingTransferStage(
+export async function updatePendingTransfer(
   customerId: string,
   transferId: string,
-  stage: PendingTransferStage,
+  changes: Partial<Pick<PendingTransfer, "stage" | "reference">>,
 ) {
   await updateSecureRecord(
     { namespace: pendingTransfersNamespace(customerId), name: transferId },
     (record) =>
-      JSON.stringify({ ...(JSON.parse(record) as PendingTransfer), stage }),
+      JSON.stringify({
+        ...(JSON.parse(record) as PendingTransfer),
+        ...changes,
+      }),
   );
 }
 
@@ -86,4 +89,6 @@ interface PendingTransfer {
   idempotencyKey: string;
   createdAt: string;
   stage: PendingTransferStage;
+  // The bank's, kept once a read has given it: a later read can fail, and support needs what Result quoted.
+  reference?: string;
 }
