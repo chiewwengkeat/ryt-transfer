@@ -7,11 +7,17 @@ import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primar
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
+import {
+  TransferFunds,
+  TransferStatus,
+} from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients.type";
 import { getLookupRecipientOptions } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
   listPendingTransfers,
   PendingTransferStage,
+  writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import {
@@ -19,6 +25,7 @@ import {
   lookUpTestRecipient,
   readBankBalanceMinor,
   sendToBank,
+  startTestTransfer,
 } from "@/test/bank-client";
 import {
   biometricPromptsShown,
@@ -684,6 +691,61 @@ it("takes a lost approval answer to the result page, which never offers to send 
   expect(screen.getByRole("button", { name: "Done" })).toBeOnTheScreen();
 });
 
+it("takes an approval lost as the phone goes offline to the result page, which reads the transfer once the phone is back", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  let releaseApproval = () => {};
+  const approvalHeld = new Promise<void>((resolve) => {
+    releaseApproval = resolve;
+  });
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      async () => {
+        await approvalHeld;
+        return HttpResponse.error();
+      },
+      { once: true },
+    ),
+    http.post("*/transfers/:transferId/approve", () => HttpResponse.error()),
+  );
+  const view = await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await waitFor(() => {
+    expect(countPostsTo(/\/approve$/)).toBe(1);
+  });
+
+  await act(() => {
+    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+  });
+  releaseApproval();
+
+  expect(
+    await screen.findByText(
+      "This transfer is being checked, so don't send it again — not confirmed yet.",
+      {},
+      { timeout: 10_000 },
+    ),
+  ).toBeOnTheScreen();
+  expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
+  expect(screen.queryByText(/not sent|no money moved/)).toBeNull();
+  const transferPath = `/transfers/${view.getPathname()?.split("/").at(-1)}`;
+  const readsOfTheTransfer = () =>
+    sentRequests.filter(
+      (request) =>
+        request.method === "GET" &&
+        new URL(request.url).pathname.endsWith(transferPath),
+    ).length;
+  const readsWhileOffline = readsOfTheTransfer();
+  await act(() => {
+    setPhoneNetwork({ isConnected: true, isInternetReachable: true });
+  });
+  await waitFor(() => {
+    expect(readsOfTheTransfer()).toBeGreaterThan(readsWhileOffline);
+  });
+});
+
 it("keeps the transfer on the phone before its approval leaves, under the key the approval carries", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const {
@@ -1167,10 +1229,10 @@ it(
 );
 
 it(
-  "never says money moved when the bank finds the balance or limit short as the approval arrives",
+  "never says money moved when the bank finds the balance or limit short as the approval arrives, and goes back to the amount from review",
   scenarioTest("transfer.balance_or_limit_short_at_approval", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    await openReviewOfRm100();
+    const view = await openReviewOfRm100();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -1182,6 +1244,94 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(screen.queryByText(/— money moved\./)).toBeNull();
+    await pressHardwareBack();
+    expect(view.getPathname()).toBe("/transfer/amount");
+    expect(await screen.findByLabelText("Amount (RM)")).toHaveDisplayValue(
+      "100",
+    );
+  }),
+);
+
+it("sends a transfer to a passport recipient through review and its approval, and debits once", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  await renderRoute("/transfer");
+  await fireEvent.press(await screen.findByRole("radio", { name: "Passport" }));
+  await fireEvent.changeText(
+    screen.getByLabelText("Passport number"),
+    "a1234567",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  expect(await screen.findByText("•••• 4567")).toBeOnTheScreen();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+    balanceBeforeMinor - 10_000,
+  );
+});
+
+it(
+  "warns on a review reached from a recent recipient that the last transfer is still being checked",
+  scenarioTest("transfer.earlier_transfer_unconfirmed", async () => {
+    const {
+      body: { customerId },
+    } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+    const { created } = await startTestTransfer(10_000);
+    await writePendingTransfer(customerId, {
+      transferId: created.transfer.transferId,
+      idempotencyKey: "approval-key",
+      createdAt: "2026-10-07T01:30:00.000Z",
+      stage: PendingTransferStage.Processing,
+    });
+    mswServer.use(
+      http.get("*/transfers/:transferId", () =>
+        HttpResponse.json({
+          transfer: {
+            ...created.transfer,
+            reference: "20261007C0FFEE00",
+            status: TransferStatus.Processing,
+            funds: TransferFunds.Debited,
+          },
+        }),
+      ),
+    );
+    const {
+      body: {
+        items: [firstRecent],
+      },
+    } = await sendToBank<ListRecentRecipientsResponse>(
+      "GET",
+      "/recipients/recent",
+    );
+    await renderRoute("/");
+    const [firstRecentButton] = await screen.findAllByRole("button", {
+      name: /••••/,
+    });
+    await fireEvent.press(firstRecentButton!);
+    await screen.findByText(firstRecent!.registeredName);
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByText("RM 12,845.50");
+    await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+
+    expect(
+      await screen.findByText(
+        "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00",
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      await screen.findByText(firstRecent!.idValueMasked),
+    ).toBeOnTheScreen();
+    expect(
+      await screen.findByRole("button", { name: "Transfer" }),
+    ).toBeEnabled();
   }),
 );
 
