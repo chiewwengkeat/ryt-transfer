@@ -6,7 +6,7 @@ The bank's data shows on several screens: the balance, the history pages, a tran
 
 ## Decision
 
-TanStack Query's cache is the only client copy of the bank's data. No normalized store sits beside it:
+TanStack Query's cache holds the bank's data; the transfer flow keeps only a few of its answers as they arrived, never refreshed, for the step that acts on them ([005](005-state.md)). No normalized store sits beside the cache:
 
 - **By id and key.** A transfer is referred to by its id and its query key; a screen that needs it reads the cache through that endpoint's own query.
 - **No pushed copies.** The details screen shows the tapped row from the loaded history pages as placeholder data until its own fetch returns. Nothing pushes a copy of a row into another cache entry, where it could drift until a fetch lands.

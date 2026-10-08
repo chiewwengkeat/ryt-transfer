@@ -30,12 +30,12 @@ Malay and Chinese ship as machine translations, so I decided on a check that fai
 - [002 Scenario matrix](decisions/002-scenario-matrix.md): one file describes every situation a transfer can meet, with permanent ids that tests, mocks, translations and the Demo menu all use.
 - [003 Biometric approval](decisions/003-biometric-approval.md): each transfer is approved by a signature over exactly what the person saw, never by a yes-or-no prompt.
 - [004 Mock backend](decisions/004-mock-backend.md): one fake bank with state, answering through the same msw handlers in tests and on a phone.
-- [005 State](decisions/005-state.md): the flow is a typed reducer in a zustand store, and the bank's data stays out of client state.
+- [005 State](decisions/005-state.md): the flow is a typed reducer in a zustand store, and the transfer itself stays in the query cache.
 - [006 Never sent twice](decisions/006-never-sent-twice.md): create, then approve; an idempotency key on every write; a lost answer resent briefly, then checked.
 - [007 The fake bank cannot ship](decisions/007-production-guard.md): one build variant, one literally gated way in, and a decided CI check on what the production bundle holds.
 - [008 Hardening](decisions/008-hardening.md): capture blocked everywhere but the receipts, the switcher blur, the rooted-phone refusal, and what only the bank's servers can do.
 - [009 History at scale](decisions/009-history-at-scale.md): cursor pages, day totals from the bank, a recycling list, and re-render counts in place of timing claims.
-- [010 Query cache only](decisions/010-query-cache-only.md): the bank's data lives only in TanStack Query's cache, with no normalized store beside it.
+- [010 Query cache only](decisions/010-query-cache-only.md): the bank's data lives in TanStack Query's cache, with no normalized store beside it.
 
 ## What I could not prove
 
