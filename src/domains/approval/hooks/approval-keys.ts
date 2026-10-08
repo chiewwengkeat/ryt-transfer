@@ -6,6 +6,7 @@ import {
   signWithOptions,
 } from "@sbaiahmed1/react-native-biometrics";
 
+import type { RegisterApprovalKeysResponse } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
 import {
   readSecureRecord,
   writeSecureRecord,
@@ -49,10 +50,9 @@ export async function createApprovalKeys() {
   };
 }
 
-export async function saveApprovalKeyIds(keyIds: {
-  possessionKeyId: string;
-  biometricKeyId: string;
-}) {
+export async function saveApprovalKeyIds(
+  keyIds: Required<RegisterApprovalKeysResponse>,
+) {
   await writeSecureRecord(POSSESSION_KEY_ID_RECORD, keyIds.possessionKeyId);
   await writeSecureRecord(BIOMETRIC_KEY_ID_RECORD, keyIds.biometricKeyId);
 }
