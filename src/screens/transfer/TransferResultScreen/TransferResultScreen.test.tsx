@@ -331,7 +331,7 @@ it(
 );
 
 it(
-  "says a transfer the bank cannot find can't be found, to check History, with its id to quote",
+  "says a transfer the bank cannot find can't be found, with its id to quote, and opens History to check it",
   scenarioTest("transfer.last_transfer_not_found", async () => {
     const view = await sendRm100FromHome();
 
@@ -352,7 +352,13 @@ it(
         `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
       ),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Check History", "Done"]);
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Check History" }),
+    );
+
+    expect(view.getPathname()).toBe("/transfer-history");
   }),
 );
 
@@ -378,7 +384,7 @@ it(
         `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
       ),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Check History", "Done"]);
   }),
 );
 
@@ -456,7 +462,11 @@ it(
         "If you contact us, quote this reference: 20261007C0FFEE00",
       ),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Load the result again", "Done"]);
+    expect(buttonsOnTheResultPage()).toEqual([
+      "Check History",
+      "Load the result again",
+      "Done",
+    ]);
     const transferId = transferIdIn(view.getPathname());
     const readsBefore = sentRequests.filter(({ url }) =>
       url.endsWith(`/transfers/${transferId}`),

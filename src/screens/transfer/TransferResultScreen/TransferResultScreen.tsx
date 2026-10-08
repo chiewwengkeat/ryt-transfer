@@ -91,6 +91,18 @@ export default function TransferResultScreen() {
         {scenario === TransferOutcomeScenario.Completed && transfer.data && (
           <SectionTransferDetails transfer={transfer.data} />
         )}
+        {[
+          TransferOutcomeScenario.OutcomeUnexpected,
+          TransferOutcomeScenario.LastTransferNotFound,
+          TransferOutcomeScenario.RecoveryUnexpected,
+        ].includes(scenario) && (
+          <ButtonSecondary
+            label={t("result.check_history")}
+            onPress={() => {
+              router.push("/transfer-history");
+            }}
+          />
+        )}
         {scenario === TransferOutcomeScenario.OutcomeUnexpected && (
           <ButtonSecondary
             label={t("common.outcome_unexpected.load_again")}

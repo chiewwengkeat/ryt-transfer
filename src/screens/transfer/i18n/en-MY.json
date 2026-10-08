@@ -362,6 +362,7 @@
     "reference": "Reference",
     "completed_at": "Completed",
     "done": "Done",
+    "check_history": "Check History",
     "heading": {
       "completed": "Transfer sent",
       "processing": "Transfer processing",
