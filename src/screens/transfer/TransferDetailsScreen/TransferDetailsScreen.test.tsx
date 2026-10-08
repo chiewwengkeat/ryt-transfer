@@ -78,6 +78,30 @@ it("shows a transfer from its History row at once, then as the bank tells it", a
   expect(await screen.findByText("Lunch")).toBeOnTheScreen();
 });
 
+it("keeps the newer copy from its History row when the bank answers with an older one", async () => {
+  const listed = buildHistoryTransfer({ version: 3 });
+  serveTransferHistoryPages([[listed]]);
+  serveTransferDetails({
+    ...listed,
+    version: 2,
+    status: TransferStatus.Processing,
+  });
+  const releaseDetails = holdTransferDetails();
+  await renderRoute("/transfer-history");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  );
+
+  releaseDetails();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+
+  expect(sentTransferDetailsReads()).toHaveLength(1);
+  expect(screen.getByText("Successful — money moved")).toBeOnTheScreen();
+  expect(
+    screen.queryByText("Processing — not confirmed yet"),
+  ).not.toBeOnTheScreen();
+});
+
 it("waits for the bank on a History row whose amount it cannot read", async () => {
   serveTransferHistoryPages([
     [buildHistoryTransfer({ amount: { minor: 50.5, currency: "MYR" } })],
@@ -175,7 +199,7 @@ it("asks three times before offering Try again when the bank takes too long", as
 });
 
 it("keeps a transfer from its History row under the notice when the bank fails, and shows the bank's on Try again", async () => {
-  serveTransferDetails({ ...AISYAH, note: "Lunch" });
+  serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
   const recoverDetails = failTransferDetails();
   await renderRoute("/transfer-history");
 
@@ -196,7 +220,7 @@ it("keeps a transfer from its History row under the notice when the bank fails, 
 });
 
 it("keeps a transfer from its History row under the notice when opened offline, and shows the bank's once back online", async () => {
-  serveTransferDetails({ ...AISYAH, note: "Lunch" });
+  serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
   await renderRoute("/transfer-history");
   const aisyah = await screen.findByRole("button", { name: /^Aisyah Rahman/ });
   await act(() => {
@@ -217,14 +241,14 @@ it("keeps a transfer from its History row under the notice when opened offline, 
 });
 
 it("keeps the transfer it has under the notice when asking again fails, and refreshes it on Try again", async () => {
-  serveTransferDetails({ ...AISYAH, note: "Lunch" });
+  serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
   await renderRoute("/transfer-history");
   await fireEvent.press(
     await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
   );
   await screen.findByText("Lunch");
   await pressHardwareBack();
-  serveTransferDetails({ ...AISYAH, version: 2, note: "Dinner" });
+  serveTransferDetails({ ...AISYAH, version: 3, note: "Dinner" });
   const recoverDetails = failTransferDetails();
 
   await fireEvent.press(
@@ -241,14 +265,14 @@ it("keeps the transfer it has under the notice when asking again fails, and refr
 });
 
 it("keeps the transfer it has under the notice when reopened offline, and refreshes it once back online", async () => {
-  serveTransferDetails({ ...AISYAH, note: "Lunch" });
+  serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
   await renderRoute("/transfer-history");
   await fireEvent.press(
     await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
   );
   await screen.findByText("Lunch");
   await pressHardwareBack();
-  serveTransferDetails({ ...AISYAH, version: 2, note: "Dinner" });
+  serveTransferDetails({ ...AISYAH, version: 3, note: "Dinner" });
   await act(() => {
     setPhoneNetwork(OFFLINE);
   });
@@ -269,7 +293,7 @@ it("keeps the transfer it has under the notice when reopened offline, and refres
 
 it("announces no failure left from an earlier visit, only one from this visit", async () => {
   const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
-  serveTransferDetails({ ...AISYAH, note: "Lunch" });
+  serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
   await renderRoute("/transfer-history");
   await fireEvent.press(
     await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
