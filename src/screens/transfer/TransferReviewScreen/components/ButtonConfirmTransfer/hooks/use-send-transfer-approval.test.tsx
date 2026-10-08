@@ -251,6 +251,30 @@ it("never sends an approval again once the bank has answered it, a server error 
   expect(approveRequests()).toHaveLength(1);
 });
 
+it("gets the bank's first answer back for a resend whose first copy already moved the money, which moves once", async () => {
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  let firstCopyLost = false;
+  // The first copy reaches the bank but its answer is lost; later copies go to the bank untouched.
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", async ({ request }) => {
+      if (firstCopyLost) return undefined;
+      firstCopyLost = true;
+      await sendToBank("POST", new URL(request.url).pathname, {
+        body: (await request.clone().json()) as unknown,
+        idempotencyKey: request.headers.get("Idempotency-Key"),
+      });
+      return HttpResponse.error();
+    }),
+  );
+  await confirmRm100Transfer();
+
+  expect(
+    await screen.findByText("Transfer sent", { timeout: 10_000 }),
+  ).toBeOnTheScreen();
+  jest.useRealTimers();
+  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+});
+
 it(
   "says the face or fingerprint was not recognised, sends nothing, and leaves Transfer to try again or the PIN to approve",
   scenarioTest("transfer.biometrics_not_recognised", async () => {
