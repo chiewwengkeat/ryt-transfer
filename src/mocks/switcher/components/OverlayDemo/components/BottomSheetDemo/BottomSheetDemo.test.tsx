@@ -12,6 +12,9 @@ jest.mock("@/shell/app-launch", () => ({
     .default,
 }));
 
+// Real time, not fake: locking the PIN and sending again outlasts Jest's 5 s under a loaded parallel run.
+jest.setTimeout(15_000);
+
 async function approveWithPin(pin: string) {
   for (const digit of pin)
     await fireEvent.press(await screen.findByRole("button", { name: digit }));
