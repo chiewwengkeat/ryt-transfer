@@ -67,9 +67,8 @@ export function useScreenCaptureBlock() {
   useLayoutEffect(() => {
     void (blocked ? blockScreenCapture() : allowScreenCapture());
     if (!blocked || Platform.OS !== "android") return;
-    // Android recreates the activity, on a window without the block, after a font-size change or a reopen from Back,
-    // and blocked stays as it was: the app becoming active is the cue to block the window it now has. iOS keeps its
-    // window, and each block there adds a screen-recording observer that only allowing capture removes.
+    // A font-size change or reopen from Back recreates Android's activity on an unblocked window; blocked stays put,
+    // so block again on active. Not iOS: it keeps its window, and each block adds a recording observer until allowed.
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") void blockScreenCapture();
     });
