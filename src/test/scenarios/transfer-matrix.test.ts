@@ -139,20 +139,22 @@ function findRetryWordsOnPressableLabels(
       ),
     )
     .flatMap(({ id }) =>
-      RETRY_WORDS.flatMap(({ word, language }) =>
-        Object.entries(
-          commonByLanguage[language]?.[id.replace(/^transfer\./, "")] ?? {},
-        )
-          .filter(
-            ([role, text]) =>
-              !MESSAGE_ROLES.includes(
-                role.replace(/_(zero|one|two|few|many|other)$/, ""),
-              ) && text.toLowerCase().includes(word.toLowerCase()),
+      Object.values(AppLanguage).flatMap((language) =>
+        RETRY_WORDS.flatMap(({ word }) =>
+          Object.entries(
+            commonByLanguage[language]?.[id.replace(/^transfer\./, "")] ?? {},
           )
-          .map(
-            ([role, text]) =>
-              `${id} ${language} ${role}: "${word}" in "${text}"`,
-          ),
+            .filter(
+              ([role, text]) =>
+                !MESSAGE_ROLES.includes(
+                  role.replace(/_(zero|one|two|few|many|other)$/, ""),
+                ) && text.toLowerCase().includes(word.toLowerCase()),
+            )
+            .map(
+              ([role, text]) =>
+                `${id} ${language} ${role}: "${word}" in "${text}"`,
+            ),
+        ),
       ),
     );
 }
@@ -396,6 +398,7 @@ it("flags a retry word on anything pressable where the matrix bans offering to s
       [AppLanguage.Malay]: {
         outcome_unexpected: {
           body_other: "Jangan hantar semula {{count}} pindahan.",
+          retry: "Try again",
         },
       },
       [AppLanguage.Chinese]: {
@@ -404,26 +407,40 @@ it("flags a retry word on anything pressable where the matrix bans offering to s
     }),
   ).toEqual([
     'transfer.outcome_unexpected en-MY load_again: "try again" in "TRY AGAIN"',
+    'transfer.outcome_unexpected ms-MY retry: "try again" in "Try again"',
     'transfer.biometrics_recognised zh-MY title: "重试" in "重试结果"',
   ]);
 });
 
-it("puts no retry word on anything pressable where the matrix bans offering to send again", () => {
-  const tryAgainOnEveryScenario = {
-    [AppLanguage.English]: Object.fromEntries(
-      scenarioSections.map(({ id }) => [
-        id.replace(/^transfer\./, ""),
-        { retry: "Try again" },
-      ]),
-    ),
-  };
+it("puts no retry word on a scenario's own labels where the matrix bans offering to send again", () => {
+  const languagesWherePlantedWordsGoUnflagged = Object.values(
+    AppLanguage,
+  ).filter((language) => {
+    const word = RETRY_WORDS.find((retry) => retry.language === language)?.word;
+    const registeredWithTheWord = Object.fromEntries(
+      Object.entries(REGISTERED_TRANSFER_COMMON[language] ?? {}).map(
+        ([name, strings]) => [
+          name,
+          Object.fromEntries(
+            Object.entries(strings).map(([role, text]) => [
+              role,
+              `${text} ${word}`,
+            ]),
+          ),
+        ],
+      ),
+    );
+    return (
+      findRetryWordsOnPressableLabels(scenarioSections, {
+        [language]: registeredWithTheWord,
+      }).length === 0
+    );
+  });
 
   expect(new Set(RETRY_WORDS.map(({ language }) => language))).toEqual(
     new Set(Object.values(AppLanguage)),
   );
-  expect(
-    findRetryWordsOnPressableLabels(scenarioSections, tryAgainOnEveryScenario),
-  ).not.toEqual([]);
+  expect(languagesWherePlantedWordsGoUnflagged).toEqual([]);
   expect(
     findRetryWordsOnPressableLabels(
       scenarioSections,
