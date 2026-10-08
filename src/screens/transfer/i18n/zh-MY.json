@@ -261,15 +261,42 @@
   },
   "recipient": {
     "title": "转账",
+    "id_type_label": "转账至",
+    "id_type": {
+      "mobile": "手机",
+      "nric": "身份证",
+      "account_number": "账号",
+      "passport": "护照",
+      "brn": "商业注册",
+      "army_police": "军警"
+    },
     "id_label": {
-      "mobile": "DuitNow 手机号码"
+      "mobile": "DuitNow 手机号码",
+      "nric": "身份证号码",
+      "account_number": "账号",
+      "passport": "护照号码",
+      "brn": "商业注册号码",
+      "army_police": "军警证件号码"
     },
     "mobile_placeholder": "012-345 6789",
-    "continue": "继续"
+    "contacts": "从通讯录中选择",
+    "contact_mobiles_title": "选择号码",
+    "change_recent": "更改",
+    "bank_label": "银行",
+    "bank_placeholder": "选择银行",
+    "bank_missing": "请选择该账户所属的银行。",
+    "bank_sheet_title": "选择银行",
+    "bank_search_label": "搜索银行",
+    "bank_no_match": "没有与您的搜索匹配的银行。",
+    "close_sheet": "关闭",
+    "continue": "继续",
+    "home": "返回首页"
   },
   "amount": {
     "title": "金额",
     "label": "金额 (RM)",
+    "placeholder": "0.00",
+    "note_label": "备注（可选）",
     "amount_missing": "请输入转账金额。",
     "review": "核对"
   },
@@ -277,14 +304,21 @@
     "title": "核对",
     "recipient_name": "收款人",
     "amount": "金额",
+    "note": "备注",
     "transfer": "转账",
     "prompt_title": "批准转账",
+    "prompt_title_ios": "批准向 {{name}} 转账 {{amount}}",
     "prompt_subtitle": "{{amount}} 转给 {{name}}",
     "prompt_cancel": "取消"
   },
   "section_review_recipient": {
     "bank": "银行",
-    "mobile": "手机号码"
+    "mobile": "手机号码",
+    "nric": "身份证号码",
+    "account_number": "账号",
+    "passport": "护照号码",
+    "brn": "商业注册号码",
+    "army_police": "军警证件号码"
   },
   "approval": {},
   "result": {

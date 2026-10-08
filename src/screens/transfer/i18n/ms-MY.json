@@ -261,15 +261,42 @@
   },
   "recipient": {
     "title": "Pindahan",
+    "id_type_label": "Hantar kepada",
+    "id_type": {
+      "mobile": "Telefon bimbit",
+      "nric": "NRIC",
+      "account_number": "Nombor akaun",
+      "passport": "Pasport",
+      "brn": "Pendaftaran perniagaan",
+      "army_police": "Tentera/Polis"
+    },
     "id_label": {
-      "mobile": "Nombor telefon bimbit DuitNow"
+      "mobile": "Nombor telefon bimbit DuitNow",
+      "nric": "Nombor NRIC",
+      "account_number": "Nombor akaun",
+      "passport": "Nombor pasport",
+      "brn": "Nombor pendaftaran perniagaan",
+      "army_police": "Nombor tentera atau polis"
     },
     "mobile_placeholder": "012-345 6789",
-    "continue": "Teruskan"
+    "contacts": "Pilih daripada kenalan",
+    "contact_mobiles_title": "Pilih nombor",
+    "change_recent": "Tukar",
+    "bank_label": "Bank",
+    "bank_placeholder": "Pilih bank",
+    "bank_missing": "Pilih bank bagi akaun ini.",
+    "bank_sheet_title": "Pilih bank",
+    "bank_search_label": "Cari bank",
+    "bank_no_match": "Tiada bank yang sepadan dengan carian anda.",
+    "close_sheet": "Tutup",
+    "continue": "Teruskan",
+    "home": "Kembali ke Laman Utama"
   },
   "amount": {
     "title": "Jumlah",
     "label": "Jumlah (RM)",
+    "placeholder": "0.00",
+    "note_label": "Nota (pilihan)",
     "amount_missing": "Masukkan jumlah untuk dihantar.",
     "review": "Semak"
   },
@@ -277,14 +304,21 @@
     "title": "Semak",
     "recipient_name": "Kepada",
     "amount": "Jumlah",
+    "note": "Nota",
     "transfer": "Pindahkan",
     "prompt_title": "Luluskan pindahan",
+    "prompt_title_ios": "Luluskan {{amount}} kepada {{name}}",
     "prompt_subtitle": "{{amount}} kepada {{name}}",
     "prompt_cancel": "Batal"
   },
   "section_review_recipient": {
     "bank": "Bank",
-    "mobile": "Nombor telefon bimbit"
+    "mobile": "Nombor telefon bimbit",
+    "nric": "Nombor NRIC",
+    "account_number": "Nombor akaun",
+    "passport": "Nombor pasport",
+    "brn": "Nombor pendaftaran perniagaan",
+    "army_police": "Nombor tentera atau polis"
   },
   "approval": {},
   "result": {
