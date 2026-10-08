@@ -33,14 +33,14 @@
     "badly_formed_input": {
       "title": "Badly formed ID, amount or note",
       "body": "The bank could not accept the amount or note as entered. Check them, then review again.",
+      "note": "Use only letters A to Z, numbers and spaces.",
       "mobile": "Enter a Malaysian mobile number, like 012-345 6789.",
       "nric": "Enter the 12 digits of the NRIC number.",
       "passport": "Enter the passport number: a letter, then 5 to 11 letters or digits.",
       "brn": "Enter the business registration number: 12 digits, or 6 or 7 digits and a letter.",
       "army_police": "Enter the army or police number: 1 to 3 letters, then 4 to 8 digits.",
       "account_number": "Enter the account number: 8 to 17 digits.",
-      "amount": "Enter an amount in ringgit, with up to two decimal places.",
-      "note": "Use only letters A to Z, numbers and spaces."
+      "amount": "Enter an amount in ringgit, with up to two decimal places."
     },
     "contacts_access_refused": {
       "title": "Contacts access refused",
