@@ -427,10 +427,9 @@ it("puts no retry word on a scenario's own labels where the matrix bans offering
         ([name, strings]) => [
           name,
           Object.fromEntries(
-            Object.entries(strings).map(([role, text]) => [
-              role,
-              `${text} ${word}`,
-            ]),
+            Object.entries(strings).flatMap(([role, text]) =>
+              typeof text === "string" ? [[role, `${text} ${word}`]] : [],
+            ),
           ),
         ],
       ),
