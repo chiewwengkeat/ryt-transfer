@@ -7,6 +7,7 @@ import {
   TransferFlowActionType,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
+import { screenTransitionOptions } from "@/shared/lib/motion/motion";
 
 export default function TransferLayout() {
   const draftOpen = useTransferFlow(isTransferDraftOpen);
@@ -19,7 +20,7 @@ export default function TransferLayout() {
   );
 
   return (
-    <Stack>
+    <Stack screenOptions={screenTransitionOptions}>
       <Stack.Protected guard={draftOpen}>
         <Stack.Screen name="amount" />
         <Stack.Screen name="review" />

@@ -7,6 +7,7 @@ import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { integrityStandInStore } from "@/domains/approval/hooks/device-integrity-verdict";
 import { addUnauthorizedListener } from "@/shared/http/transport";
+import { screenTransitionOptions } from "@/shared/lib/motion/motion";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import { demoLayer } from "@/shell/app-launch";
@@ -60,7 +61,7 @@ export default function ViewRoot() {
     <>
       <View aria-hidden={sessionEnded || demoSheetOpen} style={styles.app}>
         <ViewBottomSheetHost>
-          <Stack key={navigatorMounts}>
+          <Stack key={navigatorMounts} screenOptions={screenTransitionOptions}>
             <Stack.Screen name="transfer" options={{ headerShown: false }} />
           </Stack>
           <BannerOffline />
