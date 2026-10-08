@@ -3,6 +3,7 @@ import {
   deleteSecureRecord,
   listSecureRecords,
   readSecureRecord,
+  updateSecureRecord,
   writeSecureRecord,
 } from "@/shared/platform/secure-storage";
 
@@ -43,15 +44,10 @@ export async function updatePendingTransferStage(
   transferId: string,
   stage: PendingTransferStage,
 ) {
-  const address = {
-    namespace: pendingTransfersNamespace(customerId),
-    name: transferId,
-  };
-  const record = await readSecureRecord(address);
-  if (record === null) return;
-  await writeSecureRecord(
-    address,
-    JSON.stringify({ ...(JSON.parse(record) as PendingTransfer), stage }),
+  await updateSecureRecord(
+    { namespace: pendingTransfersNamespace(customerId), name: transferId },
+    (record) =>
+      JSON.stringify({ ...(JSON.parse(record) as PendingTransfer), stage }),
   );
 }
 

@@ -11,6 +11,7 @@ import {
   deleteSecureRecord,
   listSecureRecords,
   readSecureRecord,
+  updateSecureRecord,
   writeSecureRecord,
 } from "./secure-storage";
 
@@ -68,6 +69,29 @@ it("applies an overlapping write and delete of one record in the order they were
   await Promise.all([
     writeSecureRecord(FIRST_PENDING, "{}"),
     deleteSecureRecord(FIRST_PENDING),
+  ]);
+
+  expect(await readSecureRecord(FIRST_PENDING)).toBeNull();
+  expect(await listSecureRecords()).toEqual([]);
+});
+
+it("rewrites a record from the value it holds, and leaves a missing one missing", async () => {
+  await writeSecureRecord(FIRST_PENDING, "approving");
+
+  await updateSecureRecord(FIRST_PENDING, (value) => `${value}, processing`);
+  await updateSecureRecord(SECOND_PENDING, () => "processing");
+
+  expect(await readSecureRecord(FIRST_PENDING)).toBe("approving, processing");
+  expect(await readSecureRecord(SECOND_PENDING)).toBeNull();
+  expect(await listSecureRecords()).toEqual([FIRST_PENDING]);
+});
+
+it("never brings back a record deleted while an update of it was under way", async () => {
+  await writeSecureRecord(FIRST_PENDING, "approving");
+
+  await Promise.all([
+    updateSecureRecord(FIRST_PENDING, () => "processing"),
+    deleteAllSecureRecords(),
   ]);
 
   expect(await readSecureRecord(FIRST_PENDING)).toBeNull();

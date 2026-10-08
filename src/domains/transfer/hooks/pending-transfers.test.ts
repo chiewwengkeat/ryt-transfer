@@ -1,4 +1,5 @@
 import {
+  deleteAllSecureRecords,
   readSecureRecord,
   writeSecureRecord,
 } from "@/shared/platform/secure-storage";
@@ -67,6 +68,21 @@ it("moves a transfer to the stage it reached, and never brings back a cleared on
   expect(await listPendingTransfers(FIRST_CUSTOMER)).toEqual([
     { ...approvingRecord("trf_1"), stage: PendingTransferStage.Processing },
   ]);
+});
+
+it("never brings back a transfer wiped while its stage was being moved", async () => {
+  await writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_1"));
+
+  await Promise.all([
+    updatePendingTransferStage(
+      FIRST_CUSTOMER,
+      "trf_1",
+      PendingTransferStage.Processing,
+    ),
+    deleteAllSecureRecords(),
+  ]);
+
+  expect(await listPendingTransfers(FIRST_CUSTOMER)).toEqual([]);
 });
 
 it("clears one transfer and keeps the customer's others", async () => {

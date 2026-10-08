@@ -33,6 +33,19 @@ export async function readSecureRecord(address: SecureRecordAddress) {
   );
 }
 
+// Read in the same turn as the write: read before it, a delete landing between the two is undone.
+export async function updateSecureRecord(
+  address: SecureRecordAddress,
+  change: (value: string) => string,
+) {
+  const key = secureRecordKey(address);
+  await changeSecureRecordsInTurn(async () => {
+    const value = await SecureStore.getItemAsync(key, RECORD_OPTIONS);
+    if (value === null) return;
+    await SecureStore.setItemAsync(key, change(value), RECORD_OPTIONS);
+  });
+}
+
 export async function deleteSecureRecord(address: SecureRecordAddress) {
   const key = secureRecordKey(address);
   await changeSecureRecordsInTurn(async () => {
