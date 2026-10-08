@@ -4,10 +4,12 @@ import {
   useEffectEvent,
   useId,
   useLayoutEffect,
+  useRef,
   type ReactNode,
 } from "react";
 import {
   BackHandler,
+  Keyboard,
   KeyboardAvoidingView,
   Pressable,
   ScrollView,
@@ -60,6 +62,7 @@ export default function BottomSheetFrame({
     );
   const sheetId = useId();
   const { top, bottom } = useSafeAreaInsets();
+  const searchFieldFocusedRef = useRef(false);
 
   const closeOnBack = useEffectEvent(() => {
     if (dismissable) onClose();
@@ -117,7 +120,16 @@ export default function BottomSheetFrame({
               )}
             </View>
             {searchField !== undefined && (
-              <FieldText {...searchField} autoCorrect={false} />
+              <FieldText
+                {...searchField}
+                autoCorrect={false}
+                onFocus={() => {
+                  searchFieldFocusedRef.current = true;
+                }}
+                onBlur={() => {
+                  searchFieldFocusedRef.current = false;
+                }}
+              />
             )}
             <ScrollView
               keyboardShouldPersistTaps="handled"
@@ -133,6 +145,8 @@ export default function BottomSheetFrame({
   });
   useLayoutEffect(
     () => () => {
+      // Android hands a removed field's focus, and its keyboard, to the screen's first text field.
+      if (searchFieldFocusedRef.current) Keyboard.dismiss();
       sheetHost.hideSheet(sheetId);
     },
     [sheetHost, sheetId],

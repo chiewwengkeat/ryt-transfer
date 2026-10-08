@@ -34,6 +34,7 @@ export default function ViewScreenFrame({ children, footer }: Props) {
   return (
     <View style={styles.frame}>
       <ScrollView
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={[
           styles.content,
           footer === undefined && { paddingBottom: spacing.lg + bottom },

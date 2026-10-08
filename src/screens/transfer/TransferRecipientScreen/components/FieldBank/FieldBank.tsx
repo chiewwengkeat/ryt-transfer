@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AccessibilityInfo,
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
@@ -47,6 +48,8 @@ export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
         accessibilityValue={{ text: bankName }}
         accessibilityHint={error}
         onPress={() => {
+          // This tap lands with the keyboard up; left up, it would cover Continue after a pick.
+          Keyboard.dismiss();
           setBankSheetOpen(true);
         }}
         style={[styles.field, error !== undefined && styles.fieldInvalid]}
