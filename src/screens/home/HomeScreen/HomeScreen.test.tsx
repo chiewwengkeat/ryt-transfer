@@ -1,10 +1,15 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AppState } from "react-native";
 
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
-import { type BankErrorBody, sendToBank } from "@/test/bank-client";
+import {
+  type BankErrorBody,
+  lookUpTestRecipient,
+  sendToBank,
+} from "@/test/bank-client";
 import { clearTransferScenario } from "@/test/clear-transfer-scenario";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
@@ -270,4 +275,37 @@ it("asks for the balance again every 10 seconds while offline, and resumes sendi
     ),
   ).toBeNull();
   expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+});
+
+it("lists the recipient of a transfer just sent first among the recent recipients, back on Home", async () => {
+  const { recipient } = await lookUpTestRecipient("012-345 6789");
+  const sentRecipientRow = new RegExp(`^${recipient.registeredName}`);
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/");
+  await screen.findAllByRole("button", { name: /••••/ });
+  expect(screen.queryByRole("button", { name: sentRecipientRow })).toBeNull();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(
+    await screen.findByLabelText("Amount (RM)"),
+    "100",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await fireEvent.press(await screen.findByRole("button", { name: "Done" }));
+
+  await waitFor(() => {
+    expect(
+      screen.getAllByRole("button", { name: /••••/ })[0],
+    ).toHaveAccessibleName(sentRecipientRow);
+  });
 });
