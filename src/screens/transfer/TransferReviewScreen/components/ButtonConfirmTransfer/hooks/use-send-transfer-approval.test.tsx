@@ -925,6 +925,50 @@ it("leaves a newer transfer alone when the refusal of one the person left is set
   expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
 });
 
+it("leaves a newer transfer's PIN sheet alone when the bank asks for a PIN to set approval up again for one the person left", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  let keyRegistrationHeld = false;
+  let releaseKeyRegistration: () => void = () => undefined;
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      () =>
+        HttpResponse.json(
+          { error: { code: "KEY_NOT_REGISTERED", message: "Test." } },
+          { status: 409 },
+        ),
+      { once: true },
+    ),
+    http.post(
+      "*/approval-keys",
+      () =>
+        new Promise<undefined>((release) => {
+          keyRegistrationHeld = true;
+          releaseKeyRegistration = () => release(undefined);
+        }),
+      { once: true },
+    ),
+  );
+  await confirmRm100Transfer();
+  await waitFor(() => {
+    expect(keyRegistrationHeld).toBe(true);
+  });
+
+  // Review offers no way back while sending, so this stands in for any route that still could.
+  await act(() => {
+    router.dismissTo("/");
+  });
+  await startRm50TransferFromHomeToItsPinSheet();
+  await act(async () => {
+    releaseKeyRegistration();
+    await jest.advanceTimersByTimeAsync(1_000);
+  });
+  await approveWithPin(DEMO_PIN);
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
+});
+
 it(
   "sets face or fingerprint approval up again with the PIN that approved the transfer, so the next one needs no PIN",
   scenarioTest("transfer.biometrics_changed", async () => {

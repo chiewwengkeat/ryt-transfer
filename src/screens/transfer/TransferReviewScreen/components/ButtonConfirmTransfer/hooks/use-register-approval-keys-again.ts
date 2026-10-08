@@ -23,7 +23,7 @@ import { reportError } from "@/shared/observability/observability";
 export function useRegisterApprovalKeysAgain() {
   const { t } = useTranslation("transfer");
 
-  return async (pinInHand?: string) => {
+  return async (onAnotherTransfer: () => boolean, pinInHand?: string) => {
     const words = {
       message: t("common.approval_key_unknown.body"),
       detail: t("common.approval_key_unknown.pin"),
@@ -34,7 +34,6 @@ export function useRegisterApprovalKeysAgain() {
         () => undefined,
         (registrationFailure: unknown) => registrationFailure,
       );
-      if (failure === undefined) return { pin };
       const refusal =
         failure instanceof TransportError &&
         failure.kind === TransportErrorKind.Http
@@ -43,6 +42,10 @@ export function useRegisterApprovalKeysAgain() {
           : undefined;
       if (refusal?.code === RegisterApprovalKeysErrorCode.PinLocked)
         await rememberApprovalPinLocked();
+      // ⛔ Left during the call: a sheet or prompt now would cover the newer transfer's, whose answer then never comes.
+      if (onAnotherTransfer())
+        return { notice: TransferFlowScenario.ApprovalCancelled };
+      if (failure === undefined) return { pin };
       // The bank asks for a PIN without saying it is locked, so the lock it reported earlier answers instead.
       if (
         refusal?.code === RegisterApprovalKeysErrorCode.PinLocked ||

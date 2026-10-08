@@ -105,7 +105,7 @@ export function useSendTransferApproval() {
           type: TransferFlowActionType.ApprovalAttemptRefused,
         });
       await forgetPendingTransfer();
-      return registerApprovalKeysAgain(pinInHand);
+      return registerApprovalKeysAgain(onAnotherTransfer, pinInHand);
     };
 
     // Resolves with the PIN only once the bank has accepted it, so nothing reuses a PIN that may be wrong.
