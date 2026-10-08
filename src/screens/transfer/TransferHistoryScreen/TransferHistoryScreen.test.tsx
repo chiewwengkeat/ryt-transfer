@@ -502,6 +502,87 @@ it("keeps the rows under a notice when a refresh fails, and refreshes them on Tr
   expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
 });
 
+it("keeps the notice while an older page loads after a refresh fails, until a pull brings the newest page", async () => {
+  serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
+  await renderRoute("/transfer-history");
+  await screen.findByRole("button", { name: /^Lim Wei Jie/ });
+  const recoverFirstPage = failTransferHistoryPages("first");
+
+  await fireEvent(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+    "refresh",
+  );
+
+  await waitFor(() => {
+    expect(sentTransferHistoryCursors()).toEqual([
+      null,
+      "page-2",
+      null,
+      null,
+      null,
+      "page-2",
+    ]);
+  });
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+  expect(screen.getByText(OUT_OF_DATE)).toBeOnTheScreen();
+  recoverFirstPage();
+  await fireEvent(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+    "refresh",
+  );
+  await waitFor(() => {
+    expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
+  });
+});
+
+it("keeps the notice beside the footer's Retry when an older page fails after a refresh fails, until Try again brings the newest page", async () => {
+  serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
+  await renderRoute("/transfer-history");
+  await screen.findByRole("button", { name: /^Lim Wei Jie/ });
+  const recoverFirstPage = failTransferHistoryPages("first");
+  failTransferHistoryPages("later");
+
+  await fireEvent(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+    "refresh",
+  );
+
+  expect(await screen.findByText("Couldn't load more.")).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Retry" })).toBeOnTheScreen();
+  expect(screen.getByText(OUT_OF_DATE)).toBeOnTheScreen();
+  recoverFirstPage();
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+  await waitFor(() => {
+    expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
+  });
+});
+
+it("keeps the notice while Try again is on its way after a refresh fails, until a refresh lands", async () => {
+  await renderRoute("/transfer-history");
+  const aisyah = await screen.findByRole("button", { name: /^Aisyah Rahman/ });
+  const recoverFirstPage = failTransferHistoryPages("first");
+  await fireEvent(aisyah, "refresh");
+  expect(await screen.findByText(OUT_OF_DATE)).toBeOnTheScreen();
+  const firstPageAsks = sentTransferHistoryCursors().filter(
+    (cursor) => cursor === null,
+  ).length;
+
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+
+  await waitFor(() => {
+    expect(
+      sentTransferHistoryCursors().filter((cursor) => cursor === null),
+    ).toHaveLength(firstPageAsks + 1);
+  });
+  expect(screen.getByText(OUT_OF_DATE)).toBeOnTheScreen();
+  recoverFirstPage();
+  await waitFor(() => {
+    expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
+  });
+});
+
 it("keeps the rows it has under the notice when History opens offline", async () => {
   await renderRoute("/");
   await act(() => {

@@ -1,7 +1,7 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { hashKey, useQueryClient } from "@tanstack/react-query";
 import { router, Stack } from "expo-router";
 import { HeaderBackButton } from "expo-router/react-navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 
@@ -24,6 +24,24 @@ export default function TransferHistoryScreen() {
   const { t } = useTranslation("transfer");
   const queryClient = useQueryClient();
   const transferHistory = useListTransfers();
+  // Clear on each open: a failure left from an earlier visit would be announced as this one's.
+  const [refreshFailed, setRefreshFailed] = useState(false);
+  // The query keeps one status, which a page fetch after a failed refresh overwrites: only a refresh's outcome counts.
+  useEffect(() => {
+    const historyQueryHash = hashKey(getListTransfersOptions().queryKey);
+    return queryClient.getQueryCache().subscribe((event) => {
+      if (
+        event.type !== "updated" ||
+        event.query.queryHash !== historyQueryHash ||
+        event.query.state.fetchMeta?.fetchMore
+      )
+        return;
+      if (event.action.type === "error") setRefreshFailed(true);
+      // A cache write, a reset's own trim among them, is no refresh.
+      else if (event.action.type === "success" && !event.action.manual)
+        setRefreshFailed(false);
+    });
+  }, [queryClient]);
   // Each open fetches the newest page: people check here before paying again. Not on a cold cache, whose own
   // first fetch is that page: a reset would cancel it and ask twice.
   useEffect(() => {
@@ -71,10 +89,7 @@ export default function TransferHistoryScreen() {
         </ViewScreenFrame>
       ) : (
         <View style={styles.history}>
-          {/* A failure from an earlier visit is not this one's: shown on reopening, it would be announced as current. */}
-          {((transferHistory.isRefetchError &&
-            transferHistory.isFetchedAfterMount) ||
-            transferHistory.isPaused) && (
+          {(refreshFailed || transferHistory.isPaused) && (
             <View style={styles.outOfDate}>
               <BannerOutOfDate
                 message={t("history.out_of_date")}
