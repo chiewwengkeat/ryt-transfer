@@ -1,3 +1,4 @@
+import type { QueryKey } from "@tanstack/react-query";
 import { render } from "@testing-library/react-native";
 import { ExpoRoot, usePathname } from "expo-router";
 import {
@@ -41,6 +42,10 @@ export async function renderRoute(
   return Object.assign(view, {
     getPathname: () => recordPathname.mock.lastCall?.[0],
   });
+}
+
+export function askOpenAppToReadAgain(queryKey: QueryKey) {
+  void queryClient.invalidateQueries({ queryKey });
 }
 
 // What a killed app keeps is what it stored: its timers, cache and flow die with it, and a stray timer

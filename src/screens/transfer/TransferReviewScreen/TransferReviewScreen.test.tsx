@@ -1,12 +1,14 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { delay, http, HttpResponse } from "msw";
+import { http, HttpResponse } from "msw";
 import { AccessibilityInfo, Platform } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
+import { getLookupRecipientOptions } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
+import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
   listPendingTransfers,
   PendingTransferStage,
@@ -32,7 +34,7 @@ import {
 } from "@/test/harness/native-doubles";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 import { TransferFlowStep, transferFlowStore } from "../state/transfer-flow";
@@ -1347,6 +1349,18 @@ it(
   }),
 );
 
+// Sign-in spares an open review's name check, so this stands in for any later path that asks it again.
+function askOpenReviewsNameCheckAgain() {
+  return act(() => {
+    askOpenAppToReadAgain(
+      getLookupRecipientOptions({
+        idType: RecipientIdType.Mobile,
+        idValue: "+60123456789",
+      }).queryKey,
+    );
+  });
+}
+
 it.each([
   [
     "NAME_ENQUIRY_UNAVAILABLE",
@@ -1355,32 +1369,18 @@ it.each([
   ],
   ["RECIPIENT_NOT_FOUND", 404, "No DuitNow account was found for this ID."],
 ])(
-  "stops offering Transfer once the name check run again after signing in answers %s",
+  "stops offering Transfer once review's name check, asked again, answers %s",
   async (code, status, message) => {
     const { recipient } = await lookUpTestRecipient(MOBILE);
-    mswServer.use(
-      http.post(
-        "*/transfers",
-        () =>
-          HttpResponse.json(
-            { error: { code: "SESSION_EXPIRED", message: "Test." } },
-            { status: 401 },
-          ),
-        { once: true },
-      ),
-    );
     await openReviewOfRm100();
     await screen.findByText(recipient.registeredName);
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     mswServer.use(
       http.post("*/recipients/lookup", () =>
         HttpResponse.json({ error: { code, message: "Test." } }, { status }),
       ),
     );
 
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Sign in again" }),
-    );
+    await askOpenReviewsNameCheckAgain();
 
     expect(await screen.findByText(message)).toBeOnTheScreen();
     expect(screen.queryByText(recipient.registeredName)).toBeNull();
@@ -1981,7 +1981,7 @@ it("repeats a create whose answer could not be read under its key, and debits on
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
 });
 
-it("sends a fresh create under a new key once the name check run again after Ryt did not answer gives a new reference", async () => {
+it("sends a fresh create under a new key once review's name check, asked again after Ryt did not answer, gives a new reference", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const balanceBeforeMinor = await readBankBalanceMinor();
   let createsLost = 0;
@@ -2010,23 +2010,7 @@ it("sends a fresh create under a new key once the name check run again after Ryt
     { timeout: 10_000 },
   );
   const [unansweredKey] = idempotencyKeysOfCreatesSent();
-  mswServer.use(
-    http.get(
-      "*/accounts/primary",
-      async () => {
-        await delay(100);
-        return HttpResponse.json(
-          { error: { code: "SESSION_EXPIRED", message: "Test." } },
-          { status: 401 },
-        );
-      },
-      { once: true },
-    ),
-  );
-  await act(() => jest.advanceTimersByTimeAsync(10_500));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Sign in again" }),
-  );
+  await askOpenReviewsNameCheckAgain();
   // Until the new answer renders, Transfer still sends the earlier one, rightly under the kept key.
   await act(() => jest.advanceTimersByTimeAsync(1_000));
   expect(countSent("POST", "/recipients/lookup")).toBe(2);
