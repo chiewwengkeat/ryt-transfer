@@ -4,7 +4,6 @@ const os = require("node:os");
 const path = require("node:path");
 
 const DEMO_LAYER_VARIANTS = ["demo", "development"];
-const RENDER_TRACE = "the render trace";
 
 // Strings each group's code uses at runtime: minify drops a constant only a dead branch reads.
 // An export name survives minify too: Metro's module transform writes it as a property of exports.
@@ -41,8 +40,17 @@ const BUNDLE_MARKERS = [
     text: "kDefaultContentType",
     carriedBy: DEMO_LAYER_VARIANTS,
   },
-  // Empty until the render trace exists: a placeholder would fail the development export.
-  { source: RENDER_TRACE, text: "", carriedBy: ["development"] },
+  {
+    source: "the render trace",
+    text: "ryt-render-trace",
+    carriedBy: ["development"],
+  },
+  {
+    source:
+      "src/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/hooks/use-transfer-history-render-measurement.ts",
+    text: "pullToRefreshWithNothingNew",
+    carriedBy: ["development"],
+  },
 ];
 
 const EXPORT_RUNS = [
@@ -72,12 +80,10 @@ function checkProductionBundle({
     throw new Error(
       `Unknown platform "${unknownPlatformRun.platform}": each export must be android or ios, so its counts come from one bundle.`,
     );
-  const emptyTextMarker = markers.find(
-    ({ source, text }) => text === "" && source !== RENDER_TRACE,
-  );
+  const emptyTextMarker = markers.find(({ text }) => text === "");
   if (emptyTextMarker)
     throw new Error(
-      `The marker for ${emptyTextMarker.source} has no text, so it would check nothing: only the render trace's may be empty, until the trace exists.`,
+      `The marker for ${emptyTextMarker.source} has no text, so it would check nothing.`,
     );
 
   const outputRoot = fs.mkdtempSync(
@@ -146,7 +152,6 @@ function checkProductionBundle({
         .filter((file) => !file.endsWith(".map"))
         .map((file) => fs.readFileSync(file));
       for (const { source, text, carriedBy } of markers) {
-        if (text === "") continue;
         let foundCount = 0;
         for (const content of outputContents)
           for (
@@ -162,7 +167,7 @@ function checkProductionBundle({
           );
         if (mustCarry && foundCount === 0)
           failures.push(
-            `${exportLabel} lacks "${text}" from ${source}, so its absence from the other builds proves nothing. If ${source} no longer uses it, replace it with another string that code uses at runtime — never a constant only a dead branch reads, which minify drops — and that no ${source === RENDER_TRACE ? "other " : ""}app code contains.`,
+            `${exportLabel} lacks "${text}" from ${source}, so its absence from the other builds proves nothing. If ${source} no longer uses it, replace it with another string that code uses at runtime — never a constant only a dead branch reads, which minify drops — and that no code outside ${source} contains.`,
           );
       }
 
@@ -212,7 +217,7 @@ if (require.main === module) {
   });
   for (const failure of failures) console.error(failure);
   console.log(
-    `production bundle: ${EXPORT_RUNS.length} exports checked, ${BUNDLE_MARKERS.filter(({ text }) => text !== "").length} of ${BUNDLE_MARKERS.length} markers in each, ${failures.length} failures`,
+    `production bundle: ${EXPORT_RUNS.length} exports checked, ${BUNDLE_MARKERS.length} markers in each, ${failures.length} failures`,
   );
   process.exitCode = failures.length > 0 ? 1 : 0;
 }

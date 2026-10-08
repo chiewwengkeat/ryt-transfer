@@ -150,7 +150,7 @@ test("runs every export with Metro's cache cleared, JavaScript rather than bytec
   }
 });
 
-test("ships one marker with text for each mock group and msw's core, carried by demo and development, and the render trace's carried by development alone", () => {
+test("ships one marker with text for each mock group and msw's core, carried by demo and development, and for the render trace and its measurement, carried by development alone", () => {
   assert.deepEqual(
     BUNDLE_MARKERS.map(
       ({ source, carriedBy }) => `${source}: ${carriedBy.join(" and ")}`,
@@ -162,11 +162,12 @@ test("ships one marker with text for each mock group and msw's core, carried by 
       "src/mocks/scenarios: demo and development",
       "src/mocks/switcher: demo and development",
       "src/mocks/transport: demo and development",
+      "src/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/hooks/use-transfer-history-render-measurement.ts: development",
       "the render trace: development",
     ],
   );
   for (const { source, text } of BUNDLE_MARKERS)
-    if (source !== "the render trace") assert.notEqual(text, "", source);
+    assert.notEqual(text, "", source);
 });
 
 test("passes when production and the unset variant carry no marker and demo and development carry theirs", () => {
@@ -211,7 +212,7 @@ test("fails a demo export missing a mock marker and says how to choose another",
     /^demo ios export lacks "bank-marker" from the bank, so its absence from the other builds proves nothing/,
   );
   assert.match(failures[0], /never a constant only a dead branch reads/);
-  assert.match(failures[0], /and that no app code contains\.$/);
+  assert.match(failures[0], /and that no code outside the bank contains\.$/);
 });
 
 test("fails a development export missing a mock marker", () => {
@@ -242,7 +243,7 @@ test("fails a demo export that carries the render trace", () => {
   assert.match(failures[0], /^demo android export carries "trace-marker"/);
 });
 
-test("fails a development export missing the render trace, asking for a string no other app code contains", () => {
+test("fails a development export missing the render trace, asking for a string no code outside the trace contains", () => {
   const failures = checkWith(
     fakeExpoExport({
       bundleTextFor: bundleTextExceptFor(
@@ -254,10 +255,61 @@ test("fails a development export missing the render trace, asking for a string n
 
   assert.equal(failures.length, 1);
   assert.match(failures[0], /^development android export lacks "trace-marker"/);
-  assert.match(failures[0], /and that no other app code contains\.$/);
+  assert.match(
+    failures[0],
+    /and that no code outside the render trace contains\.$/,
+  );
 });
 
-test("refuses a marker other than the render trace's that has no text, before running any export", () => {
+for (const markerText of ["ryt-render-trace", "pullToRefreshWithNothingNew"]) {
+  const shippedTextFor = (variant, keepsMarker = true) =>
+    BUNDLE_MARKERS.filter(
+      ({ carriedBy, text }) =>
+        carriedBy.includes(variant) && (keepsMarker || text !== markerText),
+    )
+      .map(({ text }) => text)
+      .join(";");
+
+  test(`fails a development export lacking ${markerText}`, () => {
+    const failures = checkWith(
+      fakeExpoExport({
+        bundleTextFor: ({ variant }) =>
+          shippedTextFor(variant, variant !== "development"),
+      }),
+      { markers: BUNDLE_MARKERS },
+    );
+
+    assert.equal(failures.length, 1);
+    assert.match(
+      failures[0],
+      new RegExp(`^development android export lacks "${markerText}"`),
+    );
+  });
+
+  test(`fails a demo or production export carrying ${markerText}`, () => {
+    const failures = checkWith(
+      fakeExpoExport({
+        bundleTextFor: (run) =>
+          ["demo ios", "production android"].includes(exportRunLabel(run))
+            ? `${shippedTextFor(run.variant)};${markerText}`
+            : shippedTextFor(run.variant),
+      }),
+      { markers: BUNDLE_MARKERS },
+    );
+
+    assert.equal(failures.length, 2);
+    assert.match(
+      failures[0],
+      new RegExp(`^production android export carries "${markerText}"`),
+    );
+    assert.match(
+      failures[1],
+      new RegExp(`^demo ios export carries "${markerText}"`),
+    );
+  });
+}
+
+test("refuses a marker that has no text, before running any export", () => {
   const fake = fakeExpoExport();
 
   assert.throws(
@@ -270,40 +322,17 @@ test("refuses a marker other than the render trace's that has no text, before ru
   assert.equal(fake.exportCalls.length, 0);
 });
 
-test("refuses an empty marker carried by development alone when it is not the render trace's", () => {
+test("refuses the render trace's marker too when it has no text", () => {
   const fake = fakeExpoExport();
 
   assert.throws(
     () =>
       checkWith(fake, {
-        markers: [
-          ...MARKERS.slice(0, 2),
-          { source: "the render trace", text: "", carriedBy: ["development"] },
-          { source: "the dev menu", text: "", carriedBy: ["development"] },
-        ],
+        markers: [...MARKERS.slice(0, 2), { ...MARKERS[2], text: "" }],
       }),
-    /The marker for the dev menu has no text/,
+    /The marker for the render trace has no text/,
   );
   assert.equal(fake.exportCalls.length, 0);
-});
-
-test("leaves the render trace's marker unchecked while it has no text", () => {
-  const markers = [
-    ...MARKERS.slice(0, 2),
-    { source: "the render trace", text: "", carriedBy: ["development"] },
-  ];
-
-  const failures = checkWith(
-    fakeExpoExport({
-      bundleTextFor: bundleTextExceptFor(
-        "development android",
-        "bank-marker;msw-marker",
-      ),
-    }),
-    { markers },
-  );
-
-  assert.deepEqual(failures, []);
 });
 
 test("fails an export that wrote no JavaScript bundle rather than reading its zeros as clean", () => {
@@ -715,7 +744,7 @@ test("exits 0 when run as CI runs it and every bundle carries only what its vari
   assert.match(
     result.stdout,
     new RegExp(
-      `6 exports checked, ${BUNDLE_MARKERS.filter(({ text }) => text !== "").length} of 7 markers in each, 0 failures`,
+      `6 exports checked, ${BUNDLE_MARKERS.length} markers in each, 0 failures`,
     ),
   );
 });
