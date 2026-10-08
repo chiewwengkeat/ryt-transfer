@@ -4,6 +4,7 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import type { ListBanksResponse } from "@/domains/transfer/api/list-banks/list-banks.type";
 import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients.type";
+import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import {
   LookupRecipientErrorCode,
   RecipientIdType,
@@ -87,31 +88,8 @@ export function lookupBankRecipient({
         "Send an idType and idValue, with a known bankCode for an account number.",
       );
     }
-    const compact = idValue.replace(/[\s-]/g, "").toUpperCase();
-    let normalised: string | undefined;
-    switch (idType!) {
-      case RecipientIdType.Mobile: {
-        const national = /^(?:\+?60|0)(1\d{8,9})$/.exec(compact)?.[1];
-        if (national) normalised = `+60${national}`;
-        break;
-      }
-      case RecipientIdType.Nric:
-        if (/^\d{12}$/.test(compact)) normalised = compact;
-        break;
-      case RecipientIdType.Passport:
-        if (/^[A-Z][A-Z0-9]{5,11}$/.test(compact)) normalised = compact;
-        break;
-      case RecipientIdType.Brn:
-        if (/^(?:\d{12}|\d{6,7}[A-Z])$/.test(compact)) normalised = compact;
-        break;
-      case RecipientIdType.ArmyPolice:
-        if (/^[A-Z]{1,3}\/?\d{4,8}$/.test(compact)) normalised = compact;
-        break;
-      case RecipientIdType.AccountNumber:
-        if (/^\d{8,17}$/.test(compact)) normalised = compact;
-        break;
-    }
-    if (!normalised) {
+    const normalised = parseRecipientId(idType!, idValue);
+    if (normalised === null) {
       return bankError(
         422,
         LookupRecipientErrorCode.InvalidIdFormat,
@@ -119,10 +97,10 @@ export function lookupBankRecipient({
       );
     }
     counterpartyId = {
-      idType,
+      idType: idType!,
       idValue: normalised,
       bankCode: directoryEntryFor({
-        idType,
+        idType: idType!,
         idValue: normalised,
         bankCode,
       }).bankCode,

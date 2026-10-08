@@ -3,6 +3,7 @@ import { HeaderBackButton } from "expo-router/react-navigation";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import FieldText from "@/shared/ui/FieldText/FieldText";
@@ -50,11 +51,8 @@ export default function TransferRecipientScreen() {
           <ButtonPrimary
             label={t("recipient.continue")}
             onPress={() => {
-              // A DuitNow mobile ID is a Malaysian mobile number.
-              const national = /^(?:\+?60|0)(1\d{8,9})$/.exec(
-                mobile.replace(/[\s-]/g, ""),
-              )?.[1];
-              if (national === undefined) {
+              const mobileId = parseRecipientId(RecipientIdType.Mobile, mobile);
+              if (mobileId === null) {
                 setMobileError(t("common.badly_formed_input.mobile"));
                 return;
               }
@@ -63,7 +61,7 @@ export default function TransferRecipientScreen() {
                   type: TransferFlowActionType.RecipientChosen,
                   recipient: {
                     idType: RecipientIdType.Mobile,
-                    idValue: `+60${national}`,
+                    idValue: mobileId,
                   },
                 })
               )
