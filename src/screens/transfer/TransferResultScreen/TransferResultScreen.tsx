@@ -9,7 +9,7 @@ import {
   TransferReadFailure,
   useTransferStatusCheck,
 } from "@/domains/transfer/hooks/transfer-status-checks";
-import { refreshAccountAndHistoryAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
+import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import { trackEvent } from "@/shared/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
@@ -67,7 +67,7 @@ export default function TransferResultScreen() {
   useEffect(() => {
     // Settled after opening: any refresh the approve call made predates it, and it may have moved money.
     if (outcomeSettled && !openedSettled)
-      void refreshAccountAndHistoryAfterApproval(queryClient);
+      void refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
   }, [outcomeSettled, openedSettled, queryClient]);
 
   return (

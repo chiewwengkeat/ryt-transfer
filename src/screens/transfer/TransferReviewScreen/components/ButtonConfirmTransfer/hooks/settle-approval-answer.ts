@@ -15,7 +15,7 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
-import { refreshAccountAndHistoryAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
+import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
@@ -61,7 +61,7 @@ export async function settleApprovalAnswer({
       transfer.failureReason === TransferFailureReason.DailyLimitExceeded)
   ) {
     // The amount step they go back to checks against the figures that just fell short.
-    void refreshAccountAndHistoryAfterApproval(queryClient);
+    void refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
     await returnRefusedApprovalToReview({
       type: TransferFlowActionType.ApprovalNotSent,
       notice: TransferFlowScenario.BalanceOrLimitShortAtApproval,
@@ -127,7 +127,7 @@ export async function settleApprovalAnswer({
   }
 
   // Any other answer, an unknown code included, may hide moved money, so only the result page may say.
-  void refreshAccountAndHistoryAfterApproval(queryClient);
+  void refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
   // From Home, so Back from the result never reopens a transfer already sent.
   router.dismissTo("/");
   router.push({
