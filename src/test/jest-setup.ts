@@ -18,9 +18,6 @@ import { integrityStandInStore } from "@/domains/approval/hooks/device-integrity
 import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
 import { setObservabilitySink } from "@/shared/observability/observability";
 import { forgetRequestOutcomes } from "@/shared/platform/offline";
-// Ahead of every test, as at launch: loaded with the first route instead, its reinstall wipe would erase keys a
-// test paired before rendering.
-import "@/shell/app-launch";
 import type * as ShellQueryClient from "@/shell/query-client";
 import "@/shell/translations";
 
@@ -150,6 +147,9 @@ const appLanguageAtLaunch = i18next.language;
 beforeAll(() => {
   // A function, not "error": msw's built-in strategies let static-asset paths such as `.json` through.
   mswServer.listen({ onUnhandledRequest: recordUnhandledRequest });
+  // Ahead of every test, as at launch, or its reinstall wipe would erase keys a test paired before rendering. In a
+  // hook, so a demo-build file launches it first as a demo; actual, so a file that mocks it still runs the launch.
+  jest.requireActual("@/shell/app-launch");
 });
 
 beforeEach(() => {

@@ -24,6 +24,7 @@ const UNTAMPERED_PHONE: DeviceIntegrityResult = {
   riskLevel: "NONE",
 };
 let answerIntegrityCheck = () => Promise.resolve(UNTAMPERED_PHONE);
+let integrityChecksAsked = 0;
 
 function signForReal(data: string, secretKey: Uint8Array) {
   const signature = p256.sign(new TextEncoder().encode(data), secretKey, {
@@ -96,7 +97,10 @@ export const biometricsLibraryDouble = {
     keysKilledByEnrolmentChange.delete(keyAlias);
     return Promise.resolve({ success: true });
   },
-  getDeviceIntegrityStatus: () => answerIntegrityCheck(),
+  getDeviceIntegrityStatus: () => {
+    integrityChecksAsked += 1;
+    return answerIntegrityCheck();
+  },
 };
 
 export function cancelNextBiometricPrompt() {
@@ -158,6 +162,10 @@ export function biometricPromptsShown() {
   return [...biometricPrompts];
 }
 
+export function deviceIntegrityChecksAsked() {
+  return integrityChecksAsked;
+}
+
 export function resetBiometricsDouble() {
   phoneKeys.clear();
   keysKilledByEnrolmentChange.clear();
@@ -167,4 +175,5 @@ export function resetBiometricsDouble() {
   nextPromptHeldUntil = null;
   sensorUnavailableCode = null;
   answerIntegrityCheck = () => Promise.resolve(UNTAMPERED_PHONE);
+  integrityChecksAsked = 0;
 }

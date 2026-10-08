@@ -24,7 +24,6 @@ const installChecked = (async () => {
 
 // At load, ahead of the shell's guard, so the block is in place before anything renders.
 if (isProductionBuild) void blockScreenCapture();
-// Every build, and never paused for the Face ID prompt.
 void enableAppSwitcherBlur();
 warmUpDeviceIntegrityCheck();
 

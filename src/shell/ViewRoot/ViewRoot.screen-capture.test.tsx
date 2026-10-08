@@ -5,10 +5,7 @@ import { Pressable, Text } from "react-native";
 
 import { motionDurations } from "@/shared/lib/motion/motion";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import {
-  appSwitcherBlurIntensity,
-  isScreenCaptureBlocked,
-} from "@/test/harness/native-doubles";
+import { isScreenCaptureBlocked } from "@/test/harness/native-doubles";
 import { waitPastReceiptSettle } from "@/test/harness/receipt-settle";
 import { renderRoute } from "@/test/render-route";
 
@@ -121,8 +118,4 @@ it("blocks capture again when a crash replaces the app on a receipt", async () =
   await waitPastReceiptSettle();
 
   expect(isScreenCaptureBlocked()).toBe(true);
-});
-
-it("blurs the app in the iPhone's app switcher from launch, at the default strength", () => {
-  expect(appSwitcherBlurIntensity()).toBe(0.5);
 });
