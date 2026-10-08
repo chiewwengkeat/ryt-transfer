@@ -5,6 +5,7 @@ import { http, HttpResponse } from "msw";
 import { AccessibilityInfo, Pressable, Text } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import { askForApprovalPin } from "@/domains/approval/hooks/approval-pin-sheet";
 import {
   listPendingTransfers,
   PendingTransferStage,
@@ -158,4 +159,24 @@ it("discards another customer's pending transfers at launch, and keeps the signe
   expect(await listPendingTransfers(customerId)).toEqual([
     { ...pendingSince, transferId: ownTransfer.transferId },
   ]);
+});
+
+it("answers an open PIN request as closed when the app's root goes away, so its caller is not left waiting", async () => {
+  const view = await renderRoute("/", {
+    appDir: "src/app",
+    overrides: { index: () => <Text>Home</Text> },
+  });
+  let pinAnswer: string | null | undefined;
+  await act(() => {
+    void askForApprovalPin({ message: "Approve with your PIN." }).then(
+      (answer) => {
+        pinAnswer = answer;
+      },
+    );
+  });
+  await screen.findByRole("button", { name: "Approve" });
+
+  await view.unmount();
+
+  await waitFor(() => expect(pinAnswer).toBeNull());
 });

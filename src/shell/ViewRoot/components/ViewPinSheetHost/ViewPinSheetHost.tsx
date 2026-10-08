@@ -10,25 +10,25 @@ import { addUnauthorizedListener } from "@/shared/http/transport";
 
 export default function ViewPinSheetHost() {
   const pinSheet = useStore(approvalPinSheetStore);
-  // An ended session closes the sheet with its flow, as closing it by hand would.
-  useEffect(
-    () =>
-      addUnauthorizedListener(() => {
-        const shown = approvalPinSheetStore.getState();
-        if (shown.step !== ApprovalPinSheetStep.Closed) shown.answer(null);
-      }),
-    [],
-  );
-  // Nothing else resets the store, so a root mounted afresh must not find an earlier sheet still open.
-  useEffect(
-    () => () => {
+  // An ended session or a root going away closes the sheet with its flow, as closing it by hand would.
+  useEffect(() => {
+    const answerShownSheetAsClosed = () => {
+      const shown = approvalPinSheetStore.getState();
+      if (shown.step !== ApprovalPinSheetStep.Closed) shown.answer(null);
+    };
+    const removeUnauthorizedListener = addUnauthorizedListener(
+      answerShownSheetAsClosed,
+    );
+    return () => {
+      removeUnauthorizedListener();
+      answerShownSheetAsClosed();
+      // A sending sheet ignores the answer, and a root mounted afresh must not find it still open.
       approvalPinSheetStore.setState(
         approvalPinSheetStore.getInitialState(),
         true,
       );
-    },
-    [],
-  );
+    };
+  }, []);
 
   if (pinSheet.step === ApprovalPinSheetStep.Closed) return null;
   return (
