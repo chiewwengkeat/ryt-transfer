@@ -24,6 +24,9 @@
       "title": "Earlier transfer still being checked",
       "body": "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: {{reference}}"
     },
+    "screen_capture_blocked": {
+      "title": "Screenshots blocked"
+    },
     "start_unexpected": {
       "title": "Something unexpected while starting",
       "body": "Something unexpected went wrong.",
@@ -203,7 +206,8 @@
       "body": "The transfer was declined — no money moved."
     },
     "rooted_phone": {
-      "title": "Rooted, jailbroken or tampered phone"
+      "title": "Rooted, jailbroken or tampered phone",
+      "body": "This phone's security can't be confirmed, so transfers are off on it."
     },
     "approval_unexpected": {
       "title": "Something unexpected while approving",

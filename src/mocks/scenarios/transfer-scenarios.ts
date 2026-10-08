@@ -64,6 +64,10 @@ export const TRANSFER_SCENARIOS = {
     handlers: () => [http.all("*", lostAnswer)],
   },
   "transfer.earlier_transfer_unconfirmed": { step: TransferStep.Start },
+  "transfer.screen_capture_blocked": {
+    step: TransferStep.Start,
+    phoneSide: true,
+  },
   "transfer.start_unexpected": {
     step: TransferStep.Start,
     handlers: () => [http.get(BANK_PATHS.primaryAccount, unknownCodeAnswer)],
@@ -225,7 +229,7 @@ export const TRANSFER_SCENARIOS = {
     step: TransferStep.Approval,
     conditions: { approvalOutcome: ApprovalOutcome.RecipientAccountInactive },
   },
-  "transfer.rooted_phone": { step: TransferStep.Approval },
+  "transfer.rooted_phone": { step: TransferStep.Approval, phoneSide: true },
   "transfer.approval_unexpected": { step: TransferStep.Approval },
 
   "transfer.completed": { step: TransferStep.Outcome },
@@ -308,4 +312,6 @@ export interface TransferScenario {
   conditions?: BankConditions;
   // Given the bank's own handlers, so an overlay can let a write commit and then lose its answer.
   handlers?: (bankHandlers: RequestHandler[]) => RequestHandler[];
+  // Acted out by the phone, through the demo layer, while the bank behaves normally.
+  phoneSide?: true;
 }

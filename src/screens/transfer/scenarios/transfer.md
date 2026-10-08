@@ -6,7 +6,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 
 **How to change it.** Edit any wording. Keep the bold labels as they are. Never change a grey id: a new scenario gets a new id, and a removed scenario's id is never reused.
 
-**Money.** Every Money line is exactly one of these four states. Where **Tell them** ends with a state's phrase, the app's message for that scenario carries that phrase in every language. Where **Never** reads "offer to send it again", no language's message offers it. Phrases machine-translated once.
+**Money.** Every Money line is exactly one of these four states. Where **Tell them** ends with a state's phrase, the app's message for that scenario carries that phrase in every language. Phrases machine-translated once.
 
 | Money | Malay | Chinese |
 | --- | --- | --- |
@@ -15,9 +15,23 @@ Every situation someone can meet while sending money, from opening a transfer to
 | not confirmed yet | belum disahkan | 尚未确认 |
 | money returned | wang telah dipulangkan | 款项已退回 |
 
+**Retry words.** Where **Never** reads "offer to send it again", nothing the person can press carries one of these words: no button or action label, in any language. Messages keep their warnings, such as "shouldn't send it again" or "check History before sending again".
+
+| Retry word | Language |
+| --- | --- |
+| try again | English |
+| send it again | English |
+| send again | English |
+| cuba lagi | Malay |
+| hantar semula | Malay |
+| hantar lagi | Malay |
+| 重试 | Chinese |
+| 再次发送 | Chinese |
+| 重新发送 | Chinese |
+
 **Index**
 
-- **Start** · [Balance and today's limit shown](#balance-and-todays-limit-shown) · [New customer's lower daily limit](#new-customers-lower-daily-limit) · [Balance or limit can't load](#balance-or-limit-cant-load) · [Transfers under maintenance](#transfers-under-maintenance) · [Offline](#offline) · [Earlier transfer still being checked](#earlier-transfer-still-being-checked) · [Something unexpected while starting](#something-unexpected-while-starting)
+- **Start** · [Balance and today's limit shown](#balance-and-todays-limit-shown) · [New customer's lower daily limit](#new-customers-lower-daily-limit) · [Balance or limit can't load](#balance-or-limit-cant-load) · [Transfers under maintenance](#transfers-under-maintenance) · [Offline](#offline) · [Earlier transfer still being checked](#earlier-transfer-still-being-checked) · [Screenshots blocked](#screenshots-blocked) · [Something unexpected while starting](#something-unexpected-while-starting)
 - **Recipient** · [Badly formed ID, amount or note](#badly-formed-id-amount-or-note) · [Contacts access refused](#contacts-access-refused) · [Picked contact has no Malaysian mobile number](#picked-contact-has-no-malaysian-mobile-number) · [Recent recipient chosen](#recent-recipient-chosen) · [Something unexpected while choosing the recipient](#something-unexpected-while-choosing-the-recipient)
 - **Amount** · [Amount over the balance or a limit](#amount-over-the-balance-or-a-limit) · [Something unexpected while entering the amount](#something-unexpected-while-entering-the-amount)
 - **Review** · [Recipient found](#recipient-found) · [First transfer to this recipient](#first-transfer-to-this-recipient) · [Recipient not found](#recipient-not-found) · [Name check unavailable](#name-check-unavailable) · [Too many name checks](#too-many-name-checks) · [Balance or limit short at confirmation](#balance-or-limit-short-at-confirmation) · [Phone paired less than 12 hours ago](#phone-paired-less-than-12-hours-ago) · [Account opened less than an hour ago](#account-opened-less-than-an-hour-ago) · [Account locked](#account-locked) · [Name check expired](#name-check-expired) · [No answer when confirming](#no-answer-when-confirming) · [Details changed after no answer](#details-changed-after-no-answer) · [Double tap on Transfer](#double-tap-on-transfer) · [Something unexpected while reviewing](#something-unexpected-while-reviewing)
@@ -82,6 +96,15 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **They can:** carry on with a new transfer at their own risk
 - **Never:** offer to send it again
 - **Why:** the earlier transfer may still complete, so a second one could pay twice, and the person decides with that in front of them
+
+### Screenshots blocked
+`transfer.screen_capture_blocked`
+- **When:** they take a screenshot or record the screen anywhere but a receipt, in the production app
+- **Money:** no money moved
+- **Shown as:** the picture or recording comes out blank; on Android the phone says the app doesn't allow it
+- **Tell them:** nothing more; the phone's own notice is enough
+- **They can:** carry on; a receipt can still be captured
+- **Why:** a balance, a recipient or the PIN pad on screen can be captured by malware or a screen-sharing scammer
 
 ### Something unexpected while starting
 `transfer.start_unexpected`

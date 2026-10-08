@@ -1,4 +1,13 @@
 {
+  "button_language": {
+    "label": "Language"
+  },
+  "bottom_sheet_language": {
+    "title": "Language",
+    "close": "Close the language menu",
+    "phone_language": "Phone's language"
+  },
+
   "home": {
     "title": "Home",
     "transfer": "Transfer",
