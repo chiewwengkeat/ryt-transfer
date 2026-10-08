@@ -257,6 +257,41 @@
     "recovery_unexpected": {
       "title": "Sesuatu yang tidak dijangka semasa memeriksa",
       "body": "Keputusan pindahan ini tidak dapat disahkan buat masa ini. Semak Sejarah sebelum menghantarnya sekali lagi — belum disahkan."
+    },
+    "transfer_status": {
+      "sent": "Berjaya",
+      "received": "Diterima",
+      "processing": "Sedang diproses",
+      "held": "Ditahan untuk semakan keselamatan",
+      "unsuccessful": "Tidak berjaya",
+      "awaiting_approval": "Menunggu kelulusan",
+      "expired": "Tamat tempoh"
+    },
+    "section_transfer_details": {
+      "status": "Status",
+      "status_and_money": "{{status}} — {{money}}",
+      "money": {
+        "no_money_moved": "tiada wang dipindahkan",
+        "money_moved": "wang telah dipindahkan",
+        "not_confirmed_yet": "belum disahkan",
+        "money_returned": "wang telah dipulangkan"
+      },
+      "amount": "Jumlah",
+      "sent_to": "Dihantar kepada",
+      "received_from": "Diterima daripada",
+      "mobile": "Nombor telefon bimbit",
+      "nric": "Nombor NRIC",
+      "account_number": "Nombor akaun",
+      "passport": "Nombor pasport",
+      "brn": "Nombor pendaftaran perniagaan",
+      "army_police": "Nombor tentera atau polis",
+      "bank": "Bank",
+      "note": "Nota",
+      "reference": "Rujukan",
+      "sent_at": "Dihantar pada",
+      "received_at": "Diterima pada",
+      "completed_at": "Selesai pada",
+      "refunded_at": "Dipulangkan pada"
     }
   },
   "recipient": {
@@ -330,6 +365,61 @@
     "note": "Nota",
     "reference": "Rujukan",
     "completed_at": "Selesai pada",
-    "done": "Selesai"
+    "done": "Selesai",
+    "check_history": "Semak Sejarah",
+    "heading": {
+      "completed": "Pindahan dihantar",
+      "processing": "Pindahan sedang diproses",
+      "held_for_review": "Pindahan ditahan",
+      "fraud_blocked": "Pindahan dihentikan",
+      "recipient_account_inactive": "Pindahan ditolak",
+      "refunded_after_processing": "Pindahan dipulangkan",
+      "balance_or_limit_short_at_approval": "Pindahan tidak dihantar",
+      "approval_expired": "Pindahan tidak dihantar",
+      "outcome_unexpected": "Keputusan tidak tersedia",
+      "approval_unanswered": "Menyemak pindahan anda",
+      "approval_unknown_answer": "Menyemak pindahan anda",
+      "app_closed_during_approval": "Menyemak pindahan terakhir anda",
+      "status_unreachable": "Masih menyemak pindahan anda",
+      "last_transfer_not_found": "Pindahan tidak ditemui",
+      "recovery_unexpected": "Keputusan tidak disahkan"
+    },
+    "reference_to_quote": "Jika anda menghubungi kami, nyatakan rujukan ini: {{reference}}",
+    "outcome_announcement": "{{heading}}. {{body}}"
+  },
+  "history": {
+    "title": "Sejarah pindahan",
+    "home": "Kembali ke Laman Utama",
+    "empty": {
+      "title": "Belum ada pindahan",
+      "body": "Pindahan yang anda hantar atau terima akan dipaparkan di sini."
+    },
+    "first_page_failed": "Pindahan anda tidak dapat dimuatkan.",
+    "out_of_date": "Tidak dapat dimuat semula — senarai ini mungkin sudah lapuk",
+    "try_again": "Cuba lagi",
+    "day": {
+      "title": "{{day}} ({{count}})",
+      "label_one": "{{day}}, {{count}} pindahan, {{net}}",
+      "label_other": "{{day}}, {{count}} pindahan, {{net}}",
+      "label_without_net_one": "{{day}}, {{count}} pindahan",
+      "label_without_net_other": "{{day}}, {{count}} pindahan"
+    },
+    "transfer": {
+      "time_and_status": "{{time}} · {{status}}"
+    },
+    "footer": {
+      "loading": "Memuatkan lebih banyak pindahan",
+      "failed": "Tidak dapat memuatkan lagi.",
+      "retry": "Cuba semula",
+      "end": "Itu sahaja"
+    }
+  },
+  "details": {
+    "title": "Butiran pindahan",
+    "not_found": "Pindahan ini tidak dapat ditemui.",
+    "back": "Kembali",
+    "failed": "Pindahan ini tidak dapat dimuatkan.",
+    "try_again": "Cuba lagi",
+    "out_of_date": "Tidak dapat dimuat semula — butiran ini mungkin sudah lapuk"
   }
 }

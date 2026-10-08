@@ -257,6 +257,41 @@
     "recovery_unexpected": {
       "title": "核查时出现意外问题",
       "body": "目前无法确认此转账的结果。再次转账前，请先查看历史记录——尚未确认。"
+    },
+    "transfer_status": {
+      "sent": "成功",
+      "received": "已收款",
+      "processing": "处理中",
+      "held": "因安全检查而暂缓",
+      "unsuccessful": "不成功",
+      "awaiting_approval": "等待批准",
+      "expired": "已过期"
+    },
+    "section_transfer_details": {
+      "status": "状态",
+      "status_and_money": "{{status}}——{{money}}",
+      "money": {
+        "no_money_moved": "款项未转出",
+        "money_moved": "款项已转出",
+        "not_confirmed_yet": "尚未确认",
+        "money_returned": "款项已退回"
+      },
+      "amount": "金额",
+      "sent_to": "转账至",
+      "received_from": "来自",
+      "mobile": "手机号码",
+      "nric": "身份证号码",
+      "account_number": "账号",
+      "passport": "护照号码",
+      "brn": "商业注册号码",
+      "army_police": "军警证件号码",
+      "bank": "银行",
+      "note": "备注",
+      "reference": "参考编号",
+      "sent_at": "发送时间",
+      "received_at": "收款时间",
+      "completed_at": "完成时间",
+      "refunded_at": "退款时间"
     }
   },
   "recipient": {
@@ -330,6 +365,61 @@
     "note": "备注",
     "reference": "参考编号",
     "completed_at": "完成时间",
-    "done": "完成"
+    "done": "完成",
+    "check_history": "查看历史记录",
+    "heading": {
+      "completed": "转账已发送",
+      "processing": "转账处理中",
+      "held_for_review": "转账已暂缓",
+      "fraud_blocked": "转账已被拦截",
+      "recipient_account_inactive": "转账被拒绝",
+      "refunded_after_processing": "转账已退款",
+      "balance_or_limit_short_at_approval": "转账未发送",
+      "approval_expired": "转账未发送",
+      "outcome_unexpected": "无法显示结果",
+      "approval_unanswered": "正在核查您的转账",
+      "approval_unknown_answer": "正在核查您的转账",
+      "app_closed_during_approval": "正在核查您的上一笔转账",
+      "status_unreachable": "仍在核查您的转账",
+      "last_transfer_not_found": "找不到转账",
+      "recovery_unexpected": "结果未确认"
+    },
+    "reference_to_quote": "如需联系我们，请提供此参考编号：{{reference}}",
+    "outcome_announcement": "{{heading}}。{{body}}"
+  },
+  "history": {
+    "title": "转账记录",
+    "home": "返回首页",
+    "empty": {
+      "title": "暂无转账",
+      "body": "您发送或收到的转账将显示在此处。"
+    },
+    "first_page_failed": "无法加载您的转账。",
+    "out_of_date": "无法刷新——此列表可能不是最新的",
+    "try_again": "重试",
+    "day": {
+      "title": "{{day}}（{{count}}）",
+      "label_one": "{{day}}，{{count}} 笔转账，{{net}}",
+      "label_other": "{{day}}，{{count}} 笔转账，{{net}}",
+      "label_without_net_one": "{{day}}，{{count}} 笔转账",
+      "label_without_net_other": "{{day}}，{{count}} 笔转账"
+    },
+    "transfer": {
+      "time_and_status": "{{time}} · {{status}}"
+    },
+    "footer": {
+      "loading": "正在加载更多转账",
+      "failed": "无法加载更多。",
+      "retry": "重试",
+      "end": "已全部加载"
+    }
+  },
+  "details": {
+    "title": "转账详情",
+    "not_found": "找不到此转账。",
+    "back": "返回",
+    "failed": "无法加载此转账。",
+    "try_again": "重试",
+    "out_of_date": "无法刷新——这些详情可能不是最新的"
   }
 }
