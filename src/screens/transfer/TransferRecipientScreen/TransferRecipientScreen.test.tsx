@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, userEvent } from "@testing-library/react-native";
 
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { parseTypedAmount } from "@/shared/lib/money/money";
@@ -87,6 +87,29 @@ it.each([
       expect(screen.getByHintText(formatMessage)).toBeOnTheScreen();
       expect(view.getPathname()).toBe("/transfer");
     })(),
+);
+
+it.each([
+  ["Mobile", "DuitNow mobile number", "+601123456789"],
+  ["NRIC", "NRIC number", "900101145678"],
+  ["Passport", "Passport number", "A12345678901"],
+  ["Business registration", "Business registration number", "202001012345"],
+  ["Army/Police", "Army or police number", "RFT12345678"],
+  ["Account number", "Account number", "12345678901234567"],
+])(
+  "takes the longest %s ID typed with a space between every character, and no character more",
+  async (idTypeChip, fieldLabel, longestId) => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    await renderRoute("/transfer");
+    await fireEvent.press(
+      await screen.findByRole("radio", { name: idTypeChip }),
+    );
+    const spacedId = [...longestId].join(" ");
+
+    await user.type(screen.getByLabelText(fieldLabel), `${spacedId}0`);
+
+    expect(screen.getByLabelText(fieldLabel)).toHaveDisplayValue(spacedId);
+  },
 );
 
 it("shows review a passport recipient under its own label, masked", async () => {

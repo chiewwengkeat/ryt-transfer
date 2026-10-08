@@ -4,6 +4,8 @@ import { transferKeys } from "../transfer.keys";
 import {
   getLookupRecipientOptions,
   parseRecipientId,
+  RECIPIENT_ID_FORMATS,
+  RecipientIdCharacters,
 } from "./lookup-recipient";
 import {
   RecipientIdType,
@@ -50,3 +52,45 @@ it.each<[RecipientIdType, string, string | null]>([
 ])("reads %s %p as %p", (idType, typedId, expectedId) => {
   expect(parseRecipientId(idType, typedId)).toBe(expectedId);
 });
+
+it.each<[RecipientIdType, string]>([
+  [RecipientIdType.Mobile, "+601123456789"],
+  [RecipientIdType.Nric, "900101145678"],
+  [RecipientIdType.Passport, "A12345678901"],
+  [RecipientIdType.Brn, "202001012345"],
+  [RecipientIdType.ArmyPolice, "RFT12345678"],
+  [RecipientIdType.AccountNumber, "12345678901234567"],
+])(
+  "takes a %s ID as long as %p, with a space between every character, and none longer",
+  (idType, longestId) => {
+    expect(RECIPIENT_ID_FORMATS[idType].longestIdLength).toBe(longestId.length);
+    expect(parseRecipientId(idType, [...longestId].join(" "))).toBe(longestId);
+    expect(parseRecipientId(idType, `${longestId}0`)).toBeNull();
+  },
+);
+
+const CHARACTERS_ON_KEYBOARD = {
+  [RecipientIdCharacters.Digits]: /^\d+$/,
+  [RecipientIdCharacters.PlusAndDigits]: /^\+?\d+$/,
+  [RecipientIdCharacters.LettersAndDigits]: /^[A-Z\d]+$/,
+};
+
+it.each<[RecipientIdType, string, string]>([
+  [RecipientIdType.Mobile, "+60123456789", "+6012345678A"],
+  [RecipientIdType.Nric, "900101145678", "90010114567A"],
+  [RecipientIdType.Passport, "A1234567", "A123456+"],
+  [RecipientIdType.Brn, "1234567A", "1234567+"],
+  [RecipientIdType.ArmyPolice, "RF1234", "RF123+"],
+  [RecipientIdType.AccountNumber, "512345678901", "51234567890A"],
+])(
+  "keys a %s ID on a keyboard holding every character its rule takes",
+  (idType, idTheRuleTakes, idWithOtherCharacter) => {
+    const keyboardCharacters =
+      CHARACTERS_ON_KEYBOARD[RECIPIENT_ID_FORMATS[idType].characters];
+
+    expect(parseRecipientId(idType, idTheRuleTakes)).toMatch(
+      keyboardCharacters,
+    );
+    expect(parseRecipientId(idType, idWithOtherCharacter)).toBeNull();
+  },
+);

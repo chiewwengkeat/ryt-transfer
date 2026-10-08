@@ -1,7 +1,11 @@
 import { useTranslation } from "react-i18next";
 import type { TextInputProps } from "react-native";
 
-import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import {
+  RECIPIENT_ID_FORMATS,
+  RecipientIdCharacters,
+} from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
+import type { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import FieldText from "@/shared/ui/FieldText/FieldText";
 
 interface Props {
@@ -12,27 +16,28 @@ interface Props {
 }
 export default function FieldRecipientId({ idType, ...fieldProps }: Props) {
   const { t } = useTranslation("transfer");
-  // No maxLength: a pasted ID keeps the spaces and dashes the bank's rules strip, and a cap would cut it.
-  const inputProps = (
+  const { characters, longestIdLength } = RECIPIENT_ID_FORMATS[idType];
+  const keyboardProps = (
     {
-      [RecipientIdType.Mobile]: {
+      [RecipientIdCharacters.PlusAndDigits]: {
         keyboardType: "phone-pad",
         textContentType: "telephoneNumber",
         autoComplete: "tel",
         placeholder: t("recipient.mobile_placeholder"),
       },
-      [RecipientIdType.Nric]: { keyboardType: "number-pad" },
-      [RecipientIdType.AccountNumber]: { keyboardType: "number-pad" },
-      [RecipientIdType.Passport]: { autoCapitalize: "characters" },
-      [RecipientIdType.Brn]: { autoCapitalize: "characters" },
-      [RecipientIdType.ArmyPolice]: { autoCapitalize: "characters" },
-    } satisfies Record<RecipientIdType, TextInputProps>
-  )[idType];
+      [RecipientIdCharacters.Digits]: { keyboardType: "number-pad" },
+      [RecipientIdCharacters.LettersAndDigits]: {
+        autoCapitalize: "characters",
+      },
+    } satisfies Record<RecipientIdCharacters, TextInputProps>
+  )[characters];
 
   return (
     <FieldText
       {...fieldProps}
-      {...inputProps}
+      {...keyboardProps}
+      // A separator may sit between any two characters, so no typed ID the bank's rule takes is cut.
+      maxLength={2 * longestIdLength - 1}
       label={t(
         `recipient.id_label.${idType.toLowerCase() as Lowercase<RecipientIdType>}`,
       )}
