@@ -89,3 +89,24 @@ it("approves the first transfer after signing in again with no setting up, becau
     await screen.findByRole("header", { name: "Transfer sent" }),
   ).toBeOnTheScreen();
 });
+
+it("closes a PIN sheet left open, so approving from it cannot sit sending into the next session", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+  await screen.findByRole("button", { name: "Approve" });
+
+  await act(() => endSession());
+
+  expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+});
