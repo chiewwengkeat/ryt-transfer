@@ -1,7 +1,7 @@
 import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
+import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { warmUpDeviceIntegrityCheck } from "@/domains/approval/hooks/device-integrity-verdict";
 import { isProductionBuild } from "@/shared/config/config";
-import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
 import { configureTransport } from "@/shared/http/transport";
 import { reportError } from "@/shared/observability/observability";
 import { enableAppSwitcherBlur } from "@/shared/platform/app-switcher-blur";

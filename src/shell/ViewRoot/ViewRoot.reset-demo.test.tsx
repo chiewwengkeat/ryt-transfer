@@ -4,12 +4,12 @@ import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { hasApprovalKeysOnFile } from "@/domains/approval/hooks/approval-keys";
+import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { TransferStatus } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
-import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
 import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";

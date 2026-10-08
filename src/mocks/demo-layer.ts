@@ -6,7 +6,7 @@ import {
   createApprovalKeys,
   saveApprovalKeyIds,
 } from "@/domains/approval/hooks/approval-keys";
-import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
+import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 
 import { handlersForActiveScenario } from "./demo-bank";
 import { subscribeToBiometricsOff } from "./switcher/biometrics-off";

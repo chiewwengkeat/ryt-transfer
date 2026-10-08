@@ -2,7 +2,7 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { useState } from "react";
 import { Pressable, Text } from "react-native";
 
-import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
+import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { requestJson } from "@/shared/http/transport";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import { biometricPromptsShown } from "@/test/biometrics-double";

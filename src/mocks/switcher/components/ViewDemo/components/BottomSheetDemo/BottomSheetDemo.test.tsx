@@ -1,6 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 
-import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
+import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { renderRoute } from "@/test/render-route";
 
