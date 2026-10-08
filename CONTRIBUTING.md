@@ -88,7 +88,7 @@ With no scenario picked, the mock bank behaves as a normal bank. Every test star
 
 Test a route the way a person uses it, against the mock bank:
 
-- `renderRoute(url)` (`src/test/render-route.tsx`) mounts the app's own routes at that URL with their real providers. Every request goes to the mock bank, and a request no handler answers fails the test.
+- `renderRoute(url)` (`src/test/render-route.tsx`) mounts the app's own routes at that URL with their real providers. Every request goes to the mock bank, and a request no handler answers fails the test. It switches Jest to fake timers until the test ends: Testing Library's `findBy` queries and `waitFor` advance them, a test that waits out a timeout advances them itself, and one that reads the mock bank directly first returns to real timers with `readBankOnRealTimers`, since the bank answers after a delay the fake timers hold.
 - `scenarioTest("transfer.<name>", run)` (`src/test/scenario-test.ts`) picks a scenario for one test. Give the id as a string literal: the matrix test reads that argument to fail an id the matrix lacks, and an id built at runtime escapes that check.
 - Every scenario in the matrix needs a route test that picks it, renders the route and asserts what the person sees.
 - Query by accessible name, through `accessibilityRole` and `accessibilityLabel`; lint bans `testID`.
