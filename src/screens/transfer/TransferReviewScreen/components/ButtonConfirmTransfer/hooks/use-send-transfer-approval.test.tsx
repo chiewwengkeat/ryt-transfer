@@ -1240,3 +1240,109 @@ it.each([
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   },
 );
+
+it.each([
+  ["wrong", []],
+  [
+    "locked",
+    [
+      "That PIN is incorrect. You have 2 tries left.",
+      "That PIN is incorrect. You have 1 try left.",
+    ],
+  ],
+])(
+  "leaves a newer transfer being sent alone when one the person left finishes refusing its %s PIN afterwards",
+  async (_, earlierRefusals) => {
+    let recordDeleteHeld = false;
+    let releaseRecordDelete: () => void = () => undefined;
+    let releaseNewerApproval: () => void = () => undefined;
+    const newerApprovalHeld = new Promise<void>((release) => {
+      releaseNewerApproval = release;
+    });
+    await openReviewOfRm100();
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Use PIN instead" }),
+    );
+    for (const refusal of earlierRefusals) {
+      await approveWithPin("111111");
+      await screen.findByText(refusal);
+    }
+    const deleteRecordForReal = secureStoreNativeDouble.deleteValueWithKeyAsync;
+    jest
+      .spyOn(secureStoreNativeDouble, "deleteValueWithKeyAsync")
+      .mockImplementationOnce(async (key) => {
+        recordDeleteHeld = true;
+        await new Promise<void>((release) => {
+          releaseRecordDelete = release;
+        });
+        return deleteRecordForReal(key);
+      });
+    await approveWithPin("111111");
+    // ⛔ Wait on the hold, never the spy's calls: an earlier test's spy can still be in place, having seen this test's earlier deletes.
+    await waitFor(() => {
+      expect(recordDeleteHeld).toBe(true);
+    });
+
+    // The sending sheet covers the app, so starting another transfer behind it stands in for any route that still could.
+    const behindTheSendingSheet = { includeHiddenElements: true };
+    await act(() => {
+      router.dismissTo("/");
+    });
+    mswServer.use(
+      http.post(
+        "*/transfers/:transferId/approve",
+        async () => {
+          await newerApprovalHeld;
+        },
+        { once: true },
+      ),
+    );
+    await fireEvent.press(
+      await screen.findByRole("button", {
+        name: "Transfer",
+        ...behindTheSendingSheet,
+      }),
+    );
+    await fireEvent.changeText(
+      await screen.findByLabelText(
+        "DuitNow mobile number",
+        behindTheSendingSheet,
+      ),
+      "012-345 6789",
+    );
+    await fireEvent.press(
+      screen.getByRole("button", {
+        name: "Continue",
+        ...behindTheSendingSheet,
+      }),
+    );
+    await fireEvent.changeText(
+      await screen.findByLabelText("Amount (RM)", behindTheSendingSheet),
+      "50",
+    );
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Review", ...behindTheSendingSheet }),
+    );
+    // Home's Transfer stays mounted under the transfer screens; review's, on top, is found last.
+    await fireEvent.press(
+      (
+        await screen.findAllByRole("button", {
+          name: "Transfer",
+          ...behindTheSendingSheet,
+        })
+      ).at(-1)!,
+    );
+    await screen.findByText(
+      "Sending your transfer. The bank's answer comes next.",
+      behindTheSendingSheet,
+    );
+    await act(async () => {
+      releaseRecordDelete();
+      await jest.advanceTimersByTimeAsync(1_000);
+    });
+    releaseNewerApproval();
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
+  },
+);
