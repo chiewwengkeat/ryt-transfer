@@ -27,6 +27,10 @@ const MSW_BAN = {
   ruleId: "@typescript-eslint/no-restricted-imports",
   message: /metro\.msw-entry\.mjs/,
 };
+const SCREEN_CAPTURE_BAN = {
+  ruleId: "no-restricted-imports",
+  message: /whose one key they must share/,
+};
 const SCREEN_DIR = "src/screens/probe/ProbeScreen";
 const VIEW_IMPORT = 'import { View } from "react-native";\n';
 const componentReturning = (imports, element) =>
@@ -154,6 +158,19 @@ const CASES = [
     refused: false,
     ban: MSW_BAN,
   },
+  ...[
+    ["a screen", SCREEN_DIR, true],
+    ["src/mocks/", "src/mocks", true],
+    ["src/test/", "src/test", true],
+    ["src/shared/platform/", "src/shared/platform", false],
+  ].map(([where, dir, refused]) => ({
+    title: `${refused ? "refuses" : "passes"} expo-screen-capture in ${where}`,
+    file: `${dir}/screen-capture.ts`,
+    source:
+      'import { preventScreenCaptureAsync } from "expo-screen-capture";\n',
+    refused,
+    ban: SCREEN_CAPTURE_BAN,
+  })),
 ];
 
 let lintRoot;
