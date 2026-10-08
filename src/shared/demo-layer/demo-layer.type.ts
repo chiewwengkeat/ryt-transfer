@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 
 import type { Send } from "@/shared/http/transport";
 
@@ -6,7 +6,8 @@ import type { Send } from "@/shared/http/transport";
 export interface DemoLayer {
   demoSend: Send;
   pairPhoneAtFirstLaunch: () => Promise<void>;
-  OverlayDemo: ComponentType<{
+  ViewDemo: ComponentType<{
+    children: ReactNode;
     onResetDemo: () => Promise<void>;
     onSheetOpenChange: (sheetOpen: boolean) => void;
   }>;

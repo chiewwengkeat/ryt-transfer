@@ -111,9 +111,6 @@ export default function BottomSheetFrame({
         >
           <Animated.View
             entering={SlideInDown}
-            onLayout={(event) => {
-              sheetHost.reportSheetTop(sheetId, event.nativeEvent.layout.y);
-            }}
             style={[styles.panel, { paddingBottom: bottom + spacing.md }]}
           >
             <View style={styles.header}>

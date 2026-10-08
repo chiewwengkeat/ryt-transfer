@@ -46,8 +46,8 @@ export default function ViewRoot() {
     [],
   );
 
-  return (
-    <QueryClientProvider client={queryClient}>
+  const appWithSessionEndedView = (
+    <>
       <View aria-hidden={sessionEnded || demoSheetOpen} style={styles.app}>
         <ViewBottomSheetHost>
           <Stack key={navigatorMounts}>
@@ -68,9 +68,16 @@ export default function ViewRoot() {
           />
         </View>
       )}
-      {/* Above the session-ended view, so a reviewer who picked an ended session can still return to normal. */}
-      {demoLayer !== null && (
-        <demoLayer.OverlayDemo
+    </>
+  );
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      {demoLayer === null ? (
+        appWithSessionEndedView
+      ) : (
+        // Outside the session-ended view, so a reviewer who picked an ended session can still return to normal.
+        <demoLayer.ViewDemo
           onResetDemo={async () => {
             // First: endSession's clear() leaves a mounted screen showing its last read, so it reads the reset bank now.
             await queryClient.resetQueries();
@@ -83,7 +90,9 @@ export default function ViewRoot() {
             setNavigatorMounts((mounts) => mounts + 1);
           }}
           onSheetOpenChange={setDemoSheetOpen}
-        />
+        >
+          {appWithSessionEndedView}
+        </demoLayer.ViewDemo>
       )}
     </QueryClientProvider>
   );

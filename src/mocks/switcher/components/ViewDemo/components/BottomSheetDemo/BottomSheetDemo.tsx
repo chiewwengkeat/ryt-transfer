@@ -15,7 +15,7 @@ import {
   type TransferScenario,
   type TransferScenarioId,
 } from "@/mocks/scenarios/transfer-scenarios";
-import { useDemoTranslation } from "@/mocks/switcher/components/OverlayDemo/hooks/use-demo-translation";
+import { useDemoTranslation } from "@/mocks/switcher/components/ViewDemo/hooks/use-demo-translation";
 import { switcherStore } from "@/mocks/switcher/switcher-store";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";

@@ -5,10 +5,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
 import { useTrackScenarioShown } from "@/shared/observability/observability";
 import { useIsOffline } from "@/shared/platform/offline";
-import { minTouchTarget, spacing } from "@/shared/theme/theme";
+import { spacing } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import { useScreenFooterHeight } from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
-import { demoLayer } from "@/shell/app-launch";
 
 export default function BannerOffline() {
   const { t } = useTranslation("transfer");
@@ -22,13 +21,8 @@ export default function BannerOffline() {
     <View
       style={[
         styles.notice,
-        // Above the footer, so it never covers a screen's main action, and above the Demo pill's line.
-        {
-          bottom:
-            Math.max(footerHeight, bottom) +
-            spacing.sm +
-            (demoLayer === null ? 0 : minTouchTarget + spacing.sm),
-        },
+        // Above the footer, so it never covers a screen's main action.
+        { bottom: Math.max(footerHeight, bottom) + spacing.sm },
       ]}
     >
       <BannerNotice message={t("common.offline.notice")} />

@@ -10,13 +10,13 @@ import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
 
 import { handlersForActiveScenario } from "./demo-bank";
 import { subscribeToBiometricsOff } from "./switcher/biometrics-off";
-import OverlayDemo from "./switcher/components/OverlayDemo/OverlayDemo";
+import ViewDemo from "./switcher/components/ViewDemo/ViewDemo";
 import { switcherStore } from "./switcher/switcher-store";
 import { createDemoSend } from "./transport/demo-send";
 
 export default {
   demoSend: createDemoSend(handlersForActiveScenario),
-  OverlayDemo,
+  ViewDemo,
   subscribeToBiometricsOff,
   subscribeToScenarioChange: (onChange) => switcherStore.subscribe(onChange),
   // Stands in for the pairing a host app made long ago, so the bank holds no cooling-off against it.

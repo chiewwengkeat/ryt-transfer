@@ -1,14 +1,16 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import i18next from "i18next";
 import { Text } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import {
   TRANSFER_SCENARIOS,
   type TransferScenario,
   type TransferScenarioId,
 } from "@/mocks/scenarios/transfer-scenarios";
-import { spacing } from "@/shared/theme/theme";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import {
@@ -18,7 +20,7 @@ import {
   startTestTransfer,
 } from "@/test/bank-client";
 
-import OverlayDemo from "./OverlayDemo";
+import ViewDemo from "./ViewDemo";
 
 // Jest defines it; the app's types deliberately leave out Node's globals.
 declare const __dirname: string;
@@ -62,13 +64,31 @@ beforeAll(() => {
   );
 });
 
-async function renderDemoOverlay() {
+function ScreenShowingItsTopInset() {
+  const { top } = useSafeAreaInsets();
+  return <Text>{`The screen's top inset is ${top}`}</Text>;
+}
+
+async function renderDemoAroundAnApp({ appSheetOpen = false } = {}) {
   await render(
     <SafeAreaProvider initialMetrics={PHONE_METRICS}>
-      <OverlayDemo
+      <ViewDemo
         onResetDemo={() => Promise.resolve()}
         onSheetOpenChange={jest.fn()}
-      />
+      >
+        <ViewBottomSheetHost>
+          <ScreenShowingItsTopInset />
+          {appSheetOpen && (
+            <BottomSheetFrame
+              title="Approve with your PIN"
+              closeLabel="Close the PIN sheet"
+              onClose={() => undefined}
+            >
+              <Text>Keypad</Text>
+            </BottomSheetFrame>
+          )}
+        </ViewBottomSheetHost>
+      </ViewDemo>
     </SafeAreaProvider>,
   );
 }
@@ -90,52 +110,13 @@ async function lockDemoPinWithThreeWrongTries() {
     });
 }
 
-function OverlayDemoOverAnAppSheet({
-  appSheetOpen,
-}: {
-  appSheetOpen: boolean;
-}) {
-  return (
-    <SafeAreaProvider initialMetrics={PHONE_METRICS}>
-      <ViewBottomSheetHost>
-        {appSheetOpen && (
-          <BottomSheetFrame
-            title="Approve with your PIN"
-            closeLabel="Close the PIN sheet"
-            onClose={() => undefined}
-          >
-            <Text>Keypad</Text>
-          </BottomSheetFrame>
-        )}
-      </ViewBottomSheetHost>
-      <OverlayDemo
-        onResetDemo={() => Promise.resolve()}
-        onSheetOpenChange={jest.fn()}
-      />
-    </SafeAreaProvider>
-  );
-}
-
-async function layOutTheAppSheet(panel: { top: number; height: number }) {
-  // From the ✕: inside the sheet's body, the scroll view's own layout handler takes the event first.
-  await fireEvent(
-    screen.getByRole("button", { name: "Close the PIN sheet" }),
-    "layout",
-    {
-      nativeEvent: {
-        layout: { x: 0, y: panel.top, width: 390, height: panel.height },
-      },
-    },
-  );
-}
-
 function menuEntryPositions(expectedEntries: unknown[]) {
   const shownEntries = screen.getAllByRole(/^(button|radio)$/);
   return shownEntries.map((entry) => expectedEntries.indexOf(entry));
 }
 
 it("offers no scenario, no biometrics and then what the bank or the connection decides, by step in matrix order", async () => {
-  await renderDemoOverlay();
+  await renderDemoAroundAnApp();
 
   await openDemoMenu();
 
@@ -158,7 +139,7 @@ it("offers no scenario, no biometrics and then what the bank or the connection d
 });
 
 it("puts Unlock PIN first, tagged demo only, but only while the demo PIN is locked", async () => {
-  await renderDemoOverlay();
+  await renderDemoAroundAnApp();
   await openDemoMenu();
   const offeredWhileUnlocked = screen.queryByRole("button", {
     name: "Unlock PIN",
@@ -180,38 +161,34 @@ it("puts Unlock PIN first, tagged demo only, but only while the demo PIN is lock
   expect(screen.getByText("Demo only")).toBeOnTheScreen();
 });
 
-it("lifts the pill above an open sheet by the sheet's measured height, and lowers it once the sheet closes", async () => {
-  const view = await render(<OverlayDemoOverAnAppSheet appSheetOpen />);
+it("takes its own place above the app, never drawing over it, so the app pads for no status bar beneath it", async () => {
+  await renderDemoAroundAnApp();
+  await openDemoMenu();
 
-  await layOutTheAppSheet({ top: 500, height: 344 });
+  await fireEvent.press(
+    screen.getByRole("radio", { name: "Transfers under maintenance" }),
+  );
 
-  expect(screen.getByRole("button", { name: "Demo menu" })).toHaveStyle({
-    bottom: 344 + spacing.sm,
+  // Jest lays nothing out: the inset handed down and the absence of floating are what it can see.
+  expect(screen.getByText("The screen's top inset is 0")).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Demo menu" })).not.toHaveStyle({
+    position: "absolute",
   });
-  await view.rerender(<OverlayDemoOverAnAppSheet appSheetOpen={false} />);
-  expect(screen.getByRole("button", { name: "Demo menu" })).toHaveStyle({
-    bottom: PHONE_METRICS.insets.bottom + spacing.sm,
-  });
+  expect(
+    screen.getByText("Demo · Transfers under maintenance").parent,
+  ).not.toHaveStyle({ position: "absolute" });
 });
 
-it("keeps the pill above a sheet the keyboard has raised, clear of the whole sheet", async () => {
-  await render(<OverlayDemoOverAnAppSheet appSheetOpen />);
-
-  await layOutTheAppSheet({ top: 200, height: 344 });
-
-  expect(screen.getByRole("button", { name: "Demo menu" })).toHaveStyle({
-    bottom: PHONE_METRICS.frame.height - 200 + spacing.sm,
-  });
-});
-
-it("keeps the pill reachable over an open sheet, opening the Demo menu with the sheet still open", async () => {
-  await render(<OverlayDemoOverAnAppSheet appSheetOpen />);
-  await layOutTheAppSheet({ top: 500, height: 344 });
+it("opens the Demo menu while an app sheet is open, leaving the sheet open beneath it but out of a screen reader's reach", async () => {
+  await renderDemoAroundAnApp({ appSheetOpen: true });
 
   await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
 
   expect(
     screen.getByRole("button", { name: "Close the demo menu" }),
   ).toBeOnTheScreen();
-  expect(screen.getByText("Keypad")).toBeOnTheScreen();
+  expect(screen.queryByText("Keypad")).toBeNull();
+  expect(
+    screen.getByText("Keypad", { includeHiddenElements: true }),
+  ).toBeOnTheScreen();
 });
