@@ -58,9 +58,11 @@ export const biometricsLibraryDouble = {
         success: false,
         errorCode: "BIOMETRY_CURRENT_SET_CHANGED",
       });
-    biometricPrompts.push(options);
     const key = phoneKeys.get(keyAlias);
-    if (!nextPromptRecognised || key === undefined)
+    if (key === undefined)
+      return Promise.resolve({ success: false, errorCode: "KEY_NOT_FOUND" });
+    biometricPrompts.push(options);
+    if (!nextPromptRecognised)
       return Promise.resolve({ success: false, errorCode: "USER_CANCEL" });
     if (nextPromptFailure !== null) {
       const errorCode = nextPromptFailure;

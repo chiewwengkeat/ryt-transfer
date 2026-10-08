@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { http } from "msw";
+import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { approvalPinSheetStore } from "@/domains/approval/hooks/approval-pin-sheet";
@@ -54,6 +54,34 @@ function approveRequests() {
   return sentRequests.filter((request) =>
     new URL(request.url).pathname.endsWith("/approve"),
   );
+}
+
+async function sendAnotherRm100TransferFromResult() {
+  await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(
+    await screen.findByLabelText("Amount (RM)"),
+    "100",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+}
+
+// The scenario forgets keys registered before it begins, so the phone pairs a moment earlier.
+async function pairPhoneBeforeTheBankForgetsItsKeys() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await new Promise((resolve) => {
+    setTimeout(resolve, 1);
+  });
 }
 
 it(
@@ -331,4 +359,98 @@ it("lets an approval's answer change nothing once the person has left it and sta
   expect(await listPendingTransfers(customerId)).toContainEqual(
     expect.objectContaining({ transferId: firstTransferId }),
   );
+});
+
+it(
+  "sets face or fingerprint approval up again with the PIN that approved the transfer, so the next one needs no PIN",
+  scenarioTest("transfer.biometrics_changed", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    changeEnrolledBiometrics();
+    await confirmRm100Transfer();
+    await approveWithPin(DEMO_PIN);
+    await screen.findByText("Transfer sent");
+
+    await sendAnotherRm100TransferFromResult();
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    expect(biometricPromptsShown()).toHaveLength(1);
+    const keyRegistration = sentRequests
+      .filter((request) => new URL(request.url).pathname === "/approval-keys")
+      .at(-1);
+    const keyRegistrationBody = (await keyRegistration?.json()) as unknown;
+    expect(keyRegistrationBody).toHaveProperty("pin", DEMO_PIN);
+    expect(keyRegistrationBody).toHaveProperty("biometricPublicKey");
+    expect(keyRegistrationBody).not.toHaveProperty("possessionPublicKey");
+  }),
+);
+
+it("offers the PIN again on the next transfer when face or fingerprint approval could not be set up again", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  changeEnrolledBiometrics();
+  mswServer.use(
+    http.post(
+      "*/approval-keys",
+      () =>
+        HttpResponse.json(
+          { error: { code: "SERVICE_UNAVAILABLE", message: "Test." } },
+          { status: 503 },
+        ),
+      { once: true },
+    ),
+  );
+  await confirmRm100Transfer();
+  await approveWithPin(DEMO_PIN);
+  await screen.findByText("Transfer sent");
+
+  await sendAnotherRm100TransferFromResult();
+
+  expect(
+    await screen.findByText(
+      "Your fingerprints or face changed. Your PIN approves this transfer and turns face or fingerprint approval back on.",
+    ),
+  ).toBeOnTheScreen();
+});
+
+it("sets approval up again with the PIN when the bank no longer knows the phone's key, then approves", async () => {
+  await pairPhoneBeforeTheBankForgetsItsKeys();
+  await scenarioTest("transfer.approval_key_unknown", async () => {
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    await confirmRm100Transfer();
+
+    expect(
+      await screen.findByText("Approval needs setting up again on this phone."),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "Enter your PIN to set it up and approve this transfer.",
+      ),
+    ).toBeOnTheScreen();
+    await approveWithPin("111111");
+    expect(
+      await screen.findByText("That PIN is incorrect. You have 2 tries left."),
+    ).toBeOnTheScreen();
+    await approveWithPin(DEMO_PIN);
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+  })();
+});
+
+it("sets approval up again with the PIN already entered when the bank no longer knows the phone's key on the PIN path", async () => {
+  await pairPhoneBeforeTheBankForgetsItsKeys();
+  await scenarioTest("transfer.approval_key_unknown", async () => {
+    await confirmRm100ApprovedByPin();
+
+    await approveWithPin(DEMO_PIN);
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    const approvalKeyIds = await Promise.all(
+      approveRequests().map(
+        async (request) => ((await request.json()) as { keyId: string }).keyId,
+      ),
+    );
+    expect(approvalKeyIds).toHaveLength(2);
+    expect(new Set(approvalKeyIds).size).toBe(2);
+  })();
 });

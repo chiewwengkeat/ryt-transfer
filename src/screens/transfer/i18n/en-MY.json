@@ -177,7 +177,8 @@
     },
     "approval_key_unknown": {
       "title": "Approval key unknown to the bank",
-      "body": "Approval needs setting up again on this phone."
+      "body": "Approval needs setting up again on this phone.",
+      "pin": "Enter your PIN to set it up and approve this transfer."
     },
     "approval_expired": {
       "title": "Approval window passed",

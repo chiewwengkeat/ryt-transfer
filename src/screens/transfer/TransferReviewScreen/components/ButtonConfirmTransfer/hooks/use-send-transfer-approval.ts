@@ -1,11 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { randomUUID } from "expo-crypto";
 import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
   BiometricSignOutcome,
+  replaceBiometricApprovalKey,
   signWithBiometricKey,
   signWithPossessionKey,
 } from "@/domains/approval/hooks/approval-keys";
@@ -15,10 +15,7 @@ import {
   showApprovalPinLocked,
 } from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
-import {
-  buildSignedApprovalText,
-  useApproveTransfer,
-} from "@/domains/transfer/api/approve-transfer/approve-transfer";
+import { buildSignedApprovalText } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import {
   ApproveTransferErrorCode,
   type ApproveTransferErrorResponse,
@@ -41,12 +38,16 @@ import {
 import { reportError } from "@/shared/observability/observability";
 
 import { settleApprovalAnswer } from "./settle-approval-answer";
+import { useRegisterApprovalKeysAgain } from "./use-register-approval-keys-again";
+import { useSendApprovalAttempt } from "./use-send-approval-attempt";
 
+// Long by design: the prompt, the PIN sheet and setting keys up again hand the person to each other.
 export function useSendTransferApproval() {
   const { t } = useTranslation("transfer");
   const queryClient = useQueryClient();
   const customerId = useGetPrimaryAccount().data?.customerId;
-  const approveTransfer = useApproveTransfer();
+  const sendApprovalAttempt = useSendApprovalAttempt();
+  const registerApprovalKeysAgain = useRegisterApprovalKeysAgain();
 
   return async (path = ApprovalPath.Biometric) => {
     const approving = transferFlowStore.getState();
@@ -78,65 +79,52 @@ export function useSendTransferApproval() {
       clearPendingTransfer(customerId, transferId).catch((error: unknown) => {
         reportError(error, { boundary: "pending_transfer_clear" });
       });
-
-    const sendApproval = async (request: ApproveTransferRequest) => {
-      const attemptKey = randomUUID();
-      if (
-        !dispatchTransferFlow({
-          type: TransferFlowActionType.ApprovalSent,
-          attemptKey,
-        })
-      ) {
-        closeApprovalPinSheet();
-        return null;
-      }
-      const answer = await approveTransfer
-        .mutateAsync({
-          customerId,
-          transferId,
-          request,
-          idempotencyKey: attemptKey,
-        })
-        .then(
-          ({ transfer }) => ({ transfer, failure: undefined }),
-          (failure: unknown) => ({ transfer: undefined, failure }),
-        )
-        .finally(() => {
-          // Drops the finished call's variables, which carry the PIN on that path.
-          approveTransfer.reset();
-        });
-      // ⛔ Every answer passes here before anything acts on it: the person may have left for another
-      // transfer meanwhile, and an answer for an attempt the flow has left must change nothing.
-      const flow = transferFlowStore.getState();
-      return flow.step === TransferFlowStep.Submitting &&
-        flow.attemptKey === attemptKey
-        ? answer
-        : null;
+    const sendApproval = (request: ApproveTransferRequest) =>
+      sendApprovalAttempt({ customerId, transferId, request });
+    const settleAnswer = (
+      answer: Parameters<typeof settleApprovalAnswer>[0]["answer"],
+    ) =>
+      settleApprovalAnswer({
+        answer,
+        transferId,
+        forgetPendingTransfer,
+        queryClient,
+      });
+    const setUpApprovalAgain = async (pinInHand?: string) => {
+      dispatchTransferFlow({
+        type: TransferFlowActionType.ApprovalAttemptRefused,
+      });
+      await forgetPendingTransfer();
+      return registerApprovalKeysAgain(pinInHand);
     };
 
-    const approveWithPin = async (words: {
-      message: string;
-      detail?: string;
-    }) => {
+    // Resolves with the PIN only once the bank has accepted it, so nothing reuses a PIN that may be wrong.
+    const approveWithPin = async (
+      words: { message: string; detail?: string },
+      afterSetUp: { pinInHand?: string; keysSetUpAgain?: boolean } = {},
+    ) => {
       dispatchTransferFlow({
         type: TransferFlowActionType.ApprovalPathChosen,
         path: ApprovalPath.Pin,
       });
       let refusal: string | undefined;
+      let { pinInHand, keysSetUpAgain = false } = afterSetUp;
       for (;;) {
-        const pin = await askForApprovalPin({ ...words, refusal });
+        const pin =
+          pinInHand ?? (await askForApprovalPin({ ...words, refusal }));
+        pinInHand = undefined;
         if (pin === null) {
           await forgetPendingTransfer();
           leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled);
-          return;
+          return null;
         }
         const possessionSignature = await signWithPossessionKey(signedText);
         if (possessionSignature === null) {
           leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
-          return;
+          return null;
         }
         const attempt = await sendApproval({ ...possessionSignature, pin });
-        if (attempt === null) return;
+        if (attempt === null) return null;
         const pinRefusal =
           attempt.failure instanceof TransportError &&
           attempt.failure.kind === TransportErrorKind.Http
@@ -163,15 +151,107 @@ export function useSendTransferApproval() {
             refusal: t("common.pin_locked.body"),
           });
           leaveApprovalNotSent(TransferFlowScenario.PinLocked);
+          return null;
+        }
+        if (
+          pinRefusal?.code === ApproveTransferErrorCode.KeyNotRegistered &&
+          !keysSetUpAgain
+        ) {
+          const keys = await setUpApprovalAgain(pin);
+          if (keys.notice !== undefined) {
+            leaveApprovalNotSent(keys.notice);
+            return null;
+          }
+          pinInHand = keys.pin;
+          keysSetUpAgain = true;
+          continue;
+        }
+        await settleAnswer(attempt);
+        return attempt.transfer === undefined ? null : pin;
+      }
+    };
+
+    const approveWithBiometricKey = async (keysSetUpAgain = false) => {
+      const amountAndName = {
+        amount: formatMoney(draft.amount),
+        name: lookup.recipient.registeredName,
+      };
+      const signing = await signWithBiometricKey(signedText, {
+        title:
+          Platform.OS === "ios"
+            ? t("review.prompt_title_ios", amountAndName)
+            : t("review.prompt_title"),
+        subtitle: t("review.prompt_subtitle", amountAndName),
+        cancel: t("review.prompt_cancel"),
+      });
+      switch (signing.outcome) {
+        case BiometricSignOutcome.Signed: {
+          const attempt = await sendApproval({
+            keyId: signing.keyId,
+            signature: signing.signature,
+          });
+          if (attempt === null) return;
+          if (
+            attempt.failure instanceof TransportError &&
+            attempt.failure.code ===
+              ApproveTransferErrorCode.KeyNotRegistered &&
+            !keysSetUpAgain
+          ) {
+            const keys = await setUpApprovalAgain();
+            if (keys.notice !== undefined) leaveApprovalNotSent(keys.notice);
+            else if (keys.pin === undefined)
+              await approveWithBiometricKey(true);
+            else
+              await approveWithPin(
+                {
+                  message: t("common.approval_key_unknown.body"),
+                  detail: t("common.approval_key_unknown.pin"),
+                },
+                { pinInHand: keys.pin, keysSetUpAgain: true },
+              );
+            return;
+          }
+          await settleAnswer(attempt);
           return;
         }
-        await settleApprovalAnswer({
-          answer: attempt,
-          transferId,
-          forgetPendingTransfer,
-          queryClient,
-        });
-        return;
+        case BiometricSignOutcome.Cancelled:
+          leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled);
+          return;
+        case BiometricSignOutcome.NotRecognised:
+          leaveApprovalNotSent(TransferFlowScenario.BiometricsNotRecognised);
+          return;
+        case BiometricSignOutcome.LockedOut:
+          await approveWithPin({
+            message: t("common.biometrics_locked_out.body"),
+          });
+          return;
+        case BiometricSignOutcome.NotSetUp:
+          await approveWithPin({
+            message: t("common.biometrics_unavailable.body"),
+            detail: t("common.biometrics_unavailable.not_set_up"),
+          });
+          return;
+        case BiometricSignOutcome.NoSensor:
+          await approveWithPin({
+            message: t("common.biometrics_unavailable.body"),
+            detail: t("common.biometrics_unavailable.no_sensor"),
+          });
+          return;
+        case BiometricSignOutcome.KeyChanged: {
+          const acceptedPin = await approveWithPin({
+            message: t("common.biometrics_changed.body"),
+          });
+          if (acceptedPin !== null)
+            void replaceBiometricApprovalKey(acceptedPin).catch(
+              (error: unknown) => {
+                reportError(error, { boundary: "biometric_key_replacement" });
+              },
+            );
+          return;
+        }
+        case BiometricSignOutcome.Failed:
+          leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
+          return;
       }
     };
 
@@ -186,62 +266,6 @@ export function useSendTransferApproval() {
       });
       return;
     }
-    const amountAndName = {
-      amount: formatMoney(draft.amount),
-      name: lookup.recipient.registeredName,
-    };
-    const signing = await signWithBiometricKey(signedText, {
-      title:
-        Platform.OS === "ios"
-          ? t("review.prompt_title_ios", amountAndName)
-          : t("review.prompt_title"),
-      subtitle: t("review.prompt_subtitle", amountAndName),
-      cancel: t("review.prompt_cancel"),
-    });
-    switch (signing.outcome) {
-      case BiometricSignOutcome.Signed: {
-        const attempt = await sendApproval({
-          keyId: signing.keyId,
-          signature: signing.signature,
-        });
-        if (attempt !== null)
-          await settleApprovalAnswer({
-            answer: attempt,
-            transferId,
-            forgetPendingTransfer,
-            queryClient,
-          });
-        return;
-      }
-      case BiometricSignOutcome.Cancelled:
-        leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled);
-        return;
-      case BiometricSignOutcome.NotRecognised:
-        leaveApprovalNotSent(TransferFlowScenario.BiometricsNotRecognised);
-        return;
-      case BiometricSignOutcome.LockedOut:
-        await approveWithPin({
-          message: t("common.biometrics_locked_out.body"),
-        });
-        return;
-      case BiometricSignOutcome.NotSetUp:
-        await approveWithPin({
-          message: t("common.biometrics_unavailable.body"),
-          detail: t("common.biometrics_unavailable.not_set_up"),
-        });
-        return;
-      case BiometricSignOutcome.NoSensor:
-        await approveWithPin({
-          message: t("common.biometrics_unavailable.body"),
-          detail: t("common.biometrics_unavailable.no_sensor"),
-        });
-        return;
-      case BiometricSignOutcome.KeyChanged:
-        await approveWithPin({ message: t("common.biometrics_changed.body") });
-        return;
-      case BiometricSignOutcome.Failed:
-        leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
-        return;
-    }
+    await approveWithBiometricKey();
   };
 }

@@ -7,6 +7,7 @@ import {
   sign,
   signWithOptions,
 } from "@sbaiahmed1/react-native-biometrics";
+import { randomUUID } from "expo-crypto";
 import { Platform } from "react-native";
 
 import type { RegisterApprovalKeysResponse } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
@@ -15,6 +16,8 @@ import {
   readSecureRecord,
   writeSecureRecord,
 } from "@/shared/platform/secure-storage";
+
+import { registerApprovalKeys } from "../api/register-approval-keys/register-approval-keys";
 
 export enum BiometricSignOutcome {
   Signed = "signed",
@@ -37,6 +40,13 @@ const BIOMETRIC_KEY_ID_RECORD = {
   namespace: "approval",
   name: "biometric-key-id",
 };
+// ⛔ Never allow device credentials: the phone's passcode must never approve a transfer.
+const BIOMETRIC_KEY_OPTIONS = {
+  keyAlias: BIOMETRIC_KEY_ALIAS,
+  keyType: "ec256",
+  biometricStrength: BiometricStrength.Strong,
+  allowDeviceCredentials: false,
+} as const;
 
 export async function approvalKeysOnFile() {
   const keyIds = await Promise.all([
@@ -52,13 +62,7 @@ export async function createApprovalKeys() {
     keyType: "ec256",
     requireAuthentication: false,
   });
-  // ⛔ Never allow device credentials: the phone's passcode must never approve a transfer.
-  const biometricKey = await createKeysWithOptions({
-    keyAlias: BIOMETRIC_KEY_ALIAS,
-    keyType: "ec256",
-    biometricStrength: BiometricStrength.Strong,
-    allowDeviceCredentials: false,
-  });
+  const biometricKey = await createKeysWithOptions(BIOMETRIC_KEY_OPTIONS);
   return {
     possessionPublicKey: possessionKey.publicKey,
     biometricPublicKey: biometricKey.publicKey,
@@ -70,6 +74,33 @@ export async function saveApprovalKeyIds(
 ) {
   await writeSecureRecord(POSSESSION_KEY_ID_RECORD, keyIds.possessionKeyId);
   await writeSecureRecord(BIOMETRIC_KEY_ID_RECORD, keyIds.biometricKeyId);
+}
+
+export async function registerNewApprovalKeys(pin?: string) {
+  const { possessionKeyId, biometricKeyId } = await registerApprovalKeys(
+    { ...(await createApprovalKeys()), pin },
+    randomUUID(),
+  );
+  if (possessionKeyId === undefined || biometricKeyId === undefined)
+    throw new Error("The bank registered only some of the approval keys.");
+  await saveApprovalKeyIds({ possessionKeyId, biometricKeyId });
+}
+
+export async function replaceBiometricApprovalKey(pin: string) {
+  try {
+    const { publicKey } = await createKeysWithOptions(BIOMETRIC_KEY_OPTIONS);
+    const { biometricKeyId } = await registerApprovalKeys(
+      { biometricPublicKey: publicKey, pin },
+      randomUUID(),
+    );
+    if (biometricKeyId === undefined)
+      throw new Error("The bank registered no biometric approval key.");
+    await writeSecureRecord(BIOMETRIC_KEY_ID_RECORD, biometricKeyId);
+  } catch (error) {
+    // Kept, an unregistered key signs what the bank cannot verify; gone, the next transfer offers the PIN again.
+    await deleteKeys(BIOMETRIC_KEY_ALIAS).catch(() => undefined);
+    throw error;
+  }
 }
 
 export async function signWithBiometricKey(
