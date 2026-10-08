@@ -252,7 +252,7 @@ it("never sends an approval again once the bank has answered it, a server error 
 });
 
 it(
-  "says the face or fingerprint was not recognised, sends nothing, and leaves Transfer to try again",
+  "says the face or fingerprint was not recognised, sends nothing, and leaves Transfer to try again or the PIN to approve",
   scenarioTest("transfer.biometrics_not_recognised", async () => {
     failNextBiometricPrompt("AUTHENTICATION_FAILED");
     await confirmRm100Transfer();
@@ -264,8 +264,39 @@ it(
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
     expect(approveRequests()).toEqual([]);
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Use PIN instead" }),
+    );
+    await approveWithPin(DEMO_PIN);
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   }),
 );
+
+it("offers no PIN instead while the transfer is being sent", async () => {
+  let releaseApproval: () => void = () => undefined;
+  const approvalHeld = new Promise<void>((release) => {
+    releaseApproval = () => {
+      release();
+    };
+  });
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      async () => {
+        await approvalHeld;
+      },
+      { once: true },
+    ),
+  );
+  await confirmRm100Transfer();
+  await screen.findByText(
+    "Sending your transfer. The bank's answer comes next.",
+  );
+
+  expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
+  releaseApproval();
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+});
 
 it(
   "turns a prompt the phone locked after too many attempts into the PIN sheet, which approves",

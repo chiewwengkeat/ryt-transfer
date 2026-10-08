@@ -215,6 +215,30 @@ it("reports each step of a sent transfer with its amount, never with the recipie
   ]);
 });
 
+it(
+  "approves with the PIN when it is chosen instead of a face or fingerprint, with no prompt",
+  scenarioTest("transfer.pin_chosen", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Use PIN instead" }),
+    );
+    expect(
+      await screen.findByText("Enter your bank PIN to approve this transfer."),
+    ).toBeOnTheScreen();
+    for (const digit of "246810")
+      await fireEvent.press(screen.getByRole("button", { name: digit }));
+    await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    expect(biometricPromptsShown()).toEqual([]);
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+  }),
+);
+
 // The OS draws the prompt out of Jest's sight, so these three read what the app hands the library.
 it(
   "asks for a face or fingerprint only, never the phone's passcode",

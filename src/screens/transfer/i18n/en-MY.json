@@ -164,7 +164,8 @@
     },
     "pin_chosen": {
       "title": "PIN chosen instead",
-      "body": "Enter your bank PIN to approve this transfer."
+      "body": "Enter your bank PIN to approve this transfer.",
+      "choose": "Use PIN instead"
     },
     "pin_incorrect": {
       "title": "Incorrect PIN",

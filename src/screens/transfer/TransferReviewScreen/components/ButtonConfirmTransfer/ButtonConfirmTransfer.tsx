@@ -19,6 +19,7 @@ import {
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { refreshAccountAndHistoryAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import {
+  ApprovalPath,
   dispatchTransferFlow,
   TransferFlowActionType,
   TransferFlowScenario,
@@ -35,6 +36,7 @@ import { TransportError } from "@/shared/http/transport-error";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
+import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
 import { useSendTransferApproval } from "./hooks/use-send-transfer-approval";
 
@@ -97,7 +99,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   if (!lookup.isSuccess) return null;
   const confirmedLookup = lookup.data;
 
-  const createAndApproveTransfer = async () => {
+  const createAndApproveTransfer = async (path: ApprovalPath) => {
     const reviewing = transferFlowStore.getState();
     // A name check run again answers with a new ref, and the bank refuses a kept key sent with another body.
     const idempotencyKey =
@@ -235,42 +237,56 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       })
     )
       return;
-    await sendTransferApproval();
+    await sendTransferApproval(path);
+  };
+  const transferDisabledReason =
+    holdReason ?? (offline ? t("common.offline.disabled_reason") : undefined);
+  const settleUnexpectedConfirmFailure = () => {
+    // Before the approval leaves the phone nothing can have moved, so review offers it again.
+    // After, nothing proves where it ended: only the result page may say, with Home beneath it.
+    const flow = transferFlowStore.getState();
+    if (flow.step !== TransferFlowStep.Submitting) {
+      dispatchTransferFlow(
+        flow.step === TransferFlowStep.Approving
+          ? {
+              type: TransferFlowActionType.ApprovalNotSent,
+              notice: TransferFlowScenario.ApprovalUnexpected,
+            }
+          : {
+              type: TransferFlowActionType.CreateNotSent,
+              notice: TransferFlowScenario.ReviewUnexpected,
+            },
+      );
+      return;
+    }
+    void refreshAccountAndHistoryAfterApproval(queryClient);
+    router.dismissTo("/");
+    router.push(`/transfer/result/${flow.transferId}`);
+    dispatchTransferFlow({ type: TransferFlowActionType.AnswerLost });
   };
 
   return (
-    <ButtonPrimary
-      label={t("review.transfer")}
-      loading={sending || lookup.isFetching}
-      disabledReason={
-        holdReason ??
-        (offline ? t("common.offline.disabled_reason") : undefined)
-      }
-      onPress={() => {
-        void createAndApproveTransfer().catch(() => {
-          // Before the approval leaves the phone nothing can have moved, so review offers it again.
-          // After, nothing proves where it ended: only the result page may say, with Home beneath it.
-          const flow = transferFlowStore.getState();
-          if (flow.step !== TransferFlowStep.Submitting) {
-            dispatchTransferFlow(
-              flow.step === TransferFlowStep.Approving
-                ? {
-                    type: TransferFlowActionType.ApprovalNotSent,
-                    notice: TransferFlowScenario.ApprovalUnexpected,
-                  }
-                : {
-                    type: TransferFlowActionType.CreateNotSent,
-                    notice: TransferFlowScenario.ReviewUnexpected,
-                  },
+    <>
+      <ButtonPrimary
+        label={t("review.transfer")}
+        loading={sending || lookup.isFetching}
+        disabledReason={transferDisabledReason}
+        onPress={() => {
+          void createAndApproveTransfer(ApprovalPath.Biometric).catch(
+            settleUnexpectedConfirmFailure,
+          );
+        }}
+      />
+      {!sending && transferDisabledReason === undefined && (
+        <ButtonSecondary
+          label={t("common.pin_chosen.choose")}
+          onPress={() => {
+            void createAndApproveTransfer(ApprovalPath.Pin).catch(
+              settleUnexpectedConfirmFailure,
             );
-            return;
-          }
-          void refreshAccountAndHistoryAfterApproval(queryClient);
-          router.dismissTo("/");
-          router.push(`/transfer/result/${flow.transferId}`);
-          dispatchTransferFlow({ type: TransferFlowActionType.AnswerLost });
-        });
-      }}
-    />
+          }}
+        />
+      )}
+    </>
   );
 }
