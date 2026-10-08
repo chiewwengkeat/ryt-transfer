@@ -1,8 +1,20 @@
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http } from "msw";
 import { AccessibilityInfo } from "react-native";
 
-import { lookUpTestRecipient } from "@/test/bank-client";
+import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import {
+  listPendingTransfers,
+  PendingTransferStage,
+  writePendingTransfer,
+} from "@/domains/transfer/hooks/pending-transfers";
+import {
+  lookUpTestRecipient,
+  pairTestPhone,
+  sendToBank,
+  signTestApproval,
+  startTestTransfer,
+} from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
@@ -60,5 +72,49 @@ it(
     expect(announce).not.toHaveBeenCalledWith(
       expect.stringContaining("Checking your transfer"),
     );
+  }),
+);
+
+it(
+  "says a checked approval the bank ended over the balance or limit was not sent, offering only Done",
+  scenarioTest("transfer.balance_or_limit_short_at_approval", async () => {
+    const {
+      body: { customerId },
+    } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+    const keys = await pairTestPhone();
+    const started = await startTestTransfer(10_000);
+    // The approval reached the bank before the app was killed; only its answer was lost.
+    await sendToBank("POST", started.approvalPath, {
+      body: signTestApproval(started, {
+        kind: "biometric",
+        keyId: keys.biometricKeyId,
+      }),
+    });
+    await writePendingTransfer(customerId, {
+      transferId: started.created.transfer.transferId,
+      idempotencyKey: "approval-key",
+      createdAt: "2026-10-07T01:30:00.000Z",
+      stage: PendingTransferStage.Approving,
+    });
+
+    await renderRoute("/");
+
+    expect(
+      await screen.findByRole("header", { name: "Transfer not sent" }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "It was not sent because your balance or limit changed — no money moved.",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/quote this reference/)).toBeNull();
+    expect(
+      screen
+        .getAllByRole("button")
+        .map((button) => button.props.accessibilityLabel as unknown),
+    ).toEqual(["Done"]);
+    await waitFor(async () => {
+      expect(await listPendingTransfers(customerId)).toEqual([]);
+    });
   }),
 );

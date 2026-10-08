@@ -411,9 +411,9 @@ Every situation someone can meet while sending money, from opening a transfer to
 `transfer.balance_or_limit_short_at_approval`
 - **When:** the bank re-checks the balance and today's limit as the approval arrives, finds them short and ends the transfer
 - **Money:** no money moved
-- **Shown as:** on the review step
+- **Shown as:** on the review step, or on the result page when the phone checked an approval whose answer never came
 - **Tell them:** it was not sent because their balance or limit changed — no money moved
-- **They can:** go back to the amount
+- **They can:** go back to the amount on the review step, or finish on the result page
 - **Why:** money moves only after the bank's own check at that moment, since another transfer can change the balance or limit after review
 
 ### Stopped by the bank's fraud check
