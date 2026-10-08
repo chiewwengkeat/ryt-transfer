@@ -9,7 +9,7 @@ import {
   transferFlowStore,
 } from "@/screens/transfer/state/transfer-flow";
 
-import { settleApprovalAnswer } from "./settle-approval-answer";
+import { openResultPageOfSentApproval } from "./settle-approval-answer";
 
 export function settleUnexpectedConfirmFailure(queryClient: QueryClient) {
   // A sheet left sending cannot be closed by the person, and nothing else will close it.
@@ -31,11 +31,10 @@ export function settleUnexpectedConfirmFailure(queryClient: QueryClient) {
     );
     return;
   }
-  void settleApprovalAnswer({
-    answer: {},
-    transferId: flow.transferId,
-    // Only a refusal forgets the record, and an answer with nothing in it is none.
-    forgetPendingTransfer: () => Promise.resolve(),
+  openResultPageOfSentApproval({
     queryClient,
+    transferId: flow.transferId,
+    answered: false,
+    unknownAnswer: false,
   });
 }

@@ -14,6 +14,7 @@ import {
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
 import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import {
@@ -24,16 +25,17 @@ import {
   transferFlowStore,
 } from "@/screens/transfer/state/transfer-flow";
 import type { ApprovalEvent } from "@/screens/transfer/state/transfer-flow.type";
+import { reportError } from "@/shared/observability/observability";
 
 export async function settleApprovalAnswer({
   answer: { transfer, failure },
   transferId,
-  forgetPendingTransfer,
+  customerId,
   queryClient,
 }: {
   answer: { transfer?: Transfer; failure?: unknown };
   transferId: string;
-  forgetPendingTransfer: () => Promise<void>;
+  customerId: string;
   queryClient: QueryClient;
 }) {
   closeApprovalPinSheet();
@@ -45,7 +47,11 @@ export async function settleApprovalAnswer({
     return;
   }
   const returnRefusedApprovalToReview = async (event: ApprovalEvent) => {
-    await forgetPendingTransfer();
+    await clearPendingTransfer(customerId, transferId).catch(
+      (error: unknown) => {
+        reportError(error, { boundary: "pending_transfer_clear" });
+      },
+    );
     if (!isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId))
       dispatchTransferFlow(event);
   };
@@ -118,7 +124,28 @@ export async function settleApprovalAnswer({
       break;
   }
 
-  // Any other answer, an unknown code included, may hide moved money, so only the result page may say.
+  openResultPageOfSentApproval({
+    queryClient,
+    transferId,
+    answered: transfer !== undefined,
+    unknownAnswer:
+      refusal !== undefined &&
+      !Object.values<string>(ApproveTransferErrorCode).includes(refusal.code),
+  });
+}
+
+// Any answer but a refusal, an unknown code and none at all included, may hide moved money, so only the result page may say.
+export function openResultPageOfSentApproval({
+  queryClient,
+  transferId,
+  answered,
+  unknownAnswer,
+}: {
+  queryClient: QueryClient;
+  transferId: string;
+  answered: boolean;
+  unknownAnswer: boolean;
+}) {
   void refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
   // From Home, so Back from the result never reopens a transfer already sent.
   router.dismissTo("/");
@@ -126,16 +153,14 @@ export async function settleApprovalAnswer({
     pathname: "/transfer/result/[transferId]",
     params: {
       transferId,
-      ...(refusal !== undefined &&
-        !Object.values<string>(ApproveTransferErrorCode).includes(
-          refusal.code,
-        ) && { checking: TransferOutcomeScenario.ApprovalUnknownAnswer }),
+      ...(unknownAnswer && {
+        checking: TransferOutcomeScenario.ApprovalUnknownAnswer,
+      }),
     },
   });
   dispatchTransferFlow({
-    type:
-      transfer === undefined
-        ? TransferFlowActionType.AnswerLost
-        : TransferFlowActionType.ApprovalAnswered,
+    type: answered
+      ? TransferFlowActionType.ApprovalAnswered
+      : TransferFlowActionType.AnswerLost,
   });
 }
