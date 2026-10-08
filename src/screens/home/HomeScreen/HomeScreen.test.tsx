@@ -14,6 +14,13 @@ const UNKNOWN_BANK_CODE = {
   error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
 };
 
+async function pressEveryRecentRecipientExpectingItDisabled() {
+  for (const recent of await screen.findAllByRole("button", { name: /••••/ })) {
+    expect(recent).toBeDisabled();
+    await fireEvent.press(recent);
+  }
+}
+
 it(
   "shows the balance and how much more can be sent today",
   scenarioTest("transfer.balance_and_limit_shown", async () => {
@@ -35,9 +42,9 @@ it("offers Transfer only once the balance and today's limit have loaded", async 
 });
 
 it(
-  "says the balance couldn't be loaded, offers to try again, and keeps Transfer unavailable",
+  "says the balance couldn't be loaded, offers to try again, and keeps Transfer and the recent recipients unavailable",
   scenarioTest("transfer.balance_unavailable", async () => {
-    await renderRoute("/");
+    const view = await renderRoute("/");
 
     expect(
       await screen.findByText("Your balance couldn't be loaded."),
@@ -49,14 +56,16 @@ it(
         "You can send once your balance and today's limit have loaded.",
       ),
     ).toBeOnTheScreen();
+    await pressEveryRecentRecipientExpectingItDisabled();
+    expect(view.getPathname()).toBe("/");
   }),
 );
 
 it(
-  "shows the balance during maintenance, and says until when transfers are unavailable",
+  "shows the balance during maintenance, says until when transfers are unavailable, and starts none from the recent recipients",
   scenarioTest("transfer.under_maintenance", async () => {
     const { body } = await sendToBank<BankErrorBody>("GET", "/transfer-limits");
-    await renderRoute("/");
+    const view = await renderRoute("/");
 
     expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
     expect(
@@ -66,6 +75,8 @@ it(
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
     expect(screen.queryByText(/more today/)).toBeNull();
+    await pressEveryRecentRecipientExpectingItDisabled();
+    expect(view.getPathname()).toBe("/");
   }),
 );
 
