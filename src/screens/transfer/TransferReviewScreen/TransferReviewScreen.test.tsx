@@ -52,7 +52,7 @@ import { pressHandlerOf } from "@/test/press-handler-of";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
-import { TransferFlowStep, transferFlowStore } from "../state/transfer-flow";
+import { TransferFlowStep } from "../state/transfer-flow";
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -89,31 +89,16 @@ async function openReviewOfRm100(
   return view;
 }
 
-// The swipe is native and never reaches JS, so this reads the setting the root stack hands its transfer screen.
+// The swipe is native and never reaches JS, so this reads the setting the native transfer screen is handed.
 function readRootTransferScreenGestureEnabled() {
-  type Fiber = {
-    return: Fiber | null;
-    child: Fiber | null;
-    sibling: Fiber | null;
-    stateNode: unknown;
-    memoizedProps: { screenId?: unknown; gestureEnabled?: unknown } | null;
-  };
-  let fiber = (screen.root as unknown as { unstable_fiber: Fiber })
-    .unstable_fiber;
-  while (fiber.return) fiber = fiber.return;
-  // The walk up can end in React's stale copy of the tree, which still holds an earlier render's options.
-  const pending = [(fiber.stateNode as { current: Fiber }).current];
-  for (let next = pending.pop(); next; next = pending.pop()) {
-    const props = next.memoizedProps;
-    if (
-      typeof props?.screenId === "string" &&
-      props.screenId.startsWith("transfer-")
-    )
-      return props.gestureEnabled;
-    if (next.sibling) pending.push(next.sibling);
-    if (next.child) pending.push(next.child);
-  }
-  throw new Error("The root stack holds no transfer screen.");
+  const transferScreen = screen.root?.queryAll(
+    (node) =>
+      node.type === "RNSScreen" &&
+      String(node.props.screenId).startsWith("transfer-"),
+  )[0];
+  if (transferScreen === undefined)
+    throw new Error("The root stack holds no transfer screen.");
+  return transferScreen.props.gestureEnabled as unknown;
 }
 
 it(
@@ -493,7 +478,7 @@ it(
   }),
 );
 
-it.each<[TransferFlowStep, (stepHeld: Promise<void>) => void]>([
+it.each<[TransferFlowStep, (stepHeld: Promise<void>) => () => void]>([
   [
     TransferFlowStep.Creating,
     (stepHeld) => {
@@ -506,18 +491,24 @@ it.each<[TransferFlowStep, (stepHeld: Promise<void>) => void]>([
           { once: true },
         ),
       );
+      return () => {
+        expect(countSent("POST", "/transfers")).toBe(1);
+      };
     },
   ],
   [
     TransferFlowStep.Approving,
     (stepHeld) => {
       const readFromTheDouble = secureStoreNativeDouble.getValueWithKeyAsync;
-      jest
+      const keychainRead = jest
         .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
         .mockImplementationOnce(async (key) => {
           await stepHeld;
           return readFromTheDouble(key);
         });
+      return () => {
+        expect(keychainRead).toHaveBeenCalled();
+      };
     },
   ],
   [
@@ -532,16 +523,19 @@ it.each<[TransferFlowStep, (stepHeld: Promise<void>) => void]>([
           { once: true },
         ),
       );
+      return () => {
+        expect(countSent("POST", "/approve")).toBe(1);
+      };
     },
   ],
 ])(
   "turns off the swipe that would close the whole transfer flow while the transfer is %s",
-  async (step, holdStep) => {
+  async (_step, holdStep) => {
     await pairPhoneAsTheDemoLaunchDoes();
     await openReviewOfRm100("/");
     let releaseStep: () => void = () => undefined;
     // Armed once review is open: the launch check for pending transfers reads the keychain too, and would take the hold.
-    holdStep(
+    const expectStepHeld = holdStep(
       new Promise<void>((release) => {
         releaseStep = () => {
           release();
@@ -552,9 +546,7 @@ it.each<[TransferFlowStep, (stepHeld: Promise<void>) => void]>([
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
-    await waitFor(() => {
-      expect(transferFlowStore.getState().step).toBe(step);
-    });
+    await waitFor(expectStepHeld);
 
     expect(readRootTransferScreenGestureEnabled()).toBe(false);
     releaseStep();
@@ -720,13 +712,17 @@ it("never moves on from the recipient step while a transfer is still being creat
   );
 
   expect(view.getPathname()).toBe("/transfer");
-  // Review is gone, so only the flow shows the held create failing inside this test rather than in the next one.
+  // Review is gone, so only the funnel shows the held create failing inside this test rather than in the next one.
+  const recordsBeforeRelease = observedRecords.length;
   releaseCreate();
   await waitFor(
     () => {
-      expect(transferFlowStore.getState().step).toBe(
-        TransferFlowStep.Reviewing,
-      );
+      expect(
+        observedRecords
+          .slice(recordsBeforeRelease)
+          .filter((record) => record.name === "transfer_step")
+          .map((record) => record.properties.step),
+      ).toContain("reviewing");
     },
     { timeout: 10_000 },
   );
