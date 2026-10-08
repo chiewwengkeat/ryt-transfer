@@ -99,6 +99,7 @@ export type TransferFlowState =
       step: TransferFlowStep.Editing;
       draft: Partial<TransferDraft>;
       notice?: TransferFlowScenario;
+      noticeDetail?: TransferNoticeDetail;
     }
   | {
       step: TransferFlowStep.Reviewing;
@@ -108,6 +109,7 @@ export type TransferFlowState =
       hold?: TransferHold;
       // A create whose answer never arrived may have run, so the next Confirm repeats it under the same key.
       createKeyToReuse?: string;
+      createRecipientRefToReuse?: string;
     }
   | {
       step: TransferFlowStep.Creating;
@@ -158,6 +160,7 @@ export type ReviewAndCreateEvent =
   | {
       type: TransferFlowActionType.CreateReturnedToAmount;
       notice: TransferFlowScenario;
+      noticeDetail?: TransferNoticeDetail;
     };
 
 export type ApprovalEvent =
