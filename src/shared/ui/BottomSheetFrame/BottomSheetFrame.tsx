@@ -67,6 +67,8 @@ export default function BottomSheetFrame({
   const sheetId = useId();
   const { top, bottom } = useSafeAreaInsets();
   const searchFieldFocusedRef = useRef(false);
+  const sheetLayerRef = useRef<View>(null);
+  const [sheetLayerTopInWindow, setSheetLayerTopInWindow] = useState(0);
   const [bodyHeight, setBodyHeight] = useState(0);
   const [bodyContentHeight, setBodyContentHeight] = useState(0);
   const { i18n } = useTranslation();
@@ -96,6 +98,12 @@ export default function BottomSheetFrame({
     sheetHost.showSheet(
       sheetId,
       <Animated.View
+        ref={sheetLayerRef}
+        onLayout={() => {
+          sheetLayerRef.current?.measureInWindow((_x, y) => {
+            setSheetLayerTopInWindow(y);
+          });
+        }}
         entering={FadeIn.reduceMotion(sheetReduceMotion)}
         exiting={FadeOut.reduceMotion(sheetReduceMotion)}
         // Handled even when it cannot close, as Back is: iOS hands an unhandled escape on up to what holds the sheet.
@@ -114,6 +122,8 @@ export default function BottomSheetFrame({
         />
         <KeyboardAvoidingView
           behavior="padding"
+          // The keyboard's top is a window position, and it covers the panel's inset padding: neither needs clearing.
+          keyboardVerticalOffset={sheetLayerTopInWindow - bottom}
           style={[styles.keyboardClear, { paddingTop: top + spacing.lg }]}
         >
           <Animated.View

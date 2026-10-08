@@ -235,6 +235,39 @@ it("keeps a sheet that may not be dismissed open on VoiceOver's escape gesture, 
   expect(escapeOutsideTheSheet).not.toHaveBeenCalled();
 });
 
+it("rides above the keyboard however far below the window's top its host sits", async () => {
+  // Jest lays nothing out: these stand in for a host 76 points down an 844-point phone, under a 300-point keyboard.
+  jest
+    .spyOn(View.prototype, "measureInWindow")
+    .mockImplementation((reportPosition) => {
+      reportPosition(0, 76, 390, 768);
+    });
+  await render(<ScreenWithBankSheet />);
+  await openBankSheet();
+  let keyboardClear = screen.getByRole("header", { name: "Banks" }).parent;
+  while (keyboardClear !== null && keyboardClear.props.onLayout === undefined)
+    keyboardClear = keyboardClear.parent;
+  if (keyboardClear?.parent == null)
+    throw new Error("The sheet has no keyboard-avoiding view in a layer.");
+  await fireEvent(keyboardClear.parent, "layout", {
+    nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 768 } },
+  });
+  await fireEvent(keyboardClear, "layout", {
+    persist: () => undefined,
+    nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 768 } },
+  });
+
+  await act(() => {
+    DeviceEventEmitter.emit("keyboardWillShow", {
+      duration: 0,
+      easing: "keyboard",
+      endCoordinates: { screenX: 0, screenY: 544, width: 390, height: 300 },
+    });
+  });
+
+  expect(keyboardClear).toHaveStyle({ paddingBottom: 300 - 34 });
+});
+
 it("hands what is typed in its search field to its owner", async () => {
   await render(<ScreenWithBankSheet />);
   await openBankSheet();
