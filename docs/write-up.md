@@ -34,7 +34,7 @@ The block lifts only on the two receipts, and the first version lifted it the mo
 
 ### A block that never reached a new window
 
-On the emulator, production's block failed open after someone left the app with Back and opened it again, or changed the text size: Android gives the app a new window then, and the block is a flag on one window. The app did ask for the block again, but the screen-capture library skips a request under a key it already holds, and the key taken at launch was still held, so the new window was never flagged. The demo build's "Screenshots blocked" pick hid the fault, since it starts unblocked and so lets the key go. Each request now also passes through a key that is let go at once, so it always reaches the current window, and the block is asked for again each time the app becomes active. On the production build it held through every way of getting a new window that was tried.
+On the emulator, production's block failed open after someone left the app with Back and opened it again, or changed the text size: Android gives the app a new window then, and the block is a flag on one window. The app did ask for the block again, but the screen-capture library skips a request under a key it already holds, and the key taken at launch was still held, so the new window was never flagged. The demo build's "Screenshots blocked" pick hid the fault, since it starts unblocked and so lets the key go. Each request now also passes through a key that is let go at once, so it always reaches the current window, and on Android the block is asked for again each time the app becomes active. On the production build it held through every way of getting a new window that was tried.
 
 ## The decisions
 
