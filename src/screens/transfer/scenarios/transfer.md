@@ -109,7 +109,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **Money:** no money moved
 - **Shown as:** on the recipient step
 - **Tell them:** to allow contacts access in Settings, or type the number
-- **They can:** type the number
+- **They can:** type the number, or open Settings
 - **Why:** contacts are a shortcut, so refusing access never blocks a transfer
 
 ### Picked contact has no Malaysian mobile number

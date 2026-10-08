@@ -11,6 +11,7 @@ const GRANTED_CONTACTS_PERMISSION: ContactsPermissionResponse = {
 
 let contactsPermission = GRANTED_CONTACTS_PERMISSION;
 let pickedContactPhones: ExistingPhone[] | null = null;
+let pickedContactUnreadable = false;
 
 class ContactDouble {
   readonly phones: ExistingPhone[];
@@ -30,7 +31,9 @@ class ContactDouble {
   // A prototype method, never an arrow property: jest-expo wraps a class with none in jest.fn,
   // which drops the static picker.
   getPhones() {
-    return Promise.resolve(this.phones);
+    return pickedContactUnreadable
+      ? Promise.reject(new Error("The app may not read this contact."))
+      : Promise.resolve(this.phones);
   }
 }
 
@@ -49,7 +52,14 @@ export function setPickedContactPhones(phones: ExistingPhone[] | null) {
   pickedContactPhones = phones;
 }
 
+// As on Android without the contacts permission, or an iPhone pick outside the contacts it shared.
+export function setPickedContactUnreadable() {
+  pickedContactPhones = [];
+  pickedContactUnreadable = true;
+}
+
 export function resetContactsNativeDouble() {
   contactsPermission = GRANTED_CONTACTS_PERMISSION;
   pickedContactPhones = null;
+  pickedContactUnreadable = false;
 }

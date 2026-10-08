@@ -35,10 +35,13 @@
       "amount": "Enter an amount in ringgit, with up to two decimal places."
     },
     "contacts_access_refused": {
-      "title": "Contacts access refused"
+      "title": "Contacts access refused",
+      "body": "To choose from your contacts, allow contacts access in Settings. Or type the number.",
+      "open_settings": "Open Settings"
     },
     "contact_without_mobile": {
-      "title": "Picked contact has no Malaysian mobile number"
+      "title": "Picked contact has no Malaysian mobile number",
+      "body": "That contact has no Malaysian mobile number. Pick another contact, or type a number."
     },
     "recent_recipient_chosen": {
       "title": "Recent recipient chosen"
@@ -266,6 +269,8 @@
       "army_police": "Army or police number"
     },
     "mobile_placeholder": "012-345 6789",
+    "contacts": "Choose from contacts",
+    "contact_mobiles_title": "Choose a number",
     "bank_label": "Bank",
     "bank_placeholder": "Choose a bank",
     "bank_missing": "Choose the bank the account is with.",

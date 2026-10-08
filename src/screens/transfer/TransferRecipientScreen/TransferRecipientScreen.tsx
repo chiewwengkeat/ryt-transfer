@@ -14,6 +14,7 @@ import {
   TransferFlowStep,
   useTransferFlow,
 } from "../state/transfer-flow";
+import ButtonContacts from "./components/ButtonContacts/ButtonContacts";
 import ChipIdType from "./components/ChipIdType/ChipIdType";
 import FieldBank from "./components/FieldBank/FieldBank";
 import FieldRecipientId from "./components/FieldRecipientId/FieldRecipientId";
@@ -108,6 +109,14 @@ export default function TransferRecipientScreen() {
           }}
           error={idError}
         />
+        {idType === RecipientIdType.Mobile && (
+          <ButtonContacts
+            onMobilePicked={(mobileId) => {
+              setTypedId(mobileId);
+              setIdError(undefined);
+            }}
+          />
+        )}
         {idType === RecipientIdType.AccountNumber && (
           <FieldBank
             bankCode={bankCode}

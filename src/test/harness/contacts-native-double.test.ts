@@ -9,6 +9,7 @@ import {
   resetContactsNativeDouble,
   setContactsPermission,
   setPickedContactPhones,
+  setPickedContactUnreadable,
 } from "./contacts-native-double";
 
 const REFUSED_PERMISSION = {
@@ -39,6 +40,14 @@ it("returns the contact a test picks, with that contact's phones", async () => {
   const contact = await Contact.presentPicker();
 
   await expect(contact?.getPhones()).resolves.toEqual(PICKED_PHONES);
+});
+
+it("picks a contact whose phones it then refuses to read", async () => {
+  setPickedContactUnreadable();
+
+  const contact = await Contact.presentPicker();
+
+  await expect(contact?.getPhones()).rejects.toThrow();
 });
 
 it("answers with the permission a test sets", async () => {
