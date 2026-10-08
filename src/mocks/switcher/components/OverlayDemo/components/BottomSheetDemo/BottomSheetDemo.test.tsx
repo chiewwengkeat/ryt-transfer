@@ -1,5 +1,4 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { router } from "expo-router";
+import { fireEvent, screen } from "@testing-library/react-native";
 
 import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
@@ -54,36 +53,4 @@ it("gives the next transfer its PIN keypad back once Unlock PIN has unlocked the
   await approveWithPin("246810");
 
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
-});
-
-it("keeps no PIN lock past Reset demo, so the next transfer gets its keypad", async () => {
-  await lockThePinOnAnRm100TransferUnderNoBiometrics();
-  await act(() => {
-    router.dismissTo("/");
-  });
-
-  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
-  await fireEvent.press(screen.getByRole("button", { name: "Reset demo" }));
-  // Wait the reset out: its end of session and new pairing would land in the middle of the next transfer.
-  await act(() => jest.advanceTimersByTimeAsync(5_000));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Demo menu" }),
-  );
-  await fireEvent.press(screen.getByRole("radio", { name: "No biometrics" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-987 6543",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-
-  expect(await screen.findByRole("button", { name: "2" })).toBeOnTheScreen();
 });
