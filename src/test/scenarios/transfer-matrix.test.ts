@@ -359,6 +359,18 @@ it("flags a money message without its state's phrase, in each language", () => {
   ]);
 });
 
+it("carries each scenario's money phrase in one of its strings, in every language", () => {
+  expect(findMoneyMessagesWithoutTheirPhrase(scenarioSections, {})).not.toEqual(
+    [],
+  );
+  expect(
+    findMoneyMessagesWithoutTheirPhrase(
+      scenarioSections,
+      REGISTERED_TRANSFER_COMMON,
+    ),
+  ).toEqual([]);
+});
+
 it("flags a retry word on anything pressable where the matrix bans offering to send again", () => {
   const sections = [
     {
