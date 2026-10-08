@@ -1598,6 +1598,27 @@ it.each([
 );
 
 it(
+  "lifts the hold once the security wait ends, and offers Transfer again",
+  scenarioTest("transfer.cooling_off_new_account", async () => {
+    const { body } = await askBankToCreateRm100();
+    const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "")} — a security wait after opening your account.`;
+    await openReviewOfRm100();
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByText(holdReason);
+    const msUntilTheWaitEnds = Date.parse(body.error.until ?? "") - Date.now();
+
+    await act(() => jest.advanceTimersByTimeAsync(msUntilTheWaitEnds - 1_000));
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+    await act(() => jest.advanceTimersByTimeAsync(2_000));
+
+    expect(screen.queryByText(holdReason)).toBeNull();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+  }),
+);
+
+it(
   "says the account is locked and to contact Ryt, announces it, and offers no way around it",
   scenarioTest("transfer.account_locked", async () => {
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");

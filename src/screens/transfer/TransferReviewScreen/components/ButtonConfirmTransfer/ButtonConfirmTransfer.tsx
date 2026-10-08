@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AccessibilityInfo } from "react-native";
 
@@ -27,7 +27,10 @@ import {
   TransferHoldKind,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
-import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
+import type {
+  TransferDraft,
+  TransferHold,
+} from "@/screens/transfer/state/transfer-flow.type";
 import { TransportError } from "@/shared/http/transport-error";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { useIsOffline } from "@/shared/platform/offline";
@@ -53,13 +56,27 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const hold = useTransferFlow((flow) =>
     flow.step === TransferFlowStep.Reviewing ? flow.hold : undefined,
   );
+  const coolingOffEndsAtMs =
+    hold?.kind === TransferHoldKind.CoolingOff ? Date.parse(hold.until) : NaN;
+  // The hold itself, not its time: the bank refusing again with the same time holds Transfer again.
+  const [liftedHold, setLiftedHold] = useState<TransferHold>();
+  useEffect(() => {
+    if (Number.isNaN(coolingOffEndsAtMs)) return;
+    const timer = setTimeout(() => {
+      setLiftedHold(hold);
+    }, coolingOffEndsAtMs - Date.now());
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [hold, coolingOffEndsAtMs]);
   const offline = useIsOffline();
 
   const holdReason =
-    hold?.kind === TransferHoldKind.AccountLocked
-      ? t("common.account_locked.disabled_reason")
-      : hold?.kind === TransferHoldKind.CoolingOff
-        ? Number.isNaN(Date.parse(hold.until))
+    hold === undefined || hold === liftedHold
+      ? undefined
+      : hold.kind === TransferHoldKind.AccountLocked
+        ? t("common.account_locked.disabled_reason")
+        : Number.isNaN(coolingOffEndsAtMs)
           ? t(
               hold.reason === CoolingOffReason.NewAccount
                 ? "common.cooling_off_new_account.disabled_reason_without_time"
@@ -70,8 +87,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
                 ? "common.cooling_off_new_account.disabled_reason"
                 : "common.cooling_off_new_phone.disabled_reason",
               { time: formatMalaysianDateTime(hold.until) },
-            )
-        : undefined;
+            );
   // A disabled button's reason is never read out unless focus lands on it, so a hold that appears says so.
   useEffect(() => {
     if (holdReason !== undefined)
