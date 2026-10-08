@@ -10,12 +10,16 @@
 
   "home": {
     "title": "Laman Utama",
-    "transfer": "Pindahan"
+    "transfer": "Pindahan",
+    "transfer_history": "Sejarah pindahan"
   },
 
-  "next_launch_notices": {},
-
-  "maintenance": {},
-
-  "recents": {}
+  "next_launch_notices": {
+    "completed": "Pindahan {{amount}} anda kepada {{name}} telah dihantar — wang telah dipindahkan.",
+    "refunded": "Pindahan {{amount}} anda kepada {{name}} tidak berjaya. Wang sedang, atau telah, dipulangkan kepada anda secara automatik.",
+    "declined": "Pindahan {{amount}} anda kepada {{name}} tidak dihantar — tiada wang dipindahkan.",
+    "fraud_blocked": "Pindahan {{amount}} anda kepada {{name}} telah dihentikan oleh bank untuk melindungi anda. Bank akan menghubungi anda mengenainya — tiada wang dipindahkan.",
+    "dismiss": "Ketepikan",
+    "dismiss_notice_about": "Ketepikan notis tentang {{amount}} kepada {{name}}"
+  }
 }
