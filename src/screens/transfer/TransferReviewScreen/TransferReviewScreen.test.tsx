@@ -1388,6 +1388,50 @@ it.each([
   },
 );
 
+it("shows no name-check notice while sending, though review's name check, asked again, fails", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  let releaseApproval: () => void = () => undefined;
+  const approvalHeld = new Promise<void>((release) => {
+    releaseApproval = () => {
+      release();
+    };
+  });
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      async () => {
+        await approvalHeld;
+        return undefined;
+      },
+      { once: true },
+    ),
+  );
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText(
+    "Sending your transfer. The bank's answer comes next.",
+  );
+  mswServer.use(
+    http.post("*/recipients/lookup", () =>
+      HttpResponse.json(
+        { error: { code: "NAME_ENQUIRY_UNAVAILABLE", message: "Test." } },
+        { status: 503 },
+      ),
+    ),
+  );
+
+  await askOpenReviewsNameCheckAgain();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+
+  expect(
+    screen.queryByText("Recipient names can't be confirmed right now."),
+  ).toBeNull();
+  releaseApproval();
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+});
+
 it("says something unexpected stopped the transfer when the name check answers in a way the app does not know", async () => {
   mswServer.use(
     http.post("*/recipients/lookup", () =>
