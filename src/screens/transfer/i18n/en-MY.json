@@ -50,6 +50,7 @@
   "amount": {
     "title": "Amount",
     "label": "Amount (RM)",
+    "placeholder": "0.00",
     "amount_missing": "Enter the amount to send.",
     "review": "Review"
   },

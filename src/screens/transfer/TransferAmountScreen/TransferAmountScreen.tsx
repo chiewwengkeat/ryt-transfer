@@ -89,7 +89,7 @@ export default function TransferAmountScreen() {
         <CardBalance />
         <FieldText
           label={t("amount.label")}
-          placeholder="0.00"
+          placeholder={t("amount.placeholder")}
           value={typedAmount}
           onChangeText={(text) => {
             setTypedAmount(text);
