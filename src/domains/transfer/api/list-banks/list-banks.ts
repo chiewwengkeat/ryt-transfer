@@ -1,4 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
 
 import { requestJson } from "@/shared/http/transport";
 
@@ -18,6 +19,10 @@ export const getListBanksOptions = () =>
 export function useListBanks() {
   return useQuery({
     ...getListBanksOptions(),
-    select: (banks) => new Map(banks.map((bank) => [bank.bankCode, bank])),
+    select: useCallback(
+      (banks: ListBanksResponse) =>
+        new Map(banks.map((bank) => [bank.bankCode, bank])),
+      [],
+    ),
   });
 }
