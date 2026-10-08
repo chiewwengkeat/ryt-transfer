@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { focusManager } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
@@ -592,6 +593,31 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+  }),
+);
+
+it(
+  "waits for the read at 16 seconds before saying the bank is unreachable, though the app came back to the foreground first",
+  scenarioTest("transfer.status_unreachable", async () => {
+    await sendRm100FromHome();
+    await screen.findByRole("header", { name: "Checking your transfer" });
+    await act(() => jest.advanceTimersByTimeAsync(3_000));
+    await act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    await act(() => jest.advanceTimersByTimeAsync(11_000));
+    expect(
+      screen.queryByRole("header", { name: "Still checking your transfer" }),
+    ).toBeNull();
+
+    await act(() => jest.advanceTimersByTimeAsync(3_000));
+
+    expect(
+      await screen.findByRole("header", {
+        name: "Still checking your transfer",
+      }),
+    ).toBeOnTheScreen();
   }),
 );
 

@@ -113,7 +113,9 @@ export function useTransferStatusCheck(
     readFailure,
     bankUnreachable:
       readFailure === TransferReadFailure.BankUnreached &&
-      unansweredReads >= UNANSWERED_READS_BEFORE_UNREACHABLE,
+      unansweredReads >= UNANSWERED_READS_BEFORE_UNREACHABLE &&
+      // A read on returning to the app adds to the count early, so the front-loaded reads must all have run too.
+      transfer.errorUpdatedAt - openedAtMs >= Math.max(...STATUS_READ_TIMES_MS),
   };
 }
 
