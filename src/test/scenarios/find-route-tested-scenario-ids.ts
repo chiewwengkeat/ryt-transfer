@@ -12,6 +12,7 @@ import {
   type Node,
 } from "typescript";
 
+// Not an import: the import rules refuse any repo file outside src/.
 const { isTestFile } = jest.requireActual<{
   isTestFile: (file: string) => boolean;
 }>("../../../test-files");

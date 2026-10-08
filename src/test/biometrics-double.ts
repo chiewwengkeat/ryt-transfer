@@ -142,7 +142,6 @@ export function failDeviceIntegrityChecks() {
     Promise.reject(new Error("The integrity check failed."));
 }
 
-// Checks from now on wait for the returned answer, so a test can act while one is still running.
 export function holdDeviceIntegrityChecks() {
   let answerHeldChecks: (report: DeviceIntegrityResult) => void = () => {};
   const heldAnswer = new Promise<DeviceIntegrityResult>((resolve) => {

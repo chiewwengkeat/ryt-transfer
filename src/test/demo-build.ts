@@ -3,6 +3,7 @@ import * as config from "@/shared/config/config";
 import { allowScreenCapture } from "@/shared/platform/screen-capture";
 import type * as AppLaunch from "@/shell/app-launch";
 
+// ⛔ Import this before anything that loads the shell: a launch already loaded is handed back, run as production's.
 // Launched here, before jest-setup's hook can, so its load-time code runs as a demo build's does. Its demo layer still
 // loads as null, since the variant is read from the environment: requests go through msw, and each test pairs the phone.
 const launchingAsDemo = jest.replaceProperty(
