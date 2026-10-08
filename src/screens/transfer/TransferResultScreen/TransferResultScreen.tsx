@@ -1,30 +1,73 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useGetTransfer } from "@/domains/transfer/api/get-transfer/get-transfer";
-import { TransferStatus } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import { formatMoney } from "@/shared/lib/money/money";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
+import {
+  TransferOutcomeScenario,
+  useGetTransfer,
+} from "@/domains/transfer/api/get-transfer/get-transfer";
+import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import {
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport-error";
+import { trackEvent } from "@/shared/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
-import Loader from "@/shared/ui/Loader/Loader";
-import TextBody from "@/shared/ui/TextBody/TextBody";
-import TextHeading from "@/shared/ui/TextHeading/TextHeading";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import SectionTransferDetails from "../components/SectionTransferDetails/SectionTransferDetails";
+import TextOutcome from "./components/TextOutcome/TextOutcome";
 
 export default function TransferResultScreen() {
   const { t } = useTranslation("transfer");
-  const { transferId } = useLocalSearchParams<{ transferId: string }>();
+  const { transferId, checking } = useLocalSearchParams<{
+    transferId: string;
+    checking?: string;
+  }>();
   const transfer = useGetTransfer(transferId);
-  const completedTransfer =
-    transfer.data?.status === TransferStatus.Completed
-      ? transfer.data
-      : undefined;
-  // Only an approval whose answer never arrived reaches this page while the bank still awaits one.
-  const approvalAnswerLost =
-    transfer.data?.status === TransferStatus.AwaitingApproval;
+  // Opened without the approve call's answer in hand, nothing has confirmed what the approval did.
+  const [checkingUnansweredApproval] = useState(
+    () => checking !== undefined || transfer.dataUpdatedAt === 0,
+  );
+
+  const failure = transfer.error;
+  const transferNotFound =
+    failure instanceof TransportError &&
+    failure.code === GetTransferErrorCode.TransferNotFound;
+  // These never reached the bank, or the session view answers them: the transfer stands as last read.
+  const bankUnreached =
+    failure instanceof TransportError &&
+    (failure.kind === TransportErrorKind.Network ||
+      failure.kind === TransportErrorKind.Timeout ||
+      failure.kind === TransportErrorKind.Aborted ||
+      (failure.kind === TransportErrorKind.Http &&
+        (failure.status === 401 || (failure.status ?? 0) >= 500)));
+  const outcome = transfer.data?.outcome;
+  // A later read that fails never hides an outcome the bank has already settled.
+  const outcomeSettled =
+    outcome !== undefined &&
+    outcome !== null &&
+    outcome !== TransferOutcomeScenario.Processing &&
+    outcome !== TransferOutcomeScenario.HeldForReview;
+  const scenario = outcomeSettled
+    ? outcome
+    : transferNotFound
+      ? TransferOutcomeScenario.LastTransferNotFound
+      : failure !== null && !bankUnreached
+        ? checkingUnansweredApproval
+          ? TransferOutcomeScenario.RecoveryUnexpected
+          : TransferOutcomeScenario.OutcomeUnexpected
+        : (outcome ??
+          [
+            TransferOutcomeScenario.ApprovalUnknownAnswer,
+            TransferOutcomeScenario.AppClosedDuringApproval,
+          ].find((reason) => reason === checking) ??
+          TransferOutcomeScenario.ApprovalUnanswered);
+
+  useEffect(() => {
+    trackEvent("transfer_outcome", { scenario });
+  }, [scenario]);
 
   return (
     <>
@@ -39,35 +82,17 @@ export default function TransferResultScreen() {
           />
         }
       >
-        {transfer.isPending && <Loader />}
-        {completedTransfer && (
-          <>
-            <TextHeading autoFocus>{t("common.completed.title")}</TextHeading>
-            <TextBody>
-              {t("common.completed.body", {
-                amount: formatMoney(completedTransfer.amount),
-                name: completedTransfer.counterparty.registeredName,
-              })}
-            </TextBody>
-            <SectionTransferDetails transfer={completedTransfer} />
-          </>
+        <TextOutcome
+          scenario={scenario}
+          transfer={transfer.data}
+          transferId={transferId}
+        />
+        {scenario === TransferOutcomeScenario.Completed && transfer.data && (
+          <SectionTransferDetails transfer={transfer.data} />
         )}
-        {approvalAnswerLost && (
-          <BannerNotice
-            tone="negative"
-            message={t("common.approval_unanswered.body")}
-          />
-        )}
-        {(transfer.isError ||
-          (transfer.data && !completedTransfer && !approvalAnswerLost)) && (
-          <BannerNotice
-            tone="negative"
-            message={t("common.outcome_unexpected.body")}
-          />
-        )}
-        {transfer.isError && (
+        {scenario === TransferOutcomeScenario.OutcomeUnexpected && (
           <ButtonSecondary
-            label={t("common.outcome_unexpected.retry")}
+            label={t("common.outcome_unexpected.load_again")}
             onPress={() => {
               void transfer.refetch();
             }}
