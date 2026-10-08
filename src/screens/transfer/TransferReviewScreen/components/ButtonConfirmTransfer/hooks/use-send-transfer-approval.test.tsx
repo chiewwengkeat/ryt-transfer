@@ -232,7 +232,7 @@ it("sends an approval whose answer was lost twice more, 2 and then 4 seconds on,
   ).toBeGreaterThanOrEqual(4_000);
 });
 
-it("never sends an approval again once the bank has answered it, a server error included", async () => {
+it("never sends an approval again once the bank has answered it, a server error that names a code included", async () => {
   mswServer.use(
     http.post("*/transfers/:transferId/approve", () =>
       HttpResponse.json(
@@ -247,6 +247,44 @@ it("never sends an approval again once the bank has answered it, a server error 
     await screen.findByText(
       "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
     ),
+  ).toBeOnTheScreen();
+  expect(approveRequests()).toHaveLength(1);
+});
+
+it("sends an approval answered by a server error naming no bank code twice more under its key, then treats it as a lost answer", async () => {
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", () =>
+      HttpResponse.text("<html>Bad gateway</html>", { status: 502 }),
+    ),
+  );
+  await confirmRm100Transfer();
+
+  expect(
+    await screen.findByText(
+      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      { timeout: 10_000 },
+    ),
+  ).toBeOnTheScreen();
+  const attemptKeys = approveRequests().map((request) =>
+    request.headers.get("Idempotency-Key"),
+  );
+  expect(attemptKeys).toHaveLength(3);
+  expect(new Set(attemptKeys).size).toBe(1);
+});
+
+it("answers a server error by the bank code it names, a known one sent once", async () => {
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", () =>
+      HttpResponse.json(
+        { error: { code: "APPROVAL_EXPIRED", message: "Test." } },
+        { status: 503 },
+      ),
+    ),
+  );
+  await confirmRm100Transfer();
+
+  expect(
+    await screen.findByText("The approval timed out — no money moved."),
   ).toBeOnTheScreen();
   expect(approveRequests()).toHaveLength(1);
 });

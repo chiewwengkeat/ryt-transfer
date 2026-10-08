@@ -64,11 +64,17 @@ export function useApproveTransfer() {
         } catch (failure) {
           if (
             !(failure instanceof TransportError) ||
-            ![
-              TransportErrorKind.Network,
-              TransportErrorKind.Timeout,
-              TransportErrorKind.Unreadable,
-            ].includes(failure.kind)
+            !(
+              [
+                TransportErrorKind.Network,
+                TransportErrorKind.Timeout,
+                TransportErrorKind.Unreadable,
+              ].includes(failure.kind) ||
+              // A server error naming no bank code is no answer about the approval, so it is resent like a lost one.
+              (failure.kind === TransportErrorKind.Http &&
+                (failure.status ?? 0) >= 500 &&
+                failure.code === undefined)
+            )
           )
             throw failure;
         }
