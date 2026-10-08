@@ -12,7 +12,6 @@ it("fades into a sent transfer's result and shows its outcome and tick at once w
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/transfer");
   await turnOnPhoneReduceMotion();
-  const reduceMotionOfAnimations = watchReduceMotionOfAnimations();
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
     "012-345 6789",
@@ -21,9 +20,9 @@ it("fades into a sent transfer's result and shows its outcome and tick at once w
   await screen.findByText("RM 12,845.50");
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
+  await screen.findByRole("button", { name: "Transfer" });
+  const reduceMotionOfAnimations = watchReduceMotionOfAnimations();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
 
   const outcome = await screen.findByText("Transfer sent");
   // The stack hands its transition to each native screen as this prop; nothing else of it renders in Jest.
