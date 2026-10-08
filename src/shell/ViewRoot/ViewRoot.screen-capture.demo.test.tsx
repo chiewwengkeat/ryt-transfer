@@ -7,6 +7,11 @@ import { waitPastReceiptSettle } from "@/test/harness/receipt-settle";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
+async function pickDemoScenario(title: string) {
+  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
+  await fireEvent.press(screen.getByRole("radio", { name: title }));
+}
+
 it(
   "blocks capture on Home in a demo build while Screenshots blocked is picked, and allows it on a receipt",
   scenarioTest("transfer.screen_capture_blocked", async () => {
@@ -26,19 +31,19 @@ it(
   }),
 );
 
-it("allows capture on Home in a demo build until Screenshots blocked is picked from the Demo menu, then blocks it at once", async () => {
+it("allows capture on Home in a demo build until Screenshots blocked is picked from the Demo menu, blocks it at once, and allows it again once another scenario is picked", async () => {
   await renderRoute("/");
   await screen.findByText("RM 12,845.50");
   const blockedBeforePick = isScreenCaptureBlocked();
 
-  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
-  await fireEvent.press(
-    screen.getByRole("radio", { name: "Screenshots blocked" }),
-  );
+  await pickDemoScenario("Screenshots blocked");
   const blockedOnPick = isScreenCaptureBlocked();
   await waitPastReceiptSettle();
+  const blockedPastSettle = isScreenCaptureBlocked();
+  await pickDemoScenario("Normal, no scenario");
 
   expect(blockedBeforePick).toBe(false);
   expect(blockedOnPick).toBe(true);
-  expect(isScreenCaptureBlocked()).toBe(true);
+  expect(blockedPastSettle).toBe(true);
+  expect(isScreenCaptureBlocked()).toBe(false);
 });
