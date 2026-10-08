@@ -358,13 +358,6 @@
   "approval": {},
   "result": {
     "title": "收据",
-    "amount": "金额",
-    "recipient_name": "收款人",
-    "mobile": "手机号码",
-    "bank": "银行",
-    "note": "备注",
-    "reference": "参考编号",
-    "completed_at": "完成时间",
     "done": "完成",
     "transfer_history": "转账记录",
     "heading": {

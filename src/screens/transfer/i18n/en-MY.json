@@ -358,13 +358,6 @@
   "approval": {},
   "result": {
     "title": "Receipt",
-    "amount": "Amount",
-    "recipient_name": "To",
-    "mobile": "Mobile number",
-    "bank": "Bank",
-    "note": "Note",
-    "reference": "Reference",
-    "completed_at": "Completed",
     "done": "Done",
     "transfer_history": "Transfer history",
     "heading": {

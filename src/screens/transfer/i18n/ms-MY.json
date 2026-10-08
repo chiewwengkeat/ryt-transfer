@@ -358,13 +358,6 @@
   "approval": {},
   "result": {
     "title": "Resit",
-    "amount": "Jumlah",
-    "recipient_name": "Kepada",
-    "mobile": "Nombor telefon bimbit",
-    "bank": "Bank",
-    "note": "Nota",
-    "reference": "Rujukan",
-    "completed_at": "Selesai pada",
     "done": "Selesai",
     "transfer_history": "Sejarah pindahan",
     "heading": {
