@@ -79,10 +79,18 @@ export function usePendingTransfersAtLaunch() {
       });
     };
     const stopObservingAccount = accountObserver.subscribe(onAccountRead);
+    // clear() removes the query this observer is on, and nothing but setOptions moves an observer onto the next one.
+    const stopRebindingAfterClears = queryClient
+      .getQueryCache()
+      .subscribe(({ type, query }) => {
+        if (type === "removed" && query === accountObserver.getCurrentQuery())
+          accountObserver.setOptions(getPrimaryAccountOptions());
+      });
     onAccountRead(accountObserver.getCurrentResult());
     return () => {
       stopListeningForEndedSessions();
       stopObservingAccount();
+      stopRebindingAfterClears();
     };
   }, []);
 }
