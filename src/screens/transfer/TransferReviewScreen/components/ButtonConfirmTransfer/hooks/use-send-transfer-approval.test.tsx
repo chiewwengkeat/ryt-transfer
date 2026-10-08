@@ -1143,6 +1143,62 @@ it("leaves a newer transfer's PIN sheet alone when the bank asks for a PIN to se
   expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
 });
 
+it("still reports setting approval up again failing unexpectedly for a transfer the person left, saying nothing over the newer one", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  let keyRegistrationHeld = false;
+  let failKeyRegistration: () => void = () => undefined;
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      () =>
+        HttpResponse.json(
+          { error: { code: "KEY_NOT_REGISTERED", message: "Test." } },
+          { status: 409 },
+        ),
+      { once: true },
+    ),
+    http.post(
+      "*/approval-keys",
+      () =>
+        new Promise<Response>((answer) => {
+          keyRegistrationHeld = true;
+          failKeyRegistration = () => {
+            answer(
+              HttpResponse.json(
+                { error: { code: "INVALID_REQUEST", message: "Test." } },
+                { status: 400 },
+              ),
+            );
+          };
+        }),
+      { once: true },
+    ),
+  );
+  await confirmRm100Transfer();
+  await waitFor(() => {
+    expect(keyRegistrationHeld).toBe(true);
+  });
+
+  await act(() => {
+    router.dismissTo("/");
+  });
+  await startRm50TransferFromHomeToItsPinSheet();
+  await act(async () => {
+    failKeyRegistration();
+    await jest.advanceTimersByTimeAsync(1_000);
+  });
+
+  expect(observedRecords.map((record) => record.properties.boundary)).toContain(
+    "approval_key_registration",
+  );
+  expect(
+    screen.getByText("Enter your bank PIN to approve this transfer."),
+  ).toBeOnTheScreen();
+  await approveWithPin(DEMO_PIN);
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
+});
+
 it(
   "sets face or fingerprint approval up again with the PIN that approved the transfer, so the next one needs no PIN",
   scenarioTest("transfer.biometrics_changed", async () => {

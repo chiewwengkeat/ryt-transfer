@@ -42,6 +42,14 @@ export function useRegisterApprovalKeysAgain() {
           : undefined;
       if (refusal?.code === RegisterApprovalKeysErrorCode.PinLocked)
         await rememberApprovalPinLocked();
+      const failedUnexpectedly =
+        failure !== undefined &&
+        refusal?.code !== RegisterApprovalKeysErrorCode.PinLocked &&
+        refusal?.code !== RegisterApprovalKeysErrorCode.PinRequired &&
+        refusal?.code !== RegisterApprovalKeysErrorCode.PinIncorrect;
+      // Reported before the guard: a transfer the person left shows nothing, but its failure is still seen.
+      if (failedUnexpectedly)
+        reportError(failure, { boundary: "approval_key_registration" });
       // ⛔ Left during the call: a sheet or prompt now would cover the newer transfer's, whose answer then never comes.
       if (onAnotherTransfer())
         return { notice: TransferFlowScenario.ApprovalCancelled };
@@ -58,17 +66,12 @@ export function useRegisterApprovalKeysAgain() {
         });
         return { notice: TransferFlowScenario.PinLocked };
       }
-      if (
-        refusal?.code !== RegisterApprovalKeysErrorCode.PinRequired &&
-        refusal?.code !== RegisterApprovalKeysErrorCode.PinIncorrect
-      ) {
-        reportError(failure, { boundary: "approval_key_registration" });
+      if (failedUnexpectedly)
         return { notice: TransferFlowScenario.ApprovalKeyUnknown };
-      }
       const askedPin = await askForApprovalPin({
         ...words,
         refusal:
-          refusal.code === RegisterApprovalKeysErrorCode.PinIncorrect
+          refusal?.code === RegisterApprovalKeysErrorCode.PinIncorrect
             ? t("common.pin_incorrect.body", {
                 count: refusal.attemptsRemaining,
               })
