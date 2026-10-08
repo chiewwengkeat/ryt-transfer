@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet } from "react-native";
 import Animated, { Keyframe, ReduceMotion } from "react-native-reanimated";
-import { useStore } from "zustand";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
@@ -14,12 +13,9 @@ import {
   useTransferStatusCheck,
 } from "@/domains/transfer/hooks/transfer-status-checks";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
-import {
-  motionDurations,
-  reduceMotionStore,
-  standardEasing,
-} from "@/shared/lib/motion/motion";
+import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
 import { trackEvent } from "@/shared/observability/observability";
+import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion";
 import { spacing } from "@/shared/theme/theme";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
@@ -45,10 +41,7 @@ export default function TransferResultScreen() {
     transferId,
     customerId,
   );
-  const phoneReducesMotion = useStore(
-    reduceMotionStore,
-    (motion) => motion.phoneReducesMotion,
-  );
+  const phoneReducesMotion = usePhoneReducesMotion();
   // Opened without the approve call's answer in hand, nothing has confirmed what the approval did.
   const [checkingUnansweredApproval] = useState(
     () => checking !== undefined || transfer.dataUpdatedAt === 0,

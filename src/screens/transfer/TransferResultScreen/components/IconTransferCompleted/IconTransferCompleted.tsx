@@ -1,19 +1,12 @@
 import { StyleSheet, View } from "react-native";
 import Animated, { Keyframe, ReduceMotion } from "react-native-reanimated";
-import { useStore } from "zustand";
 
-import {
-  motionDurations,
-  reduceMotionStore,
-  standardEasing,
-} from "@/shared/lib/motion/motion";
+import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
+import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion";
 import { colors } from "@/shared/theme/theme";
 
 export default function IconTransferCompleted() {
-  const phoneReducesMotion = useStore(
-    reduceMotionStore,
-    (motion) => motion.phoneReducesMotion,
-  );
+  const phoneReducesMotion = usePhoneReducesMotion();
 
   return (
     <Animated.View
