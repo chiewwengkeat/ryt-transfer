@@ -38,6 +38,22 @@ export enum TransferOutcomeScenario {
   RecoveryUnexpected = "transfer.recovery_unexpected",
 }
 
+// Each says where the money went. Any outcome not listed, a new one included, leaves the money unconfirmed.
+export const SETTLED_TRANSFER_OUTCOMES = [
+  TransferOutcomeScenario.Completed,
+  TransferOutcomeScenario.FraudBlocked,
+  TransferOutcomeScenario.RecipientAccountInactive,
+  TransferOutcomeScenario.RefundedAfterProcessing,
+  TransferOutcomeScenario.BalanceOrLimitShortAtApproval,
+  TransferOutcomeScenario.ApprovalExpired,
+] as const;
+
+export function isSettledTransferOutcome(
+  outcome: TransferOutcomeScenario | null | undefined,
+): outcome is (typeof SETTLED_TRANSFER_OUTCOMES)[number] {
+  return SETTLED_TRANSFER_OUTCOMES.some((settled) => settled === outcome);
+}
+
 export const getTransferOptions = (transferId: string) =>
   queryOptions({
     queryKey: transferKeys.detail(transferId),

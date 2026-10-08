@@ -5,7 +5,10 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
-import { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
+import {
+  isSettledTransferOutcome,
+  TransferOutcomeScenario,
+} from "@/domains/transfer/api/get-transfer/get-transfer";
 import {
   TransferReadFailure,
   useTransferStatusCheck,
@@ -43,12 +46,7 @@ export default function TransferResultScreen() {
   );
   const outcome = transfer.data?.outcome;
   // A later read that fails never hides an outcome the bank has already settled.
-  const outcomeSettled =
-    outcome !== undefined &&
-    outcome !== null &&
-    outcome !== TransferOutcomeScenario.Processing &&
-    outcome !== TransferOutcomeScenario.HeldForReview &&
-    outcome !== TransferOutcomeScenario.OutcomeUnexpected;
+  const outcomeSettled = isSettledTransferOutcome(outcome);
   const [openedSettled] = useState(outcomeSettled);
   const latestScenario = outcomeSettled
     ? outcome

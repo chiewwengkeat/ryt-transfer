@@ -13,8 +13,8 @@ import { reportError } from "@/shared/observability/observability";
 
 import {
   getTransferOptions,
+  isSettledTransferOutcome,
   outcomeOfTransfer,
-  TransferOutcomeScenario,
   useGetTransfer,
 } from "../api/get-transfer/get-transfer";
 import { GetTransferErrorCode } from "../api/get-transfer/get-transfer.type";
@@ -48,7 +48,7 @@ export function useTransferStatusCheck(
       const outcome = state.data && outcomeOfTransfer(state.data);
       const failure = classifyTransferReadFailure(state.error);
       if (
-        !transferStillSettling(outcome) ||
+        isSettledTransferOutcome(outcome) ||
         (failure !== undefined && failure !== TransferReadFailure.BankUnreached)
       )
         return false;
@@ -90,9 +90,9 @@ export function useTransferStatusCheck(
     if (customerId === undefined) return;
     const recordChange =
       readFailure === TransferReadFailure.NotFound ||
-      !transferStillSettling(outcome)
+      isSettledTransferOutcome(outcome)
         ? clearPendingTransfer(customerId, transferId)
-        : outcomeLeavesMoneyUnconfirmed(outcome)
+        : outcome !== undefined && outcome !== null
           ? updatePendingTransferStage(
               customerId,
               transferId,
@@ -131,7 +131,7 @@ export async function checkPendingTransferOnce(
         retry: 0,
       }),
     );
-    if (outcomeLeavesMoneyUnconfirmed(outcome))
+    if (outcome !== null && !isSettledTransferOutcome(outcome))
       await updatePendingTransferStage(
         customerId,
         transferId,
@@ -141,28 +141,6 @@ export async function checkPendingTransferOnce(
     if (classifyTransferReadFailure(error) === TransferReadFailure.NotFound)
       await clearPendingTransfer(customerId, transferId);
   }
-}
-
-// Undefined while there is no data: a read that has not answered yet has not settled anything.
-function transferStillSettling(
-  outcome: TransferOutcomeScenario | null | undefined,
-) {
-  return (
-    outcome === undefined ||
-    outcome === null ||
-    outcomeLeavesMoneyUnconfirmed(outcome)
-  );
-}
-
-// An outcome the app cannot name counts too: its record waits as processing, so the next launch warns on Home.
-function outcomeLeavesMoneyUnconfirmed(
-  outcome: TransferOutcomeScenario | null | undefined,
-) {
-  return (
-    outcome === TransferOutcomeScenario.Processing ||
-    outcome === TransferOutcomeScenario.HeldForReview ||
-    outcome === TransferOutcomeScenario.OutcomeUnexpected
-  );
 }
 
 function classifyTransferReadFailure(error: unknown) {

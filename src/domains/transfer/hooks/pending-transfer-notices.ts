@@ -8,7 +8,9 @@ import {
 
 import {
   getTransferOptions,
+  isSettledTransferOutcome,
   selectTransferWithOutcome,
+  type SETTLED_TRANSFER_OUTCOMES,
   TransferOutcomeScenario,
 } from "../api/get-transfer/get-transfer";
 import { transferKeys } from "../api/transfer.keys";
@@ -21,8 +23,9 @@ export enum NextLaunchNotice {
   FraudBlocked = "fraud_blocked",
 }
 
-const NEXT_LAUNCH_NOTICE_OF_OUTCOME: Partial<
-  Record<TransferOutcomeScenario, NextLaunchNotice>
+const NEXT_LAUNCH_NOTICE_OF_OUTCOME: Record<
+  (typeof SETTLED_TRANSFER_OUTCOMES)[number],
+  NextLaunchNotice
 > = {
   [TransferOutcomeScenario.Completed]: NextLaunchNotice.Completed,
   [TransferOutcomeScenario.RefundedAfterProcessing]: NextLaunchNotice.Refunded,
@@ -63,7 +66,7 @@ export function usePendingTransferNotices() {
   const newestFirst = records
     .map((record, index) => {
       const transfer = transfers[index]?.data;
-      const notice = transfer?.outcome
+      const notice = isSettledTransferOutcome(transfer?.outcome)
         ? NEXT_LAUNCH_NOTICE_OF_OUTCOME[transfer.outcome]
         : undefined;
       return { ...record, transfer, notice };

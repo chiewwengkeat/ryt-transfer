@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next";
 import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
   getTransferOptions,
+  isSettledTransferOutcome,
   outcomeOfTransfer,
-  TransferOutcomeScenario,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
 import { listPendingTransfers } from "@/domains/transfer/hooks/pending-transfers";
 import { reportError } from "@/shared/observability/observability";
@@ -33,21 +33,13 @@ export default function TextLastTransferReference() {
               getTransferOptions(transferId).queryKey,
             ),
           }))
-          .filter(({ transfer }) => {
-            const outcome = transfer && outcomeOfTransfer(transfer);
-            // A record can outlast its check: one whose money the bank has confirmed is not being checked.
-            return !(
-              outcome &&
-              [
-                TransferOutcomeScenario.Completed,
-                TransferOutcomeScenario.FraudBlocked,
-                TransferOutcomeScenario.RecipientAccountInactive,
-                TransferOutcomeScenario.RefundedAfterProcessing,
-                TransferOutcomeScenario.BalanceOrLimitShortAtApproval,
-                TransferOutcomeScenario.ApprovalExpired,
-              ].includes(outcome)
-            );
-          })
+          // A record can outlast its check: one whose money the bank has confirmed is not being checked.
+          .filter(
+            ({ transfer }) =>
+              !isSettledTransferOutcome(
+                transfer && outcomeOfTransfer(transfer),
+              ),
+          )
           .sort(
             (newer, older) =>
               Date.parse(older.createdAt) - Date.parse(newer.createdAt),

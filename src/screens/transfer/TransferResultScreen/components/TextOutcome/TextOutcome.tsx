@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { AccessibilityInfo } from "react-native";
 
 import {
-  TransferOutcomeScenario,
+  type TransferOutcomeScenario,
   type useGetTransfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
 import { formatMoney } from "@/shared/lib/money/money";
