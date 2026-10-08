@@ -15,4 +15,10 @@ export interface DemoLayer {
     onChange: (biometricsOff: boolean) => void,
   ) => () => void;
   subscribeToScenarioChange: (onChange: () => void) => () => void;
+  subscribeToScreenCaptureBlock: (
+    onChange: (captureBlocked: boolean) => void,
+  ) => () => void;
+  subscribeToRootedPhone: (
+    onChange: (phoneRooted: boolean) => void,
+  ) => () => void;
 }

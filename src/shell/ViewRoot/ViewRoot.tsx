@@ -5,6 +5,7 @@ import { StyleSheet, View } from "react-native";
 
 import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import { integrityStandInStore } from "@/domains/approval/hooks/device-integrity-verdict";
 import { addUnauthorizedListener } from "@/shared/http/transport";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
@@ -45,6 +46,13 @@ export default function ViewRoot() {
       demoLayer?.subscribeToScenarioChange(
         readAgainEveryReadButAnAnsweredNameCheck,
       ),
+    [],
+  );
+  useEffect(
+    () =>
+      demoLayer?.subscribeToRootedPhone((phoneRooted) => {
+        integrityStandInStore.setState({ phoneTampered: phoneRooted });
+      }),
     [],
   );
 

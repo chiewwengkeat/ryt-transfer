@@ -70,6 +70,17 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
           onClose();
         }}
       />
+      {PHONE_SIDE_SCENARIO_IDS.map((scenarioId) => (
+        <ItemScenarioDemo
+          key={scenarioId}
+          label={scenarioTitle(scenarioId)}
+          checked={activeScenarioId === scenarioId}
+          onPress={() => {
+            pickTransferScenario(scenarioId);
+            onClose();
+          }}
+        />
+      ))}
       {Object.values(TransferStep).map((step) => (
         <Fragment key={step}>
           <TextBody tone="secondary" strong>
@@ -103,10 +114,16 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
   );
 }
 
-// Picking any other does nothing: those are the bank acting normally, or happen on the phone.
+// Picking an unlisted scenario does nothing: those are the bank acting normally, or happen on the phone.
 const PICKABLE_SCENARIO_IDS = (
   Object.keys(TRANSFER_SCENARIOS) as TransferScenarioId[]
 ).filter((scenarioId) => {
   const scenario: TransferScenario = TRANSFER_SCENARIOS[scenarioId];
   return scenario.handlers !== undefined || scenario.conditions !== undefined;
+});
+const PHONE_SIDE_SCENARIO_IDS = (
+  Object.keys(TRANSFER_SCENARIOS) as TransferScenarioId[]
+).filter((scenarioId) => {
+  const scenario: TransferScenario = TRANSFER_SCENARIOS[scenarioId];
+  return scenario.phoneSide === true;
 });

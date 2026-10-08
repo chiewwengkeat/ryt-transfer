@@ -11,6 +11,7 @@ import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
 import { handlersForActiveScenario } from "./demo-bank";
 import { subscribeToBiometricsOff } from "./switcher/biometrics-off";
 import ViewDemo from "./switcher/components/ViewDemo/ViewDemo";
+import { subscribeToPhoneSidePick } from "./switcher/phone-side-picks";
 import { switcherStore } from "./switcher/switcher-store";
 import { createDemoSend } from "./transport/demo-send";
 
@@ -19,6 +20,10 @@ export default {
   ViewDemo,
   subscribeToBiometricsOff,
   subscribeToScenarioChange: (onChange) => switcherStore.subscribe(onChange),
+  subscribeToScreenCaptureBlock: (onChange) =>
+    subscribeToPhoneSidePick("transfer.screen_capture_blocked", onChange),
+  subscribeToRootedPhone: (onChange) =>
+    subscribeToPhoneSidePick("transfer.rooted_phone", onChange),
   // Stands in for the pairing a host app made long ago, so the bank holds no cooling-off against it.
   async pairPhoneAtFirstLaunch() {
     if (await hasApprovalKeysOnFile()) return;

@@ -6,6 +6,7 @@ import {
   allowScreenCapture,
   blockScreenCapture,
 } from "@/shared/platform/screen-capture";
+import { demoLayer } from "@/shell/app-launch";
 
 const RECEIPT_ROUTES = new Set([
   "/transfer/result/[transferId]",
@@ -31,9 +32,15 @@ export function useScreenCaptureBlock() {
       setSettledReceiptPathname(null);
     };
   }, [onReceiptRoute, pathname]);
+  const [captureBlockPicked, setCaptureBlockPicked] = useState(false);
+  // Before paint, so a pick saved before a restart blocks the first frame.
+  useLayoutEffect(
+    () => demoLayer?.subscribeToScreenCaptureBlock(setCaptureBlockPicked),
+    [],
+  );
 
   const receiptOnScreen = onReceiptRoute && settledReceiptPathname === pathname;
-  const blocked = isProductionBuild && !receiptOnScreen;
+  const blocked = (isProductionBuild || captureBlockPicked) && !receiptOnScreen;
   // Before paint, so a receipt being left hands over to a screen that is drawn blocked.
   useLayoutEffect(() => {
     if (!blocked) return;

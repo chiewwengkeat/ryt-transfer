@@ -13,6 +13,7 @@ import {
 import type * as ContextStubs from "expo-router/build/testing-library/context-stubs";
 
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import { integrityStandInStore } from "@/domains/approval/hooks/device-integrity-verdict";
 import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
 import { setObservabilitySink } from "@/shared/observability/observability";
 import { forgetRequestOutcomes } from "@/shared/platform/offline";
@@ -167,6 +168,7 @@ afterEach(() => {
   resetNativeDoubles();
   resetBiometricsDouble();
   approvalSettingsStore.setState(approvalSettingsStore.getInitialState(), true);
+  integrityStandInStore.setState(integrityStandInStore.getInitialState(), true);
   resetContactsNativeDouble();
   resetObscuredTouchGuardDouble();
   // A test that a request left offline would start the next one offline.
