@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 import { Platform } from "react-native";
 
+import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import { lookUpTestRecipient, readBankBalanceMinor } from "@/test/bank-client";
 import {
   biometricPromptsShown,
@@ -580,3 +581,206 @@ it("never says no money moved when something unexpected fails after the bank ans
   jest.useRealTimers();
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
 });
+
+it.each<[string, () => Response]>([
+  ["a 500 with no body", () => new HttpResponse(null, { status: 500 })],
+  [
+    "a 502 proxy page",
+    () => new HttpResponse("<html>Bad gateway</html>", { status: 502 }),
+  ],
+  [
+    "a 503 whose code approve does not name",
+    () =>
+      HttpResponse.json(
+        { error: { code: "SERVICE_UNAVAILABLE", message: "Test." } },
+        { status: 503 },
+      ),
+  ],
+  ["a 200 with an empty body", () => new HttpResponse("", { status: 200 })],
+  ["a 200 whose body is not JSON", () => new HttpResponse("OK")],
+  ["a 200 whose body holds no transfer", () => HttpResponse.json({})],
+  [
+    "404 TRANSFER_NOT_FOUND",
+    () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: ApproveTransferErrorCode.TransferNotFound,
+            message: "Test.",
+          },
+        },
+        { status: 404 },
+      ),
+  ],
+  [
+    "409 IDEMPOTENCY_KEY_REUSED",
+    () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: ApproveTransferErrorCode.IdempotencyKeyReused,
+            message: "Test.",
+          },
+        },
+        { status: 409 },
+      ),
+  ],
+  [
+    "409 REQUEST_IN_PROGRESS",
+    () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: ApproveTransferErrorCode.RequestInProgress,
+            message: "Test.",
+          },
+        },
+        { status: 409 },
+      ),
+  ],
+])(
+  "never offers to send again when the bank answers the approval with %s",
+  async (_, answerApproval) => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    mswServer.use(http.post("*/transfers/:transferId/approve", answerApproval));
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByText("The transfer was not sent — no money moved."),
+    ).toBeNull();
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Back to Home" }),
+    ).toBeOnTheScreen();
+    expect(countPostsTo(/\/approve$/)).toBe(1);
+  },
+);
+
+it("never offers to send again when the bank has not answered the approval after 30 seconds", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  let releaseApproval: () => void = () => undefined;
+  const approvalHeld = new Promise<void>((release) => {
+    releaseApproval = () => {
+      release();
+    };
+  });
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      async () => {
+        await approvalHeld;
+        return HttpResponse.error();
+      },
+      { once: true },
+    ),
+  );
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText(
+    "Sending your transfer. The bank's answer comes next.",
+  );
+
+  await act(() => jest.advanceTimersByTimeAsync(29_000));
+  // ⛔ Never a findBy here: it moves the fake clock while it waits, past the 30 seconds under test.
+  expect(
+    screen.queryByText(
+      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+    ),
+  ).toBeNull();
+  await act(() => jest.advanceTimersByTimeAsync(1_500));
+
+  expect(
+    await screen.findByText(
+      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+  expect(countPostsTo(/\/approve$/)).toBe(1);
+  releaseApproval();
+});
+
+it("never says the transfer was not sent when the session ends as the bank answers the approval", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", () =>
+      HttpResponse.json(
+        { error: { code: "UNAUTHORIZED", message: "Test." } },
+        { status: 401 },
+      ),
+    ),
+  );
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(await screen.findByText("Your session has ended")).toBeOnTheScreen();
+  // The ended session hides the app from screen readers, review's notice included.
+  expect(
+    screen.getByText(
+      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      { includeHiddenElements: true },
+    ),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByText("The transfer was not sent — no money moved.", {
+      includeHiddenElements: true,
+    }),
+  ).toBeNull();
+});
+
+// ⛔ No INVALID_REQUEST row: that answer is ruled to move to the approval step's catch-all.
+it.each([
+  [410, ApproveTransferErrorCode.ApprovalExpired, {}],
+  [403, ApproveTransferErrorCode.ApprovalInvalid, {}],
+  [422, ApproveTransferErrorCode.PinIncorrect, { attemptsRemaining: 2 }],
+  [423, ApproveTransferErrorCode.PinLocked, {}],
+  [409, ApproveTransferErrorCode.KeyNotRegistered, {}],
+  [
+    403,
+    ApproveTransferErrorCode.CoolingOff,
+    { until: "2026-10-07T21:30:00+08:00", reason: "DEVICE_PAIRED" },
+  ],
+  [403, ApproveTransferErrorCode.AccountLocked, {}],
+])(
+  "says the transfer was not sent, and offers it again, when the bank refuses the approval with %i %s",
+  async (status, code, details) => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    mswServer.use(
+      http.post("*/transfers/:transferId/approve", () =>
+        HttpResponse.json(
+          { error: { code, message: "Test.", ...details } },
+          { status },
+        ),
+      ),
+    );
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText("The transfer was not sent — no money moved."),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByText(
+        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      ),
+    ).toBeNull();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+    expect(countPostsTo(/\/approve$/)).toBe(1);
+  },
+);
