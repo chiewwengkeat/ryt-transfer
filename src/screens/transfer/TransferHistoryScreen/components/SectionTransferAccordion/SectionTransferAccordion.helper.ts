@@ -1,17 +1,14 @@
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 
 const expandedDayHeaderRows = new WeakMap<
-  DaySummary,
-  { summary: DaySummary; expanded: boolean }
+  ListTransfersResponse["days"][number],
+  { summary: ListTransfersResponse["days"][number]; expanded: boolean }
 >();
-const collapsedDayHeaderRows = new WeakMap<
-  DaySummary,
-  { summary: DaySummary; expanded: boolean }
->();
+const collapsedDayHeaderRows: typeof expandedDayHeaderRows = new WeakMap();
 
 // One object per summary and flag: a header's cell redraws only when its day's summary or open state changes.
 export function reuseTransferDayHeaderRow(
-  summary: DaySummary,
+  summary: ListTransfersResponse["days"][number],
   expanded: boolean,
 ) {
   const dayHeaderRows = expanded
@@ -21,5 +18,3 @@ export function reuseTransferDayHeaderRow(
   dayHeaderRows.set(summary, dayHeaderRow);
   return dayHeaderRow;
 }
-
-type DaySummary = ListTransfersResponse["days"][number];
