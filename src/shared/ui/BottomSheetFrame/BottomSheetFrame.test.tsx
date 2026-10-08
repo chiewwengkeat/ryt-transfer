@@ -14,12 +14,6 @@ jest.mock("react-native/Libraries/Utilities/BackHandler", () =>
     "react-native/Libraries/Utilities/BackHandler.android",
   ),
 );
-// expo-router's testing library mocks Reanimated before worklets can be mocked, so its mock comes out
-// empty; the real Reanimated runs over worklets' own mock instead.
-jest.unmock("react-native-reanimated");
-jest.mock("react-native-worklets", () =>
-  jest.requireActual<object>("react-native-worklets/src/mock"),
-);
 
 const PHONE_METRICS = {
   frame: { x: 0, y: 0, width: 390, height: 844 },

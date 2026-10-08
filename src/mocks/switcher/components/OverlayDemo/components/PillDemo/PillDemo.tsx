@@ -8,6 +8,7 @@ import {
   spacing,
   typography,
 } from "@/shared/theme/theme";
+import { useScreenFooterHeight } from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 interface Props {
   onPress: () => void;
@@ -15,6 +16,7 @@ interface Props {
 export default function PillDemo({ onPress }: Props) {
   const { t } = useDemoTranslation();
   const { bottom } = useSafeAreaInsets();
+  const footerHeight = useScreenFooterHeight();
   return (
     <Pressable
       accessibilityRole="button"
@@ -22,8 +24,8 @@ export default function PillDemo({ onPress }: Props) {
       onPress={onPress}
       style={[
         styles.pill,
-        // Clears a screen footer holding one button, so the pill never covers a screen's main action.
-        { bottom: bottom + spacing.md * 2 + minTouchTarget + spacing.sm },
+        // Above the footer of the screen on top, so the pill never covers a screen's main action.
+        { bottom: Math.max(footerHeight, bottom) + spacing.sm },
       ]}
     >
       <Text style={styles.label}>{t("pill_demo.label")} ▾</Text>

@@ -16,13 +16,6 @@ import {
 
 import OverlayDemo from "./OverlayDemo";
 
-// expo-router's testing library mocks Reanimated before worklets can be mocked, so its mock comes out
-// empty; the real Reanimated runs over worklets' own mock instead.
-jest.unmock("react-native-reanimated");
-jest.mock("react-native-worklets", () =>
-  jest.requireActual<object>("react-native-worklets/src/mock"),
-);
-
 // Jest defines it; the app's types deliberately leave out Node's globals.
 declare const __dirname: string;
 

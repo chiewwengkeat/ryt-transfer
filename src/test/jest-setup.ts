@@ -1,3 +1,8 @@
+// Hoisted above the import below: the Reanimated mock that import installs throws without it, leaving every
+// animated view undefined.
+jest.mock("react-native-worklets", () =>
+  jest.requireActual<object>("react-native-worklets/src/mock"),
+);
 // Its mocks run at require time, so they must load before any test module imports expo-router.
 import "expo-router/testing-library";
 import {

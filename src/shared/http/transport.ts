@@ -5,12 +5,6 @@ import { TransportError, TransportErrorKind } from "./transport-error";
 
 export type Send = (request: Request) => Promise<Response>;
 
-// The demo layer's module shape lives here: the shell may not import even a type from src/mocks.
-export interface DemoLayer {
-  demoSend: Send;
-  pairPhoneAtFirstLaunch: () => Promise<void>;
-}
-
 const DEFAULT_TIMEOUT_MS = 10_000;
 
 // An arrow, not fetch itself: called unbound fetch can throw, and msw swaps the global after load.
