@@ -5,6 +5,7 @@ import {
   useId,
   useLayoutEffect,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
 import {
@@ -63,6 +64,8 @@ export default function BottomSheetFrame({
   const sheetId = useId();
   const { top, bottom } = useSafeAreaInsets();
   const searchFieldFocusedRef = useRef(false);
+  const [bodyHeight, setBodyHeight] = useState(0);
+  const [bodyContentHeight, setBodyContentHeight] = useState(0);
 
   const closeOnBack = useEffectEvent(() => {
     if (dismissable) onClose();
@@ -124,7 +127,9 @@ export default function BottomSheetFrame({
                   onPress={onClose}
                   style={styles.closeButton}
                 >
-                  <Text style={styles.closeMark}>✕</Text>
+                  <Text aria-hidden style={styles.closeMark}>
+                    ✕
+                  </Text>
                 </Pressable>
               )}
             </View>
@@ -141,6 +146,14 @@ export default function BottomSheetFrame({
               />
             )}
             <ScrollView
+              // Android makes a scroll view a screen-reader stop while it can scroll, speaking all it holds at once.
+              scrollEnabled={bodyContentHeight > bodyHeight}
+              onLayout={(event) => {
+                setBodyHeight(event.nativeEvent.layout.height);
+              }}
+              onContentSizeChange={(_, contentHeight) => {
+                setBodyContentHeight(contentHeight);
+              }}
               keyboardShouldPersistTaps="handled"
               style={styles.body}
               contentContainerStyle={styles.bodyContent}

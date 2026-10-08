@@ -81,6 +81,30 @@ function ScreenWithBankSheet({
   );
 }
 
+// TalkBack's rule, not RNTL's: React Native makes every focusable view clickable on Android, and TalkBack
+// stops on a clickable view whatever `accessible` says. A scroll view is focusable while it can scroll.
+function screenReaderStopsUnder(
+  element: typeof screen.container,
+): (typeof screen.container)[] {
+  if (isHiddenFromAccessibility(element)) return [];
+  if (
+    element.props.accessible === true ||
+    element.props.focusable === true ||
+    element.type === "Text" ||
+    element.type === "TextInput"
+  )
+    return [element];
+  return [
+    ...(element.type === "RCTScrollView" &&
+    element.props.scrollEnabled !== false
+      ? [element]
+      : []),
+    ...element.children.flatMap((child) =>
+      typeof child === "string" ? [] : screenReaderStopsUnder(child),
+    ),
+  ];
+}
+
 async function openBankSheet() {
   await fireEvent.press(screen.getByRole("button", { name: "Choose a bank" }));
 }
@@ -108,23 +132,6 @@ it("leaves a screen reader no unlabelled stop in an open sheet, its title the fi
 
   await openBankSheet();
 
-  // TalkBack's rule, not RNTL's: React Native makes every focusable view clickable on Android, and TalkBack
-  // stops on a clickable view whatever `accessible` says.
-  const screenReaderStopsUnder = (
-    element: typeof screen.container,
-  ): (typeof screen.container)[] => {
-    if (isHiddenFromAccessibility(element)) return [];
-    if (
-      element.props.accessible === true ||
-      element.props.focusable === true ||
-      element.type === "Text" ||
-      element.type === "TextInput"
-    )
-      return [element];
-    return element.children.flatMap((child) =>
-      typeof child === "string" ? [] : screenReaderStopsUnder(child),
-    );
-  };
   const [firstStop, secondStop, ...laterStops] = screenReaderStopsUnder(
     screen.container,
   );
@@ -132,6 +139,31 @@ it("leaves a screen reader no unlabelled stop in an open sheet, its title the fi
   expect(secondStop).toHaveAccessibleName("Close");
   expect(laterStops).not.toHaveLength(0);
   for (const stop of laterStops) expect(stop).toHaveAccessibleName();
+});
+
+it("gives a screen reader no stop of the body's own, which would read all it holds as one string, while the body fits", async () => {
+  await render(<ScreenWithBankSheet />);
+
+  await openBankSheet();
+
+  expect(
+    screenReaderStopsUnder(screen.container).map((stop) => stop.type),
+  ).not.toContain("RCTScrollView");
+});
+
+it("still scrolls a body taller than the sheet", async () => {
+  await render(<ScreenWithBankSheet />);
+  await openBankSheet();
+  let body = screen.getByText("Every bank").parent;
+  while (body !== null && body.type !== "RCTScrollView") body = body.parent;
+  if (body === null) throw new Error("The sheet's body is not a scroll view.");
+
+  await fireEvent(body, "layout", {
+    nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 300 } },
+  });
+  await fireEvent(body, "contentSizeChange", 390, 900);
+
+  expect(body.props.scrollEnabled).not.toBe(false);
 });
 
 it("closes from its close button and gives the screen back", async () => {

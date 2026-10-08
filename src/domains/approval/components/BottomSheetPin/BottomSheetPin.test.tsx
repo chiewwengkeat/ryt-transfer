@@ -75,6 +75,16 @@ it("keeps Approve off until all six digits are in, counting them without showing
   expect(screen.getByRole("button", { name: "Approve" })).toBeDisabled();
 });
 
+it("gives a screen reader the Delete key by its label, never its glyph", async () => {
+  await openPinSheetWithBiometricsOff();
+
+  expect(screen.getByRole("button", { name: "Delete" })).toBeOnTheScreen();
+  expect(screen.queryByText("⌫")).toBeNull();
+  expect(
+    screen.getByText("⌫", { includeHiddenElements: true }),
+  ).toBeOnTheScreen();
+});
+
 it("drops touches while another app draws over the PIN pad, says why, and stops guarding once closed", async () => {
   await openPinSheetWithBiometricsOff();
   expect(isObscuredTouchGuardOn()).toBe(true);

@@ -73,7 +73,9 @@ export default function KeypadPin({
           onPress={onPressDelete}
           style={({ pressed }) => [styles.key, pressed && styles.keyPressed]}
         >
-          <Text style={styles.keyLabel}>⌫</Text>
+          <Text aria-hidden style={styles.keyLabel}>
+            ⌫
+          </Text>
         </Pressable>
       </View>
     </View>
