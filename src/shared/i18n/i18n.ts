@@ -16,7 +16,13 @@ export enum AppLanguage {
   Chinese = "zh-MY",
 }
 
-const APP_LANGUAGES = new Set<string>(Object.values(AppLanguage));
+// Never translated: each name stays in its own script, so a person finds their language whatever the app shows.
+export const APP_LANGUAGE_NAMES = {
+  [AppLanguage.English]: { full: "English", short: "EN" },
+  [AppLanguage.Malay]: { full: "Bahasa Malaysia", short: "BM" },
+  [AppLanguage.Chinese]: { full: "中文", short: "中文" },
+};
+
 const APP_LANGUAGE_BY_PHONE_LANGUAGE = new Map([
   ["en", AppLanguage.English],
   ["ms", AppLanguage.Malay],
@@ -39,17 +45,11 @@ export function initTranslations(
     resources[language] = joined;
   }
 
-  // Only a pick is stored: until there is one, every launch follows the phone's current language.
-  const pickedLanguage = kvStorage.getItemSync(PICKED_LANGUAGE_KEY);
   addI18nextPlugin(initReactI18next);
   void init({
     resources,
-    lng:
-      pickedLanguage !== null && APP_LANGUAGES.has(pickedLanguage)
-        ? pickedLanguage
-        : (APP_LANGUAGE_BY_PHONE_LANGUAGE.get(
-            getLocales()[0]?.languageCode ?? "",
-          ) ?? AppLanguage.English),
+    // Only a pick is stored: until there is one, every launch follows the phone's current language.
+    lng: readPickedAppLanguage() ?? findAppLanguageForPhone(),
     fallbackLng: AppLanguage.English,
     defaultNS: "common",
     // Synchronous, so the first render has its strings; under fake timers an async init never finishes.
@@ -58,7 +58,26 @@ export function initTranslations(
   });
 }
 
+export function readPickedAppLanguage() {
+  const storedLanguage = kvStorage.getItemSync(PICKED_LANGUAGE_KEY);
+  return Object.values(AppLanguage).find(
+    (language) => language === storedLanguage,
+  );
+}
+
 export function pickAppLanguage(language: AppLanguage) {
   kvStorage.setItemSync(PICKED_LANGUAGE_KEY, language);
   void changeLanguage(language);
+}
+
+export function followPhoneLanguage() {
+  kvStorage.removeItemSync(PICKED_LANGUAGE_KEY);
+  void changeLanguage(findAppLanguageForPhone());
+}
+
+function findAppLanguageForPhone() {
+  return (
+    APP_LANGUAGE_BY_PHONE_LANGUAGE.get(getLocales()[0]?.languageCode ?? "") ??
+    AppLanguage.English
+  );
 }
