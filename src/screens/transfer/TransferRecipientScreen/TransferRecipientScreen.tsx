@@ -50,7 +50,7 @@ export default function TransferRecipientScreen() {
           <ButtonPrimary
             label={t("recipient.continue")}
             onPress={() => {
-              // A DuitNow mobile ID is a Malaysian mobile number: 1 and 8 or 9 digits after 0, 60 or +60.
+              // A DuitNow mobile ID is a Malaysian mobile number.
               const national = /^(?:\+?60|0)(1\d{8,9})$/.exec(
                 mobile.replace(/[\s-]/g, ""),
               )?.[1];
