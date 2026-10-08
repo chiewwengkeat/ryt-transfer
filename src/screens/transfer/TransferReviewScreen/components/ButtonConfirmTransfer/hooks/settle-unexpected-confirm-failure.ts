@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 
+import { closeApprovalPinSheet } from "@/domains/approval/hooks/approval-pin-sheet";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
@@ -11,6 +12,8 @@ import {
 import { settleApprovalAnswer } from "./settle-approval-answer";
 
 export function settleUnexpectedConfirmFailure(queryClient: QueryClient) {
+  // A sheet left sending cannot be closed by the person, and nothing else will close it.
+  closeApprovalPinSheet();
   // Before the approval leaves the phone nothing can have moved, so review offers it again.
   // After, nothing proves where it ended, so it settles as an answer that never came.
   const flow = transferFlowStore.getState();

@@ -991,6 +991,35 @@ it("offers to try again or leave when the phone cannot read its approval key", a
   );
 });
 
+it("closes the PIN sheet and offers to try again or leave when the phone cannot read its approval key after the PIN", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+  for (const digit of "246810")
+    await fireEvent.press(await screen.findByRole("button", { name: digit }));
+  const readSecureValue = secureStoreNativeDouble.getValueWithKeyAsync;
+  jest
+    .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
+    .mockImplementation((key: string) =>
+      key.includes("possession-key-id")
+        ? Promise.reject(new Error("Test."))
+        : readSecureValue(key),
+    );
+
+  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
+
+  expect(
+    await screen.findByText(
+      "Something unexpected stopped the approval — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+  expect(countSent("POST", "/approve")).toBe(0);
+});
+
 it("offers to try again or leave when something unexpected fails before the transfer is sent", async () => {
   await openReviewOfRm100();
   jest
