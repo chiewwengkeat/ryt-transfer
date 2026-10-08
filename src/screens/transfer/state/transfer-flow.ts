@@ -71,7 +71,6 @@ function reduceTransferFlow(
     case TransferFlowActionType.ApprovalAttemptRefused:
     case TransferFlowActionType.ApprovalNotSent:
     case TransferFlowActionType.ApproveRefusedByHold:
-    case TransferFlowActionType.ApprovalReturnedToAmount:
     case TransferFlowActionType.ApprovalAnswered:
     case TransferFlowActionType.AnswerLost:
       return reduceApprovalEvent(flow, action);

@@ -32,7 +32,6 @@ export enum TransferFlowActionType {
   ApprovalAttemptRefused = "approval_attempt_refused",
   ApprovalNotSent = "approval_not_sent",
   ApproveRefusedByHold = "approve_refused_by_hold",
-  ApprovalReturnedToAmount = "approval_returned_to_amount",
   ApprovalAnswered = "approval_answered",
   AnswerLost = "answer_lost",
   FlowLeft = "flow_left",
@@ -174,10 +173,6 @@ export type ApprovalEvent =
       notice: TransferFlowScenario;
     }
   | { type: TransferFlowActionType.ApproveRefusedByHold; hold: TransferHold }
-  | {
-      type: TransferFlowActionType.ApprovalReturnedToAmount;
-      notice: TransferFlowScenario;
-    }
   | { type: TransferFlowActionType.ApprovalAnswered }
   | { type: TransferFlowActionType.AnswerLost };
 

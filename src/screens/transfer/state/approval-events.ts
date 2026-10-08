@@ -54,13 +54,6 @@ export function reduceApprovalEvent(
         draft: flow.draft,
         hold: action.hold,
       };
-    case TransferFlowActionType.ApprovalReturnedToAmount:
-      if (flow.step !== TransferFlowStep.Submitting) return flow;
-      return {
-        step: TransferFlowStep.Editing,
-        draft: flow.draft,
-        notice: action.notice,
-      };
     case TransferFlowActionType.ApprovalAnswered:
     case TransferFlowActionType.AnswerLost:
       if (flow.step !== TransferFlowStep.Submitting) return flow;

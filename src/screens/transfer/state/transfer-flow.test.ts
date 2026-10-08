@@ -143,28 +143,3 @@ it("takes a refused attempt back to approval on the same transfer and path, with
   });
   expect(transferFlowStore.getState()).not.toHaveProperty("attemptKey");
 });
-
-it("returns an approval the bank sent back to the amount step with its reason and the draft", () => {
-  confirmTransferOfRm100();
-  dispatchTransferFlow({
-    type: TransferFlowActionType.Created,
-    transferId: "trf_1",
-    challenge: "challenge",
-    expiresInSeconds: 60,
-  });
-  dispatchTransferFlow({
-    type: TransferFlowActionType.ApprovalSent,
-    attemptKey: "attempt-1",
-  });
-
-  dispatchTransferFlow({
-    type: TransferFlowActionType.ApprovalReturnedToAmount,
-    notice: TransferFlowScenario.BalanceOrLimitShortAtApproval,
-  });
-
-  expect(transferFlowStore.getState()).toMatchObject({
-    step: TransferFlowStep.Editing,
-    draft: { amount: { minor: 10_000 } },
-    notice: TransferFlowScenario.BalanceOrLimitShortAtApproval,
-  });
-});
