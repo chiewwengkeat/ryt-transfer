@@ -4,6 +4,10 @@ import { Pressable, StyleSheet, View } from "react-native";
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 import { formatMalaysianDayHeader } from "@/shared/lib/dates/dates";
 import { formatMoney, parseWireAmount } from "@/shared/lib/money/money";
+import {
+  traceFormatCalls,
+  useRenderTrace,
+} from "@/shared/observability/render-trace";
 import { colors, minTouchTarget, spacing } from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
@@ -21,10 +25,12 @@ export default function HeaderTransferDay({
   today,
   onToggle,
 }: Props) {
+  useRenderTrace("header", summary.date);
   const { t } = useTranslation("transfer");
-  const day = formatMalaysianDayHeader(summary.date, today);
+  const day = traceFormatCalls(formatMalaysianDayHeader)(summary.date, today);
   const net = parseWireAmount(summary.net);
-  const netText = net && formatMoney(net, { signDisplay: "exceptZero" });
+  const netText =
+    net && traceFormatCalls(formatMoney)(net, { signDisplay: "exceptZero" });
 
   return (
     <Pressable

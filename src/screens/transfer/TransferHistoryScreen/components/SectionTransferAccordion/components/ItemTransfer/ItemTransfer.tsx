@@ -10,6 +10,10 @@ import {
 import { MONEY_MOVED_SIGN } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { formatMalaysianTime } from "@/shared/lib/dates/dates";
 import { asSen, formatMoney, parseWireAmount } from "@/shared/lib/money/money";
+import {
+  traceFormatCalls,
+  useRenderTrace,
+} from "@/shared/observability/render-trace";
 import { colors, minTouchTarget, spacing } from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
@@ -19,6 +23,7 @@ interface Props {
   transfer: Transfer;
 }
 export default function ItemTransfer({ transfer }: Props) {
+  useRenderTrace("row", transfer.transferId);
   const { t } = useTranslation("transfer");
   const statusWord = {
     [TransferStatus.AwaitingApproval]: t(
@@ -36,7 +41,9 @@ export default function ItemTransfer({ transfer }: Props) {
   } satisfies Record<TransferStatus, string>;
   const amount = parseWireAmount(transfer.amount);
   const moneyMovedSign = MONEY_MOVED_SIGN[transfer.funds];
-  const transferTime = formatMalaysianTime(transfer.createdAt);
+  const transferTime = traceFormatCalls(formatMalaysianTime)(
+    transfer.createdAt,
+  );
 
   return (
     <Pressable
@@ -64,8 +71,8 @@ export default function ItemTransfer({ transfer }: Props) {
       {amount && (
         <TextBody strong>
           {moneyMovedSign === 0
-            ? formatMoney(amount)
-            : formatMoney(
+            ? traceFormatCalls(formatMoney)(amount)
+            : traceFormatCalls(formatMoney)(
                 { ...amount, minor: asSen(moneyMovedSign * amount.minor) },
                 { signDisplay: "exceptZero" },
               )}
