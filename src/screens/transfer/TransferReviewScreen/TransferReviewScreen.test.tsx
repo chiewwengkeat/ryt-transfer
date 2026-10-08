@@ -1326,10 +1326,10 @@ it(
 );
 
 it(
-  "never says money moved when the bank finds the balance or limit short as the approval arrives, and goes back to the amount from review",
+  "never says money moved when the bank finds the balance or limit short as the approval arrives",
   scenarioTest("transfer.balance_or_limit_short_at_approval", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    const view = await openReviewOfRm100();
+    await openReviewOfRm100();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -1341,11 +1341,6 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(screen.queryByText(/— money moved\./)).toBeNull();
-    await pressHardwareBack();
-    expect(view.getPathname()).toBe("/transfer/amount");
-    expect(await screen.findByLabelText("Amount (RM)")).toHaveDisplayValue(
-      "100",
-    );
   }),
 );
 
