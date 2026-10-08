@@ -69,6 +69,7 @@ const RETRY_WORDS = [
   )?.[1];
   return language === undefined ? [] : [{ word, language }];
 });
+const RESEND_BAN = "offer to send it again";
 // Fail-closed: any role not named here counts as pressable, a new message role included.
 const MESSAGE_ROLES = ["body"];
 const REGISTERED_TRANSFER_COMMON = Object.fromEntries(
@@ -134,8 +135,7 @@ function findRetryWordsOnPressableLabels(
   return sections
     .filter(({ labels }) =>
       labels.some(
-        ({ name, value }) =>
-          name === "Never" && value.startsWith("offer to send it again"),
+        ({ name, value }) => name === "Never" && value.startsWith(RESEND_BAN),
       ),
     )
     .flatMap(({ id }) =>
@@ -234,6 +234,80 @@ it("gives every scenario one of the four money states, each with its glossary ph
     MONEY_STATES,
   );
   expect(outsideTheFour).toEqual([]);
+});
+
+it("reads every row of the header's money and retry-word tables", () => {
+  const rowsBelowTableHeadings = matrixHeader
+    .split(/\n\s*\n/)
+    .filter((paragraph) => paragraph.startsWith("|"))
+    .flatMap((table) => table.trim().split("\n").slice(2));
+
+  expect(rowsBelowTableHeadings).toHaveLength(
+    MONEY_PHRASES.length + RETRY_WORDS.length,
+  );
+});
+
+it("writes every money phrase ending a Tell them exactly as the money table writes it", () => {
+  const endsWithAPhraseOnlyLoosely = (tellThem: string) => {
+    const looseEnding = tellThem.toLowerCase().replace(/[\p{P}\p{S}\s]+$/u, "");
+    return MONEY_PHRASES.map((phrases) => phrases[AppLanguage.English]).some(
+      (phrase) => looseEnding.endsWith(phrase) && !tellThem.endsWith(phrase),
+    );
+  };
+
+  expect(
+    [
+      "the transfer was declined — No money moved",
+      "a reference to quote to support — not confirmed yet.",
+      "the approval timed out — no money moved",
+      "the time it completed in Malaysia time — money moved",
+      "the registered name and bank",
+    ].filter(endsWithAPhraseOnlyLoosely),
+  ).toEqual([
+    "the transfer was declined — No money moved",
+    "a reference to quote to support — not confirmed yet.",
+  ]);
+  expect(
+    scenarioSections
+      .filter(({ labels }) =>
+        labels.some(
+          ({ name, value }) =>
+            name === "Tell them" && endsWithAPhraseOnlyLoosely(value),
+        ),
+      )
+      .map(({ id }) => id),
+  ).toEqual([]);
+});
+
+it('starts every Never that speaks of sending again with "offer to send it again"', () => {
+  const speaksOfResendingInOtherWords = (never: string) =>
+    /resend|send.*again/i.test(never) && !never.startsWith(RESEND_BAN);
+
+  expect(
+    [
+      "Offer to send it again",
+      "offer to resend it",
+      "Resend it for them",
+      "approve anyway, or offer to send it again",
+      "offer to send it again while the answer is awaited",
+      "approve with the phone's own passcode",
+    ].filter(speaksOfResendingInOtherWords),
+  ).toEqual([
+    "Offer to send it again",
+    "offer to resend it",
+    "Resend it for them",
+    "approve anyway, or offer to send it again",
+  ]);
+  expect(
+    scenarioSections
+      .filter(({ labels }) =>
+        labels.some(
+          ({ name, value }) =>
+            name === "Never" && speaksOfResendingInOtherWords(value),
+        ),
+      )
+      .map(({ id }) => id),
+  ).toEqual([]);
 });
 
 it("flags a money message without its state's phrase, in each language", () => {
