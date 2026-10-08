@@ -9,6 +9,7 @@ import { addUnauthorizedListener } from "@/shared/http/transport";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import { demoLayer } from "@/shell/app-launch";
 import { queryClient } from "@/shell/query-client";
+import { endSession } from "@/shell/session/end-session";
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
 import "@/shell/translations";
 
@@ -65,7 +66,10 @@ export default function ViewRoot() {
       {demoLayer !== null && (
         <demoLayer.OverlayDemo
           onResetDemo={async () => {
-            // The reset bank no longer knows this phone's keys, and pairing skips a phone that still holds keys.
+            // First: endSession's clear() leaves a mounted screen showing its last read, so it reads the reset bank now.
+            await queryClient.resetQueries();
+            // The reset bank knows none of this phone's keys. Pairing runs only once endSession has wiped their ids.
+            await endSession();
             await deleteApprovalKeys();
             await demoLayer?.pairPhoneAtFirstLaunch();
           }}
