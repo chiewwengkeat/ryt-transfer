@@ -43,7 +43,7 @@ it.each([
   ["/transfer/result/trf_1", "/"],
   ["/_sitemap", "/"],
 ])("opens the link %s at %s", (link, expectedPath) => {
-  expect(redirectSystemPath({ path: link })).toBe(expectedPath);
+  expect(redirectSystemPath({ path: link, initial: false })).toBe(expectedPath);
 });
 
 it.each([
@@ -53,9 +53,13 @@ it.each([
   "exp+ryt-transfer://transfer-history",
   "https://example.com/transfer",
   "transfer/review",
-])("drops %s, which is not in the app's own scheme", (link) => {
-  expect(redirectSystemPath({ path: link })).toBeNull();
-});
+])(
+  "drops %s, which is not in the app's own scheme, and opens Home for it at cold start",
+  (link) => {
+    expect(redirectSystemPath({ path: link, initial: false })).toBeNull();
+    expect(redirectSystemPath({ path: link, initial: true })).toBe("/");
+  },
+);
 
 it.each([
   "ryt-demo://transfer-history",
@@ -69,7 +73,7 @@ it.each([
     recipient: TEST_RECIPIENT,
   });
 
-  expect(redirectSystemPath({ path: link })).toBeNull();
+  expect(redirectSystemPath({ path: link, initial: false })).toBeNull();
 });
 
 it("still drops links after the transfer's screens close on an approval whose answer never came", () => {
@@ -109,5 +113,7 @@ it("still drops links after the transfer's screens close on an approval whose an
 
   dispatchTransferFlow({ type: TransferFlowActionType.FlowLeft });
 
-  expect(redirectSystemPath({ path: "ryt-demo://transfer" })).toBeNull();
+  expect(
+    redirectSystemPath({ path: "ryt-demo://transfer", initial: false }),
+  ).toBeNull();
 });

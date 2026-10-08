@@ -12,7 +12,15 @@ const LINKABLE_PATHS = [
   /^\/transfer-history\/[\w-]+$/,
 ];
 
-export function redirectSystemPath({ path }: { path: string }) {
+export function redirectSystemPath({
+  path,
+  initial,
+}: {
+  path: string;
+  initial: boolean;
+}) {
+  // Handed nothing at cold start, the router opens the root stack's first screen: the transfer flow, alone.
+  const dropped = initial ? "/" : null;
   const [, scheme = "", linkedPath = path] =
     /^([a-z][a-z\d+.-]*):(.*)$/i.exec(path) ?? [];
   // Android hands any app's intent data over as given, so a slash-led path is a link too: it skips only this check.
@@ -21,9 +29,9 @@ export function redirectSystemPath({ path }: { path: string }) {
     !path.startsWith("/") &&
     !collectManifestSchemes().includes(scheme.toLowerCase())
   )
-    return null;
+    return dropped;
   // A link never replaces a transfer in progress.
-  if (isTransferDraftOpen(transferFlowStore.getState())) return null;
+  if (isTransferDraftOpen(transferFlowStore.getState())) return dropped;
   const pathname = `/${linkedPath.split(/[?#]/)[0]?.replace(/^\/+|\/+$/g, "") ?? ""}`;
   return LINKABLE_PATHS.some((linkable) => linkable.test(pathname))
     ? pathname
