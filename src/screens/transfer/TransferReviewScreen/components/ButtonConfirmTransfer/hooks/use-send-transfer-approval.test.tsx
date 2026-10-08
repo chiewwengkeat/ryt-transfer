@@ -1069,19 +1069,22 @@ it("leaves a newer transfer alone when the refusal of one the person left is set
       { once: true },
     ),
   );
+  let recordDeleteHeld = false;
   let releaseRecordDelete: () => void = () => undefined;
   const deleteRecordForReal = secureStoreNativeDouble.deleteValueWithKeyAsync;
-  const recordDelete = jest
+  jest
     .spyOn(secureStoreNativeDouble, "deleteValueWithKeyAsync")
     .mockImplementationOnce(async (key) => {
+      recordDeleteHeld = true;
       await new Promise<void>((release) => {
         releaseRecordDelete = release;
       });
       return deleteRecordForReal(key);
     });
   await confirmRm100Transfer();
+  // ⛔ Wait on the hold, never the spy's calls: an earlier test's spy can still be in place, having seen this test's earlier deletes.
   await waitFor(() => {
-    expect(recordDelete).toHaveBeenCalled();
+    expect(recordDeleteHeld).toBe(true);
   });
 
   // Review offers no way back while sending, so this stands in for any route that still could.
