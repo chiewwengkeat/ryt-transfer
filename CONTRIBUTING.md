@@ -14,7 +14,7 @@ pnpm test    # Jest, then the tests of the repo's own scripts and lint rules
 
 The pre-commit hook lints, formats and secret-scans the staged files, then runs the placement check over the commit's own tree. The `commit-msg` hook lints the message, and CI lints every pushed message again.
 
-CI also runs `production-bundle`, a job of its own that exports the app in each variant, and with none set (`scripts/check-production-bundle.js`). It fails when an export does not finish, when a production or unset export carries code from `src/mocks/` or msw, or when a demo or development export lacks that code, since then a clean production export proves nothing.
+CI also runs `production-bundle`, a job of its own that exports the app in each variant, and with none set (`scripts/check-production-bundle.js`). It fails when a production or unset export carries code from `src/mocks/` or msw, or when a demo or production export carries the development-only re-render counter. It also fails when an export does not finish or writes no bundle, when no source map lists `src/app/`, or when a build that should carry that code lacks it, since then a clean export proves nothing.
 
 ## Layout
 
@@ -25,13 +25,13 @@ The app is cut into vertical slices of two kinds:
 
 A screens folder and a domain about the same thing share a singular name, as `src/screens/transfer/` and `src/domains/transfer/` do. Around the slices:
 
-| Folder        | Holds                                                                                                                                           |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/app/`    | The routes, kept thin: they re-export the screens and the shell's views, and the layouts and `+native-intent.tsx` hold the navigation.          |
-| `src/shell/`  | The app's root: its views, its providers, the query client, the translation bundles it registers, and the only code that may load `src/mocks/`. |
-| `src/shared/` | Code that knows nothing about banking: UI, theme, i18n, HTTP, config, platform wrappers, observability, plain helpers.                          |
-| `src/mocks/`  | The mock bank and its scenarios, for development and demo builds only.                                                                          |
-| `src/test/`   | The test harness.                                                                                                                               |
+| Folder        | Holds                                                                                                                                                                                                             |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/`    | The routes, kept thin: they re-export the screens and the shell's views. A flow's layout holds its navigator, `+native-intent.tsx` filters the links that open the app, and the root layout re-exports the shell. |
+| `src/shell/`  | The app's root: its views, its providers, the root stack, the query client, the translation bundles it registers, and the one place app code loads `src/mocks/` from.                                             |
+| `src/shared/` | Code that knows nothing about banking: UI, theme, i18n, HTTP, config, platform wrappers, observability, plain helpers.                                                                                            |
+| `src/mocks/`  | The mock bank and its scenarios, for development and demo builds only.                                                                                                                                            |
+| `src/test/`   | The test harness.                                                                                                                                                                                                 |
 
 ### Adding a slice
 
@@ -48,7 +48,7 @@ The placement check fails any other entry in a slice (`scripts/slice-layout.js`)
 
 Imports run one way: a screens folder may use domains and shared code, a domain only itself and shared code, and shared code only shared code. Nothing imports sideways: no screens folder imports another, no domain imports another, and a screen's own `components/` and `hooks/` are private to that screen.
 
-App code outside a domain reaches it only through its public files: an endpoint's `<endpoint>.ts` and `<endpoint>.type.ts`, a domain component's own file, the domain's `api/<area>.keys.ts`, and the files directly in its `hooks/`. Routes and the shell reach a screens folder only through a screen's entry file and the folder's `state/`. The shell also imports the `i18n/` bundles of screens folders and domains alike, which it registers. Only the shell may load `src/mocks/`, and only through `require`, never an `import`. The test harness in `src/test/` may import from any slice, the mock bank included; any other test keeps the import rules of the code beside it and may also import the harness.
+App code outside a domain reaches it only through its public files: an endpoint's `<endpoint>.ts` and `<endpoint>.type.ts`, a domain component's own file, the domain's `api/<area>.keys.ts`, and the files directly in its `hooks/`. Routes and the shell reach a screens folder only through a screen's entry file and the folder's `state/`. The shell also imports the `i18n/` bundles of screens folders and domains alike, which it registers. In app code, only the shell may load `src/mocks/`, and only through `require`, never an `import`. Tests are not app code: the test harness in `src/test/` may import from any slice, the mock bank included; any other test keeps the import rules of the code beside it and may also import the harness.
 
 `eslint.boundaries.mjs` holds the slice rules and `eslint.bans.mjs` the import bans; `pnpm lint` fails a breach of either.
 
@@ -61,9 +61,9 @@ Colocation first: a piece of code lives as close to its users as possible. Most 
 3. Used by two or more screens folders, or by the shell → `src/domains/<area>/components/<Component>/`, in the area whose data it shows.
 4. Knows nothing about banking → `src/shared/ui/`.
 
-Hooks climb the same ladder in `hooks/` folders, except that a hook that knows nothing about banking and that only the shell uses stays in `src/shell/` until code outside the shell uses it. A component that only one other component uses nests in that component's own `components/`. The views the shell is built from, which the root layout and the not-found route re-export the way a screen's route re-exports its screen, sit in `src/shell/<Component>/`, and a component only one of them uses nests inside it. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
+Hooks climb the same ladder in `hooks/` folders, except that a hook only the shell uses, which knows nothing about banking beyond the app's routes, stays in `src/shell/` until code outside the shell uses it: the shell holds the root stack, so a hook that reads the current route, such as the one that lifts the capture block on a receipt, belongs beside it. A component that only one other component uses nests in that component's own `components/`. The views the shell is built from, which the root layout and the not-found route re-export the way a screen's route re-exports its screen, sit in `src/shell/<Component>/`, and a component only one of them uses nests inside it. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
 
-`scripts/check-placement-ladder.js` fails a component or hook placed higher than its users need, or one no app code uses, and the import rules fail one placed too low. It checks every component and hook in a `components/` or `hooks/` folder of a screens folder, a domain or shared code; the base components directly in `src/shared/ui/` are exempt, since they are built before any screen uses them. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case of who uses a piece, the script is the authority, not this summary. It cannot tell whether a piece knows about banking, so that call is the reviewer's: a hook that knows nothing about banking and that only the shell uses passes the script in a domain, and still belongs in `src/shell/`.
+`scripts/check-placement-ladder.js` fails a component or hook placed higher than its users need, or one no app code uses, and the import rules fail one placed too low. It checks every component and hook in a `components/` or `hooks/` folder of a screens folder, a domain or shared code; the base components directly in `src/shared/ui/` are exempt, since they are built before any screen uses them. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case of who uses a piece, the script is the authority, not this summary. It cannot tell whether a piece knows about banking, so that call is the reviewer's: a hook only the shell uses, knowing nothing of banking beyond the routes, passes the script in a domain, and still belongs in `src/shell/`. It never looks inside `src/shell/`, so the nesting of the shell's own pieces is the reviewer's to hold too.
 
 ## Names and file shape
 
@@ -96,7 +96,7 @@ Test a route the way a person uses it, against the mock bank:
 - Query by accessible name, through `accessibilityRole` and `accessibilityLabel`; lint bans `testID`.
 - Assert what a person could observe: text, roles, where they ended up, and the requests that left the app. Never assert on component state or on which module a value passed through.
 
-Only these are tested below the route: the money, date and validation helpers, the transport, the translation bundles, and other logic with more cases than a route test can meaningfully cover, such as the mock bank's rules or the query client's retries. A component is tested through a route that renders it.
+Only these are tested below the route: the money and date helpers, the transport, the platform wrappers, the translation bundles and the scenario matrix's checks, a state no route can stage, such as a launch after a reinstall, and other logic with more cases than a route test can meaningfully cover, such as the mock bank's rules or the query client's retries. A component is tested through a route that renders it.
 
 ## Translations
 
