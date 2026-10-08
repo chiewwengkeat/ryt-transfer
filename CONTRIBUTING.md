@@ -87,7 +87,7 @@ Test a route the way a person uses it, against the mock bank:
 
 Every string the production app shows comes from a bundle named by its language's code in `AppLanguage` (`src/shared/i18n/i18n.ts`): `en-MY` for English, `ms-MY` for Malay and `zh-MY` for Chinese. A Malay or Chinese string is a machine translation, set as it comes out, with no human review.
 
-- A slice's bundle has one top-level key per screen, plus `common` for what two or more of its screens share; a scenario's words sit under `common.<name>`. A leaf key is named for its role (`title`, `body_secondary`), never numbered.
+- A slice's bundle has a top-level key for each screen, and for each component with words of its own, plus `common` for what two or more of them share; a scenario's words sit under `common.<name>`. A leaf key is named for its role (`title`, `body_secondary`), never numbered.
 - A Malay or Chinese bundle has every key of the English bundle beside it, and each of its strings keeps the English string's `{{placeholders}}`.
 - A plural comes as a twin. English has `_one` and `_other`; Malay and Chinese repeat their `_other` string under `_one`. Hermes lacks `Intl.PluralRules`, so i18next reads `_one` for a count of one in every language, and a missing twin shows English.
 - A money state's phrase appears in each language exactly as the matrix's money table gives it.
