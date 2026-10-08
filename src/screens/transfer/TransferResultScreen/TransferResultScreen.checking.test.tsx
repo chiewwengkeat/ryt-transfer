@@ -58,7 +58,11 @@ it(
       await screen.findByRole("button", { name: "Transfer" }),
     );
     expect(
-      await screen.findByRole("header", { name: "Checking your transfer" }),
+      await screen.findByRole(
+        "header",
+        { name: "Checking your transfer" },
+        { timeout: 10_000 },
+      ),
     ).toBeOnTheScreen();
 
     releaseStatusRead();

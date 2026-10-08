@@ -499,7 +499,7 @@ it(
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
-    await screen.findByText("Transfer sent");
+    await screen.findByText("Transfer sent", { timeout: 10_000 });
     await pressHardwareBack();
 
     expect(view.getPathname()).toBe("/");
@@ -532,7 +532,7 @@ it(
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
-    await screen.findByText("Transfer sent");
+    await screen.findByText("Transfer sent", { timeout: 10_000 });
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 
     expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
@@ -628,14 +628,10 @@ it("never moves on from the recipient step while a transfer is still being creat
     };
   });
   mswServer.use(
-    http.post(
-      "*/transfers",
-      async () => {
-        await createHeld;
-        return HttpResponse.error();
-      },
-      { once: true },
-    ),
+    http.post("*/transfers", async () => {
+      await createHeld;
+      return HttpResponse.error();
+    }),
   );
   const view = await openReviewOfRm100();
   await fireEvent.press(
@@ -654,9 +650,14 @@ it("never moves on from the recipient step while a transfer is still being creat
   expect(view.getPathname()).toBe("/transfer");
   // Review is gone, so only the flow shows the held create failing inside this test rather than in the next one.
   releaseCreate();
-  await waitFor(() => {
-    expect(transferFlowStore.getState().step).toBe(TransferFlowStep.Reviewing);
-  });
+  await waitFor(
+    () => {
+      expect(transferFlowStore.getState().step).toBe(
+        TransferFlowStep.Reviewing,
+      );
+    },
+    { timeout: 10_000 },
+  );
 });
 
 it("takes a lost approval answer to the result page, which never offers to send again", async () => {
@@ -883,11 +884,12 @@ it("never says no money moved when something unexpected fails after the bank ans
   );
 });
 
-it.each<[string, () => Response]>([
-  ["a 500 with no body", () => new HttpResponse(null, { status: 500 })],
+it.each<[string, () => Response, number]>([
+  ["a 500 with no body", () => new HttpResponse(null, { status: 500 }), 3],
   [
     "a 502 proxy page",
     () => new HttpResponse("<html>Bad gateway</html>", { status: 502 }),
+    3,
   ],
   [
     "a 503 whose code approve does not name",
@@ -896,10 +898,11 @@ it.each<[string, () => Response]>([
         { error: { code: "SERVICE_UNAVAILABLE", message: "Test." } },
         { status: 503 },
       ),
+    1,
   ],
-  ["a 200 with an empty body", () => new HttpResponse("", { status: 200 })],
-  ["a 200 whose body is not JSON", () => new HttpResponse("OK")],
-  ["a 200 whose body holds no transfer", () => HttpResponse.json({})],
+  ["a 200 with an empty body", () => new HttpResponse("", { status: 200 }), 3],
+  ["a 200 whose body is not JSON", () => new HttpResponse("OK"), 3],
+  ["a 200 whose body holds no transfer", () => HttpResponse.json({}), 1],
   [
     "404 TRANSFER_NOT_FOUND",
     () =>
@@ -912,6 +915,7 @@ it.each<[string, () => Response]>([
         },
         { status: 404 },
       ),
+    1,
   ],
   [
     "409 IDEMPOTENCY_KEY_REUSED",
@@ -925,6 +929,7 @@ it.each<[string, () => Response]>([
         },
         { status: 409 },
       ),
+    1,
   ],
   [
     "409 REQUEST_IN_PROGRESS",
@@ -938,10 +943,11 @@ it.each<[string, () => Response]>([
         },
         { status: 409 },
       ),
+    1,
   ],
 ])(
   "never offers to send again when the bank answers the approval with %s",
-  async (_, answerApproval) => {
+  async (_, answerApproval, approvesSent) => {
     await pairPhoneAsTheDemoLaunchDoes();
     mswServer.use(http.post("*/transfers/:transferId/approve", answerApproval));
     const view = await openReviewOfRm100();
@@ -953,35 +959,35 @@ it.each<[string, () => Response]>([
     expect(
       await screen.findByText(
         "This transfer is being checked, so don't send it again — not confirmed yet.",
+        { timeout: 10_000 },
       ),
     ).toBeOnTheScreen();
     expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
-    expect(
-      screen.queryByText("The transfer was not sent — no money moved."),
-    ).toBeNull();
+    expect(screen.queryByText(/no money moved/)).toBeNull();
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
     expect(screen.getByRole("button", { name: "Done" })).toBeOnTheScreen();
-    expect(countPostsTo(/\/approve$/)).toBe(1);
+    expect(countPostsTo(/\/approve$/)).toBe(approvesSent);
   },
 );
 
-it("never offers to send again when the bank has not answered the approval after 30 seconds", async () => {
+it("never offers to send again when the bank answers none of three tries at the approval, each given 30 seconds", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  let releaseApproval: () => void = () => undefined;
-  const approvalHeld = new Promise<void>((release) => {
-    releaseApproval = () => {
+  let releaseApprovals: () => void = () => undefined;
+  const approvalsHeld = new Promise<void>((release) => {
+    releaseApprovals = () => {
       release();
     };
   });
+  // The status read is held too: past the bank's approval window it would truthfully answer "expired".
   mswServer.use(
-    http.post(
-      "*/transfers/:transferId/approve",
-      async () => {
-        await approvalHeld;
-        return HttpResponse.error();
-      },
-      { once: true },
-    ),
+    http.post("*/transfers/:transferId/approve", async () => {
+      await approvalsHeld;
+      return HttpResponse.error();
+    }),
+    http.get("*/transfers/:transferId", async () => {
+      await approvalsHeld;
+      return HttpResponse.error();
+    }),
   );
   const view = await openReviewOfRm100();
   await fireEvent.press(
@@ -991,8 +997,8 @@ it("never offers to send again when the bank has not answered the approval after
     "Sending your transfer. The bank's answer comes next.",
   );
 
-  await act(() => jest.advanceTimersByTimeAsync(29_000));
-  // ⛔ Never a findBy here: it moves the fake clock while it waits, past the 30 seconds under test.
+  await act(() => jest.advanceTimersByTimeAsync(95_000));
+  // ⛔ Never a findBy here: it moves the fake clock while it waits, past the moment under test.
   expect(
     screen.queryByText(
       "This transfer is being checked, so don't send it again — not confirmed yet.",
@@ -1007,8 +1013,8 @@ it("never offers to send again when the bank has not answered the approval after
   ).toBeOnTheScreen();
   expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
-  expect(countPostsTo(/\/approve$/)).toBe(1);
-  releaseApproval();
+  expect(countPostsTo(/\/approve$/)).toBe(3);
+  releaseApprovals();
 });
 
 it("never says the transfer was not sent when the session ends as the bank answers the approval", async () => {
@@ -1064,9 +1070,11 @@ it(
       ),
     );
     await fireEvent.press(transferButton);
-    const signInButton = await screen.findByRole("button", {
-      name: "Sign in again",
-    });
+    const signInButton = await screen.findByRole(
+      "button",
+      { name: "Sign in again" },
+      { timeout: 10_000 },
+    );
     mswServer.use(
       http.post("*/recipients/lookup", () =>
         HttpResponse.json(

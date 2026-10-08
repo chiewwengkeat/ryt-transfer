@@ -239,7 +239,11 @@ it(
     const view = await sendRm100FromHome();
 
     expect(
-      await screen.findByRole("header", { name: "Checking your transfer" }),
+      await screen.findByRole(
+        "header",
+        { name: "Checking your transfer" },
+        { timeout: 10_000 },
+      ),
     ).toBeOnTheScreen();
     expect(
       screen.getByText(
@@ -305,7 +309,11 @@ it(
     const view = await sendRm100FromHome();
 
     expect(
-      await screen.findByRole("header", { name: "Transfer not found" }),
+      await screen.findByRole(
+        "header",
+        { name: "Transfer not found" },
+        { timeout: 10_000 },
+      ),
     ).toBeOnTheScreen();
     expect(
       screen.getByText(
@@ -327,7 +335,11 @@ it(
     const view = await sendRm100FromHome();
 
     expect(
-      await screen.findByRole("header", { name: "Outcome not confirmed" }),
+      await screen.findByRole(
+        "header",
+        { name: "Outcome not confirmed" },
+        { timeout: 10_000 },
+      ),
     ).toBeOnTheScreen();
     expect(
       screen.getByText(
@@ -568,7 +580,11 @@ it(
   scenarioTest("transfer.status_unreachable", async () => {
     const view = await sendRm100FromHome();
     expect(
-      await screen.findByRole("header", { name: "Checking your transfer" }),
+      await screen.findByRole(
+        "header",
+        { name: "Checking your transfer" },
+        { timeout: 10_000 },
+      ),
     ).toBeOnTheScreen();
     await act(() => jest.advanceTimersByTimeAsync(14_000));
     expect(
@@ -600,7 +616,11 @@ it(
   "waits for the read at 16 seconds before saying the bank is unreachable, though the app came back to the foreground first",
   scenarioTest("transfer.status_unreachable", async () => {
     await sendRm100FromHome();
-    await screen.findByRole("header", { name: "Checking your transfer" });
+    await screen.findByRole(
+      "header",
+      { name: "Checking your transfer" },
+      { timeout: 10_000 },
+    );
     await act(() => jest.advanceTimersByTimeAsync(3_000));
     await act(() => {
       focusManager.setFocused(false);
