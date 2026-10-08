@@ -111,6 +111,7 @@
   "history": {
     "title": "Transfer history",
     "back": "Back",
+    "navigate_up": "Navigate up",
     "empty": {
       "title": "No transfers yet",
       "body": "Transfers you send or receive will show here."
