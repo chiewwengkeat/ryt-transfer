@@ -1423,17 +1423,18 @@ it.each([
 );
 
 it.each([
-  ["wrong", []],
+  ["wrong", [], "That PIN is incorrect. You have 2 tries left."],
   [
     "locked",
     [
       "That PIN is incorrect. You have 2 tries left.",
       "That PIN is incorrect. You have 1 try left.",
     ],
+    "Your PIN is locked. Reset it in the app's security settings.",
   ],
 ])(
   "leaves a newer transfer being sent alone when one the person left finishes refusing its %s PIN afterwards",
-  async (_, earlierRefusals) => {
+  async (_, earlierRefusals, leftTransfersRefusal) => {
     let recordDeleteHeld = false;
     let releaseRecordDelete: () => void = () => undefined;
     let releaseNewerApproval: () => void = () => undefined;
@@ -1521,6 +1522,9 @@ it.each([
       releaseRecordDelete();
       await jest.advanceTimersByTimeAsync(1_000);
     });
+    expect(
+      screen.queryByText(leftTransfersRefusal, behindTheSendingSheet),
+    ).toBeNull();
     releaseNewerApproval();
 
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();

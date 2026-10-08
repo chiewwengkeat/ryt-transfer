@@ -153,10 +153,10 @@ export function useSendTransferApproval() {
             : undefined;
         if (pinRefusal?.code === ApproveTransferErrorCode.PinIncorrect) {
           await forgetPendingTransfer();
-          if (!noLongerOnThisTransfer())
-            dispatchTransferFlow({
-              type: TransferFlowActionType.ApprovalAttemptRefused,
-            });
+          if (noLongerOnThisTransfer()) return null;
+          dispatchTransferFlow({
+            type: TransferFlowActionType.ApprovalAttemptRefused,
+          });
           refusal = t("common.pin_incorrect.body", {
             count: pinRefusal.attemptsRemaining,
           });
@@ -168,7 +168,9 @@ export function useSendTransferApproval() {
             dispatchTransferFlow({
               type: TransferFlowActionType.ApprovalAttemptRefused,
             });
+          // Remembered even once left: the bank's lock holds for every transfer, the newer one's included.
           await rememberApprovalPinLocked();
+          if (noLongerOnThisTransfer()) return null;
           await showApprovalPinLocked({
             ...words,
             refusal: t("common.pin_locked.body"),
