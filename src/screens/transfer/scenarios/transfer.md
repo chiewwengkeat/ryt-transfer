@@ -392,7 +392,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 `transfer.approval_expired`
 - **When:** the bank says the 60-second approval window has passed (`APPROVAL_EXPIRED`)
 - **Money:** no money moved
-- **Shown as:** on the review step
+- **Shown as:** on the review step, or on the result page when the phone checked an approval whose answer never came
 - **Tell them:** the approval timed out — no money moved
 - **They can:** start again, which creates a new transfer
 - **Never:** decide it timed out from the phone's own clock
