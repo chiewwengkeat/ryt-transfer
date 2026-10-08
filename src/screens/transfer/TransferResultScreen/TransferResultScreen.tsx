@@ -3,6 +3,8 @@ import { notificationAsync, NotificationFeedbackType } from "expo-haptics";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { StyleSheet } from "react-native";
+import Animated, { Keyframe } from "react-native-reanimated";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
@@ -11,7 +13,9 @@ import {
   useTransferStatusCheck,
 } from "@/domains/transfer/hooks/transfer-status-checks";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
+import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
 import { trackEvent } from "@/shared/observability/observability";
+import { spacing } from "@/shared/theme/theme";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
@@ -103,35 +107,52 @@ export default function TransferResultScreen() {
           />
         }
       >
-        <TextOutcome
-          scenario={scenario}
-          transfer={transfer.data}
-          transferId={transferId}
-        />
-        {scenario === TransferOutcomeScenario.Completed && transfer.data && (
-          <SectionTransferDetails transfer={transfer.data} />
-        )}
-        {[
-          TransferOutcomeScenario.OutcomeUnexpected,
-          TransferOutcomeScenario.LastTransferNotFound,
-          TransferOutcomeScenario.RecoveryUnexpected,
-        ].includes(scenario) && (
-          <ButtonSecondary
-            label={t("result.check_history")}
-            onPress={() => {
-              router.push("/transfer-history");
-            }}
+        {/* Unkeyed: a remount would reset TextOutcome's focus and its announcement of a settled outcome. */}
+        <Animated.View
+          entering={new Keyframe({
+            0: { opacity: 0, transform: [{ scale: 0.96 }] },
+            100: {
+              opacity: 1,
+              transform: [{ scale: 1 }],
+              easing: standardEasing,
+            },
+          }).duration(motionDurations.screenContentEntrance)}
+          style={styles.outcome}
+        >
+          <TextOutcome
+            scenario={scenario}
+            transfer={transfer.data}
+            transferId={transferId}
           />
-        )}
-        {scenario === TransferOutcomeScenario.OutcomeUnexpected && (
-          <ButtonSecondary
-            label={t("common.outcome_unexpected.load_again")}
-            onPress={() => {
-              void transfer.refetch();
-            }}
-          />
-        )}
+          {scenario === TransferOutcomeScenario.Completed && transfer.data && (
+            <SectionTransferDetails transfer={transfer.data} />
+          )}
+          {[
+            TransferOutcomeScenario.OutcomeUnexpected,
+            TransferOutcomeScenario.LastTransferNotFound,
+            TransferOutcomeScenario.RecoveryUnexpected,
+          ].includes(scenario) && (
+            <ButtonSecondary
+              label={t("result.check_history")}
+              onPress={() => {
+                router.push("/transfer-history");
+              }}
+            />
+          )}
+          {scenario === TransferOutcomeScenario.OutcomeUnexpected && (
+            <ButtonSecondary
+              label={t("common.outcome_unexpected.load_again")}
+              onPress={() => {
+                void transfer.refetch();
+              }}
+            />
+          )}
+        </Animated.View>
       </ViewScreenFrame>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  outcome: { gap: spacing.md },
+});
