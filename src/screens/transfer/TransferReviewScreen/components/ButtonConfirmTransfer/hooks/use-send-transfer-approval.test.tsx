@@ -6,7 +6,10 @@ import { AppState } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { approvalPinSheetStore } from "@/domains/approval/hooks/approval-pin-sheet";
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import {
+  approvalSettingsStore,
+  notifyApprovalPinReset,
+} from "@/domains/approval/hooks/approval-settings";
 import { listPendingTransfers } from "@/domains/transfer/hooks/pending-transfers";
 import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
 import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
@@ -219,6 +222,32 @@ it("asks for no PIN to set approval up again while the bank holds the PIN locked
       ),
     ).toBeOnTheScreen();
   })();
+});
+
+it("opens the keypad again once the host app reports the PIN reset", async () => {
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      () =>
+        HttpResponse.json(
+          { error: { code: "PIN_LOCKED", message: "Test." } },
+          { status: 423 },
+        ),
+      { once: true },
+    ),
+  );
+  await confirmRm100ApprovedByPin();
+  await approveWithPin(DEMO_PIN);
+  await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
+  await screen.findByText(
+    "Your PIN is locked. Reset it in the app's security settings.",
+  );
+
+  await act(() => notifyApprovalPinReset());
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  await approveWithPin(DEMO_PIN);
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
 });
 
 async function readWhatTheAppStillHolds() {

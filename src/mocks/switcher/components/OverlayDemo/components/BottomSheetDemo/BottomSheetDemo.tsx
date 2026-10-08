@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import { useStore } from "zustand";
 
-import { forgetApprovalPinLock } from "@/domains/approval/hooks/approval-pin-lock";
+import { notifyApprovalPinReset } from "@/domains/approval/hooks/approval-settings";
 import {
   clearTransferScenario,
   isDemoPinLocked,
@@ -48,7 +48,7 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
             label={t("bottom_sheet_demo.unlock_pin")}
             onPress={() => {
               unlockDemoPin();
-              void forgetApprovalPinLock();
+              void notifyApprovalPinReset();
               onClose();
             }}
           />
@@ -96,7 +96,7 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
         label={t("bottom_sheet_demo.reset")}
         onPress={() => {
           onClose();
-          void resetDemoBank().then(onResetDemo);
+          void resetDemoBank().then(notifyApprovalPinReset).then(onResetDemo);
         }}
       />
     </BottomSheetFrame>
