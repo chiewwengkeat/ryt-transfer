@@ -31,11 +31,16 @@ export const getLookupRecipientOptions = (
   recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }>,
 ) =>
   queryOptions({
-    queryKey: transferKeys.lookup(recipient),
+    // One account number at two banks is two recipients.
+    queryKey: [...transferKeys.lookup(recipient), recipient.bankCode ?? null],
     queryFn: ({ signal }) =>
       requestJson<LookupRecipientResponse>("/recipients/lookup", {
         method: "POST",
-        body: recipient,
+        body: {
+          idType: recipient.idType,
+          idValue: recipient.idValue,
+          bankCode: recipient.bankCode,
+        } satisfies LookupRecipientRequest,
         signal,
       }),
     // Each answer mints a new recipient reference: review keeps the one it showed, and reopening asks afresh.

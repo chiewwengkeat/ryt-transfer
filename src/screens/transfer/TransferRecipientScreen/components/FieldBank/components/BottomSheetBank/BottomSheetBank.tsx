@@ -1,0 +1,77 @@
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text } from "react-native";
+
+import { useListBanks } from "@/domains/transfer/api/list-banks/list-banks";
+import { useIsOffline } from "@/shared/platform/offline";
+import { colors, minTouchTarget, typography } from "@/shared/theme/theme";
+import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
+import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
+import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
+import Loader from "@/shared/ui/Loader/Loader";
+
+interface Props {
+  onBankChosen: (bankCode: string) => void;
+  onClose: () => void;
+}
+export default function BottomSheetBank({ onBankChosen, onClose }: Props) {
+  const { t } = useTranslation("transfer");
+  const banks = useListBanks();
+  // The shell's offline notice already explains a list that cannot load.
+  const offline = useIsOffline();
+  const [bankSearch, setBankSearch] = useState("");
+
+  return (
+    <BottomSheetFrame
+      title={t("recipient.bank_sheet_title")}
+      closeLabel={t("recipient.close_sheet")}
+      onClose={onClose}
+      searchField={{
+        label: t("recipient.bank_search_label"),
+        value: bankSearch,
+        onChangeText: setBankSearch,
+      }}
+    >
+      {banks.isError ? (
+        !offline && (
+          <>
+            <BannerNotice
+              tone="negative"
+              message={t("common.recipient_unexpected.body")}
+            />
+            <ButtonSecondary
+              label={t("common.recipient_unexpected.retry")}
+              onPress={() => {
+                void banks.refetch();
+              }}
+            />
+          </>
+        )
+      ) : banks.data === undefined ? (
+        <Loader />
+      ) : (
+        [...banks.data.values()]
+          .filter((bank) =>
+            bank.name.toLowerCase().includes(bankSearch.trim().toLowerCase()),
+          )
+          .map((bank) => (
+            <Pressable
+              key={bank.bankCode}
+              accessibilityRole="button"
+              onPress={() => {
+                onBankChosen(bank.bankCode);
+              }}
+              style={styles.bank}
+            >
+              <Text style={styles.bankName}>{bank.name}</Text>
+            </Pressable>
+          ))
+      )}
+    </BottomSheetFrame>
+  );
+}
+
+const styles = StyleSheet.create({
+  bank: { minHeight: minTouchTarget, justifyContent: "center" },
+  bankName: { ...typography.body, color: colors.textPrimary },
+});

@@ -25,6 +25,7 @@ export default function ChipIdType({ idType, onIdTypeChange }: Props) {
       {[
         RecipientIdType.Mobile,
         RecipientIdType.Nric,
+        RecipientIdType.AccountNumber,
         RecipientIdType.Passport,
         RecipientIdType.Brn,
         RecipientIdType.ArmyPolice,

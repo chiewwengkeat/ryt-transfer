@@ -44,7 +44,9 @@
       "title": "Recent recipient chosen"
     },
     "recipient_unexpected": {
-      "title": "Something unexpected while choosing the recipient"
+      "title": "Something unexpected while choosing the recipient",
+      "body": "Something unexpected went wrong.",
+      "retry": "Try again"
     },
     "amount_too_high": {
       "title": "Amount over the balance or a limit",
@@ -264,6 +266,12 @@
       "army_police": "Army or police number"
     },
     "mobile_placeholder": "012-345 6789",
+    "bank_label": "Bank",
+    "bank_placeholder": "Choose a bank",
+    "bank_missing": "Choose the bank the account is with.",
+    "bank_sheet_title": "Choose a bank",
+    "bank_search_label": "Search banks",
+    "close_sheet": "Close",
     "continue": "Continue",
     "home": "Back to Home"
   },

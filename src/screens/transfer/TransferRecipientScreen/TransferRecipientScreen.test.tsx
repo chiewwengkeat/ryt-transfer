@@ -105,6 +105,55 @@ it("shows review a passport recipient under its own label, masked", async () => 
   expect(screen.getByText("Passport number")).toBeOnTheScreen();
 });
 
+it("sends to an account number at the bank picked from a search", async () => {
+  await renderRoute("/transfer");
+  await fireEvent.press(
+    await screen.findByRole("radio", { name: "Account number" }),
+  );
+  await fireEvent.changeText(
+    screen.getByLabelText("Account number"),
+    "5123 4567 8901",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Bank" }));
+  await fireEvent.changeText(
+    await screen.findByLabelText("Search banks"),
+    "public",
+  );
+  const publicBank = await screen.findByRole("button", {
+    name: "Public Bank",
+  });
+
+  expect(
+    screen.queryByRole("button", { name: "Maybank" }),
+  ).not.toBeOnTheScreen();
+  await fireEvent.press(publicBank);
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+
+  expect(await screen.findByText("•••• 8901")).toBeOnTheScreen();
+  expect(screen.getByText("Account number")).toBeOnTheScreen();
+  expect(screen.getByText("Public Bank")).toBeOnTheScreen();
+});
+
+it("asks for the account's bank before moving on", async () => {
+  const view = await renderRoute("/transfer");
+  await fireEvent.press(
+    await screen.findByRole("radio", { name: "Account number" }),
+  );
+  await fireEvent.changeText(
+    screen.getByLabelText("Account number"),
+    "512345678901",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+
+  expect(
+    screen.getByHintText("Choose the bank the account is with."),
+  ).toBeOnTheScreen();
+  expect(view.getPathname()).toBe("/transfer");
+});
+
 it("starts blank after a transfer whose approval left unanswered, and keeps none of its amount", async () => {
   dispatchTransferFlow({
     type: TransferFlowActionType.RecipientChosen,

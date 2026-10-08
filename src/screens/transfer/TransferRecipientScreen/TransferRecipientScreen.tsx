@@ -15,6 +15,7 @@ import {
   useTransferFlow,
 } from "../state/transfer-flow";
 import ChipIdType from "./components/ChipIdType/ChipIdType";
+import FieldBank from "./components/FieldBank/FieldBank";
 import FieldRecipientId from "./components/FieldRecipientId/FieldRecipientId";
 
 export default function TransferRecipientScreen() {
@@ -30,7 +31,9 @@ export default function TransferRecipientScreen() {
     draftRecipient?.idType ?? RecipientIdType.Mobile,
   );
   const [typedId, setTypedId] = useState(draftRecipient?.idValue ?? "");
+  const [bankCode, setBankCode] = useState(draftRecipient?.bankCode);
   const [idError, setIdError] = useState<string>();
+  const [bankError, setBankError] = useState<string>();
 
   return (
     <>
@@ -56,18 +59,30 @@ export default function TransferRecipientScreen() {
             label={t("recipient.continue")}
             onPress={() => {
               const idValue = parseRecipientId(idType, typedId);
-              if (idValue === null) {
-                setIdError(
-                  t(
-                    `common.badly_formed_input.${idType.toLowerCase() as Lowercase<RecipientIdType>}`,
-                  ),
-                );
-                return;
-              }
+              const bankMissing =
+                idType === RecipientIdType.AccountNumber &&
+                bankCode === undefined;
+              setIdError(
+                idValue === null
+                  ? t(
+                      `common.badly_formed_input.${idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+                    )
+                  : undefined,
+              );
+              setBankError(
+                bankMissing ? t("recipient.bank_missing") : undefined,
+              );
+              if (idValue === null || bankMissing) return;
               if (
                 dispatchTransferFlow({
                   type: TransferFlowActionType.RecipientChosen,
-                  recipient: { idType, idValue },
+                  recipient: {
+                    idType,
+                    idValue,
+                    ...(idType === RecipientIdType.AccountNumber && {
+                      bankCode,
+                    }),
+                  },
                 })
               )
                 router.push("/transfer/amount");
@@ -81,6 +96,7 @@ export default function TransferRecipientScreen() {
             setIdType(chosenIdType);
             setTypedId("");
             setIdError(undefined);
+            setBankError(undefined);
           }}
         />
         <FieldRecipientId
@@ -92,6 +108,16 @@ export default function TransferRecipientScreen() {
           }}
           error={idError}
         />
+        {idType === RecipientIdType.AccountNumber && (
+          <FieldBank
+            bankCode={bankCode}
+            onBankChosen={(chosenBankCode) => {
+              setBankCode(chosenBankCode);
+              setBankError(undefined);
+            }}
+            error={bankError}
+          />
+        )}
       </ViewScreenFrame>
     </>
   );
