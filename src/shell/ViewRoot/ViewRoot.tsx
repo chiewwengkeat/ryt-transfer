@@ -117,6 +117,6 @@ const styles = StyleSheet.create({
 function readAgainEveryReadButAnAnsweredNameCheck() {
   void queryClient.invalidateQueries({
     predicate: ({ queryKey, state }) =>
-      queryKey[0] !== transferKeys.lookupAll[0] || state.data === undefined,
+      queryKey[0] !== transferKeys.lookupAll[0] || state.status !== "success",
   });
 }
