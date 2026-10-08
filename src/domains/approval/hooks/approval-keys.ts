@@ -70,7 +70,7 @@ export async function signWithBiometricKey(
       data: signedText,
       inputEncoding: InputEncoding.UTF8,
       promptTitle: prompt.title,
-      // Android only: on iOS the library hands Face ID the title alone.
+      // Android only: iOS gets the title alone, and the simulator's Face ID HUD showed no app text.
       promptSubtitle: prompt.subtitle,
       cancelButtonText: prompt.cancel,
       biometricStrength: BiometricStrength.Strong,

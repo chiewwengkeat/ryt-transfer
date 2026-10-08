@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
+import { Platform } from "react-native";
 
 import { lookUpTestRecipient, readBankBalanceMinor } from "@/test/bank-client";
 import {
@@ -175,7 +176,8 @@ it("asks for a face or fingerprint only, never the phone's passcode", async () =
   ]);
 });
 
-it("states the amount and the recipient's registered name in the face or fingerprint prompt", async () => {
+// The OS draws the prompt out of Jest's sight, so these read what the app hands the library.
+it("hands the iOS face or fingerprint prompt a title stating the amount and the recipient's registered name", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const { recipient } = await lookUpTestRecipient(MOBILE);
   await openReviewOfRm100();
@@ -184,6 +186,28 @@ it("states the amount and the recipient's registered name in the face or fingerp
     await screen.findByRole("button", { name: "Transfer" }),
   );
   await screen.findByText("Transfer sent");
+
+  expect(biometricPromptsShown()).toEqual([
+    expect.objectContaining({
+      promptTitle: `Approve RM 100.00 to ${recipient.registeredName}`,
+    }),
+  ]);
+});
+
+it("hands the Android face or fingerprint prompt the amount and the recipient's registered name under its title", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const { recipient } = await lookUpTestRecipient(MOBILE);
+  await openReviewOfRm100();
+  const platformOs = jest.replaceProperty(Platform, "OS", "android");
+
+  try {
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByText("Transfer sent");
+  } finally {
+    platformOs.restore();
+  }
 
   expect(biometricPromptsShown()).toEqual([
     expect.objectContaining({

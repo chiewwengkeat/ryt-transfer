@@ -67,6 +67,7 @@
     "amount": "Amount",
     "transfer": "Transfer",
     "prompt_title": "Approve transfer",
+    "prompt_title_ios": "Approve {{amount}} to {{name}}",
     "prompt_subtitle": "{{amount}} to {{name}}",
     "prompt_cancel": "Cancel",
     "home": "Back to Home"
