@@ -1,4 +1,14 @@
 {
-  "bottom_sheet_pin": {},
-  "keypad_pin": {}
+  "bottom_sheet_pin": {
+    "title": "Luluskan dengan PIN anda",
+    "title_locked": "PIN dikunci",
+    "close": "Tutup",
+    "approve": "Luluskan",
+    "enter_every_digit": "Masukkan kesemua {{length}} digit PIN anda.",
+    "touch_dropped": "Aplikasi lain sedang memaparkan sesuatu di atas skrin. Tutup aplikasi itu untuk memasukkan PIN anda."
+  },
+  "keypad_pin": {
+    "digits_entered": "PIN, {{entered}} daripada {{length}} digit dimasukkan",
+    "delete": "Padam"
+  }
 }
