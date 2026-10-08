@@ -1,7 +1,7 @@
 import { type NativeStackNavigationProp, useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, Platform } from "react-native";
 
 import {
   type TransferOutcomeScenario,
@@ -36,13 +36,22 @@ export default function TextOutcome({ scenario, transfer, transferId }: Props) {
     useNavigation<NativeStackNavigationProp<Record<string, object>>>();
   const [pageOpened, setPageOpened] = useState(false);
   // Asked while the page opens, the heading's focus loses to the reader's own, which lands on the header after.
-  useEffect(
-    () =>
-      navigation.addListener("transitionEnd", ({ data }) => {
-        if (!data.closing) setPageOpened(true);
-      }),
-    [navigation],
-  );
+  useEffect(() => {
+    let headingFocusTimer: ReturnType<typeof setTimeout> | undefined;
+    const stopListening = navigation.addListener(
+      "transitionEnd",
+      ({ data }) => {
+        if (data.closing) return;
+        headingFocusTimer = setTimeout(() => {
+          setPageOpened(true);
+        }, HEADING_FOCUS_DELAY_MS);
+      },
+    );
+    return () => {
+      stopListening();
+      clearTimeout(headingFocusTimer);
+    };
+  }, [navigation]);
   const outcomeHeading = t(`result.heading.${scenarioName}`);
   const outcomeBody = t(`common.${scenarioName}.body`, {
     amount: transfer && formatMoney(transfer.amount),
@@ -75,3 +84,6 @@ export default function TextOutcome({ scenario, transfer, transferId }: Props) {
     </>
   );
 }
+
+// VoiceOver places its own focus up to half a second after the page opens, and the later request wins.
+const HEADING_FOCUS_DELAY_MS = Platform.select({ ios: 1_000, default: 0 });

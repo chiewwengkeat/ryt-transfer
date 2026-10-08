@@ -118,7 +118,7 @@ it(
   }),
 );
 
-it("moves a screen reader to the outcome once the page has finished opening, not while it opens", async () => {
+it("moves a screen reader to the outcome a moment after the page has finished opening, once VoiceOver has placed its own focus", async () => {
   // Jest has no screen reader: the focus request is the nearest thing it can see.
   const focusRequests = jest.spyOn(AccessibilityInfo, "sendAccessibilityEvent");
   focusRequests.mockClear();
@@ -138,8 +138,12 @@ it("moves a screen reader to the outcome once the page has finished opening, not
   if (resultPage === null) throw new Error("Result is not a native screen.");
 
   await fireEvent(resultPage, "appear");
+  await act(() => jest.advanceTimersByTimeAsync(500));
+  const focusRequestsHalfASecondAfterOpening = outcomeFocusRequests().length;
+  await act(() => jest.advanceTimersByTimeAsync(500));
 
   expect(focusRequestsWhileOpening).toBe(0);
+  expect(focusRequestsHalfASecondAfterOpening).toBe(0);
   expect(outcomeFocusRequests()).toHaveLength(1);
 });
 
