@@ -3,11 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text } from "react-native";
 
 import { useListBanks } from "@/domains/transfer/api/list-banks/list-banks";
+import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
 import { useIsOffline } from "@/shared/platform/offline";
 import { colors, minTouchTarget, typography } from "@/shared/theme/theme";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import Loader from "@/shared/ui/Loader/Loader";
 
 interface Props {
@@ -34,18 +33,11 @@ export default function BottomSheetBank({ onBankChosen, onClose }: Props) {
     >
       {banks.isError ? (
         !offline && (
-          <>
-            <BannerNotice
-              tone="negative"
-              message={t("common.recipient_unexpected.body")}
-            />
-            <ButtonSecondary
-              label={t("common.recipient_unexpected.retry")}
-              onPress={() => {
-                void banks.refetch();
-              }}
-            />
-          </>
+          <BannerRecipientUnexpected
+            onRetry={() => {
+              void banks.refetch();
+            }}
+          />
         )
       ) : banks.data === undefined ? (
         <Loader />

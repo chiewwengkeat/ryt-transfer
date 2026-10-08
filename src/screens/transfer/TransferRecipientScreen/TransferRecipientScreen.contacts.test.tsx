@@ -8,6 +8,7 @@ import { AppState, Linking } from "react-native";
 
 import {
   setContactsPermission,
+  setContactsPickerFailingOnce,
   setPickedContactPhones,
   setPickedContactUnreadable,
 } from "@/test/harness/contacts-native-double";
@@ -97,6 +98,21 @@ it("fills in the picked contact's one Malaysian mobile number", async () => {
     { id: "phone-2", label: "work", number: "+60 3-2345 6789" },
   ]);
   await pressChooseFromContacts();
+
+  expect(await screen.findByDisplayValue("+60123456789")).toBeOnTheScreen();
+});
+
+it("says something unexpected went wrong when the contacts picker fails, and opens it again on Try again", async () => {
+  setContactsPickerFailingOnce();
+  await pressChooseFromContacts();
+  expect(
+    await screen.findByText("Something unexpected went wrong."),
+  ).toBeOnTheScreen();
+  setPickedContactPhones([
+    { id: "phone-1", label: "mobile", number: "012-345 6789" },
+  ]);
+
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
 
   expect(await screen.findByDisplayValue("+60123456789")).toBeOnTheScreen();
 });

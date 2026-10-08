@@ -12,6 +12,7 @@ const GRANTED_CONTACTS_PERMISSION: ContactsPermissionResponse = {
 let contactsPermission = GRANTED_CONTACTS_PERMISSION;
 let pickedContactPhones: ExistingPhone[] | null = null;
 let pickedContactUnreadable = false;
+let contactsPickerFailsNext = false;
 
 class ContactDouble {
   readonly phones: ExistingPhone[];
@@ -21,6 +22,10 @@ class ContactDouble {
   }
 
   static presentPicker() {
+    if (contactsPickerFailsNext) {
+      contactsPickerFailsNext = false;
+      return Promise.reject(new Error("The contacts picker could not open."));
+    }
     return Promise.resolve(
       pickedContactPhones === null
         ? null
@@ -58,8 +63,13 @@ export function setPickedContactUnreadable() {
   pickedContactUnreadable = true;
 }
 
+export function setContactsPickerFailingOnce() {
+  contactsPickerFailsNext = true;
+}
+
 export function resetContactsNativeDouble() {
   contactsPermission = GRANTED_CONTACTS_PERMISSION;
   pickedContactPhones = null;
   pickedContactUnreadable = false;
+  contactsPickerFailsNext = false;
 }

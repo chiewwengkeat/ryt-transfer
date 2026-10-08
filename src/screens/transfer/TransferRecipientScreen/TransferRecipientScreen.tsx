@@ -8,9 +8,7 @@ import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
 import { useIsOffline } from "@/shared/platform/offline";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import {
@@ -19,6 +17,7 @@ import {
   TransferFlowStep,
   useTransferFlow,
 } from "../state/transfer-flow";
+import BannerRecipientUnexpected from "./components/BannerRecipientUnexpected/BannerRecipientUnexpected";
 import ButtonContacts from "./components/ButtonContacts/ButtonContacts";
 import CardRecentRecipientChosen from "./components/CardRecentRecipientChosen/CardRecentRecipientChosen";
 import ChipIdType from "./components/ChipIdType/ChipIdType";
@@ -167,18 +166,11 @@ export default function TransferRecipientScreen() {
               />
             )}
             {recents.isError && !offline && (
-              <>
-                <BannerNotice
-                  tone="negative"
-                  message={t("common.recipient_unexpected.body")}
-                />
-                <ButtonSecondary
-                  label={t("common.recipient_unexpected.retry")}
-                  onPress={() => {
-                    void recents.refetch();
-                  }}
-                />
-              </>
+              <BannerRecipientUnexpected
+                onRetry={() => {
+                  void recents.refetch();
+                }}
+              />
             )}
             <SectionRecentRecipients onRecentChosen={setChosenRecentId} />
           </>

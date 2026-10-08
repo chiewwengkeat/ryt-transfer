@@ -7,6 +7,7 @@ import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
+import BannerRecipientUnexpected from "../BannerRecipientUnexpected/BannerRecipientUnexpected";
 import BannerContactsRefused from "./components/BannerContactsRefused/BannerContactsRefused";
 import BottomSheetContactMobiles from "./components/BottomSheetContactMobiles/BottomSheetContactMobiles";
 
@@ -79,9 +80,10 @@ export default function ButtonContacts({ onMobilePicked }: Props) {
         <BannerNotice message={t("common.contact_without_mobile.body")} />
       )}
       {contactsOutcome === ContactsOutcome.Unexpected && (
-        <BannerNotice
-          tone="negative"
-          message={t("common.recipient_unexpected.body")}
+        <BannerRecipientUnexpected
+          onRetry={() => {
+            void pickMobileFromContacts();
+          }}
         />
       )}
       {contactMobiles !== undefined && (

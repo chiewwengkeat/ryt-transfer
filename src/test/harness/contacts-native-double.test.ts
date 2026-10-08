@@ -8,6 +8,7 @@ import {
 import {
   resetContactsNativeDouble,
   setContactsPermission,
+  setContactsPickerFailingOnce,
   setPickedContactPhones,
   setPickedContactUnreadable,
 } from "./contacts-native-double";
@@ -50,6 +51,13 @@ it("picks a contact whose phones it then refuses to read", async () => {
   await expect(contact?.getPhones()).rejects.toThrow();
 });
 
+it("fails to open the picker once when a test says so, then opens it", async () => {
+  setContactsPickerFailingOnce();
+
+  await expect(Contact.presentPicker()).rejects.toThrow();
+  await expect(Contact.presentPicker()).resolves.toBeNull();
+});
+
 it("answers with the permission a test sets", async () => {
   setContactsPermission(REFUSED_PERMISSION);
 
@@ -59,6 +67,7 @@ it("answers with the permission a test sets", async () => {
 it("puts back granted access and an empty pick on reset", async () => {
   setContactsPermission(REFUSED_PERMISSION);
   setPickedContactPhones(PICKED_PHONES);
+  setContactsPickerFailingOnce();
 
   resetContactsNativeDouble();
 
