@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
-import { useEffect, useState } from "react";
+import { type NativeStackNavigationProp, useNavigation } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AccessibilityInfo } from "react-native";
 
@@ -76,6 +77,25 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const approvalPinLocked = useApprovalPinLocked();
   const [checkingPhone, setCheckingPhone] = useState(false);
   const [phoneRefused, setPhoneRefused] = useState(false);
+  const navigation =
+    useNavigation<NativeStackNavigationProp<Record<string, undefined>>>();
+  const reviewLeaveCountRef = useRef(0);
+  useEffect(() => {
+    const countLeave = () => {
+      reviewLeaveCountRef.current += 1;
+    };
+    // iOS's own Back and swipe pop review only once their animation ends; this hears them begin.
+    const stopHearingClose = navigation.addListener(
+      "transitionStart",
+      (event) => {
+        if (event.data.closing) countLeave();
+      },
+    );
+    return () => {
+      stopHearingClose();
+      countLeave();
+    };
+  }, [navigation]);
 
   const holdReason =
     hold === undefined || hold === liftedHold
@@ -109,12 +129,12 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     );
 
   const createAndApproveTransfer = async (path: ApprovalPath) => {
-    const flowAtPress = transferFlowStore.getState();
+    const leaveCountAtPress = reviewLeaveCountRef.current;
     setCheckingPhone(true);
     const phoneRefusesApproval = await isApprovalRefusedOnThisPhone();
     setCheckingPhone(false);
-    // A press whose flow moved during the check, as by leaving review, is void.
-    if (transferFlowStore.getState() !== flowAtPress) return;
+    // Leaving review while the check runs voids the press, even if they come back: nothing is approved behind them.
+    if (reviewLeaveCountRef.current !== leaveCountAtPress) return;
     if (phoneRefusesApproval) {
       setPhoneRefused(true);
       return;
