@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
+import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { addUnauthorizedListener } from "@/shared/http/transport";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import { demoLayer } from "@/shell/app-launch";
@@ -22,6 +23,13 @@ export default function ViewRoot() {
     () =>
       addUnauthorizedListener(() => {
         setSessionEnded(true);
+      }),
+    [],
+  );
+  useEffect(
+    () =>
+      demoLayer?.subscribeToBiometricsOff((biometricsOff) => {
+        approvalSettingsStore.setState({ biometricApprovalOn: !biometricsOff });
       }),
     [],
   );

@@ -5,6 +5,8 @@ import { Pressable, Text } from "react-native";
 import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
 import { requestJson } from "@/shared/http/transport";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
+import { biometricPromptsShown } from "@/test/biometrics-double";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { renderRoute } from "@/test/render-route";
 
 // The demo build's root: Jest runs as production, whose launch loads no demo layer.
@@ -136,4 +138,29 @@ it("draws a screen's sheet over the app and hides the screen behind it from scre
   expect(
     screen.getByRole("button", { name: "Close the banks" }),
   ).toBeOnTheScreen();
+});
+
+it("stops a transfer's approval before any face or fingerprint prompt while No biometrics is picked", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await pickDemoScenario("No biometrics");
+
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      "Face or fingerprint approval isn't available, so approve with your PIN.",
+    ),
+  ).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toEqual([]);
 });

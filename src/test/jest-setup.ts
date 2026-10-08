@@ -12,6 +12,7 @@ import {
 } from "@tanstack/react-query";
 import type * as ContextStubs from "expo-router/build/testing-library/context-stubs";
 
+import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
 import { setObservabilitySink } from "@/shared/observability/observability";
 // Ahead of every test, as at launch: loaded with the first route instead, its reinstall wipe would erase keys a
@@ -143,6 +144,7 @@ afterEach(() => {
   transferFlowStore.setState(transferFlowStore.getInitialState(), true);
   resetNativeDoubles();
   resetBiometricsDouble();
+  approvalSettingsStore.setState(approvalSettingsStore.getInitialState(), true);
   mswServer.resetHandlers();
   sentRequests.splice(0);
   // The app sees the throw above as a 500, which an error-state test could mistake for its scenario.

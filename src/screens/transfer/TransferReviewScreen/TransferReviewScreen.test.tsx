@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { Platform } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import {
   listPendingTransfers,
@@ -683,6 +684,28 @@ it("says the approval was not sent when the phone cannot keep a record of it", a
       "Something unexpected stopped the approval before it was sent — no money moved.",
     ),
   ).toBeOnTheScreen();
+  const sentPaths = sentRequests.map(
+    ({ method, url }) => `${method} ${new URL(url).pathname}`,
+  );
+  expect(sentPaths).toContain("POST /transfers");
+  expect(sentPaths.filter((path) => path.endsWith("/approve"))).toEqual([]);
+});
+
+it("says face or fingerprint approval is unavailable while it is turned off, and sends no approval", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  approvalSettingsStore.setState({ biometricApprovalOn: false });
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      "Face or fingerprint approval isn't available, so approve with your PIN.",
+    ),
+  ).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toEqual([]);
   const sentPaths = sentRequests.map(
     ({ method, url }) => `${method} ${new URL(url).pathname}`,
   );

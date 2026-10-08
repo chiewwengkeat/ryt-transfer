@@ -3,6 +3,7 @@ import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
+import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import {
   APPROVAL_REFUSAL_CODES,
   ApproveRequestNotSentError,
@@ -36,6 +37,13 @@ export function useSendTransferApproval() {
       dispatchTransferFlow({
         type: TransferFlowActionType.ApprovalNotSent,
         notice: TransferFlowScenario.ApprovalUnexpected,
+      });
+      return;
+    }
+    if (!approvalSettingsStore.getState().biometricApprovalOn) {
+      dispatchTransferFlow({
+        type: TransferFlowActionType.ApprovalNotSent,
+        notice: TransferFlowScenario.BiometricsUnavailable,
       });
       return;
     }
