@@ -36,4 +36,4 @@ The cost of headers that do not pin: a day's header scrolls away with its rows, 
 - **The mechanisms alone, with no seeded data.** Nothing would show the list at scale.
 - **An on-device timing harness.** About a day's work, and on an emulator on a desktop its timings would say nothing about a mid-range phone.
 - **A throwaway probe for the counts, or counting in Jest.** A throwaway probe leaves no measurement code in the repository, and counting in Jest needs no emulator. Chosen instead: a counter committed with its tests and compiled only into development builds, counted by hand in a release-mode development build on an Android emulator.
-- **Counting on iOS as well.** iOS would get counts of its own, at the cost of the app writing them to a file read off the simulator, since a release build's logs never reach iOS's log. Chosen instead: Android only.
+- **Counting on iOS as well.** iOS would get counts of its own, at the cost of the app writing them to a file read off the simulator, since in the spike no log line from a release build reached iOS's log. Chosen instead: Android only.

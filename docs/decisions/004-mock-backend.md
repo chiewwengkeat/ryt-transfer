@@ -16,7 +16,7 @@ The app carries its own mock bank, and one set of [msw](https://mswjs.io) handle
 ## Rejected
 
 - **msw's own routes into React Native.** On Hermes, msw 2's React Native entry returned empty response bodies; the newer `@msw/react-native` was an unreleased experiment that worked only after a manual build, bundler aliases and two hand-written shims; msw 3 has no React Native entry at all.
-- **Taking a supported package to mean the path its maintainers declare, or a stable 1.0 release.** The first would have meant `@msw/react-native`, the experiment above; the second would rule out any library before its first stable release. Chosen instead: msw stays on its 2.x line, and a library before 1.0, such as the signing library ([003](003-biometric-approval.md)), is acceptable.
+- **Taking a supported package to mean the path its maintainers declare, or a stable 1.0 release.** The first would have meant `@msw/react-native`, the experiment above; the second would rule out any library before its first stable release. Chosen instead: msw stays on its 2.x line, and the signing library ([003](003-biometric-approval.md)) may stay before 1.0.
 - **msw 2's main entry, with two hand-written shims.** The app would import msw's public entry, not its internal files, once stand-ins for the two browser APIs React Native lacks kept it from crashing at startup. Chosen instead: the alias, which needs no stand-ins, at the cost of re-checking it on any msw upgrade.
 - **msw in tests only, with plain handlers in the app.** The phone would not have depended on msw's internal files; msw's own handlers answer on the phone instead, through the alias.
 - **A local mock server.** The most production-like, but an installed APK has no server to reach.
