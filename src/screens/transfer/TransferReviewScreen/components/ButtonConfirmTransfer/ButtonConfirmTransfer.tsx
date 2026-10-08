@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
-import { type NativeStackNavigationProp, useNavigation } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AccessibilityInfo } from "react-native";
 
@@ -11,7 +10,6 @@ import {
 } from "@/domains/approval/hooks/approval-keys";
 import { showApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
-import { isApprovalRefusedOnThisPhone } from "@/domains/approval/hooks/device-integrity-verdict";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
 import {
   CoolingOffReason,
@@ -41,6 +39,7 @@ import ButtonUsePinInstead from "./components/ButtonUsePinInstead/ButtonUsePinIn
 import { settleCreateFailure } from "./hooks/settle-create-failure";
 import { settleUnexpectedConfirmFailure } from "./hooks/settle-unexpected-confirm-failure";
 import { useApprovalPinLocked } from "./hooks/use-approval-pin-locked";
+import { usePhoneCheckBeforeApproval } from "./hooks/use-phone-check-before-approval";
 import { useSendTransferApproval } from "./hooks/use-send-transfer-approval";
 
 interface Props {
@@ -74,26 +73,8 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   }, [hold, coolingOffUntil]);
   const offline = useIsOffline();
   const approvalPinLocked = useApprovalPinLocked();
-  const [checkingPhone, setCheckingPhone] = useState(false);
-  const navigation =
-    useNavigation<NativeStackNavigationProp<Record<string, undefined>>>();
-  const reviewLeaveCountRef = useRef(0);
-  useEffect(() => {
-    const countLeave = () => {
-      reviewLeaveCountRef.current += 1;
-    };
-    // iOS's own Back and swipe pop review only once their animation ends; this hears them begin.
-    const stopHearingClose = navigation.addListener(
-      "transitionStart",
-      (event) => {
-        if (event.data.closing) countLeave();
-      },
-    );
-    return () => {
-      stopHearingClose();
-      countLeave();
-    };
-  }, [navigation]);
+  const { checkingPhone, checkPhoneAllowsThisApproval } =
+    usePhoneCheckBeforeApproval();
 
   const holdReason =
     hold === undefined || hold === liftedHold
@@ -122,19 +103,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const confirmedLookup = lookup.data;
 
   const createAndApproveTransfer = async (path: ApprovalPath) => {
-    const leaveCountAtPress = reviewLeaveCountRef.current;
-    setCheckingPhone(true);
-    const phoneRefusesApproval = await isApprovalRefusedOnThisPhone();
-    setCheckingPhone(false);
-    // Leaving review while the check runs voids the press, even if they come back: nothing is approved behind them.
-    if (reviewLeaveCountRef.current !== leaveCountAtPress) return;
-    if (phoneRefusesApproval) {
-      dispatchTransferFlow({
-        type: TransferFlowActionType.CreateNotSent,
-        notice: TransferFlowScenario.RootedPhone,
-      });
-      return;
-    }
+    if (!(await checkPhoneAllowsThisApproval())) return;
     if (approvalPinLocked) {
       const sensorRefusalOutcome = (await readBiometricSensorRefusal())
         ?.outcome;
