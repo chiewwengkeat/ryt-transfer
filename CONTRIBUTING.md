@@ -98,11 +98,12 @@ Test a route the way a person uses it, against the mock bank:
 - Query by accessible name, through `accessibilityRole` and `accessibilityLabel`; lint bans `testID`.
 - Assert what a person could observe: text, roles, where they ended up, and the requests that left the app. Never assert on component state or on which module a value passed through.
 
-Only these are tested below the route: the money and date helpers, the transport, the platform wrappers, the translation bundles and the scenario matrix's checks, a state no route can stage, such as a launch after a reinstall, and other logic with more cases than a route test can meaningfully cover, such as the mock bank's rules or the query client's retries. A component is tested through a route that renders it, except three shared pieces whose behaviour no route test can reach, which keep suites of their own:
+Only these are tested below the route: the money and date helpers, the transport, the platform wrappers, the translation bundles and the scenario matrix's checks, a state no route can stage, such as a launch after a reinstall, and other logic with more cases than a route test can meaningfully cover, such as the mock bank's rules or the query client's retries. A component is tested through a route that renders it, except three shared pieces whose behaviour no route test can reach, and the Demo strip, whose suite mounts it around a stand-in app, which keep suites of their own:
 
 - `src/shared/ui/BottomSheetFrame/`: a body taller than the sheet still scrolls, which needs a layout pass Jest never runs, and a sheet that may not be dismissed holds Back and the escape gesture, which no route leaves reachable.
 - `src/shared/ui/ViewScreenFrame/`: the footer height it publishes changes only on layout, which a route render never fires.
 - `src/shared/observability/render-trace.ts`: the trace is compiled only into development builds, and every route test runs as production.
+- `src/mocks/switcher/components/ViewDemo/`: its menu's order, Unlock PIN's place, its own place above the app, its menu opening over an app sheet, and its screen-reader language, against a stand-in app; the demo build's route tests reach it through the root too.
 
 ## Translations
 
