@@ -12,6 +12,7 @@ import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { lookUpTestRecipient, sendToBank } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer } from "@/test/msw-server";
+import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -43,11 +44,11 @@ it(
     ).toBeOnTheScreen();
     expect(screen.getByText("•••• 6789")).toBeOnTheScreen();
     expect(screen.getByText(recipient.bankName)).toBeOnTheScreen();
-    // The bank answers after a delay, which the route's fake timers would hold forever.
-    jest.useRealTimers();
-    const { body } = await sendToBank<GetTransferResponse>(
-      "GET",
-      view.getPathname()?.replace("/transfer/result", "/transfers") ?? "",
+    const { body } = await readBankOnRealTimers(() =>
+      sendToBank<GetTransferResponse>(
+        "GET",
+        view.getPathname()?.replace("/transfer/result", "/transfers") ?? "",
+      ),
     );
     expect(
       screen.getByText(formatMalaysianDateTime(body.transfer.updatedAt)),

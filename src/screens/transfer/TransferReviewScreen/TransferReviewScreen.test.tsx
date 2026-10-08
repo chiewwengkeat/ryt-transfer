@@ -12,6 +12,7 @@ import {
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
+import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
@@ -111,9 +112,9 @@ it(
 
     await screen.findByText("Transfer sent");
     expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
-    // The bank answers after a delay, which the route's fake timers would hold forever.
-    jest.useRealTimers();
-    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+    expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+      balanceBeforeMinor - 10_000,
+    );
   }),
 );
 
@@ -149,8 +150,9 @@ it(
     expect(countPostsTo(/\/transfers$/)).toBe(1);
     expect(countPostsTo(/\/approve$/)).toBe(1);
     expect(biometricPromptsShown()).toHaveLength(1);
-    jest.useRealTimers();
-    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+    expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+      balanceBeforeMinor - 10_000,
+    );
   }),
 );
 
@@ -267,8 +269,9 @@ it(
       await screen.findByText("The transfer was not sent — no money moved."),
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
-    jest.useRealTimers();
-    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
+    expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+      balanceBeforeMinor,
+    );
   }),
 );
 
@@ -287,8 +290,9 @@ it(
       await screen.findByText("The transfer was not sent — no money moved."),
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
-    jest.useRealTimers();
-    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
+    expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+      balanceBeforeMinor,
+    );
   }),
 );
 
@@ -312,8 +316,9 @@ it(
     expect(
       screen.getByRole("button", { name: "Back to Home" }),
     ).toBeOnTheScreen();
-    jest.useRealTimers();
-    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+    expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+      balanceBeforeMinor - 10_000,
+    );
   }),
 );
 
@@ -357,8 +362,9 @@ it(
     await pressHardwareBack();
     expect(view.getPathname()).toBe("/transfer/review");
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
-    jest.useRealTimers();
-    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+    expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+      balanceBeforeMinor - 10_000,
+    );
   }),
 );
 
@@ -601,8 +607,9 @@ it("offers to try again or leave when the phone cannot read its approval key", a
     ),
   ).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
-  jest.useRealTimers();
-  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
+  expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+    balanceBeforeMinor,
+  );
 });
 
 it("offers to try again or leave when something unexpected fails before the transfer is sent", async () => {
@@ -651,8 +658,9 @@ it("never says no money moved when something unexpected fails after the bank ans
   expect(
     screen.getByRole("button", { name: "Back to Home" }),
   ).toBeOnTheScreen();
-  jest.useRealTimers();
-  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+  expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+    balanceBeforeMinor - 10_000,
+  );
 });
 
 it.each<[string, () => Response]>([

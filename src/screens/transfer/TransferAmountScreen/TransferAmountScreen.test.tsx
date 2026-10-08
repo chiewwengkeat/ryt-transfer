@@ -6,6 +6,7 @@ import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transf
 import { readBankBalanceMinor } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer } from "@/test/msw-server";
+import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -131,8 +132,7 @@ it(
         "Something unexpected stopped the transfer — no money moved.",
       ),
     ).toBeOnTheScreen();
-    jest.useRealTimers();
-    expect(await readBankBalanceMinor()).toBe(1_284_550);
+    expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(1_284_550);
   }),
 );
 
