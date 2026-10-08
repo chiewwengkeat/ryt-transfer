@@ -10,6 +10,7 @@ import {
 } from "@/domains/approval/hooks/approval-keys";
 import { showApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import { isApprovalRefusedOnThisPhone } from "@/domains/approval/hooks/device-integrity-verdict";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
 import {
   CoolingOffReason,
@@ -33,6 +34,7 @@ import type {
 } from "@/screens/transfer/state/transfer-flow.type";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { useIsOffline } from "@/shared/platform/offline";
+import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 
 import ButtonUsePinInstead from "./components/ButtonUsePinInstead/ButtonUsePinInstead";
@@ -72,6 +74,8 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   }, [hold, coolingOffUntil]);
   const offline = useIsOffline();
   const approvalPinLocked = useApprovalPinLocked();
+  const [checkingPhone, setCheckingPhone] = useState(false);
+  const [phoneRefused, setPhoneRefused] = useState(false);
 
   const holdReason =
     hold === undefined || hold === liftedHold
@@ -98,8 +102,23 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   // Not the data: a name check that fails on a later run keeps the earlier answer's data.
   if (!lookup.isSuccess) return null;
   const confirmedLookup = lookup.data;
+  // No Transfer button at all: a phone that reports tampering is never offered a way to approve.
+  if (phoneRefused)
+    return (
+      <BannerNotice tone="negative" message={t("common.rooted_phone.body")} />
+    );
 
   const createAndApproveTransfer = async (path: ApprovalPath) => {
+    const flowAtPress = transferFlowStore.getState();
+    setCheckingPhone(true);
+    const phoneRefusesApproval = await isApprovalRefusedOnThisPhone();
+    setCheckingPhone(false);
+    // A press whose flow moved during the check, as by leaving review, is void.
+    if (transferFlowStore.getState() !== flowAtPress) return;
+    if (phoneRefusesApproval) {
+      setPhoneRefused(true);
+      return;
+    }
     if (approvalPinLocked) {
       const sensorRefusalOutcome = (await readBiometricSensorRefusal())
         ?.outcome;
@@ -180,7 +199,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     <>
       <ButtonPrimary
         label={t("review.transfer")}
-        loading={transferBeingSent || lookup.isFetching}
+        loading={transferBeingSent || lookup.isFetching || checkingPhone}
         disabledReason={transferDisabledReason}
         onPress={() => {
           void createAndApproveTransfer(ApprovalPath.Biometric).catch(() => {
@@ -192,6 +211,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
         pinTryAvailable={
           !transferBeingSent &&
           !lookup.isFetching &&
+          !checkingPhone &&
           transferDisabledReason === undefined &&
           !approvalPinLocked
         }

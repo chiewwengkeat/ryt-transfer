@@ -1,0 +1,21 @@
+import { isProductionBuild } from "@/shared/config/config";
+import { trackEvent } from "@/shared/observability/observability";
+import {
+  checkDeviceIntegrity,
+  DeviceIntegrity,
+} from "@/shared/platform/device-integrity";
+
+// Once at launch, so the check an approval waits on is never the library's first.
+export function warmUpDeviceIntegrityCheck() {
+  if (isProductionBuild) void checkDeviceIntegrity();
+}
+
+export async function isApprovalRefusedOnThisPhone() {
+  // Emulators read as rooted, so development and demo builds never ask.
+  if (!isProductionBuild) return false;
+  const integrity = await checkDeviceIntegrity();
+  // Allowed: an unclear check must not lock out a genuine customer.
+  if (integrity === DeviceIntegrity.Unknown)
+    trackEvent("device_integrity_unknown");
+  return integrity === DeviceIntegrity.Compromised;
+}

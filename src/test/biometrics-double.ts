@@ -1,6 +1,7 @@
 import { p256 } from "@noble/curves/nist.js";
 import type {
   CreateKeysOptions,
+  DeviceIntegrityResult,
   SignatureOptions,
   SignOptions,
 } from "@sbaiahmed1/react-native-biometrics";
@@ -17,6 +18,12 @@ let nextPromptRecognised = true;
 let nextPromptFailure: string | null = null;
 let nextPromptHeldUntil: Promise<void> | null = null;
 let sensorUnavailableCode: string | null = null;
+const UNTAMPERED_PHONE: DeviceIntegrityResult = {
+  hasRuntimeHooks: false,
+  isCompromised: false,
+  riskLevel: "NONE",
+};
+let answerIntegrityCheck = () => Promise.resolve(UNTAMPERED_PHONE);
 
 function signForReal(data: string, secretKey: Uint8Array) {
   const signature = p256.sign(new TextEncoder().encode(data), secretKey, {
@@ -89,6 +96,7 @@ export const biometricsLibraryDouble = {
     keysKilledByEnrolmentChange.delete(keyAlias);
     return Promise.resolve({ success: true });
   },
+  getDeviceIntegrityStatus: () => answerIntegrityCheck(),
 };
 
 export function cancelNextBiometricPrompt() {
@@ -119,6 +127,29 @@ export function changeEnrolledBiometrics() {
       keysKilledByEnrolmentChange.add(keyAlias);
 }
 
+// Every check from now on answers this, as a phone's state holds until something changes it.
+export function reportDeviceIntegrity(report: Partial<DeviceIntegrityResult>) {
+  answerIntegrityCheck = () =>
+    Promise.resolve({ ...UNTAMPERED_PHONE, ...report });
+}
+
+export function failDeviceIntegrityChecks() {
+  answerIntegrityCheck = () =>
+    Promise.reject(new Error("The integrity check failed."));
+}
+
+// Checks from now on wait for the returned answer, so a test can act while one is still running.
+export function holdDeviceIntegrityChecks() {
+  let answerHeldChecks: (report: DeviceIntegrityResult) => void = () => {};
+  const heldAnswer = new Promise<DeviceIntegrityResult>((resolve) => {
+    answerHeldChecks = resolve;
+  });
+  answerIntegrityCheck = () => heldAnswer;
+  return (report: Partial<DeviceIntegrityResult>) => {
+    answerHeldChecks({ ...UNTAMPERED_PHONE, ...report });
+  };
+}
+
 export function phoneKeyOptions() {
   return [...phoneKeys.values()].map(({ options }) => options);
 }
@@ -135,4 +166,5 @@ export function resetBiometricsDouble() {
   nextPromptFailure = null;
   nextPromptHeldUntil = null;
   sensorUnavailableCode = null;
+  answerIntegrityCheck = () => Promise.resolve(UNTAMPERED_PHONE);
 }

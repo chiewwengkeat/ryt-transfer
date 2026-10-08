@@ -1,4 +1,5 @@
 import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
+import { warmUpDeviceIntegrityCheck } from "@/domains/approval/hooks/device-integrity-verdict";
 import { isProductionBuild } from "@/shared/config/config";
 import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
 import { configureTransport } from "@/shared/http/transport";
@@ -25,6 +26,7 @@ const installChecked = (async () => {
 if (isProductionBuild) void blockScreenCapture();
 // Every build, and never paused for the Face ID prompt.
 void enableAppSwitcherBlur();
+warmUpDeviceIntegrityCheck();
 
 // Compared literally, never through the config predicate: Metro strips the demo layer from production only for this form.
 export const demoLayer =
