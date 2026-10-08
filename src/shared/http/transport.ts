@@ -72,12 +72,14 @@ export async function requestJson<Data>(
 
   let response: Response;
   let text: string;
+  let rejectOnAbort = () => {};
   try {
     // A raced promise, because the demo send answers whether or not the request was aborted.
     response = await new Promise<Response>((resolve, reject) => {
-      controller.signal.addEventListener("abort", () => {
+      rejectOnAbort = () => {
         reject(new Error("aborted"));
-      });
+      };
+      controller.signal.addEventListener("abort", rejectOnAbort);
       configuredSend(request).then(resolve, reject);
     });
     text = await response.text();
@@ -92,6 +94,8 @@ export async function requestJson<Data>(
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener("abort", abortForCaller);
+    // Removed by hand: Node's Request keeps its signal alive until the request is collected, and this listener holds the request.
+    controller.signal.removeEventListener("abort", rejectOnAbort);
   }
 
   // An error status or an unreadable body still proves the bank was reached.
