@@ -65,7 +65,7 @@ export default function CardBalance({ unexpectedScenario }: Props) {
         <TextBody tone="secondary">{t("card_balance.label")}</TextBody>
         <Text style={styles.balance}>{formatMoney(account.data.balance)}</Text>
       </View>
-      {limits.data !== undefined && (
+      {limits.isSuccess && (
         <TextBody>
           {t("common.balance_and_limit_shown.remaining_today", {
             amount: formatMoney(limits.data.remainingToday),
