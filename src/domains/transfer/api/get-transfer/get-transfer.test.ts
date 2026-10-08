@@ -1,4 +1,8 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { createElement, type ReactNode } from "react";
@@ -14,7 +18,11 @@ import {
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import { startTestTransfer } from "@/test/bank-client";
 import { mswServer } from "@/test/msw-server";
+
+import type { ListTransfersResponse } from "../list-transfers/list-transfers.type";
+import { transferKeys } from "../transfer.keys";
 
 const transferAt = (
   transferId: string,
@@ -39,6 +47,12 @@ const transferAt = (
   createdAt: "2026-10-07T09:30:00+08:00",
   updatedAt: "2026-10-07T09:30:05+08:00",
 });
+
+const EMPTY_HISTORY_PAGE: ListTransfersResponse = {
+  items: [],
+  nextCursor: null,
+  days: [],
+};
 
 it.each([
   { relation: "the same version as", versionOfNext: 3 },
@@ -84,3 +98,57 @@ it.each([
     });
   },
 );
+
+it("brings history's older copy of a transfer up to date when the transfer is read", async () => {
+  const {
+    created: { transfer },
+  } = await startTestTransfer(10_000);
+  const queryClient = new QueryClient();
+  queryClient.setQueryData<InfiniteData<ListTransfersResponse>>(
+    transferKeys.history(),
+    {
+      pages: [
+        {
+          ...EMPTY_HISTORY_PAGE,
+          items: [{ ...transfer, version: transfer.version - 1 }],
+        },
+      ],
+      pageParams: [null],
+    },
+  );
+
+  const read = await queryClient.fetchQuery(
+    getTransferOptions(transfer.transferId),
+  );
+
+  expect(
+    queryClient.getQueryData<InfiniteData<ListTransfersResponse>>(
+      transferKeys.history(),
+    )?.pages[0]?.items,
+  ).toEqual([read]);
+});
+
+it("leaves a history load running when history holds no copy of the transfer read", async () => {
+  const {
+    created: { transfer },
+  } = await startTestTransfer(10_000);
+  const queryClient = new QueryClient();
+  let finishHistoryLoad: (page: ListTransfersResponse) => void = () =>
+    undefined;
+  const historyLoad = queryClient.fetchInfiniteQuery({
+    queryKey: transferKeys.history(),
+    queryFn: () =>
+      new Promise<ListTransfersResponse>((resolve) => {
+        finishHistoryLoad = resolve;
+      }),
+    initialPageParam: null,
+  });
+
+  await queryClient.fetchQuery(getTransferOptions(transfer.transferId));
+  finishHistoryLoad(EMPTY_HISTORY_PAGE);
+
+  await expect(historyLoad).resolves.toEqual({
+    pages: [EMPTY_HISTORY_PAGE],
+    pageParams: [null],
+  });
+});

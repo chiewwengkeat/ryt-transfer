@@ -1,6 +1,7 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
+import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
   type GetTransferResponse,
   TransferDirection,
@@ -9,12 +10,25 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import {
+  listPendingTransfers,
+  PendingTransferStage,
+  writePendingTransfer,
+} from "@/domains/transfer/hooks/pending-transfers";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
-import { lookUpTestRecipient, sendToBank } from "@/test/bank-client";
+import {
+  lookUpTestRecipient,
+  pairTestPhone,
+  sendToBank,
+  signTestApproval,
+  startTestTransfer,
+} from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { setPhoneNetwork } from "@/test/harness/native-doubles";
+import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
-import { renderRoute } from "@/test/render-route";
+import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 const BANK_REFERENCE =
@@ -382,5 +396,224 @@ it(
     expect(
       await screen.findByRole("header", { name: "Result not available" }),
     ).toBeOnTheScreen();
+  }),
+);
+
+async function readCustomerId() {
+  const { body } = await sendToBank<GetPrimaryAccountResponse>(
+    "GET",
+    "/accounts/primary",
+  );
+  return body.customerId;
+}
+
+it(
+  "keeps checking a processing transfer in place, its record kept as processing, and shows the receipt once it completes",
+  scenarioTest("transfer.processing", async () => {
+    const customerId = await readCustomerId();
+    await sendRm100FromHome();
+    expect(
+      await screen.findByRole("header", { name: "Transfer processing" }),
+    ).toBeOnTheScreen();
+    await waitFor(async () => {
+      expect(await listPendingTransfers(customerId)).toEqual([
+        expect.objectContaining({ stage: PendingTransferStage.Processing }),
+      ]);
+    });
+
+    await act(() => jest.advanceTimersByTimeAsync(32_000));
+
+    expect(
+      await screen.findByRole("header", { name: "Transfer sent" }),
+    ).toBeOnTheScreen();
+    await waitFor(async () => {
+      expect(await listPendingTransfers(customerId)).toEqual([]);
+    });
+  }),
+);
+
+it(
+  "says a processing transfer that ends unsuccessful didn't go through, with the money coming back",
+  scenarioTest("transfer.refunded_after_processing", async () => {
+    await sendRm100FromHome();
+    expect(
+      await screen.findByRole("header", { name: "Transfer processing" }),
+    ).toBeOnTheScreen();
+
+    await act(() => jest.advanceTimersByTimeAsync(32_000));
+
+    expect(
+      await screen.findByRole("header", { name: "Transfer refunded" }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "This transfer didn't go through. The money is being, or has been, returned to you automatically.",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/quote this reference/)).toBeNull();
+  }),
+);
+
+it(
+  "says the bank is still unreachable once four reads get no answer, quoting the transfer's id",
+  scenarioTest("transfer.status_unreachable", async () => {
+    const view = await sendRm100FromHome();
+    expect(
+      await screen.findByRole("header", { name: "Checking your transfer" }),
+    ).toBeOnTheScreen();
+
+    await act(() => jest.advanceTimersByTimeAsync(9_000));
+
+    expect(
+      await screen.findByRole("header", {
+        name: "Still checking your transfer",
+      }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "The bank can't be reached right now. This transfer will keep being checked, and the result will show here and in History — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
+      ),
+    ).toBeOnTheScreen();
+    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+  }),
+);
+
+it("checks a transfer whose approval drew an answer the app does not know, under that answer's own id", async () => {
+  const { created } = await startTestTransfer(10_000);
+
+  await renderRoute(
+    `/transfer/result/${created.transfer.transferId}?checking=transfer.approval_unknown_answer`,
+  );
+
+  expect(
+    await screen.findByRole("header", { name: "Checking your transfer" }),
+  ).toBeOnTheScreen();
+  expect(observedRecords).toContainEqual(
+    expect.objectContaining({
+      name: "transfer_outcome",
+      properties: { scenario: "transfer.approval_unknown_answer" },
+    }),
+  );
+});
+
+it(
+  "reopens the transfer the app was closed during, quoting its id, and says no money moved once its window passes",
+  scenarioTest("transfer.app_closed_during_approval", async () => {
+    const customerId = await readCustomerId();
+    // Never answered: the app is killed while the approval is on its way.
+    mswServer.use(
+      http.post(
+        "*/transfers/:transferId/approve",
+        () => new Promise<never>(() => undefined),
+        { once: true },
+      ),
+    );
+    const view = await sendRm100FromHome();
+    await waitFor(() => {
+      expect(sentRequests.some(({ url }) => url.endsWith("/approve"))).toBe(
+        true,
+      );
+    });
+
+    const relaunched = await relaunchApp(view);
+
+    expect(
+      await screen.findByRole("header", {
+        name: "Checking your last transfer",
+      }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "The app closed before your last transfer's answer arrived. It's being checked, and its outcome will show here — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        `If you contact us, quote this reference: ${transferIdIn(relaunched.getPathname())}`,
+      ),
+    ).toBeOnTheScreen();
+    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+
+    await act(() => jest.advanceTimersByTimeAsync(62_000));
+
+    expect(
+      await screen.findByRole("header", { name: "Transfer not sent" }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText("The approval timed out — no money moved."),
+    ).toBeOnTheScreen();
+    await waitFor(async () => {
+      expect(await listPendingTransfers(customerId)).toEqual([]);
+    });
+  }),
+);
+
+it(
+  "shows at launch how the transfer the app was closed during ended, then stops tracking it",
+  scenarioTest("transfer.app_closed_during_approval", async () => {
+    const customerId = await readCustomerId();
+    const keys = await pairTestPhone();
+    const started = await startTestTransfer(10_000);
+    // The approval reached the bank before the app was killed; only its answer was lost.
+    await sendToBank("POST", started.approvalPath, {
+      body: signTestApproval(started, {
+        kind: "biometric",
+        keyId: keys.biometricKeyId,
+      }),
+    });
+    await writePendingTransfer(customerId, {
+      transferId: started.created.transfer.transferId,
+      idempotencyKey: "approval-key",
+      createdAt: "2026-10-07T01:30:00.000Z",
+      stage: PendingTransferStage.Approving,
+    });
+
+    await renderRoute("/");
+
+    expect(
+      await screen.findByRole("header", { name: "Transfer sent" }),
+    ).toBeOnTheScreen();
+    await waitFor(async () => {
+      expect(await listPendingTransfers(customerId)).toEqual([]);
+    });
+  }),
+);
+
+it(
+  "waits for the account before reopening the transfer left mid-approval, after a launch with no connection",
+  scenarioTest("transfer.app_closed_during_approval", async () => {
+    const customerId = await readCustomerId();
+    const { created } = await startTestTransfer(10_000);
+    await writePendingTransfer(customerId, {
+      transferId: created.transfer.transferId,
+      idempotencyKey: "approval-key",
+      createdAt: "2026-10-07T01:30:00.000Z",
+      stage: PendingTransferStage.Approving,
+    });
+    let phoneConnected = false;
+    mswServer.use(
+      http.all("*", () => (phoneConnected ? undefined : HttpResponse.error())),
+    );
+    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+    const view = await renderRoute("/");
+    await act(() => jest.advanceTimersByTimeAsync(1_000));
+    const pathnameWhileOffline = view.getPathname();
+
+    phoneConnected = true;
+    await act(() => {
+      setPhoneNetwork({ isConnected: true, isInternetReachable: true });
+    });
+
+    expect(
+      await screen.findByRole("header", {
+        name: "Checking your last transfer",
+      }),
+    ).toBeOnTheScreen();
+    expect(pathnameWhileOffline).toBe("/");
   }),
 );

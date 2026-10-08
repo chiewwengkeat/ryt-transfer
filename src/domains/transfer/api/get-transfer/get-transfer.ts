@@ -1,8 +1,14 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  queryOptions,
+  useQuery,
+} from "@tanstack/react-query";
 
 import { requestJson } from "@/shared/http/transport";
 import { parseWireAmount } from "@/shared/lib/money/money";
 
+import { patchTransferInHistory } from "../list-transfers/list-transfers";
+import type { ListTransfersResponse } from "../list-transfers/list-transfers.type";
 import { transferKeys } from "../transfer.keys";
 import {
   type GetTransferResponse,
@@ -34,13 +40,29 @@ export enum TransferOutcomeScenario {
 export const getTransferOptions = (transferId: string) =>
   queryOptions({
     queryKey: transferKeys.detail(transferId),
-    queryFn: async ({ signal }) =>
-      (
-        await requestJson<GetTransferResponse>(
-          `/transfers/${encodeURIComponent(transferId)}`,
-          { signal },
-        )
-      ).transfer,
+    queryFn: async ({ client, signal }) => {
+      const { transfer } = await requestJson<GetTransferResponse>(
+        `/transfers/${encodeURIComponent(transferId)}`,
+        { signal },
+      );
+      // Patching cancels history's own loads first, so only a copy there that this read outdates earns it.
+      const historyHoldsAnOlderCopy = client
+        .getQueriesData<InfiniteData<ListTransfersResponse>>({
+          queryKey: transferKeys.historyAll,
+        })
+        .some(([, history]) =>
+          history?.pages.some(({ items }) =>
+            items.some(
+              (item) =>
+                item.transferId === transfer.transferId &&
+                item.version < transfer.version,
+            ),
+          ),
+        );
+      if (historyHoldsAnOlderCopy)
+        await patchTransferInHistory(client, transfer);
+      return transfer;
+    },
     // An answer that left before a newer copy arrived must not replace it. Query also runs this on select
     // results, where the held copy can belong to the transfer shown before.
     structuralSharing: (held: unknown, received: unknown) =>
@@ -51,7 +73,13 @@ export const getTransferOptions = (transferId: string) =>
         : received,
   });
 
-export function useGetTransfer(transferId: string) {
+export function useGetTransfer(
+  transferId: string,
+  options?: Pick<
+    ReturnType<typeof getTransferOptions>,
+    "retry" | "refetchInterval"
+  >,
+) {
   return useQuery({
     ...getTransferOptions(transferId),
     select: (transfer) => {
@@ -59,6 +87,7 @@ export function useGetTransfer(transferId: string) {
       if (!amount) throw new TypeError("The transfer's amount is unreadable.");
       return { ...transfer, amount, outcome: outcomeOfTransfer(transfer) };
     },
+    ...options,
   });
 }
 

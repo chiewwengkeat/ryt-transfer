@@ -11,7 +11,7 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
 import { requestJson } from "@/shared/http/transport";
-import { sendToBank } from "@/test/bank-client";
+import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
@@ -129,6 +129,10 @@ it("discards another customer's pending transfers at launch, and keeps the signe
   const {
     body: { customerId },
   } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+  // Still awaiting approval, so reopening it at launch keeps its record; one the bank cannot find would be cleared.
+  const {
+    created: { transfer: ownTransfer },
+  } = await startTestTransfer(10_000);
   const pendingSince = {
     idempotencyKey: "key-earlier",
     createdAt: "2026-10-07T01:00:00.000Z",
@@ -140,7 +144,7 @@ it("discards another customer's pending transfers at launch, and keeps the signe
   });
   await writePendingTransfer(customerId, {
     ...pendingSince,
-    transferId: "trf_own",
+    transferId: ownTransfer.transferId,
   });
 
   await renderRoute("/", {
@@ -152,6 +156,6 @@ it("discards another customer's pending transfers at launch, and keeps the signe
     expect(await listPendingTransfers("cus_earlier")).toEqual([]);
   });
   expect(await listPendingTransfers(customerId)).toEqual([
-    { ...pendingSince, transferId: "trf_own" },
+    { ...pendingSince, transferId: ownTransfer.transferId },
   ]);
 });

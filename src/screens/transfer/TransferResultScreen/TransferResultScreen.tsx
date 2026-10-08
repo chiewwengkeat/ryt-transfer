@@ -1,16 +1,15 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
+import { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
 import {
-  TransferOutcomeScenario,
-  useGetTransfer,
-} from "@/domains/transfer/api/get-transfer/get-transfer";
-import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import {
-  TransportError,
-  TransportErrorKind,
-} from "@/shared/http/transport-error";
+  TransferReadFailure,
+  useTransferStatusCheck,
+} from "@/domains/transfer/hooks/transfer-status-checks";
+import { refreshAccountAndHistoryAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import { trackEvent } from "@/shared/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
@@ -21,53 +20,55 @@ import TextOutcome from "./components/TextOutcome/TextOutcome";
 
 export default function TransferResultScreen() {
   const { t } = useTranslation("transfer");
+  const queryClient = useQueryClient();
   const { transferId, checking } = useLocalSearchParams<{
     transferId: string;
     checking?: string;
   }>();
-  const transfer = useGetTransfer(transferId);
+  const customerId = useGetPrimaryAccount().data?.customerId;
+  const { transfer, readFailure, bankUnreachable } = useTransferStatusCheck(
+    transferId,
+    customerId,
+  );
   // Opened without the approve call's answer in hand, nothing has confirmed what the approval did.
   const [checkingUnansweredApproval] = useState(
     () => checking !== undefined || transfer.dataUpdatedAt === 0,
   );
-
-  const failure = transfer.error;
-  const transferNotFound =
-    failure instanceof TransportError &&
-    failure.code === GetTransferErrorCode.TransferNotFound;
-  // These never reached the bank, or the session view answers them: the transfer stands as last read.
-  const bankUnreached =
-    failure instanceof TransportError &&
-    (failure.kind === TransportErrorKind.Network ||
-      failure.kind === TransportErrorKind.Timeout ||
-      failure.kind === TransportErrorKind.Aborted ||
-      (failure.kind === TransportErrorKind.Http &&
-        (failure.status === 401 || (failure.status ?? 0) >= 500)));
   const outcome = transfer.data?.outcome;
   // A later read that fails never hides an outcome the bank has already settled.
   const outcomeSettled =
     outcome !== undefined &&
     outcome !== null &&
     outcome !== TransferOutcomeScenario.Processing &&
-    outcome !== TransferOutcomeScenario.HeldForReview;
+    outcome !== TransferOutcomeScenario.HeldForReview &&
+    outcome !== TransferOutcomeScenario.OutcomeUnexpected;
+  const [openedSettled] = useState(outcomeSettled);
   const scenario = outcomeSettled
     ? outcome
-    : transferNotFound
+    : readFailure === TransferReadFailure.NotFound
       ? TransferOutcomeScenario.LastTransferNotFound
-      : failure !== null && !bankUnreached
+      : readFailure === TransferReadFailure.Unexpected ||
+          outcome === TransferOutcomeScenario.OutcomeUnexpected
         ? checkingUnansweredApproval
           ? TransferOutcomeScenario.RecoveryUnexpected
           : TransferOutcomeScenario.OutcomeUnexpected
         : (outcome ??
-          [
-            TransferOutcomeScenario.ApprovalUnknownAnswer,
-            TransferOutcomeScenario.AppClosedDuringApproval,
-          ].find((reason) => reason === checking) ??
-          TransferOutcomeScenario.ApprovalUnanswered);
+          (bankUnreachable
+            ? TransferOutcomeScenario.StatusUnreachable
+            : ([
+                TransferOutcomeScenario.ApprovalUnknownAnswer,
+                TransferOutcomeScenario.AppClosedDuringApproval,
+              ].find((reason) => reason === checking) ??
+              TransferOutcomeScenario.ApprovalUnanswered)));
 
   useEffect(() => {
     trackEvent("transfer_outcome", { scenario });
   }, [scenario]);
+  useEffect(() => {
+    // Settled after opening: any refresh the approve call made predates it, and it may have moved money.
+    if (outcomeSettled && !openedSettled)
+      void refreshAccountAndHistoryAfterApproval(queryClient);
+  }, [outcomeSettled, openedSettled, queryClient]);
 
   return (
     <>
