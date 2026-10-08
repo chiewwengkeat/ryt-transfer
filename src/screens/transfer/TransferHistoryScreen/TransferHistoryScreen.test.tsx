@@ -7,8 +7,11 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
+import { lookUpTestRecipient } from "@/test/bank-client";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
+import { scenarioTest } from "@/test/scenario-test";
 import {
   buildHistoryTransfer,
   failTransferHistoryPages,
@@ -74,6 +77,62 @@ it("shows the transfers it has at once on a later open, then the newest page in 
   ).not.toBeOnTheScreen();
   expect(sentTransferHistoryCursors()).toEqual([null, null]);
 });
+
+it(
+  "shows a transfer sent while History was closed first when History opens again",
+  scenarioTest("transfer.completed", async () => {
+    mswServer.resetHandlers();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const { recipient } = await lookUpTestRecipient("012-345 6789");
+    await renderRoute("/");
+    await act(() => {
+      router.push("/transfer-history");
+    });
+    expect(
+      await screen.findByRole("button", { name: /^6 Oct 2026, / }),
+    ).toBeOnTheScreen();
+    await act(() => {
+      router.back();
+    });
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await fireEvent.changeText(
+      await screen.findByLabelText("DuitNow mobile number"),
+      "012-345 6789",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+    await fireEvent.changeText(
+      await screen.findByLabelText("Amount (RM)"),
+      "100",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await fireEvent.press(await screen.findByRole("button", { name: "Done" }));
+    const requestCountBeforeReopening = sentTransferHistoryCursors().length;
+
+    await act(() => {
+      router.push("/transfer-history");
+    });
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Today, 1 transfer, -RM 100.00",
+      }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByRole("button", {
+        name: new RegExp(`^${recipient.registeredName} .+ -RM 100\\.00$`),
+      }),
+    ).toBeOnTheScreen();
+    expect(
+      sentTransferHistoryCursors().slice(requestCountBeforeReopening),
+    ).toContain(null);
+  }),
+);
 
 it("loads the next page as the list nears its end, with a spinner until it lands", async () => {
   serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
