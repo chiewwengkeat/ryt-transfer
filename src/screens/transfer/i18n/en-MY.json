@@ -21,7 +21,9 @@
       "title": "Earlier transfer still being checked"
     },
     "start_unexpected": {
-      "title": "Something unexpected while starting"
+      "title": "Something unexpected while starting",
+      "body": "Something unexpected went wrong.",
+      "retry": "Try again"
     },
     "badly_formed_input": {
       "title": "Badly formed ID, amount or note",

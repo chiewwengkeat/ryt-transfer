@@ -1,10 +1,16 @@
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
+import { AppState } from "react-native";
 
 import { clearTransferScenario } from "@/test/clear-transfer-scenario";
+import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+
+const UNKNOWN_BANK_CODE = {
+  error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
+};
 
 it(
   "shows the balance and how much more can be sent today",
@@ -51,4 +57,68 @@ it("pauses sending once a request finds no network, and resumes once a request r
 
   expect(pausedReason).not.toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+});
+
+it("says something unexpected went wrong where the recent recipients would be, and lists them on Try again", async () => {
+  mswServer.use(
+    http.get(
+      "*/recipients/recent",
+      () => HttpResponse.json(UNKNOWN_BANK_CODE, { status: 400 }),
+      { once: true },
+    ),
+  );
+  await renderRoute("/");
+  const recentsUnexpected = await screen.findByText(
+    "Something unexpected went wrong.",
+  );
+
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+
+  expect(
+    await screen.findAllByRole("button", { name: /••••/ }),
+  ).not.toHaveLength(0);
+  expect(recentsUnexpected).not.toBeOnTheScreen();
+});
+
+it("keeps the recent recipients already listed under that message when reloading them fails", async () => {
+  await renderRoute("/");
+  const [listedRecent] = await screen.findAllByRole("button", {
+    name: /••••/,
+  });
+  mswServer.use(
+    http.get("*/recipients/recent", () =>
+      HttpResponse.json(UNKNOWN_BANK_CODE, { status: 400 }),
+    ),
+  );
+
+  // Back in the foreground, every query reads afresh.
+  for (const [eventName, listener] of jest.mocked(AppState).addEventListener
+    .mock.calls)
+    if (eventName === "change") listener("active");
+
+  expect(
+    await screen.findByText("Something unexpected went wrong."),
+  ).toBeOnTheScreen();
+  expect(listedRecent).toBeOnTheScreen();
+});
+
+it("keeps that message off Home while the phone has no connection", async () => {
+  mswServer.use(
+    http.get("*/recipients/recent", () =>
+      HttpResponse.json(UNKNOWN_BANK_CODE, { status: 400 }),
+    ),
+  );
+  await renderRoute("/");
+  const recentsUnexpected = await screen.findByText(
+    "Something unexpected went wrong.",
+  );
+
+  await act(() => {
+    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+  });
+
+  expect(recentsUnexpected).not.toBeOnTheScreen();
+  expect(
+    screen.getByText("You're offline, so sending is paused."),
+  ).toBeOnTheScreen();
 });
