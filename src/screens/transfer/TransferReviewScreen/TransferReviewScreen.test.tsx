@@ -89,13 +89,14 @@ function readRootTransferScreenGestureEnabled() {
 }
 
 it(
-  "shows the name and bank the bank holds for the number",
+  "shows the name and bank the bank holds for the number, and the number masked",
   scenarioTest("transfer.recipient_found", async () => {
     const { recipient } = await lookUpTestRecipient(MOBILE);
     await openReviewOfRm100();
 
     expect(await screen.findByText(recipient.registeredName)).toBeOnTheScreen();
     expect(screen.getByText(recipient.bankName)).toBeOnTheScreen();
+    expect(screen.getByText(recipient.idValueMasked)).toBeOnTheScreen();
     expect(screen.getByText("RM 100.00")).toBeOnTheScreen();
   }),
 );

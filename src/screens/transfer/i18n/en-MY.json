@@ -255,14 +255,16 @@
   "review": {
     "title": "Review",
     "recipient_name": "To",
-    "bank": "Bank",
-    "mobile": "Mobile number",
     "amount": "Amount",
     "transfer": "Transfer",
     "prompt_title": "Approve transfer",
     "prompt_title_ios": "Approve {{amount}} to {{name}}",
     "prompt_subtitle": "{{amount}} to {{name}}",
     "prompt_cancel": "Cancel"
+  },
+  "section_review_recipient": {
+    "bank": "Bank",
+    "mobile": "Mobile number"
   },
   "approval": {},
   "result": {

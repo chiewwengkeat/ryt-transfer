@@ -6,12 +6,14 @@ import {
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
-import { formatMoney } from "@/shared/lib/money/money";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
 import RowDetail from "@/shared/ui/RowDetail/RowDetail";
+
+import SectionReviewAmount from "./components/SectionReviewAmount/SectionReviewAmount";
+import SectionReviewRecipient from "./components/SectionReviewRecipient/SectionReviewRecipient";
 
 interface Props {
   draft: TransferDraft;
@@ -54,9 +56,8 @@ export default function SectionReviewDetails({ draft }: Props) {
       {firstTransfer && (
         <BannerNotice message={t("common.first_transfer_to_recipient.body")} />
       )}
-      <RowDetail label={t("review.bank")} value={recipient.bankName} />
-      <RowDetail label={t("review.mobile")} value={recipient.idValueMasked} />
-      <RowDetail label={t("review.amount")} value={formatMoney(draft.amount)} />
+      <SectionReviewRecipient recipient={recipient} />
+      <SectionReviewAmount draft={draft} />
     </Card>
   );
 }
