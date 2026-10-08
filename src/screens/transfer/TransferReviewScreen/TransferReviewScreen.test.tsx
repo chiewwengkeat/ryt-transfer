@@ -428,7 +428,7 @@ it(
     releaseApproval();
 
     expect(
-      await screen.findByText("Transfer sent", { timeout: 10_000 }),
+      await screen.findByText("Transfer sent", {}, { timeout: 10_000 }),
     ).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
     expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
@@ -580,7 +580,7 @@ it(
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
-    await screen.findByText("Transfer sent", { timeout: 10_000 });
+    await screen.findByText("Transfer sent", {}, { timeout: 10_000 });
 
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
     await fireEvent.press(
@@ -690,6 +690,7 @@ it("takes a lost approval answer to the result page, which never offers to send 
   expect(
     await screen.findByText(
       "This transfer is being checked, so don't send it again — not confirmed yet.",
+      {},
       { timeout: 10_000 },
     ),
   ).toBeOnTheScreen();

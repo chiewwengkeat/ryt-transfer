@@ -312,7 +312,7 @@ it("sends an approval whose answer was lost twice more, 2 and then 4 seconds on,
   await confirmRm100Transfer();
 
   expect(
-    await screen.findByText("Transfer sent", { timeout: 10_000 }),
+    await screen.findByText("Transfer sent", {}, { timeout: 10_000 }),
   ).toBeOnTheScreen();
   const [firstSend, firstResend, secondResend] = approvalsSeen;
   expect(approvalsSeen).toHaveLength(3);
@@ -363,6 +363,7 @@ it("sends an approval answered by a server error naming no bank code twice more 
   expect(
     await screen.findByText(
       "This transfer is being checked, so don't send it again — not confirmed yet.",
+      {},
       { timeout: 10_000 },
     ),
   ).toBeOnTheScreen();
@@ -412,7 +413,7 @@ it("gets the bank's first answer back for a resend whose first copy already move
   await confirmRm100Transfer();
 
   expect(
-    await screen.findByText("Transfer sent", { timeout: 10_000 }),
+    await screen.findByText("Transfer sent", {}, { timeout: 10_000 }),
   ).toBeOnTheScreen();
   jest.useRealTimers();
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
@@ -425,9 +426,11 @@ it("keeps the tries left that a wrong PIN was told when its refusal answers a re
   await approveWithPin("111111");
 
   expect(
-    await screen.findByText("That PIN is incorrect. You have 2 tries left.", {
-      timeout: 10_000,
-    }),
+    await screen.findByText(
+      "That PIN is incorrect. You have 2 tries left.",
+      {},
+      { timeout: 10_000 },
+    ),
   ).toBeOnTheScreen();
   await approveWithPin(DEMO_PIN);
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
