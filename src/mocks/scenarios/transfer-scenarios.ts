@@ -239,6 +239,8 @@ export const TRANSFER_SCENARIOS = {
   },
   "transfer.outcome_unexpected": {
     step: TransferStep.Outcome,
+    // Approved as processing, so Result reads it again: a completed approval would outlast the failed read.
+    conditions: { approvalOutcome: ApprovalOutcome.Processing },
     handlers: () => [http.get(BANK_PATHS.transfer, unknownCodeAnswer)],
   },
 
