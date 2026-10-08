@@ -35,7 +35,6 @@ import type {
 } from "@/screens/transfer/state/transfer-flow.type";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { useIsOffline } from "@/shared/platform/offline";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 
 import ButtonUsePinInstead from "./components/ButtonUsePinInstead/ButtonUsePinInstead";
@@ -46,8 +45,12 @@ import { useSendTransferApproval } from "./hooks/use-send-transfer-approval";
 
 interface Props {
   draft: TransferDraft;
+  onPhoneRefused: () => void;
 }
-export default function ButtonConfirmTransfer({ draft }: Props) {
+export default function ButtonConfirmTransfer({
+  draft,
+  onPhoneRefused,
+}: Props) {
   const { t } = useTranslation("transfer");
   const queryClient = useQueryClient();
   const lookup = useLookupRecipient(draft.recipient);
@@ -76,7 +79,6 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const offline = useIsOffline();
   const approvalPinLocked = useApprovalPinLocked();
   const [checkingPhone, setCheckingPhone] = useState(false);
-  const [phoneRefused, setPhoneRefused] = useState(false);
   const navigation =
     useNavigation<NativeStackNavigationProp<Record<string, undefined>>>();
   const reviewLeaveCountRef = useRef(0);
@@ -122,11 +124,6 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   // Not the data: a name check that fails on a later run keeps the earlier answer's data.
   if (!lookup.isSuccess) return null;
   const confirmedLookup = lookup.data;
-  // No Transfer button at all: a phone that reports tampering is never offered a way to approve.
-  if (phoneRefused)
-    return (
-      <BannerNotice tone="negative" message={t("common.rooted_phone.body")} />
-    );
 
   const createAndApproveTransfer = async (path: ApprovalPath) => {
     const leaveCountAtPress = reviewLeaveCountRef.current;
@@ -136,7 +133,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     // Leaving review while the check runs voids the press, even if they come back: nothing is approved behind them.
     if (reviewLeaveCountRef.current !== leaveCountAtPress) return;
     if (phoneRefusesApproval) {
-      setPhoneRefused(true);
+      onPhoneRefused();
       return;
     }
     if (approvalPinLocked) {
