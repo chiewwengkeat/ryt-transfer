@@ -11,6 +11,7 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 import type * as ContextStubs from "expo-router/build/testing-library/context-stubs";
+import i18next, { changeLanguage } from "i18next";
 
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { integrityStandInStore } from "@/domains/approval/hooks/device-integrity-verdict";
@@ -144,6 +145,8 @@ jest.mock("@/shell/query-client", () => {
   });
 });
 
+const appLanguageAtLaunch = i18next.language;
+
 beforeAll(() => {
   // A function, not "error": msw's built-in strategies let static-asset paths such as `.json` through.
   mswServer.listen({ onUnhandledRequest: recordUnhandledRequest });
@@ -153,7 +156,7 @@ beforeEach(() => {
   setObservabilitySink(recordObservation);
 });
 
-afterEach(() => {
+afterEach(async () => {
   // clear() leaves each mutation's 5-minute gc timer running, which holds a single-file run open.
   for (const mutation of mockQueryClient?.getMutationCache().getAll() ?? [])
     mutation.destroy();
@@ -171,6 +174,8 @@ afterEach(() => {
   integrityStandInStore.setState(integrityStandInStore.getInitialState(), true);
   resetContactsNativeDouble();
   resetObscuredTouchGuardDouble();
+  // A test that switched language would start the next one in it: clearing the stored pick leaves i18next as it is.
+  await changeLanguage(appLanguageAtLaunch);
   // A test that a request left offline would start the next one offline.
   forgetRequestOutcomes();
   mswServer.resetHandlers();
