@@ -29,12 +29,18 @@ function globToRegExp(glob) {
   );
 }
 
-const TEST_CODE_PATTERNS = [...TEST_FILES, ...TEST_HELPER_FILES].map(
-  globToRegExp,
-);
+const TEST_FILE_PATTERNS = TEST_FILES.map(globToRegExp);
+const TEST_CODE_PATTERNS = [
+  ...TEST_FILE_PATTERNS,
+  ...TEST_HELPER_FILES.map(globToRegExp),
+];
+
+function isTestFile(file) {
+  return TEST_FILE_PATTERNS.some((pattern) => pattern.test(file));
+}
 
 function isTestCode(file) {
   return TEST_CODE_PATTERNS.some((pattern) => pattern.test(file));
 }
 
-module.exports = { TEST_FILES, TEST_HELPER_FILES, isTestCode };
+module.exports = { TEST_FILES, TEST_HELPER_FILES, isTestFile, isTestCode };
