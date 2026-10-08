@@ -12,6 +12,7 @@ import {
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
+import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -151,6 +152,29 @@ it(
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
   }),
 );
+
+it("reports each step of a sent transfer with its amount, never with the recipient", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText("Transfer sent");
+
+  expect(
+    observedRecords
+      .filter((record) => record.name === "transfer_step")
+      .map((record) => record.properties),
+  ).toEqual([
+    { step: "reviewing", amountMinor: 10_000, currency: "MYR" },
+    { step: "creating", amountMinor: 10_000, currency: "MYR" },
+    { step: "approving", amountMinor: 10_000, currency: "MYR" },
+    { step: "submitting", amountMinor: 10_000, currency: "MYR" },
+    { step: "done" },
+    { step: "editing" },
+  ]);
+});
 
 it("asks for a face or fingerprint only, never the phone's passcode", async () => {
   await pairPhoneAsTheDemoLaunchDoes();

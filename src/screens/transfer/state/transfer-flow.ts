@@ -6,7 +6,8 @@ import type {
   RecipientIdType,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import type { Money } from "@/shared/lib/money/money.type";
-import { trackEvent } from "@/shared/observability/observability";
+
+import { trackTransferStepAndAmount } from "./transfer-funnel";
 
 export enum TransferFlowStep {
   Editing = "editing",
@@ -43,14 +44,7 @@ export function dispatchTransferFlow(action: TransferFlowAction) {
   const nextFlow = reduceTransferFlow(flow, action);
   if (nextFlow === flow) return false;
   transferFlowStore.setState(nextFlow, true);
-  if (nextFlow.step !== flow.step)
-    trackEvent("transfer_step", {
-      step: nextFlow.step,
-      ...("draft" in nextFlow && {
-        amountMinor: nextFlow.draft.amount?.minor,
-        currency: nextFlow.draft.amount?.currency,
-      }),
-    });
+  if (nextFlow.step !== flow.step) trackTransferStepAndAmount(nextFlow);
   return true;
 }
 
