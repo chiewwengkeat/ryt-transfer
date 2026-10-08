@@ -41,7 +41,7 @@ export const transferFlowStore = createStore<TransferFlowState>()(
 export function dispatchTransferFlow(action: TransferFlowAction) {
   const flow = transferFlowStore.getState();
   const nextFlow = reduceTransferFlow(flow, action);
-  if (nextFlow === flow) return;
+  if (nextFlow === flow) return false;
   transferFlowStore.setState(nextFlow, true);
   if (nextFlow.step !== flow.step)
     trackEvent("transfer_step", {
@@ -51,6 +51,7 @@ export function dispatchTransferFlow(action: TransferFlowAction) {
         currency: nextFlow.draft.amount?.currency,
       }),
     });
+  return true;
 }
 
 export function useTransferFlow<Selected>(

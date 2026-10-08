@@ -75,15 +75,12 @@ export default function TransferReviewScreen() {
   const sendTransfer = async (confirmedLookup: LookupRecipientResponse) => {
     setNotSentMessage(undefined);
     const idempotencyKey = randomUUID();
-    dispatchTransferFlow({
-      type: TransferFlowActionType.Confirmed,
-      lookup: confirmedLookup,
-      idempotencyKey,
-    });
-    const confirmed = transferFlowStore.getState();
     if (
-      confirmed.step !== TransferFlowStep.Creating ||
-      confirmed.idempotencyKey !== idempotencyKey
+      !dispatchTransferFlow({
+        type: TransferFlowActionType.Confirmed,
+        lookup: confirmedLookup,
+        idempotencyKey,
+      })
     )
       return;
 
@@ -102,12 +99,13 @@ export default function TransferReviewScreen() {
       return;
     }
     const { transferId } = created.transfer;
-    dispatchTransferFlow({
-      type: TransferFlowActionType.Created,
-      transferId,
-      challenge: created.approval.challenge,
-    });
-    if (transferFlowStore.getState().step !== TransferFlowStep.Approving)
+    if (
+      !dispatchTransferFlow({
+        type: TransferFlowActionType.Created,
+        transferId,
+        challenge: created.approval.challenge,
+      })
+    )
       return;
 
     const signedApproval = await signTransferApproval({
@@ -125,11 +123,12 @@ export default function TransferReviewScreen() {
       return;
     }
     const attemptKey = randomUUID();
-    dispatchTransferFlow({
-      type: TransferFlowActionType.ApprovalSent,
-      attemptKey,
-    });
-    if (transferFlowStore.getState().step !== TransferFlowStep.Submitting)
+    if (
+      !dispatchTransferFlow({
+        type: TransferFlowActionType.ApprovalSent,
+        attemptKey,
+      })
+    )
       return;
 
     try {

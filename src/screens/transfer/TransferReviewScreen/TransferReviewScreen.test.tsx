@@ -1,4 +1,5 @@
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
 import { lookUpTestRecipient, readBankBalanceMinor } from "@/test/bank-client";
@@ -234,6 +235,29 @@ it(
 
     expect(await screen.findByLabelText("Amount (RM)")).toHaveDisplayValue("");
     expect(view.getPathname()).toBe("/transfer/amount");
+  }),
+);
+
+it(
+  "never reopens review after a lost answer, even from the amount step behind it",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await openReviewOfRm100();
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByRole("button", { name: "Back to Home" });
+
+    // Review offers no way back after a lost answer, so this stands in for any route that still could.
+    await act(() => {
+      router.back();
+    });
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Review" }),
+    );
+
+    expect(view.getPathname()).toBe("/transfer/amount");
+    expect(screen.queryByText("This screen stopped working.")).toBeNull();
   }),
 );
 

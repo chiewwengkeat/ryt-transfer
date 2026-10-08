@@ -75,11 +75,13 @@ export default function TransferAmountScreen() {
             onPress={() => {
               setReviewPressed(true);
               if (amount === null || amount.minor === 0 || amountError) return;
-              dispatchTransferFlow({
-                type: TransferFlowActionType.AmountEntered,
-                amount,
-              });
-              router.push("/transfer/review");
+              if (
+                dispatchTransferFlow({
+                  type: TransferFlowActionType.AmountEntered,
+                  amount,
+                })
+              )
+                router.push("/transfer/review");
             }}
           />
         }

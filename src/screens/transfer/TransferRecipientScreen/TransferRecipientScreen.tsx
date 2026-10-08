@@ -42,14 +42,16 @@ export default function TransferRecipientScreen() {
                 setMobileError(t("common.badly_formed_input.mobile"));
                 return;
               }
-              dispatchTransferFlow({
-                type: TransferFlowActionType.RecipientChosen,
-                recipient: {
-                  idType: RecipientIdType.Mobile,
-                  idValue: `+60${national}`,
-                },
-              });
-              router.push("/transfer/amount");
+              if (
+                dispatchTransferFlow({
+                  type: TransferFlowActionType.RecipientChosen,
+                  recipient: {
+                    idType: RecipientIdType.Mobile,
+                    idValue: `+60${national}`,
+                  },
+                })
+              )
+                router.push("/transfer/amount");
             }}
           />
         }
