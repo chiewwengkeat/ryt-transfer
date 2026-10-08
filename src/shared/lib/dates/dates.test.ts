@@ -49,7 +49,7 @@ it.each([
   expect(toMalaysianDateKey(instant)).toBe(dateKey);
 });
 
-it("refuses a time or day for an instant it cannot read", () => {
-  expect(() => formatMalaysianTime("not a date")).toThrow(RangeError);
-  expect(() => toMalaysianDateKey("not a date")).toThrow(RangeError);
+it("gives no time or day for an instant it cannot read", () => {
+  expect(formatMalaysianTime("not a date")).toBeNull();
+  expect(toMalaysianDateKey("not a date")).toBeNull();
 });

@@ -44,6 +44,13 @@ export const getListTransfersOptions = () =>
         trackEvent("transfer_history_unreadable_amounts", {
           count: unreadableAmountCount,
         });
+      const unreadableTimeCount = page.items.filter(
+        ({ createdAt }) => toMalaysianDateKey(createdAt) === null,
+      ).length;
+      if (unreadableTimeCount > 0)
+        trackEvent("transfer_history_unreadable_times", {
+          count: unreadableTimeCount,
+        });
       return page;
     },
     initialPageParam: null as string | null,
@@ -63,21 +70,25 @@ export function useListTransfers() {
 }
 
 // Module-level so its identity holds: TanStack re-runs a new select over every loaded transfer.
-function selectTransferHistory(
-  history: InfiniteData<ListTransfersResponse, string | null>,
+export function selectTransferHistory(
+  history: InfiniteData<ListTransfersResponse>,
 ) {
   const daySummaries: Record<string, ListTransfersResponse["days"][number]> =
     {};
   // A day split across two pages comes with its whole-day summary in both: keep one, never add them.
   for (const page of history.pages)
     for (const day of page.days) daySummaries[day.date] = day;
+  const transfers = history.pages.flatMap(({ items }) => items);
+  const readableDates = transfers.map(({ createdAt }) =>
+    toMalaysianDateKey(createdAt),
+  );
+  // A row whose time cannot be read keeps its place in the bank's newest-first order, on its neighbour's day.
+  let malaysianDate = readableDates.find((date) => date !== null) ?? "";
   return {
-    transfers: history.pages.flatMap(({ items }) =>
-      items.map((transfer) => ({
-        ...transfer,
-        malaysianDate: toMalaysianDateKey(transfer.createdAt),
-      })),
-    ),
+    transfers: transfers.map((transfer, index) => {
+      malaysianDate = readableDates[index] ?? malaysianDate;
+      return { ...transfer, malaysianDate };
+    }),
     daySummaries,
   };
 }

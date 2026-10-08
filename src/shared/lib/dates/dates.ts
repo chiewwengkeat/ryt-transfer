@@ -43,10 +43,10 @@ export function formatMalaysianDayHeader(malaysianIsoDate: string, now: Date) {
   return formatDayMonthYear(new Date(`${malaysianIsoDate}T00:00:00Z`));
 }
 
+// Null rather than a throw, as for an unreadable amount: one bad row must not blank a list.
 export function formatMalaysianTime(instant: string) {
   const wallClock = new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS);
-  if (Number.isNaN(wallClock.getTime()))
-    throw new RangeError("Invalid time value");
+  if (Number.isNaN(wallClock.getTime())) return null;
   const hour = wallClock.getUTCHours();
   return t("date.time", {
     hour: hour % 12 || 12,
@@ -56,9 +56,10 @@ export function formatMalaysianTime(instant: string) {
 }
 
 export function toMalaysianDateKey(instant: string) {
-  return new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS)
-    .toISOString()
-    .slice(0, 10);
+  const wallClock = new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS);
+  return Number.isNaN(wallClock.getTime())
+    ? null
+    : wallClock.toISOString().slice(0, 10);
 }
 
 function formatDayMonthYear(wallClock: Date) {

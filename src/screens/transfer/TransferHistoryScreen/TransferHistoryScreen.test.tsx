@@ -11,6 +11,7 @@ import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
 import { lookUpTestRecipient } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
+import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -34,6 +35,10 @@ const LIM_ON_4_OCTOBER = buildHistoryTransfer({
 const TAN_ON_6_OCTOBER = buildHistoryTransfer({
   registeredName: "Tan Mei Ling",
   createdAt: "2026-10-06T09:00:00+08:00",
+});
+const LIM_AT_AN_UNREADABLE_TIME = buildHistoryTransfer({
+  registeredName: "Lim Wei Jie",
+  createdAt: "not a date",
 });
 const OFFLINE = { isConnected: false, isInternetReachable: false };
 const ONLINE = { isConnected: true, isInternetReachable: true };
@@ -649,6 +654,103 @@ it("still lists a transfer whose amount it cannot read", async () => {
       name: "Aisyah Rahman 3:42 pm · Successful",
     }),
   ).toBeOnTheScreen();
+});
+
+it("keeps transfers whose time it cannot read in their place without a time, reporting them once for the page", async () => {
+  serveTransferHistoryPages([
+    [
+      TAN_ON_6_OCTOBER,
+      LIM_AT_AN_UNREADABLE_TIME,
+      buildHistoryTransfer({
+        registeredName: "Ng Siew Lan",
+        createdAt: "",
+      }),
+      buildHistoryTransfer(),
+    ],
+  ]);
+  await renderRoute("/transfer-history");
+
+  expect(
+    await screen.findByRole("button", {
+      name: "Lim Wei Jie Successful -RM 50.00",
+    }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: "Ng Siew Lan Successful -RM 50.00" }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: /^Tan Mei Ling 9:00 am/ }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: /^Aisyah Rahman 3:42 pm/ }),
+  ).toBeOnTheScreen();
+  expect(
+    observedRecords.filter(
+      ({ name }) => name === "transfer_history_unreadable_times",
+    ),
+  ).toEqual([
+    {
+      type: "event",
+      name: "transfer_history_unreadable_times",
+      properties: { count: 2 },
+    },
+  ]);
+});
+
+it("folds a transfer whose time it cannot read away with its neighbour's day, which a pull leaves folded", async () => {
+  serveTransferHistoryPages([
+    [TAN_ON_6_OCTOBER, LIM_AT_AN_UNREADABLE_TIME, buildHistoryTransfer()],
+  ]);
+  await renderRoute("/transfer-history");
+
+  await fireEvent.press(
+    await screen.findByRole("button", {
+      name: "6 Oct 2026, 1 transfer, -RM 50.00",
+    }),
+  );
+
+  expect(
+    screen.getByRole("button", {
+      name: "6 Oct 2026, 1 transfer, -RM 50.00",
+      expanded: false,
+    }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByRole("button", { name: /^Lim Wei Jie/ }),
+  ).not.toBeOnTheScreen();
+  expect(
+    screen.queryByRole("button", { name: /^Tan Mei Ling/ }),
+  ).not.toBeOnTheScreen();
+  await fireEvent(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+    "refresh",
+  );
+  await act(() => jest.advanceTimersByTimeAsync(1000));
+  expect(
+    screen.getByRole("button", {
+      name: "6 Oct 2026, 1 transfer, -RM 50.00",
+      expanded: false,
+    }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByRole("button", { name: /^Lim Wei Jie/ }),
+  ).not.toBeOnTheScreen();
+});
+
+it("loads on past a later page holding a transfer whose time it cannot read", async () => {
+  serveTransferHistoryPages([
+    [buildHistoryTransfer()],
+    [LIM_AT_AN_UNREADABLE_TIME],
+  ]);
+  await renderRoute("/transfer-history");
+
+  expect(
+    await screen.findByRole("button", {
+      name: "Lim Wei Jie Successful -RM 50.00",
+    }),
+  ).toBeOnTheScreen();
+  expect(screen.getByText("That's everything")).toBeOnTheScreen();
+  expect(screen.queryByText("Couldn't load more.")).not.toBeOnTheScreen();
 });
 
 it("pages through the bank's own history, its split day whole from the first page", async () => {

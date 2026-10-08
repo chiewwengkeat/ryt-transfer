@@ -36,6 +36,7 @@ export default function ItemTransfer({ transfer }: Props) {
   } satisfies Record<TransferStatus, string>;
   const amount = parseWireAmount(transfer.amount);
   const moneyMovedSign = MONEY_MOVED_SIGN[transfer.funds];
+  const transferTime = formatMalaysianTime(transfer.createdAt);
 
   return (
     <Pressable
@@ -52,10 +53,12 @@ export default function ItemTransfer({ transfer }: Props) {
       <View style={styles.details}>
         <TextBody strong>{transfer.counterparty.registeredName}</TextBody>
         <TextBody tone="secondary">
-          {t("history.transfer.time_and_status", {
-            time: formatMalaysianTime(transfer.createdAt),
-            status: statusWord[transfer.status],
-          })}
+          {transferTime === null
+            ? statusWord[transfer.status]
+            : t("history.transfer.time_and_status", {
+                time: transferTime,
+                status: statusWord[transfer.status],
+              })}
         </TextBody>
       </View>
       {amount && (

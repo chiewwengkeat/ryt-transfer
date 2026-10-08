@@ -5,9 +5,9 @@ import { useRef, useState } from "react";
 import {
   getListTransfersOptions,
   resetTransferHistory,
+  selectTransferHistory,
   type useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
-import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
 
 import HeaderTransferDay from "./components/HeaderTransferDay/HeaderTransferDay";
 import ItemTransfer from "./components/ItemTransfer/ItemTransfer";
@@ -45,10 +45,14 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
 
   const toggleTransferDay = (date: string, expanded: boolean) => {
     // From the cache, not this render's rows: closing over those would redraw every row on each page.
-    const loadedRowCount = queryClient
-      .getQueryData(getListTransfersOptions().queryKey)
-      ?.pages.flatMap(({ items }) => items)
-      .filter(({ createdAt }) => toMalaysianDateKey(createdAt) === date).length;
+    const history = queryClient.getQueryData(
+      getListTransfersOptions().queryKey,
+    );
+    const loadedRowCount =
+      history &&
+      selectTransferHistory(history).transfers.filter(
+        ({ malaysianDate }) => malaysianDate === date,
+      ).length;
     setCollapsedDayRowCounts((counts) => ({
       ...counts,
       [date]: expanded ? (loadedRowCount ?? 0) : undefined,
