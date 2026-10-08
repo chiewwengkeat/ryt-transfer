@@ -1,10 +1,14 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http } from "msw";
 
+import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { approvalPinSheetStore } from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import { listPendingTransfers } from "@/domains/transfer/hooks/pending-transfers";
 import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
-import { readBankBalanceMinor } from "@/test/bank-client";
+import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
 import {
   biometricPromptsShown,
   changeEnrolledBiometrics,
@@ -13,7 +17,7 @@ import {
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { observedRecords } from "@/test/harness/recording-sink";
-import { sentRequests } from "@/test/msw-server";
+import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -268,3 +272,63 @@ it(
     expect(approveRequests()).toEqual([]);
   }),
 );
+
+it("lets an approval's answer change nothing once the person has left it and started another transfer", async () => {
+  let releaseFirstApproval: () => void = () => undefined;
+  const firstApprovalHeld = new Promise<void>((release) => {
+    releaseFirstApproval = () => {
+      release();
+    };
+  });
+  // Holds the first approval in flight, then falls through to the bank, which completes it.
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      async () => {
+        await firstApprovalHeld;
+      },
+      { once: true },
+    ),
+  );
+  await confirmRm100Transfer();
+  await screen.findByText(
+    "Sending your transfer. The bank's answer comes next.",
+  );
+
+  // Review offers no way back while sending, so this stands in for any route that still could.
+  await act(() => {
+    router.back();
+  });
+  await act(() => {
+    router.back();
+  });
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(await screen.findByLabelText("Amount (RM)"), "50");
+  releaseFirstApproval();
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(1_000);
+  });
+
+  expect(screen.getByLabelText("Amount (RM)")).toHaveDisplayValue("50");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  const [firstTransferId, secondTransferId] = approveRequests().map(
+    (request) => new URL(request.url).pathname.split("/")[2],
+  );
+  expect(secondTransferId).not.toBe(firstTransferId);
+  expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
+  jest.useRealTimers();
+  const {
+    body: { customerId },
+  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+  expect(await listPendingTransfers(customerId)).toContainEqual(
+    expect.objectContaining({ transferId: firstTransferId }),
+  );
+});

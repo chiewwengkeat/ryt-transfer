@@ -323,7 +323,9 @@ it(
     );
 
     expect(
-      await screen.findByText("The transfer was not sent — no money moved."),
+      await screen.findByText(
+        "The approval couldn't be verified — no money moved.",
+      ),
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
     expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
@@ -487,7 +489,9 @@ it(
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
-    await screen.findByText("The transfer was not sent — no money moved.");
+    await screen.findByText(
+      "The approval couldn't be verified — no money moved.",
+    );
 
     expect(readRootTransferScreenGestureEnabled()).not.toBe(false);
   }),

@@ -8,23 +8,10 @@ import {
   writePendingTransfer,
 } from "../../hooks/pending-transfers";
 import { getTransferOptions } from "../get-transfer/get-transfer";
-import {
-  ApproveTransferErrorCode,
-  type ApproveTransferRequest,
-  type ApproveTransferResponse,
+import type {
+  ApproveTransferRequest,
+  ApproveTransferResponse,
 } from "./approve-transfer.type";
-
-// Only answers proving the bank refused and moved no money: any other failure may hide a debit, so never "not sent".
-export const APPROVAL_REFUSAL_CODES = new Set<string>([
-  ApproveTransferErrorCode.ApprovalExpired,
-  ApproveTransferErrorCode.ApprovalInvalid,
-  ApproveTransferErrorCode.PinIncorrect,
-  ApproveTransferErrorCode.PinLocked,
-  ApproveTransferErrorCode.KeyNotRegistered,
-  ApproveTransferErrorCode.CoolingOff,
-  ApproveTransferErrorCode.AccountLocked,
-  ApproveTransferErrorCode.InvalidRequest,
-]);
 
 export class ApproveRequestNotSentError extends Error {}
 

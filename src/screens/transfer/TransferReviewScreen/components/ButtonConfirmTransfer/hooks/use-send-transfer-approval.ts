@@ -1,6 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
-import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
 
@@ -17,8 +16,6 @@ import {
 } from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import {
-  APPROVAL_REFUSAL_CODES,
-  ApproveRequestNotSentError,
   buildSignedApprovalText,
   useApproveTransfer,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer";
@@ -28,7 +25,6 @@ import {
   type ApproveTransferRequest,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
-import { refreshAccountAndHistoryAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import {
   ApprovalPath,
   dispatchTransferFlow,
@@ -43,6 +39,8 @@ import {
   TransportErrorKind,
 } from "@/shared/http/transport-error";
 import { reportError } from "@/shared/observability/observability";
+
+import { settleApprovalAnswer } from "./settle-approval-answer";
 
 export function useSendTransferApproval() {
   const { t } = useTranslation("transfer");
@@ -88,9 +86,11 @@ export function useSendTransferApproval() {
           type: TransferFlowActionType.ApprovalSent,
           attemptKey,
         })
-      )
+      ) {
+        closeApprovalPinSheet();
         return null;
-      return approveTransfer
+      }
+      const answer = await approveTransfer
         .mutateAsync({
           customerId,
           transferId,
@@ -98,42 +98,20 @@ export function useSendTransferApproval() {
           idempotencyKey: attemptKey,
         })
         .then(
-          () => ({ failure: undefined }),
-          (failure: unknown) => ({ failure }),
+          ({ transfer }) => ({ transfer, failure: undefined }),
+          (failure: unknown) => ({ transfer: undefined, failure }),
         )
         .finally(() => {
           // Drops the finished call's variables, which carry the PIN on that path.
           approveTransfer.reset();
         });
-    };
-
-    const settleApprovalAnswer = async (failure: unknown) => {
-      closeApprovalPinSheet();
-      if (failure instanceof ApproveRequestNotSentError) {
-        leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
-        return;
-      }
-      if (
-        failure instanceof TransportError &&
-        failure.kind === TransportErrorKind.Http &&
-        failure.code !== undefined &&
-        APPROVAL_REFUSAL_CODES.has(failure.code)
-      ) {
-        await forgetPendingTransfer();
-        leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled);
-        return;
-      }
-      // The approval left the phone and nothing proves where it ended, so only the result page may say.
-      void refreshAccountAndHistoryAfterApproval(queryClient);
-      // From Home, so Back from the result never reopens a transfer already sent.
-      router.dismissTo("/");
-      router.push(`/transfer/result/${transferId}`);
-      dispatchTransferFlow({
-        type:
-          failure === undefined
-            ? TransferFlowActionType.ApprovalAnswered
-            : TransferFlowActionType.AnswerLost,
-      });
+      // ⛔ Every answer passes here before anything acts on it: the person may have left for another
+      // transfer meanwhile, and an answer for an attempt the flow has left must change nothing.
+      const flow = transferFlowStore.getState();
+      return flow.step === TransferFlowStep.Submitting &&
+        flow.attemptKey === attemptKey
+        ? answer
+        : null;
     };
 
     const approveWithPin = async (words: {
@@ -158,10 +136,7 @@ export function useSendTransferApproval() {
           return;
         }
         const attempt = await sendApproval({ ...possessionSignature, pin });
-        if (attempt === null) {
-          closeApprovalPinSheet();
-          return;
-        }
+        if (attempt === null) return;
         const pinRefusal =
           attempt.failure instanceof TransportError &&
           attempt.failure.kind === TransportErrorKind.Http
@@ -190,7 +165,12 @@ export function useSendTransferApproval() {
           leaveApprovalNotSent(TransferFlowScenario.PinLocked);
           return;
         }
-        await settleApprovalAnswer(attempt.failure);
+        await settleApprovalAnswer({
+          answer: attempt,
+          transferId,
+          forgetPendingTransfer,
+          queryClient,
+        });
         return;
       }
     };
@@ -224,7 +204,13 @@ export function useSendTransferApproval() {
           keyId: signing.keyId,
           signature: signing.signature,
         });
-        if (attempt !== null) await settleApprovalAnswer(attempt.failure);
+        if (attempt !== null)
+          await settleApprovalAnswer({
+            answer: attempt,
+            transferId,
+            forgetPendingTransfer,
+            queryClient,
+          });
         return;
       }
       case BiometricSignOutcome.Cancelled:

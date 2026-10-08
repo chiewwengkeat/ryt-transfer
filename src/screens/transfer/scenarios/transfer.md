@@ -459,7 +459,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 
 ### Something unexpected while approving
 `transfer.approval_unexpected`
-- **When:** anything the scenarios above don't name goes wrong before the approval leaves the phone; once it has left, anything unexpected is a lost approval answer, in Recovery
+- **When:** anything the scenarios above don't name goes wrong before the approval leaves the phone, or the bank refuses the approval as badly formed (`INVALID_REQUEST`); once it has left, anything else unexpected is a lost approval answer, in Recovery
 - **Money:** no money moved
 - **Shown as:** on the review step
 - **Tell them:** something unexpected stopped the approval before it was sent — no money moved
