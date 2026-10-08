@@ -2,19 +2,18 @@ import { screen } from "@testing-library/react-native";
 
 import { renderRoute } from "./render-route";
 
-const VARIANT_BEFORE_TESTS = process.env.EXPO_PUBLIC_APP_VARIANT;
-
 jest.mock("@/mocks/demo-layer", () => {
   throw new Error("The fake bank's loader was touched.");
 });
 
+// Before setup's launch hook loads the shell: a variant left set in the shell would load the fake bank there.
+delete process.env.EXPO_PUBLIC_APP_VARIANT;
+
 afterEach(() => {
-  if (VARIANT_BEFORE_TESTS === undefined)
-    delete process.env.EXPO_PUBLIC_APP_VARIANT;
-  else process.env.EXPO_PUBLIC_APP_VARIANT = VARIANT_BEFORE_TESTS;
+  delete process.env.EXPO_PUBLIC_APP_VARIANT;
 });
 
-// Setup loads the shell before this file's mock exists, so its gate is run again here, under the mock.
+// Isolated: setup has already loaded the launch, and a loaded module is handed back without running its gate again.
 function launchShellBuiltAs(variant: string | undefined) {
   if (variant === undefined) delete process.env.EXPO_PUBLIC_APP_VARIANT;
   else process.env.EXPO_PUBLIC_APP_VARIANT = variant;
