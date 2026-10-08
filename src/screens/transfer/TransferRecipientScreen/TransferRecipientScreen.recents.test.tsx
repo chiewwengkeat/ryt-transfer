@@ -14,7 +14,7 @@ const UNKNOWN_BANK_CODE = {
 };
 
 it(
-  "opens the recipient step filled in from a recent recipient on Home, with the amount empty and the name looked up afresh",
+  "opens the recipient step with a recent recipient picked on Home, the amount empty and the name looked up afresh",
   scenarioTest("transfer.recent_recipient_chosen", async () => {
     const {
       items: [firstRecent],
