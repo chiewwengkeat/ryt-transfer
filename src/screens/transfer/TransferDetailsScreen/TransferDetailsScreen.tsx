@@ -8,8 +8,8 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
+import BannerOutOfDate from "../components/BannerOutOfDate/BannerOutOfDate";
 import SectionTransferDetails from "../components/SectionTransferDetails/SectionTransferDetails";
-import BannerDetailsOutOfDate from "./components/BannerDetailsOutOfDate/BannerDetailsOutOfDate";
 import { useGetTransferWithHistoryPlaceholder } from "./hooks/use-get-transfer-with-history-placeholder";
 
 export default function TransferDetailsScreen() {
@@ -40,7 +40,8 @@ export default function TransferDetailsScreen() {
           {/* A failure from an earlier visit is not this one's: shown on reopening, it would be announced as current. */}
           {((transferQuery.isError && transferQuery.isFetchedAfterMount) ||
             transferQuery.isPaused) && (
-            <BannerDetailsOutOfDate
+            <BannerOutOfDate
+              message={t("details.out_of_date")}
               onTryAgain={() => {
                 void transferQuery.refetch();
               }}

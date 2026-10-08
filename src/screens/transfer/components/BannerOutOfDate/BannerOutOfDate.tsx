@@ -6,15 +6,16 @@ import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
 interface Props {
+  message: string;
   onTryAgain: () => void;
 }
-export default function BannerDetailsOutOfDate({ onTryAgain }: Props) {
+export default function BannerOutOfDate({ message, onTryAgain }: Props) {
   const { t } = useTranslation("transfer");
 
   return (
     <View style={styles.banner}>
-      <BannerNotice message={t("details.out_of_date")} />
-      <ButtonSecondary label={t("details.try_again")} onPress={onTryAgain} />
+      <BannerNotice message={message} />
+      <ButtonSecondary label={t("history.try_again")} onPress={onTryAgain} />
     </View>
   );
 }

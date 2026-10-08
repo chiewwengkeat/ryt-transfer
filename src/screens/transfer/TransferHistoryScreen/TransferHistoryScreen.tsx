@@ -9,13 +9,14 @@ import {
   resetTransferHistory,
   useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
+import { colors, spacing } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
-import BannerOutOfDate from "./components/BannerOutOfDate/BannerOutOfDate";
+import BannerOutOfDate from "../components/BannerOutOfDate/BannerOutOfDate";
 import ButtonHeaderBack from "./components/ButtonHeaderBack/ButtonHeaderBack";
 import SectionTransferAccordion from "./components/SectionTransferAccordion/SectionTransferAccordion";
 
@@ -63,7 +64,16 @@ export default function TransferHistoryScreen() {
           {/* A failure from an earlier visit is not this one's: shown on reopening, it would be announced as current. */}
           {((transferHistory.isRefetchError &&
             transferHistory.isFetchedAfterMount) ||
-            transferHistory.isPaused) && <BannerOutOfDate />}
+            transferHistory.isPaused) && (
+            <View style={styles.outOfDate}>
+              <BannerOutOfDate
+                message={t("history.out_of_date")}
+                onTryAgain={() => {
+                  void resetTransferHistory(queryClient);
+                }}
+              />
+            </View>
+          )}
           {transferHistory.data.transfers.length === 0 ? (
             <ViewMessage
               title={t("history.empty.title")}
@@ -81,4 +91,5 @@ export default function TransferHistoryScreen() {
 
 const styles = StyleSheet.create({
   history: { flex: 1 },
+  outOfDate: { padding: spacing.md, backgroundColor: colors.background },
 });
