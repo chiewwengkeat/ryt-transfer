@@ -11,7 +11,5 @@
     "declined": "Your transfer of {{amount}} to {{name}} was not sent — no money moved.",
     "fraud_blocked": "Your transfer of {{amount}} to {{name}} was stopped by the bank to protect you. The bank will contact you about it — no money moved.",
     "dismiss": "Dismiss the notice about {{amount}} to {{name}}"
-  },
-
-  "recents": {}
+  }
 }
