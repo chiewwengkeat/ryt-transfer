@@ -25,8 +25,8 @@ The cost of headers that do not pin: a day's header scrolls away with its rows, 
 - **A tuned FlatList.** It virtualizes but does not recycle rows, and it needs fixed row heights, which large text breaks.
 - **Legend List 3.** Pure JavaScript, but its own documentation still called version 3 a beta when it was weighed.
 - **A hand-built list.** It rebuilds the virtualization the platform's list components already provide, in code every later engineer has to maintain.
-- **Sticky date headers, without collapsing.** A pinned header keeps the current day in view, but it holds a band of the screen for the whole scroll, a band that grows with the text size, and with no collapse a busy day can only be scrolled through.
-- **A date on every row.** It repeats the date on every row and leaves no one place for a day's count and net amount.
+- **Sticky date headers, without collapsing.** A pinned header keeps the current day in view, but it holds a band of the screen for the whole scroll, and with no collapse a long day can only scroll under its header.
+- **A date on every row.** The simplest, but harder to scan by day: it repeats the date on every row and leaves no one place for a day's count and net amount.
 - **Summing the loaded rows.** A day split across two pages would read short until its next page arrived, which in a bank looks like a wrong total.
 - **Only the date and count in a day's header, or only the date.** A header with fewer figures. Chosen instead: the bank's summary of each day, so the header shows the day's count and net amount, whole from the first page.
 - **A "Load more" button.** A tap for every 30 rows, in a list meant to be scrolled through by the thousand.

@@ -24,8 +24,8 @@ A production build protects what is on screen, the phone it runs on and what it 
 - **Blocking capture on the transfer steps only, or on those and Home.** Either leaves History, with its names and amounts, capturable, since it runs in a route stack of its own; the first leaves Home's balance and recent recipients capturable too.
 - **Blocking every screen, receipts included.** People keep a screenshot of a receipt as proof of payment.
 - **Never blocking.** A balance, a recipient or the PIN pad on screen could be captured by malware or a screen-sharing scammer.
-- **An on/off switch for the block in the Demo menu.** It could be on beside a bank scenario; as a scenario, the block is one pick among the others, and the menu holds one pick at a time.
-- **A switch with no matrix section.** Every Demo-menu entry carries a permanent id from the matrix, and a switch with no section would have none.
+- **An on/off switch for the block in the Demo menu.** It would stay on across scenarios, so the block could be shown during a bank scenario such as not enough balance, at the cost of a second kind of entry in the menu and one more field in the store behind it.
+- **A switch with no matrix section.** It would be a demo-only control with no matrix id, unlike every scenario the Demo menu picks, and the matrix would never tell other clients that capture is blocked.
 - **react-native-capture-protection.** Chosen instead: expo-screen-capture, Expo's own module, which both blocks capture and draws the switcher blur, at a patch that fixes an iPhone bug where blocking again on the next screen blacked out the app.
 - **A full-strength blur, paused for Face ID.** The pause would switch the cover off around every approval, and anyone leaving the app mid-prompt would leave the review screen, recipient and amount, unblurred in the switcher.
 - **No cover in the switcher.** A balance or a recipient's name would show to anyone glancing at the switcher.
@@ -37,13 +37,13 @@ A production build protects what is on screen, the phone it runs on and what it 
 - **Hiding the screen from accessibility services now, on Android 14 and newer.** It would stop a malicious accessibility service reading the marked views, at the cost of native code; the gap is named instead, for production.
 - **Keeping the template's permissions.** The app would request drawing over other apps, the permission tapjacking malware relies on, and shared storage, none of which it uses, and a store listing shows every permission an app requests.
 - **Keeping the screen-capture library's two permissions.** Photo access would be requested for nothing, since the library checks for it before using it; only the screenshot-detection permission came back, once refusing it crashed every launch on Android 14 and newer.
-- **Patching the screen-capture library.** It would have kept the screenshot permission refused; allowing that one permission, granted at install with no prompt, was chosen instead.
+- **Patching the screen-capture library.** It would have kept the screenshot permission refused, at the cost of a patched dependency in the repository, re-checked at every SDK upgrade; allowing that one permission, granted at install with no prompt, was chosen instead.
 - **Dropping the screen-capture library.** The block and the switcher blur both come from it; allowing the one permission kept them.
 - **react-native-keychain.** A native module outside the SDK's versioning, where expo-secure-store is versioned with the SDK; its last release was in March 2025.
 - **Encrypted MMKV.** Its encryption key would itself need the platform's secure storage: a second store for records that fit in the first.
 - **A biometric lock on the stored records.** It would ask for a fingerprint at every launch-time check, and a biometric change would wipe the records.
 - **Treating financial data as sensitive too.** Balances and amounts could never reach a log or an analytics sink either; amounts may, under this decision.
 - **Treating only credentials as sensitive.** Recipients' IDs and registered names could reach a log; they count as sensitive here.
-- **Lint bans alone, with no secret scan.** One check fewer; the secret scan runs with every lint instead.
+- **Lint bans alone, with no secret scan.** One check fewer, but a committed key or token would be left to review to catch.
 - **No security checks beyond style.** A rule nobody checks is a rule someone breaks.
 - **An app lock, or a mock sign-in.** Sign-in, device pairing, PIN setup and reset, and the biometrics setting belong to the host app this module runs inside; building them here adds a capability nobody asked for.
