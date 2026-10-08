@@ -6,6 +6,7 @@ import {
   TransferFlowStep,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
+import type { TransferFlowNotice } from "@/screens/transfer/state/transfer-flow.type";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 
@@ -30,9 +31,7 @@ export default function BannerFlowNotice({ step }: Props) {
   const noticeName = notice.replace(
     /^transfer\./,
     "",
-  ) as `${TransferFlowScenario}` extends `transfer.${infer Name}`
-    ? Name
-    : never;
+  ) as `${TransferFlowNotice}` extends `transfer.${infer Name}` ? Name : never;
   return (
     <BannerNotice
       tone="negative"

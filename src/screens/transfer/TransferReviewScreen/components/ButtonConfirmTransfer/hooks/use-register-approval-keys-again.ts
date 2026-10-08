@@ -18,12 +18,16 @@ import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
-import { reportError } from "@/shared/observability/observability";
+import {
+  reportError,
+  trackScenarioShown,
+} from "@/shared/observability/observability";
 
 export function useRegisterApprovalKeysAgain() {
   const { t } = useTranslation("transfer");
 
   return async (noLongerOnThisTransfer: () => boolean, pinInHand?: string) => {
+    trackScenarioShown(TransferFlowScenario.ApprovalKeyUnknown);
     const words = {
       message: t("common.approval_key_unknown.body"),
       detail: t("common.approval_key_unknown.pin"),
@@ -52,7 +56,7 @@ export function useRegisterApprovalKeysAgain() {
         reportError(failure, { boundary: "approval_key_registration" });
       // ⛔ Left during the call: a sheet or prompt now would cover whatever they moved on to, a newer transfer's sheet included.
       if (noLongerOnThisTransfer())
-        return { notice: TransferFlowScenario.ApprovalCancelled };
+        return { notice: TransferFlowScenario.ApprovalCancelled } as const;
       if (failure === undefined) return { pin };
       // The bank asks for a PIN without saying it is locked, so the lock it reported earlier answers instead.
       if (
@@ -64,10 +68,12 @@ export function useRegisterApprovalKeysAgain() {
           ...words,
           refusal: t("common.pin_locked.body"),
         });
-        return { notice: TransferFlowScenario.PinLocked };
+        return { notice: TransferFlowScenario.PinLocked } as const;
       }
       if (failedUnexpectedly)
-        return { notice: TransferFlowScenario.ApprovalKeyUnknown };
+        return { notice: TransferFlowScenario.ApprovalKeyUnknown } as const;
+      if (refusal?.code === RegisterApprovalKeysErrorCode.PinIncorrect)
+        trackScenarioShown(TransferFlowScenario.PinIncorrect);
       const askedPin = await askForApprovalPin({
         ...words,
         refusal:
@@ -78,7 +84,7 @@ export function useRegisterApprovalKeysAgain() {
             : undefined,
       });
       if (askedPin === null)
-        return { notice: TransferFlowScenario.ApprovalCancelled };
+        return { notice: TransferFlowScenario.ApprovalCancelled } as const;
       pin = askedPin;
     }
   };

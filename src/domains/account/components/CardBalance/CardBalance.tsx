@@ -11,6 +11,7 @@ import {
   TransportErrorKind,
 } from "@/shared/http/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
+import { useTrackScenarioShown } from "@/shared/observability/observability";
 import { useIsOffline } from "@/shared/platform/offline";
 import { colors, typography } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
@@ -33,22 +34,35 @@ export default function CardBalance({ unexpectedScenario }: Props) {
     getTransferLimitsMaintenance(limits.error) !== undefined;
   const failure =
     account.error ?? (limitsPausedForMaintenance ? null : limits.error);
+  const failureScenario =
+    failure === null
+      ? undefined
+      : failure instanceof TransportError &&
+          (failure.kind === TransportErrorKind.Network ||
+            failure.kind === TransportErrorKind.Timeout ||
+            (failure.kind === TransportErrorKind.Http &&
+              (failure.status ?? 0) >= 500))
+        ? "balance_unavailable"
+        : unexpectedScenario;
+  useTrackScenarioShown(
+    failureScenario !== undefined
+      ? `transfer.${failureScenario}`
+      : limitsPausedForMaintenance
+        ? "transfer.under_maintenance"
+        : account.data !== undefined && limits.isSuccess
+          ? "transfer.balance_and_limit_shown"
+          : undefined,
+  );
 
-  if (failure !== null) {
-    const failedToReachBank =
-      failure instanceof TransportError &&
-      (failure.kind === TransportErrorKind.Network ||
-        failure.kind === TransportErrorKind.Timeout ||
-        (failure.kind === TransportErrorKind.Http &&
-          (failure.status ?? 0) >= 500));
-    const scenario = failedToReachBank
-      ? "balance_unavailable"
-      : unexpectedScenario;
+  if (failureScenario !== undefined) {
     return (
       <Card>
-        <BannerNotice tone="negative" message={t(`common.${scenario}.body`)} />
+        <BannerNotice
+          tone="negative"
+          message={t(`common.${failureScenario}.body`)}
+        />
         <ButtonSecondary
-          label={t(`common.${scenario}.retry`)}
+          label={t(`common.${failureScenario}.retry`)}
           onPress={() => {
             void account.refetch();
             void limits.refetch();

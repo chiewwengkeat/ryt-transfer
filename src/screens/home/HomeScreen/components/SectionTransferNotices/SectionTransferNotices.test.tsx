@@ -15,6 +15,7 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
+import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -114,6 +115,9 @@ it(
 
     expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: /^Dismiss/ })).toBeNull();
+    expect(reportedScenarios()).toContain(
+      "transfer.earlier_transfer_unconfirmed",
+    );
   }),
 );
 

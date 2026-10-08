@@ -11,6 +11,7 @@ import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transf
 import { readBankBalanceMinor } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
+import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
 import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
 import { renderRoute } from "@/test/render-route";
@@ -97,6 +98,7 @@ it(
     expect(
       screen.getByHintText("That is more than your balance of RM 12,845.50."),
     ).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.amount_too_high");
   }),
 );
 
@@ -204,6 +206,7 @@ it(
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Review" })).toBeDisabled();
+    expect(reportedScenarios()).toContain("transfer.amount_unexpected");
   }),
 );
 

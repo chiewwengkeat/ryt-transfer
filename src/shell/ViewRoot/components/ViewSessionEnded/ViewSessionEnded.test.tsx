@@ -14,6 +14,7 @@ import {
 import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -65,6 +66,7 @@ it(
         .getAllByRole("button")
         .map((button) => button.props.accessibilityLabel as unknown),
     ).toEqual(["Sign in again"]);
+    expect(reportedScenarios()).toContain("transfer.session_ended");
   }),
 );
 

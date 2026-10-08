@@ -23,7 +23,10 @@ import {
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
-import { observedRecords } from "@/test/harness/recording-sink";
+import {
+  observedRecords,
+  reportedScenarios,
+} from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -108,6 +111,7 @@ it(
     const approvalBody = (await approval?.json()) as unknown;
     expect(approvalBody).toHaveProperty("keyId");
     expect(approvalBody).toHaveProperty("pin", DEMO_PIN);
+    expect(reportedScenarios()).toContain("transfer.biometrics_unavailable");
     jest.useRealTimers();
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
   }),
@@ -129,6 +133,7 @@ it(
       request.headers.get("Idempotency-Key"),
     );
     expect(new Set(attemptKeys).size).toBe(2);
+    expect(reportedScenarios()).toContain("transfer.pin_incorrect");
   }),
 );
 
@@ -715,6 +720,7 @@ it(
         "There were too many attempts, so approve with your PIN.",
       ),
     ).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.biometrics_locked_out");
     await approveWithPin(DEMO_PIN);
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   }),
@@ -809,6 +815,7 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(biometricPromptsShown()).toEqual([]);
+    expect(reportedScenarios()).toContain("transfer.biometrics_changed");
     await approveWithPin(DEMO_PIN);
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   }),
@@ -1319,6 +1326,7 @@ it("sets approval up again with the PIN when the bank no longer knows the phone'
         "Enter your PIN to set it up and approve this transfer.",
       ),
     ).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.approval_key_unknown");
     await approveWithPin("111111");
     expect(
       await screen.findByText("That PIN is incorrect. You have 2 tries left."),

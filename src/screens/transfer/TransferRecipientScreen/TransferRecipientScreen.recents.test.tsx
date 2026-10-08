@@ -5,6 +5,7 @@ import { http, HttpResponse } from "msw";
 import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients.type";
 import { requestJson } from "@/shared/http/transport";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
+import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -28,6 +29,7 @@ it(
     expect(
       await screen.findByText(firstRecent!.registeredName),
     ).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.recent_recipient_chosen");
     await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByLabelText("Amount (RM)")).toHaveDisplayValue("");
     await screen.findByText("RM 12,845.50");
@@ -125,6 +127,7 @@ it(
       await screen.findByText("Something unexpected went wrong."),
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.recipient_unexpected");
     await fireEvent.changeText(
       screen.getByLabelText("DuitNow mobile number"),
       "012-345 6789",

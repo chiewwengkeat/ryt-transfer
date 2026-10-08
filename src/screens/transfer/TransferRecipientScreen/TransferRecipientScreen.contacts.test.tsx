@@ -12,6 +12,7 @@ import {
   setPickedContactPhones,
   setPickedContactUnreadable,
 } from "@/test/harness/contacts-native-double";
+import { reportedScenarios } from "@/test/harness/recording-sink";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -50,6 +51,7 @@ it(
     await pressChooseFromContacts();
 
     expect(await screen.findByText(REFUSED_MESSAGE)).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.contacts_access_refused");
     await fireEvent.press(
       screen.getByRole("button", { name: "Open Settings" }),
     );
@@ -89,6 +91,7 @@ it(
     expect(screen.getByLabelText("DuitNow mobile number")).toHaveDisplayValue(
       "",
     );
+    expect(reportedScenarios()).toContain("transfer.contact_without_mobile");
   }),
 );
 

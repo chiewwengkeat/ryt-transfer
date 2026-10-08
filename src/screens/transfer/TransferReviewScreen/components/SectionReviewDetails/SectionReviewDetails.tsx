@@ -4,11 +4,13 @@ import { useTranslation } from "react-i18next";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { LookupRecipientErrorCode } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
+  TransferFlowScenario,
   TransferFlowStep,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
 import { TransportError } from "@/shared/http/transport-error";
+import { useTrackScenarioShown } from "@/shared/observability/observability";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import Card from "@/shared/ui/Card/Card";
@@ -30,44 +32,60 @@ export default function SectionReviewDetails({ draft }: Props) {
       flow.step === TransferFlowStep.Approving ||
       flow.step === TransferFlowStep.Submitting,
   );
-  if (lookup.isPending) return <Loader />;
+  const code =
+    lookup.error instanceof TransportError ? lookup.error.code : undefined;
   // Never while sending: "no money moved" can be false by then, and a retry mints a new recipient reference.
-  if (lookup.isError && !sending) {
-    const code =
-      lookup.error instanceof TransportError ? lookup.error.code : undefined;
-    if (code === LookupRecipientErrorCode.RecipientNotFound)
-      return (
-        <>
-          <BannerNotice
-            tone="negative"
-            message={t("common.recipient_not_found.body")}
-          />
-          <ButtonSecondary
-            label={t("common.recipient_not_found.change_recipient")}
-            onPress={() => {
-              router.dismissTo("/transfer");
-            }}
-          />
-        </>
-      );
-    const scenario =
-      code === LookupRecipientErrorCode.NameEnquiryUnavailable
-        ? "name_check_unavailable"
-        : code === LookupRecipientErrorCode.TooManyLookups
-          ? "too_many_name_checks"
-          : "review_unexpected";
+  const nameCheckFailure =
+    !lookup.isError || sending
+      ? undefined
+      : code === LookupRecipientErrorCode.RecipientNotFound
+        ? "recipient_not_found"
+        : code === LookupRecipientErrorCode.NameEnquiryUnavailable
+          ? "name_check_unavailable"
+          : code === LookupRecipientErrorCode.TooManyLookups
+            ? "too_many_name_checks"
+            : "review_unexpected";
+  useTrackScenarioShown(
+    nameCheckFailure === undefined
+      ? lookup.data && TransferFlowScenario.RecipientFound
+      : `transfer.${nameCheckFailure}`,
+  );
+  useTrackScenarioShown(
+    nameCheckFailure === undefined && lookup.data?.firstTransfer
+      ? TransferFlowScenario.FirstTransferToRecipient
+      : undefined,
+  );
+  if (lookup.isPending) return <Loader />;
+  if (nameCheckFailure === "recipient_not_found")
     return (
       <>
-        <BannerNotice tone="negative" message={t(`common.${scenario}.body`)} />
+        <BannerNotice
+          tone="negative"
+          message={t("common.recipient_not_found.body")}
+        />
         <ButtonSecondary
-          label={t(`common.${scenario}.retry`)}
+          label={t("common.recipient_not_found.change_recipient")}
+          onPress={() => {
+            router.dismissTo("/transfer");
+          }}
+        />
+      </>
+    );
+  if (nameCheckFailure !== undefined)
+    return (
+      <>
+        <BannerNotice
+          tone="negative"
+          message={t(`common.${nameCheckFailure}.body`)}
+        />
+        <ButtonSecondary
+          label={t(`common.${nameCheckFailure}.retry`)}
           onPress={() => {
             void lookup.refetch();
           }}
         />
       </>
     );
-  }
   if (!lookup.data) return null;
 
   const { recipient, firstTransfer } = lookup.data;

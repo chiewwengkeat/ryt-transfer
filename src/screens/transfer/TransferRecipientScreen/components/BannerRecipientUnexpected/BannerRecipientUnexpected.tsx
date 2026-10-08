@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 
+import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
+import { useTrackScenarioShown } from "@/shared/observability/observability";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
@@ -8,6 +10,7 @@ interface Props {
 }
 export default function BannerRecipientUnexpected({ onRetry }: Props) {
   const { t } = useTranslation("transfer");
+  useTrackScenarioShown(TransferFlowScenario.RecipientUnexpected);
   return (
     <>
       <BannerNotice

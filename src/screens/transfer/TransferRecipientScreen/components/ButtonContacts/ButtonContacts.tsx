@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 
 import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
+import { useTrackScenarioShown } from "@/shared/observability/observability";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
@@ -21,6 +23,11 @@ export default function ButtonContacts({ onMobilePicked }: Props) {
     useState<
       ComponentProps<typeof BottomSheetContactMobiles>["contactMobiles"]
     >();
+  useTrackScenarioShown(
+    contactsOutcome === ContactsOutcome.WithoutMobile
+      ? TransferFlowScenario.ContactWithoutMobile
+      : undefined,
+  );
 
   async function pickMobileFromContacts() {
     setContactsOutcome(undefined);

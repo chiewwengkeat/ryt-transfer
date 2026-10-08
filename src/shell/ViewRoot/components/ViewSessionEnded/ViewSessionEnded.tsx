@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { BackHandler, StyleSheet, View } from "react-native";
 
+import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
+import { useTrackScenarioShown } from "@/shared/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 
@@ -12,6 +14,7 @@ interface Props {
 }
 export default function ViewSessionEnded({ onSignIn }: Props) {
   const { t } = useTranslation();
+  useTrackScenarioShown(TransferFlowScenario.SessionEnded);
   // The app behind is hidden, so Back would move it where nobody can see.
   useEffect(() => {
     const subscription = BackHandler.addEventListener(

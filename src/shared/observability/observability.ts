@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import { TransportError } from "@/shared/http/transport-error";
 
 // An allow-list, so nothing unvetted reaches a sink: credentials and personal data never pass; amounts may, in sen.
@@ -36,6 +38,17 @@ export function trackEvent(
     name,
     properties: redactProperties(properties),
   });
+}
+
+// For a scenario a screen shows by itself: the transfer store reports its own with the step it moves to.
+export function trackScenarioShown(scenario: string) {
+  trackEvent("transfer_step", { scenario });
+}
+
+export function useTrackScenarioShown(scenario: string | undefined) {
+  useEffect(() => {
+    if (scenario !== undefined) trackScenarioShown(scenario);
+  }, [scenario]);
 }
 
 // Never the message: it can quote whatever the code that threw had in hand.

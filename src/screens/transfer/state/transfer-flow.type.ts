@@ -49,25 +49,65 @@ export enum TransferHoldKind {
 
 // App code may not import the registry's id type, so these restate its ids; a test holds them to it.
 export enum TransferFlowScenario {
-  BadlyFormedInput = "transfer.badly_formed_input",
   UnderMaintenance = "transfer.under_maintenance",
+  Offline = "transfer.offline",
+  BadlyFormedInput = "transfer.badly_formed_input",
+  ContactsAccessRefused = "transfer.contacts_access_refused",
+  ContactWithoutMobile = "transfer.contact_without_mobile",
+  RecentRecipientChosen = "transfer.recent_recipient_chosen",
+  RecipientUnexpected = "transfer.recipient_unexpected",
+  AmountTooHigh = "transfer.amount_too_high",
+  RecipientFound = "transfer.recipient_found",
+  FirstTransferToRecipient = "transfer.first_transfer_to_recipient",
+  RecipientNotFound = "transfer.recipient_not_found",
+  NameCheckUnavailable = "transfer.name_check_unavailable",
+  TooManyNameChecks = "transfer.too_many_name_checks",
   BalanceOrLimitShortAtConfirmation = "transfer.balance_or_limit_short_at_confirmation",
+  CoolingOffNewPhone = "transfer.cooling_off_new_phone",
+  CoolingOffNewAccount = "transfer.cooling_off_new_account",
+  AccountLocked = "transfer.account_locked",
   NameCheckExpired = "transfer.name_check_expired",
   ConfirmationUnanswered = "transfer.confirmation_unanswered",
   DetailsChangedAfterNoAnswer = "transfer.details_changed_after_no_answer",
   ReviewUnexpected = "transfer.review_unexpected",
+  BiometricsRecognised = "transfer.biometrics_recognised",
   ApprovalCancelled = "transfer.approval_cancelled",
   BiometricsNotRecognised = "transfer.biometrics_not_recognised",
   BiometricsLockedOut = "transfer.biometrics_locked_out",
   BiometricsUnavailable = "transfer.biometrics_unavailable",
   BiometricsChanged = "transfer.biometrics_changed",
+  PinChosen = "transfer.pin_chosen",
+  PinIncorrect = "transfer.pin_incorrect",
   PinLocked = "transfer.pin_locked",
   ApprovalKeyUnknown = "transfer.approval_key_unknown",
   ApprovalExpired = "transfer.approval_expired",
   ApprovalNotVerified = "transfer.approval_not_verified",
   BalanceOrLimitShortAtApproval = "transfer.balance_or_limit_short_at_approval",
   ApprovalUnexpected = "transfer.approval_unexpected",
+  SessionEnded = "transfer.session_ended",
 }
+
+export type TransferFlowNotice = Extract<
+  TransferFlowScenario,
+  | TransferFlowScenario.UnderMaintenance
+  | TransferFlowScenario.BadlyFormedInput
+  | TransferFlowScenario.BalanceOrLimitShortAtConfirmation
+  | TransferFlowScenario.NameCheckExpired
+  | TransferFlowScenario.ConfirmationUnanswered
+  | TransferFlowScenario.DetailsChangedAfterNoAnswer
+  | TransferFlowScenario.ReviewUnexpected
+  | TransferFlowScenario.ApprovalCancelled
+  | TransferFlowScenario.BiometricsNotRecognised
+  | TransferFlowScenario.BiometricsLockedOut
+  | TransferFlowScenario.BiometricsUnavailable
+  | TransferFlowScenario.BiometricsChanged
+  | TransferFlowScenario.PinLocked
+  | TransferFlowScenario.ApprovalKeyUnknown
+  | TransferFlowScenario.ApprovalExpired
+  | TransferFlowScenario.ApprovalNotVerified
+  | TransferFlowScenario.BalanceOrLimitShortAtApproval
+  | TransferFlowScenario.ApprovalUnexpected
+>;
 
 export type TransferRecipient = Extract<
   LookupRecipientRequest,
@@ -98,7 +138,7 @@ export type TransferFlowState =
   | {
       step: TransferFlowStep.Editing;
       draft: Partial<TransferDraft>;
-      notice?: TransferFlowScenario;
+      notice?: TransferFlowNotice;
       noticeDetail?: TransferNoticeDetail;
       // Not a notice: the amount step would show it, and the matrix shows it on review only.
       detailsChangedAfterNoAnswer?: true;
@@ -106,7 +146,7 @@ export type TransferFlowState =
   | {
       step: TransferFlowStep.Reviewing;
       draft: TransferDraft;
-      notice?: TransferFlowScenario;
+      notice?: TransferFlowNotice;
       noticeDetail?: TransferNoticeDetail;
       hold?: TransferHold;
       // A create whose answer never arrived may have run, so the next Confirm repeats it under the same key.
@@ -151,17 +191,17 @@ export type ReviewAndCreateEvent =
     }
   | {
       type: TransferFlowActionType.CreateNotSent;
-      notice: TransferFlowScenario;
+      notice: TransferFlowNotice;
       noticeDetail?: TransferNoticeDetail;
     }
   | {
       type: TransferFlowActionType.CreateUnanswered;
-      notice: TransferFlowScenario;
+      notice: TransferFlowNotice;
     }
   | { type: TransferFlowActionType.CreateRefusedByHold; hold: TransferHold }
   | {
       type: TransferFlowActionType.CreateReturnedToAmount;
-      notice: TransferFlowScenario;
+      notice: TransferFlowNotice;
       noticeDetail?: TransferNoticeDetail;
     };
 
@@ -171,7 +211,7 @@ export type ApprovalEvent =
   | { type: TransferFlowActionType.ApprovalAttemptRefused }
   | {
       type: TransferFlowActionType.ApprovalNotSent;
-      notice: TransferFlowScenario;
+      notice: TransferFlowNotice;
     }
   | { type: TransferFlowActionType.ApproveRefusedByHold; hold: TransferHold }
   | { type: TransferFlowActionType.ApprovalAnswered }

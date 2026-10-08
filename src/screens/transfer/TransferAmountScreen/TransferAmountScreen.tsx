@@ -10,6 +10,7 @@ import {
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
 import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { formatMoney, parseTypedAmount } from "@/shared/lib/money/money";
+import { useTrackScenarioShown } from "@/shared/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import FieldText from "@/shared/ui/FieldText/FieldText";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
@@ -18,6 +19,7 @@ import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
+  TransferFlowScenario,
   TransferFlowStep,
   useTransferFlow,
 } from "../state/transfer-flow";
@@ -76,26 +78,39 @@ export default function TransferAmountScreen() {
   const lowestCeiling = ceilings?.reduce((lowest, ceiling) =>
     ceiling.limit.minor < lowest.limit.minor ? ceiling : lowest,
   );
-  const amountError =
-    typedAmount !== "" && parsedAmount === null
-      ? t("common.badly_formed_input.amount")
-      : bankRefusal === CreateTransferErrorCode.AmountInvalid &&
-          parsedAmount?.minor === enteredAmount?.minor
-        ? t("common.badly_formed_input.amount_refused")
-        : parsedAmount !== null &&
-            lowestCeiling !== undefined &&
-            parsedAmount.minor > lowestCeiling.limit.minor
-          ? lowestCeiling.message
-          : reviewPressed && (parsedAmount === null || parsedAmount.minor === 0)
-            ? t("amount.amount_missing")
-            : undefined;
+  const amountBadlyFormed = typedAmount !== "" && parsedAmount === null;
+  const amountRefusedByBank =
+    bankRefusal === CreateTransferErrorCode.AmountInvalid &&
+    parsedAmount?.minor === enteredAmount?.minor;
+  const amountTooHigh =
+    parsedAmount !== null &&
+    lowestCeiling !== undefined &&
+    parsedAmount.minor > lowestCeiling.limit.minor;
+  const amountError = amountBadlyFormed
+    ? t("common.badly_formed_input.amount")
+    : amountRefusedByBank
+      ? t("common.badly_formed_input.amount_refused")
+      : amountTooHigh
+        ? lowestCeiling.message
+        : reviewPressed && (parsedAmount === null || parsedAmount.minor === 0)
+          ? t("amount.amount_missing")
+          : undefined;
   // The bank's own rule: DuitNow carries the note onto the recipient's statement as it is typed.
-  const noteError = !/^[A-Za-z0-9 ]*$/.test(typedNote)
+  const noteBadlyFormed = !/^[A-Za-z0-9 ]*$/.test(typedNote);
+  const noteError = noteBadlyFormed
     ? t("common.badly_formed_input.note")
     : bankRefusal === CreateTransferErrorCode.NoteInvalid &&
         typedNote.trim() === (enteredNote ?? "")
       ? t("common.badly_formed_input.note_refused")
       : undefined;
+  // Not the bank's refusals: the flow already reported each as it came back to this step.
+  useTrackScenarioShown(
+    amountBadlyFormed || noteBadlyFormed
+      ? TransferFlowScenario.BadlyFormedInput
+      : !amountRefusedByBank && amountTooHigh
+        ? TransferFlowScenario.AmountTooHigh
+        : undefined,
+  );
 
   return (
     <>

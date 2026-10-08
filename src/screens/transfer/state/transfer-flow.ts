@@ -11,7 +11,7 @@ import {
   type TransferFlowState,
   TransferFlowStep,
 } from "./transfer-flow.type";
-import { trackTransferStepAndAmount } from "./transfer-funnel";
+import { trackTransferStepOrScenarioChange } from "./transfer-funnel";
 
 export {
   ApprovalPath,
@@ -36,7 +36,7 @@ export function dispatchTransferFlow(action: TransferFlowAction) {
   const nextFlow = reduceTransferFlow(flow, action);
   if (nextFlow === flow) return false;
   transferFlowStore.setState(nextFlow, true);
-  if (nextFlow.step !== flow.step) trackTransferStepAndAmount(nextFlow);
+  trackTransferStepOrScenarioChange(flow, nextFlow);
   return true;
 }
 

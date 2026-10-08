@@ -42,7 +42,10 @@ import {
   secureStoreNativeDouble,
   setPhoneNetwork,
 } from "@/test/harness/native-doubles";
-import { observedRecords } from "@/test/harness/recording-sink";
+import {
+  observedRecords,
+  reportedScenarios,
+} from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -255,7 +258,7 @@ it("signs the note review shows and sends it with the transfer, which the bank t
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
 });
 
-it("reports each step of a sent transfer with its amount, never with the recipient", async () => {
+it("reports each step of a sent transfer and each scenario it shows, with its amount, never with the recipient", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await openReviewOfRm100();
 
@@ -269,7 +272,10 @@ it("reports each step of a sent transfer with its amount, never with the recipie
       .filter((record) => record.name === "transfer_step")
       .map((record) => record.properties),
   ).toEqual([
+    { scenario: "transfer.balance_and_limit_shown" },
     { step: "reviewing", amountMinor: 10_000, currency: "MYR" },
+    { scenario: "transfer.recipient_found" },
+    { scenario: "transfer.first_transfer_to_recipient" },
     { step: "creating", amountMinor: 10_000, currency: "MYR" },
     {
       step: "approving",
@@ -277,6 +283,7 @@ it("reports each step of a sent transfer with its amount, never with the recipie
       currency: "MYR",
       path: "biometric",
     },
+    { scenario: "transfer.biometrics_recognised" },
     {
       step: "submitting",
       amountMinor: 10_000,
@@ -285,6 +292,7 @@ it("reports each step of a sent transfer with its amount, never with the recipie
     },
     { step: "done" },
     { step: "editing" },
+    { scenario: "transfer.balance_and_limit_shown" },
   ]);
 });
 
@@ -307,6 +315,7 @@ it(
 
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
     expect(biometricPromptsShown()).toEqual([]);
+    expect(reportedScenarios()).toContain("transfer.pin_chosen");
     jest.useRealTimers();
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
   }),
@@ -1545,6 +1554,7 @@ it(
       await screen.findByText("No DuitNow account was found for this ID."),
     ).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    expect(reportedScenarios()).toContain("transfer.recipient_not_found");
     await fireEvent.press(
       screen.getByRole("button", { name: "Change the recipient" }),
     );
@@ -1563,6 +1573,7 @@ it(
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    expect(reportedScenarios()).toContain("transfer.name_check_unavailable");
   }),
 );
 
@@ -1578,6 +1589,7 @@ it(
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    expect(reportedScenarios()).toContain("transfer.too_many_name_checks");
   }),
 );
 
@@ -1953,6 +1965,7 @@ it(
       screen.queryByRole("button", { name: "Use PIN instead" }),
     ).toBeNull();
     expect(countSent("POST", "/approve")).toBe(0);
+    expect(reportedScenarios()).toContain("transfer.cooling_off_new_phone");
   }),
 );
 
@@ -1972,6 +1985,7 @@ it(
     expect(announce).toHaveBeenCalledWith(holdReason);
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
     expect(countSent("POST", "/approve")).toBe(0);
+    expect(reportedScenarios()).toContain("transfer.cooling_off_new_account");
   }),
 );
 
@@ -2097,6 +2111,7 @@ it(
     );
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
     expect(countSent("POST", "/approve")).toBe(0);
+    expect(reportedScenarios()).toContain("transfer.account_locked");
   }),
 );
 
@@ -2436,6 +2451,9 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(screen.getByText("Lunch")).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain(
+      "transfer.details_changed_after_no_answer",
+    );
   }),
 );
 

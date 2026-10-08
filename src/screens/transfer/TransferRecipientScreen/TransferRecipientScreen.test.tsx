@@ -10,6 +10,7 @@ import { AccessibilityInfo } from "react-native";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { parseTypedAmount } from "@/shared/lib/money/money";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
+import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -105,6 +106,7 @@ it.each([
 
       expect(screen.getByHintText(formatMessage)).toBeOnTheScreen();
       expect(view.getPathname()).toBe("/transfer");
+      expect(reportedScenarios()).toContain("transfer.badly_formed_input");
     })(),
 );
 

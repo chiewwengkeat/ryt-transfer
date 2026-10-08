@@ -7,6 +7,7 @@ import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-reci
 import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
+import { useTrackScenarioShown } from "@/shared/observability/observability";
 import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
@@ -15,6 +16,7 @@ import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
+  TransferFlowScenario,
   TransferFlowStep,
   useTransferFlow,
 } from "../state/transfer-flow";
@@ -51,6 +53,9 @@ export default function TransferRecipientScreen() {
     linkedRecentId ?? draftRecipient?.recentId,
   );
   const [idError, setIdError] = useState<string>();
+  useTrackScenarioShown(
+    idError === undefined ? undefined : TransferFlowScenario.BadlyFormedInput,
+  );
   const [bankError, setBankError] = useState<string>();
   const recents = useListRecentRecipients();
   // The shell's offline notice already explains a list that cannot load.

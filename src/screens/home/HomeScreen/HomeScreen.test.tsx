@@ -11,7 +11,10 @@ import {
 import { clearTransferScenario } from "@/test/clear-transfer-scenario";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
-import { observedRecords } from "@/test/harness/recording-sink";
+import {
+  observedRecords,
+  reportedScenarios,
+} from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -66,6 +69,7 @@ it(
         "You can send once your balance and today's limit have loaded.",
       ),
     ).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.balance_unavailable");
     await pressEveryRecentRecipientExpectingItDisabled();
     expect(view.getPathname()).toBe("/");
   }),
@@ -85,6 +89,7 @@ it(
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
     expect(screen.queryByText(/more today/)).toBeNull();
+    expect(reportedScenarios()).toContain("transfer.under_maintenance");
     await pressEveryRecentRecipientExpectingItDisabled();
     expect(view.getPathname()).toBe("/");
   }),
@@ -141,6 +146,7 @@ it(
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+    expect(reportedScenarios()).toContain("transfer.start_unexpected");
   }),
 );
 
@@ -286,6 +292,7 @@ it(
     expect(
       screen.getByText("You're offline, so sending is paused."),
     ).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.offline");
   }),
 );
 

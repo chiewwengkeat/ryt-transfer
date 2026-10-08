@@ -3,6 +3,8 @@ import { useEffect, useEffectEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { AppState, Linking } from "react-native";
 
+import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
+import { useTrackScenarioShown } from "@/shared/observability/observability";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
@@ -11,6 +13,7 @@ interface Props {
 }
 export default function BannerContactsRefused({ onAccessGranted }: Props) {
   const { t } = useTranslation("transfer");
+  useTrackScenarioShown(TransferFlowScenario.ContactsAccessRefused);
   const recheckContactsAccess = useEffectEvent(async () => {
     if ((await getPermissionsAsync()).granted) onAccessGranted();
   });

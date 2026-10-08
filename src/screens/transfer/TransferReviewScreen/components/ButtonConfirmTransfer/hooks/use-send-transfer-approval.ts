@@ -35,12 +35,16 @@ import {
   TransferFlowStep,
   transferFlowStore,
 } from "@/screens/transfer/state/transfer-flow";
+import type { TransferFlowNotice } from "@/screens/transfer/state/transfer-flow.type";
 import { formatMoney } from "@/shared/lib/money/money";
 import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
-import { reportError } from "@/shared/observability/observability";
+import {
+  reportError,
+  trackScenarioShown,
+} from "@/shared/observability/observability";
 
 import { settleApprovalAnswer } from "./settle-approval-answer";
 import { useRegisterApprovalKeysAgain } from "./use-register-approval-keys-again";
@@ -61,7 +65,7 @@ export function useSendTransferApproval() {
     // ⛔ Any wait here can end with the flow off this transfer, and whatever it is on now this call leaves alone.
     const noLongerOnThisTransfer = () =>
       isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId);
-    const leaveApprovalNotSent = (notice: TransferFlowScenario) => {
+    const leaveApprovalNotSent = (notice: TransferFlowNotice) => {
       if (noLongerOnThisTransfer()) return;
       closeApprovalPinSheet();
       dispatchTransferFlow({
@@ -110,6 +114,7 @@ export function useSendTransferApproval() {
 
     // Resolves with the PIN only once the bank has accepted it, so nothing reuses a PIN that may be wrong.
     const approveWithPin = async (
+      scenario: TransferFlowScenario,
       words: { message: string; detail?: string },
       afterSetUp: { pinInHand?: string; keysSetUpAgain?: boolean } = {},
     ) => {
@@ -120,6 +125,7 @@ export function useSendTransferApproval() {
       });
       let refusal: string | undefined;
       let { pinInHand, keysSetUpAgain = false } = afterSetUp;
+      if (pinInHand === undefined) trackScenarioShown(scenario);
       // No new try at a PIN the bank has locked; a PIN already in hand is one the bank has just accepted.
       if (pinInHand === undefined && (await isApprovalPinLocked())) {
         await showApprovalPinLocked({
@@ -160,6 +166,7 @@ export function useSendTransferApproval() {
           refusal = t("common.pin_incorrect.body", {
             count: pinRefusal.attemptsRemaining,
           });
+          trackScenarioShown(TransferFlowScenario.PinIncorrect);
           continue;
         }
         if (pinRefusal?.code === ApproveTransferErrorCode.PinLocked) {
@@ -211,6 +218,7 @@ export function useSendTransferApproval() {
       });
       switch (signing.outcome) {
         case BiometricSignOutcome.Signed: {
+          trackScenarioShown(TransferFlowScenario.BiometricsRecognised);
           const attempt = await sendApproval({
             keyId: signing.keyId,
             signature: signing.signature,
@@ -228,6 +236,7 @@ export function useSendTransferApproval() {
               await approveWithBiometricKey(true);
             else
               await approveWithPin(
+                TransferFlowScenario.ApprovalKeyUnknown,
                 {
                   message: t("common.approval_key_unknown.body"),
                   detail: t("common.approval_key_unknown.pin"),
@@ -246,26 +255,27 @@ export function useSendTransferApproval() {
           leaveApprovalNotSent(TransferFlowScenario.BiometricsNotRecognised);
           return;
         case BiometricSignOutcome.LockedOut:
-          await approveWithPin({
+          await approveWithPin(TransferFlowScenario.BiometricsLockedOut, {
             message: t("common.biometrics_locked_out.body"),
           });
           return;
         case BiometricSignOutcome.NotSetUp:
-          await approveWithPin({
+          await approveWithPin(TransferFlowScenario.BiometricsUnavailable, {
             message: t("common.biometrics_unavailable.body"),
             detail: t("common.biometrics_unavailable.not_set_up"),
           });
           return;
         case BiometricSignOutcome.NoSensor:
-          await approveWithPin({
+          await approveWithPin(TransferFlowScenario.BiometricsUnavailable, {
             message: t("common.biometrics_unavailable.body"),
             detail: t("common.biometrics_unavailable.no_sensor"),
           });
           return;
         case BiometricSignOutcome.KeyChanged: {
-          const acceptedPin = await approveWithPin({
-            message: t("common.biometrics_changed.body"),
-          });
+          const acceptedPin = await approveWithPin(
+            TransferFlowScenario.BiometricsChanged,
+            { message: t("common.biometrics_changed.body") },
+          );
           if (acceptedPin !== null)
             void replaceBiometricApprovalKey(acceptedPin).catch(
               (error: unknown) => {
@@ -281,11 +291,13 @@ export function useSendTransferApproval() {
     };
 
     if (path === ApprovalPath.Pin) {
-      await approveWithPin({ message: t("common.pin_chosen.body") });
+      await approveWithPin(TransferFlowScenario.PinChosen, {
+        message: t("common.pin_chosen.body"),
+      });
       return;
     }
     if (!approvalSettingsStore.getState().biometricApprovalOn) {
-      await approveWithPin({
+      await approveWithPin(TransferFlowScenario.BiometricsUnavailable, {
         message: t("common.biometrics_unavailable.body"),
         detail: t("common.biometrics_unavailable.turned_off"),
       });
