@@ -60,7 +60,7 @@ Colocation first: a piece of code lives as close to its users as possible. Most 
 
 Hooks climb the same ladder in `hooks/` folders, except that a hook that knows nothing about banking and that only the shell uses stays in `src/shell/` until code outside the shell uses it. A component that only one other component uses nests in that component's own `components/`. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
 
-`scripts/check-placement-ladder.js` fails a component or hook placed higher than its users need, and the import rules fail one placed too low. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case, the script is the authority, not this summary.
+`scripts/check-placement-ladder.js` fails a component or hook placed higher than its users need, and the import rules fail one placed too low. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case of who uses a piece, the script is the authority, not this summary. It cannot tell whether a piece knows about banking, so that call is the reviewer's: a hook that knows nothing about banking and that only the shell uses passes the script in a domain, and still belongs in `src/shell/`.
 
 ## Adding a scenario
 
