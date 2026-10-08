@@ -23,7 +23,6 @@ import {
   type CreateTransferResponse,
 } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
-import { refreshAccountAndHistoryAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import {
   ApprovalPath,
   dispatchTransferFlow,
@@ -44,6 +43,7 @@ import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
+import { settleApprovalAnswer } from "./hooks/settle-approval-answer";
 import { useSendTransferApproval } from "./hooks/use-send-transfer-approval";
 
 interface Props {
@@ -276,7 +276,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     holdReason ?? (offline ? t("common.offline.disabled_reason") : undefined);
   const settleUnexpectedConfirmFailure = () => {
     // Before the approval leaves the phone nothing can have moved, so review offers it again.
-    // After, nothing proves where it ended: only the result page may say, with Home beneath it.
+    // After, nothing proves where it ended, so it settles as an answer that never came.
     const flow = transferFlowStore.getState();
     if (flow.step !== TransferFlowStep.Submitting) {
       dispatchTransferFlow(
@@ -292,10 +292,13 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       );
       return;
     }
-    void refreshAccountAndHistoryAfterApproval(queryClient);
-    router.dismissTo("/");
-    router.push(`/transfer/result/${flow.transferId}`);
-    dispatchTransferFlow({ type: TransferFlowActionType.AnswerLost });
+    void settleApprovalAnswer({
+      answer: {},
+      transferId: flow.transferId,
+      // Only a refusal forgets the record, and an answer with nothing in it is none.
+      forgetPendingTransfer: () => Promise.resolve(),
+      queryClient,
+    });
   };
 
   return (
