@@ -1,6 +1,7 @@
 import {
   focusManager,
   onlineManager,
+  type Query,
   QueryClient,
 } from "@tanstack/react-query";
 import { AppState } from "react-native";
@@ -49,14 +50,21 @@ export function createQueryClient() {
     },
   });
   // React Query re-reads on the phone's reconnect, which never comes when only requests found no network.
+  // Once per answer: a read that still finds none would turn offline back on after every request that gets through.
+  const answersWhenLastReadAgain = new WeakMap<Query, number>();
   addBankReachedAgainListener(() => {
+    const readsThatFoundNoNetwork = client.getQueryCache().findAll({
+      type: "active",
+      predicate: (query) =>
+        query.state.error instanceof TransportError &&
+        query.state.error.kind === TransportErrorKind.Network &&
+        answersWhenLastReadAgain.get(query) !== query.state.dataUpdateCount,
+    });
+    for (const query of readsThatFoundNoNetwork)
+      answersWhenLastReadAgain.set(query, query.state.dataUpdateCount);
     void client.refetchQueries(
-      {
-        type: "active",
-        predicate: ({ state }) =>
-          state.error instanceof TransportError &&
-          state.error.kind === TransportErrorKind.Network,
-      },
+      { predicate: (query) => readsThatFoundNoNetwork.includes(query) },
+      // The read in flight may be the one that got through: let it land rather than send it again.
       { cancelRefetch: false },
     );
   });

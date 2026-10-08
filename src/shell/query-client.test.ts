@@ -155,12 +155,44 @@ it.each([
   },
 );
 
-it("reads a query that failed for lack of network again once a request reaches the bank", async () => {
+it("reads a query that found no network again once a request reaches the bank, and not again until it is answered", async () => {
   const client = createQueryClient();
   client.mount();
+  const queryFn = jest.fn(() =>
+    Promise.reject(new TransportError(TransportErrorKind.Network)),
+  );
+  const stopObserving = new QueryObserver(client, {
+    queryKey: ["balance"],
+    queryFn,
+    retry: false,
+    gcTime: 0,
+  }).subscribe(() => undefined);
+  await letPendingFetchesRun();
+  reportRequestOutcome(TransportErrorKind.Network);
+  reportRequestOutcome();
+  await letPendingFetchesRun();
+  const readsOnceTheBankWasFirstReachedAgain = queryFn.mock.calls.length;
+
+  reportRequestOutcome(TransportErrorKind.Network);
+  reportRequestOutcome();
+  await letPendingFetchesRun();
+
+  expect(readsOnceTheBankWasFirstReachedAgain).toBe(2);
+  expect(queryFn).toHaveBeenCalledTimes(2);
+  stopObserving();
+  client.unmount();
+});
+
+it("reads a query that found no network again after an answer, though it was read again before", async () => {
+  const client = createQueryClient();
+  client.mount();
+  const noNetwork = new TransportError(TransportErrorKind.Network);
   const queryFn = jest
     .fn<Promise<string>, []>()
-    .mockRejectedValueOnce(new TransportError(TransportErrorKind.Network))
+    .mockRejectedValueOnce(noNetwork)
+    .mockRejectedValueOnce(noNetwork)
+    .mockResolvedValueOnce("balance")
+    .mockRejectedValueOnce(noNetwork)
     .mockResolvedValue("balance");
   const observer = new QueryObserver(client, {
     queryKey: ["balance"],
@@ -171,11 +203,54 @@ it("reads a query that failed for lack of network again once a request reaches t
   const stopObserving = observer.subscribe(() => undefined);
   await letPendingFetchesRun();
   reportRequestOutcome(TransportErrorKind.Network);
+  reportRequestOutcome();
+  await letPendingFetchesRun();
+  await observer.refetch();
+  await observer.refetch();
+  reportRequestOutcome(TransportErrorKind.Network);
 
   reportRequestOutcome();
   await letPendingFetchesRun();
 
-  expect(observer.getCurrentResult().data).toBe("balance");
+  expect(queryFn).toHaveBeenCalledTimes(5);
+  stopObserving();
+  client.unmount();
+});
+
+it("lets a read already on its way land, rather than send it again, once a request reaches the bank", async () => {
+  const client = createQueryClient();
+  client.mount();
+  let releaseHeldAnswer = () => {};
+  const queryFn = jest
+    .fn<Promise<string>, []>()
+    .mockResolvedValueOnce("balance")
+    .mockRejectedValueOnce(new TransportError(TransportErrorKind.Network))
+    .mockReturnValueOnce(
+      new Promise((resolve) => {
+        releaseHeldAnswer = () => {
+          resolve("balance held in flight");
+        };
+      }),
+    )
+    .mockResolvedValue("balance sent again");
+  const observer = new QueryObserver(client, {
+    queryKey: ["balance"],
+    queryFn,
+    retry: false,
+    gcTime: 0,
+  });
+  const stopObserving = observer.subscribe(() => undefined);
+  await letPendingFetchesRun();
+  await observer.refetch();
+  reportRequestOutcome(TransportErrorKind.Network);
+  void observer.refetch();
+
+  reportRequestOutcome();
+  releaseHeldAnswer();
+  await letPendingFetchesRun();
+
+  expect(queryFn).toHaveBeenCalledTimes(3);
+  expect(observer.getCurrentResult().data).toBe("balance held in flight");
   stopObserving();
   client.unmount();
 });
@@ -186,8 +261,24 @@ it.each([
     error: new TransportError(TransportErrorKind.Http, 404),
   },
   {
+    failure: "a server failure",
+    error: new TransportError(TransportErrorKind.Http, 503),
+  },
+  {
+    failure: "an answer it cannot read",
+    error: new TransportError(TransportErrorKind.Unreadable),
+  },
+  {
     failure: "a timeout",
     error: new TransportError(TransportErrorKind.Timeout),
+  },
+  {
+    failure: "a cancelled request",
+    error: new TransportError(TransportErrorKind.Aborted),
+  },
+  {
+    failure: "a bug",
+    error: new TypeError("undefined is not a function"),
   },
 ])(
   "leaves a query that failed with $failure alone once a request reaches the bank again",
