@@ -1,6 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
 
+import { clearTransferScenario } from "@/test/clear-transfer-scenario";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -17,23 +17,19 @@ it(
   }),
 );
 
-it("offers to try again when the balance cannot load, and shows it once it does", async () => {
-  mswServer.use(
-    http.get(
-      "*/accounts/primary",
-      () =>
-        HttpResponse.json(
-          { error: { code: "NEW_BANK_CODE", message: "Unknown to this app." } },
-          { status: 400 },
-        ),
-      { once: true },
-    ),
-  );
-  await renderRoute("/");
+it(
+  "offers to try again when the balance cannot load, and shows it once it does",
+  scenarioTest("transfer.start_unexpected", async () => {
+    await renderRoute("/");
+    const tryAgainButton = await screen.findByRole("button", {
+      name: "Try again",
+    });
 
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Try again" }),
-  );
+    // The scenario's answers stay until it is cleared and its handlers are dropped too.
+    clearTransferScenario();
+    mswServer.resetHandlers();
+    await fireEvent.press(tryAgainButton);
 
-  expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
-});
+    expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
+  }),
+);

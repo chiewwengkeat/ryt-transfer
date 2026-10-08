@@ -146,20 +146,25 @@ it("moves on to review with an amount within the balance and both limits", async
   expect(view.getPathname()).toBe("/transfer/review");
 });
 
-it("asks for an amount before moving on, and for one with at most two decimals", async () => {
-  const view = await openAmountStep();
+it(
+  "asks for an amount before moving on, and for one with at most two decimals",
+  scenarioTest("transfer.badly_formed_input", async () => {
+    const view = await openAmountStep();
 
-  await fireEvent.press(await screen.findByRole("button", { name: "Review" }));
-  expect(screen.getByHintText("Enter the amount to send.")).toBeOnTheScreen();
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Review" }),
+    );
+    expect(screen.getByHintText("Enter the amount to send.")).toBeOnTheScreen();
 
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "12.345");
-  expect(
-    screen.getByHintText(
-      "Enter an amount in ringgit, with up to two decimal places.",
-    ),
-  ).toBeOnTheScreen();
-  expect(view.getPathname()).toBe("/transfer/amount");
-});
+    await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "12.345");
+    expect(
+      screen.getByHintText(
+        "Enter an amount in ringgit, with up to two decimal places.",
+      ),
+    ).toBeOnTheScreen();
+    expect(view.getPathname()).toBe("/transfer/amount");
+  }),
+);
 
 it("opens the recipient step instead when no recipient is chosen yet", async () => {
   // Mounted past the link guard, which sends this path Home: only the app's own navigation can try it.

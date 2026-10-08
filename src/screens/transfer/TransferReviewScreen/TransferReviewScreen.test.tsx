@@ -177,88 +177,100 @@ it("reports each step of a sent transfer with its amount, never with the recipie
   ]);
 });
 
-it("asks for a face or fingerprint only, never the phone's passcode", async () => {
-  await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100();
+// The OS draws the prompt out of Jest's sight, so these three read what the app hands the library.
+it(
+  "asks for a face or fingerprint only, never the phone's passcode",
+  scenarioTest("transfer.biometrics_recognised", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await openReviewOfRm100();
 
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  await screen.findByText("Transfer sent");
-
-  expect(phoneKeyOptions()).toContainEqual(
-    expect.objectContaining({
-      keyType: "ec256",
-      biometricStrength: "strong",
-      allowDeviceCredentials: false,
-    }),
-  );
-  expect(biometricPromptsShown()).toEqual([
-    expect.objectContaining({
-      biometricStrength: "strong",
-      disableDeviceFallback: true,
-    }),
-  ]);
-});
-
-// The OS draws the prompt out of Jest's sight, so these read what the app hands the library.
-it("hands the iOS face or fingerprint prompt a title stating the amount and the recipient's registered name", async () => {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const { recipient } = await lookUpTestRecipient(MOBILE);
-  await openReviewOfRm100();
-
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  await screen.findByText("Transfer sent");
-
-  expect(biometricPromptsShown()).toEqual([
-    expect.objectContaining({
-      promptTitle: `Approve RM 100.00 to ${recipient.registeredName}`,
-    }),
-  ]);
-});
-
-it("hands the Android face or fingerprint prompt the amount and the recipient's registered name under its title", async () => {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const { recipient } = await lookUpTestRecipient(MOBILE);
-  await openReviewOfRm100();
-  const platformOs = jest.replaceProperty(Platform, "OS", "android");
-
-  try {
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
     await screen.findByText("Transfer sent");
-  } finally {
-    platformOs.restore();
-  }
 
-  expect(biometricPromptsShown()).toEqual([
-    expect.objectContaining({
-      promptTitle: "Approve transfer",
-      promptSubtitle: `RM 100.00 to ${recipient.registeredName}`,
-    }),
-  ]);
-});
+    expect(phoneKeyOptions()).toContainEqual(
+      expect.objectContaining({
+        keyType: "ec256",
+        biometricStrength: "strong",
+        allowDeviceCredentials: false,
+      }),
+    );
+    expect(biometricPromptsShown()).toEqual([
+      expect.objectContaining({
+        biometricStrength: "strong",
+        disableDeviceFallback: true,
+      }),
+    ]);
+  }),
+);
 
-it("says the transfer was not sent when the face or fingerprint prompt is closed", async () => {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const balanceBeforeMinor = await readBankBalanceMinor();
-  cancelNextBiometricPrompt();
-  await openReviewOfRm100();
+it(
+  "hands the iOS face or fingerprint prompt a title stating the amount and the recipient's registered name",
+  scenarioTest("transfer.biometrics_recognised", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const { recipient } = await lookUpTestRecipient(MOBILE);
+    await openReviewOfRm100();
 
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByText("Transfer sent");
 
-  expect(
-    await screen.findByText("The transfer was not sent — no money moved."),
-  ).toBeOnTheScreen();
-  expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
-  jest.useRealTimers();
-  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
-});
+    expect(biometricPromptsShown()).toEqual([
+      expect.objectContaining({
+        promptTitle: `Approve RM 100.00 to ${recipient.registeredName}`,
+      }),
+    ]);
+  }),
+);
+
+it(
+  "hands the Android face or fingerprint prompt the amount and the recipient's registered name under its title",
+  scenarioTest("transfer.biometrics_recognised", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const { recipient } = await lookUpTestRecipient(MOBILE);
+    await openReviewOfRm100();
+    const platformOs = jest.replaceProperty(Platform, "OS", "android");
+
+    try {
+      await fireEvent.press(
+        await screen.findByRole("button", { name: "Transfer" }),
+      );
+      await screen.findByText("Transfer sent");
+    } finally {
+      platformOs.restore();
+    }
+
+    expect(biometricPromptsShown()).toEqual([
+      expect.objectContaining({
+        promptTitle: "Approve transfer",
+        promptSubtitle: `RM 100.00 to ${recipient.registeredName}`,
+      }),
+    ]);
+  }),
+);
+
+it(
+  "says the transfer was not sent when the face or fingerprint prompt is closed",
+  scenarioTest("transfer.approval_cancelled", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    cancelNextBiometricPrompt();
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText("The transfer was not sent — no money moved."),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
+  }),
+);
 
 it(
   "says the transfer was not sent when the bank cannot verify the approval",
@@ -490,27 +502,27 @@ it("never moves on from the recipient step while a transfer is still being creat
   });
 });
 
-it("never offers to send again when the approval's answer is lost", async () => {
-  await pairPhoneAsTheDemoLaunchDoes();
-  mswServer.use(
-    http.post("*/transfers/:transferId/approve", () => HttpResponse.error()),
-  );
-  await openReviewOfRm100();
+it(
+  "never offers to send again when the approval's answer is lost",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await openReviewOfRm100();
 
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
 
-  expect(
-    await screen.findByText(
-      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
-    ),
-  ).toBeOnTheScreen();
-  expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
-  expect(
-    screen.getByRole("button", { name: "Back to Home" }),
-  ).toBeOnTheScreen();
-});
+    expect(
+      await screen.findByText(
+        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Back to Home" }),
+    ).toBeOnTheScreen();
+  }),
+);
 
 it("offers to try again or leave when the bank's answer to the transfer cannot be read", async () => {
   mswServer.use(
