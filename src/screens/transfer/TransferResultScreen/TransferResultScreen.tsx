@@ -4,7 +4,8 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet } from "react-native";
-import Animated, { Keyframe } from "react-native-reanimated";
+import Animated, { Keyframe, ReduceMotion } from "react-native-reanimated";
+import { useStore } from "zustand";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
@@ -13,7 +14,11 @@ import {
   useTransferStatusCheck,
 } from "@/domains/transfer/hooks/transfer-status-checks";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
-import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
+import {
+  motionDurations,
+  reduceMotionStore,
+  standardEasing,
+} from "@/shared/lib/motion/motion";
 import { trackEvent } from "@/shared/observability/observability";
 import { spacing } from "@/shared/theme/theme";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
@@ -39,6 +44,10 @@ export default function TransferResultScreen() {
   const { transfer, readFailure, bankUnreachable } = useTransferStatusCheck(
     transferId,
     customerId,
+  );
+  const phoneReducesMotion = useStore(
+    reduceMotionStore,
+    (motion) => motion.phoneReducesMotion,
   );
   // Opened without the approve call's answer in hand, nothing has confirmed what the approval did.
   const [checkingUnansweredApproval] = useState(
@@ -117,7 +126,11 @@ export default function TransferResultScreen() {
               transform: [{ scale: 1 }],
               easing: standardEasing,
             },
-          }).duration(motionDurations.screenContentEntrance)}
+          })
+            .duration(motionDurations.screenContentEntrance)
+            .reduceMotion(
+              phoneReducesMotion ? ReduceMotion.Always : ReduceMotion.Never,
+            )}
           style={styles.outcome}
         >
           {scenario === TransferOutcomeScenario.Completed && (

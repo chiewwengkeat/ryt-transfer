@@ -1,17 +1,31 @@
 import { StyleSheet, View } from "react-native";
-import Animated, { Keyframe } from "react-native-reanimated";
+import Animated, { Keyframe, ReduceMotion } from "react-native-reanimated";
+import { useStore } from "zustand";
 
-import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
+import {
+  motionDurations,
+  reduceMotionStore,
+  standardEasing,
+} from "@/shared/lib/motion/motion";
 import { colors } from "@/shared/theme/theme";
 
 export default function IconTransferCompleted() {
+  const phoneReducesMotion = useStore(
+    reduceMotionStore,
+    (motion) => motion.phoneReducesMotion,
+  );
+
   return (
     <Animated.View
       aria-hidden
       entering={new Keyframe({
         0: { opacity: 0, transform: [{ scale: 0.8 }] },
         100: { opacity: 1, transform: [{ scale: 1 }], easing: standardEasing },
-      }).duration(motionDurations.successMark)}
+      })
+        .duration(motionDurations.successMark)
+        .reduceMotion(
+          phoneReducesMotion ? ReduceMotion.Always : ReduceMotion.Never,
+        )}
       style={styles.circle}
     >
       <View style={styles.tick} />
