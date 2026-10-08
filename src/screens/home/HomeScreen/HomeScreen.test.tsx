@@ -24,6 +24,9 @@ it(
     const tryAgainButton = await screen.findByRole("button", {
       name: "Try again",
     });
+    expect(
+      screen.getByText("Something unexpected went wrong."),
+    ).toBeOnTheScreen();
 
     // The scenario's answers stay until it is cleared and its handlers are dropped too.
     clearTransferScenario();
