@@ -1,8 +1,5 @@
 {
-  "earlier_transfer_notice": {},
-
-  "offline_notice": {},
-  "maintenance_notice": {},
-
-  "recents": {}
+  "recents": {
+    "title": "Penerima terkini"
+  }
 }
