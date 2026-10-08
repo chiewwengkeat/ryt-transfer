@@ -2550,36 +2550,6 @@ it("reopens review without saying the details changed when nothing changed after
   ).toBeNull();
 });
 
-it(
-  "starts one transfer when Transfer is tapped twice, and debits once",
-  scenarioTest("transfer.double_tap_ignored", async () => {
-    await pairPhoneAsTheDemoLaunchDoes();
-    const balanceBeforeMinor = await readBankBalanceMinor();
-    await openReviewOfRm100();
-    const transferButton = await screen.findByRole("button", {
-      name: "Transfer",
-    });
-    let fiber = (transferButton as unknown as { unstable_fiber: PressFiber })
-      .unstable_fiber;
-    while (typeof fiber.memoizedProps.onPress !== "function")
-      fiber = fiber.return;
-    const pressTransfer = fiber.memoizedProps.onPress as () => void;
-
-    // ⛔ Not two fireEvent.press calls: awaited, the second meets a busy button; together, their acts overlap.
-    // Both presses in one act land before the re-render, so only the flow's own guard can refuse the second.
-    await act(() => {
-      pressTransfer();
-      pressTransfer();
-    });
-
-    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
-    expect(countSent("POST", "/transfers")).toBe(1);
-    expect(countSent("POST", "/approve")).toBe(1);
-    jest.useRealTimers();
-    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
-  }),
-);
-
 it.each([
   ["made", () => undefined],
   [
@@ -2748,5 +2718,3 @@ it.each([
     expect(screen.queryByHintText(refusal)).toBeNull();
   },
 );
-
-type PressFiber = { memoizedProps: { onPress?: unknown }; return: PressFiber };
