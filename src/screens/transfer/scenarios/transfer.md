@@ -516,7 +516,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 `transfer.refunded_after_processing`
 - **When:** a transfer that was processing ends unsuccessful, and the bank refunds it automatically
 - **Money:** money returned
-- **Shown as:** in History, and as a notice the next time the app opens
+- **Shown as:** in History, and on the result page if it is still open; otherwise as a notice the next time the app opens
 - **Tell them:** it didn't go through, and the money is being or has been returned automatically
 - **They can:** see it in History; nothing else is needed
 - **Why:** money that left and came back is a different answer from money that never left, and the person sees which
