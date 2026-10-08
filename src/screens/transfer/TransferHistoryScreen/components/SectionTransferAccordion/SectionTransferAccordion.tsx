@@ -43,19 +43,22 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
   });
   const listRef = useRef<FlashListRef<(typeof dataItems)[number]>>(null);
 
-  const toggleTransferDay = (date: string, expanded: boolean) => {
-    // From the cache, not this render's rows: closing over those would redraw every row on each page.
+  // From the cache, not this render's rows: closing over those would redraw every row on each page.
+  const countLoadedTransfersOn = (date: string) => {
     const history = queryClient.getQueryData(
       getListTransfersOptions().queryKey,
     );
-    const loadedRowCount =
-      history &&
-      selectTransferHistory(history).transfers.filter(
-        ({ malaysianDate }) => malaysianDate === date,
-      ).length;
+    return history
+      ? selectTransferHistory(history).transfers.filter(
+          ({ malaysianDate }) => malaysianDate === date,
+        ).length
+      : 0;
+  };
+
+  const toggleTransferDay = (date: string, expanded: boolean) => {
     setCollapsedDayRowCounts((counts) => ({
       ...counts,
-      [date]: expanded ? (loadedRowCount ?? 0) : undefined,
+      [date]: expanded ? countLoadedTransfersOn(date) : undefined,
     }));
   };
 
@@ -106,6 +109,16 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
       }
       refreshing={transferHistory.isRefetching}
       onRefresh={() => {
+        // A day reopened by a later page's rows would close again once the refresh trims them away.
+        setCollapsedDayRowCounts((counts) =>
+          Object.fromEntries(
+            Object.entries(counts).filter(
+              ([date, collapsedAt]) =>
+                collapsedAt !== undefined &&
+                countLoadedTransfersOn(date) <= collapsedAt,
+            ),
+          ),
+        );
         void resetTransferHistory(queryClient).then(() => {
           listRef.current?.scrollToTop();
         });

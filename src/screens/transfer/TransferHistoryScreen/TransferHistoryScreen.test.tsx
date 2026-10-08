@@ -571,6 +571,50 @@ it("opens a collapsed day again when the next page brings rows it did not have",
   ).toBeOnTheScreen();
 });
 
+it("keeps a day open that a later page reopened when a pull trims that page away", async () => {
+  serveTransferHistoryPages([
+    [buildHistoryTransfer()],
+    [
+      buildHistoryTransfer({
+        registeredName: "Lim Wei Jie",
+        createdAt: "2026-10-05T09:15:00+08:00",
+      }),
+    ],
+  ]);
+  const releaseLaterPages = holdTransferHistoryPages("later");
+  await renderRoute("/transfer-history");
+  await fireEvent.press(
+    await screen.findByRole("button", {
+      name: "5 Oct 2026, 2 transfers, -RM 100.00",
+    }),
+  );
+  releaseLaterPages();
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+  const releaseLaterPagesAgain = holdTransferHistoryPages("later");
+
+  await fireEvent(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+    "refresh",
+  );
+  await act(() => jest.advanceTimersByTimeAsync(1000));
+
+  expect(
+    screen.getByRole("button", {
+      name: "5 Oct 2026, 2 transfers, -RM 100.00",
+      expanded: true,
+    }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+  releaseLaterPagesAgain();
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+});
+
 it("moves a day from Today to Yesterday at Malaysian midnight", async () => {
   const today = toMalaysianDateKey(new Date().toISOString());
   serveTransferHistoryPages([
