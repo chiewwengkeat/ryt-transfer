@@ -14,10 +14,12 @@ import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import {
-  buildHistoryTransfer,
   failTransferDetails,
   holdTransferDetails,
   serveTransferDetails,
+} from "@/test/transfer-details-responses";
+import {
+  buildHistoryTransfer,
   serveTransferHistoryPages,
 } from "@/test/transfer-history-pages";
 
