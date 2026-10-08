@@ -4,7 +4,7 @@
 
 A transfer needs proof that the account holder approved this transfer, to this recipient, for this amount, on their own phone. A biometric prompt that answers only yes or no proves none of that: it ties nothing to the transfer, and Expo's local-authentication module, for one, reports the same success for the phone's passcode as for a fingerprint. That passcode is often known to family, and it is all a phone asks before someone adds a fingerprint of their own.
 
-Bank Negara Malaysia's Risk Management in Technology policy (RMiT) expects the code that authorises a transfer to be generated on the payer's device, with more than one factor, and to be specific to the confirmed recipient and amount. It forbids the app from storing a PIN, which the bank verifies centrally, and it expects the bank to detect a change to the biometrics a device approves with. Some phones have no biometrics at all.
+Bank Negara Malaysia's Risk Management in Technology policy (RMiT) expects the code that authorises a transfer to be generated on the payer's device, with more than one factor, and to be specific to the confirmed recipient and amount. It forbids the app from storing a PIN, which the bank verifies centrally, and where biometrics alone authenticate a customer, it expects the bank to detect a change to the biometrics a device approves with. Some phones have no biometrics at all.
 
 ## Decision
 
@@ -24,8 +24,13 @@ Each transfer is approved by a signature the bank checks, never by a yes-or-no p
 - **A fallback key the phone's passcode unlocks.** Anyone who knows the passcode can approve, and can add their own fingerprint. A key that accepts the passcode also survives a new fingerprint, so the bank never learns the biometrics changed.
 - **One key that either unlocks.** A newly added fingerprint, or the passcode, approves.
 - **Signing less.** Signing only the recipient and the amount lets a note changed on the way pass; signing only the bank's challenge commits the phone to nothing it showed.
-- **A 12-hour hold after a biometric change.** Whoever holds the phone and the PIN approves through the PIN path and never registers a new key, so the hold stops nobody who has the PIN and falls only on the owner who added a finger. What does stop them: three wrong PINs lock it at the bank, the customer is notified of every transfer and of the biometric change, and the account can be locked.
+- **Building the signed text in the mock bank first, then in the approval domain.** The approval domain would end up holding the text its keys sign. Chosen instead: the builder sits beside the approve call, in the file that sends the signature, from its first commit.
+- **A 12-hour hold after a biometric change.** Whoever holds the phone and the PIN approves through the PIN path and never registers a new key, so the hold stops nobody who has the PIN and falls only on the owner who added a finger. What acts against them is the bank's: every transfer and every biometric change is notified, and the account can be locked. Three wrong PINs lock the PIN at the bank, which stops someone guessing it, not someone who knows it.
+- **A four-digit PIN.** Two taps fewer per approval. Chosen instead: six digits, a million combinations, so three blind guesses succeed three times in a million.
 - **Re-pairing in the host app, or quietly making a new key.** Re-pairing leaves approvals dead until the phone is paired again elsewhere, a dead end inside this module. A quiet new key hands approval to whoever adds a fingerprint.
 - **Our own native signing module, or the older well-known library.** Our own module keeps third-party code away from the keys, at the cost of more native code with no emulator evidence behind it. The older library has had no release since 2022.
 - **Approval as a screen of its own.** It repeats the review screen and adds a URL and a back entry into a half-approved transfer, both of which must then be guarded.
+- **A shared modal route for approval.** Like a screen of its own, it adds a URL and a back entry into a half-approved transfer, and the 60-second challenge would no longer live within one screen.
 - **A Demo menu that fakes approval results.** The demo build would approve transfers with no real authentication.
+- **A Demo menu that never touches approval.** A reviewer on a real phone would have to remove their own fingerprints to see the PIN fallback.
+- **A mock bank that trusts any signature.** A demo would pass a transfer the real bank would refuse, where checking each signature for real shows a tampered amount refused on screen.

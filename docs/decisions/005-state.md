@@ -8,7 +8,7 @@ The transfer flow runs across several screens, and several of its steps wait on 
 
 The transfer flow is a plain typed reducer. It is in one state at a time — editing, reviewing, creating, approving, submitting, checking, done — each holding only what that step needs, and it rejects any transition its current state does not allow. A confirmation that arrives outside reviewing is ignored, and going back to edit discards the transfer's idempotency key ([006](006-never-sent-twice.md)).
 
-The reducer lives in a zustand store. A component subscribes to the slice it shows and re-renders only when that slice changes, and code outside React reads the store directly: the deep-link handler drops a link that arrives mid-transfer, and a background check takes over a transfer the person leaves while it is being sent. `src/mocks/switcher/switcher-store.ts`, read by the mock bank outside React, is the same pattern at its smallest.
+The reducer lives in a zustand store. A component subscribes to the slice it shows and re-renders only when that slice changes, and code outside React reads the store directly: the deep-link handler drops a link that arrives mid-transfer. `src/mocks/switcher/switcher-store.ts`, read by the mock bank outside React, is the same pattern at its smallest.
 
 The bank's data is not client state. The flow keeps the draft and the transfer's id, never the transfer itself, which lives in the query cache ([010](010-query-cache-only.md)). Each form keeps its fields in react-hook-form, so a keystroke re-renders its field rather than the screen. The language picked is kept across launches in a key-value store read synchronously, so the first screen appears already in that language (`src/shared/platform/kv-storage.ts`). Development and demo builds also keep the scenario picked, saved with the mock bank's state, and a transfer still being checked keeps its ids in secure storage ([006](006-never-sent-twice.md)).
 
@@ -19,3 +19,5 @@ The bank's data is not client state. The flow keeps the draft and the transfer's
 - **React Context with a reducer.** Every consumer re-renders on any change unless the state is split across many providers, and nothing outside React can read it.
 - **Jotai.** Atoms are fine-grained, but they are a second mental model, and its major release was days old when it was weighed.
 - **AsyncStorage for the language picked.** It reads asynchronously only, so the splash screen would wait for it.
+- **expo-secure-store for the language picked.** No extra dependency and a synchronous read, but a setting that is no secret would sit in the keychain or keystore, and on iOS a keychain item can survive deleting the app.
+- **MMKV.** Fast and synchronous, but it needs `react-native-nitro-modules` beside it. Chosen instead: expo-sqlite's key-value store, versioned with the Expo SDK.
