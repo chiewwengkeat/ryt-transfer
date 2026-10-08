@@ -83,6 +83,7 @@ export enum TransferFlowScenario {
   ApprovalExpired = "transfer.approval_expired",
   ApprovalNotVerified = "transfer.approval_not_verified",
   BalanceOrLimitShortAtApproval = "transfer.balance_or_limit_short_at_approval",
+  RootedPhone = "transfer.rooted_phone",
   ApprovalUnexpected = "transfer.approval_unexpected",
   SessionEnded = "transfer.session_ended",
 }
@@ -106,6 +107,7 @@ export type TransferFlowNotice = Extract<
   | TransferFlowScenario.ApprovalExpired
   | TransferFlowScenario.ApprovalNotVerified
   | TransferFlowScenario.BalanceOrLimitShortAtApproval
+  | TransferFlowScenario.RootedPhone
   | TransferFlowScenario.ApprovalUnexpected
 >;
 

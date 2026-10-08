@@ -1,19 +1,21 @@
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 
 import BannerEarlierTransferUnconfirmed from "@/domains/transfer/components/BannerEarlierTransferUnconfirmed/BannerEarlierTransferUnconfirmed";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
-import { TransferFlowStep, transferFlowStore } from "../state/transfer-flow";
+import {
+  TransferFlowScenario,
+  TransferFlowStep,
+  transferFlowStore,
+  useTransferFlow,
+} from "../state/transfer-flow";
 import ButtonConfirmTransfer from "./components/ButtonConfirmTransfer/ButtonConfirmTransfer";
 import HeaderReview from "./components/HeaderReview/HeaderReview";
 import SectionReviewDetails from "./components/SectionReviewDetails/SectionReviewDetails";
 import TextSendingTransfer from "./components/TextSendingTransfer/TextSendingTransfer";
 
 export default function TransferReviewScreen() {
-  const { t } = useTranslation("transfer");
   // Review shows, and the phone signs, the draft it opened with; the steps behind it cannot change it meanwhile.
   const [draft] = useState(() => {
     const flow = transferFlowStore.getState();
@@ -21,26 +23,22 @@ export default function TransferReviewScreen() {
       throw new Error(`Review opened while the transfer was ${flow.step}.`);
     return flow.draft;
   });
-  // A refused phone sees the refusal alone: no Transfer button, and no earlier notice that offers the PIN.
-  const [phoneRefused, setPhoneRefused] = useState(false);
+  const phoneRefused = useTransferFlow(
+    (flow) =>
+      flow.step === TransferFlowStep.Reviewing &&
+      flow.notice === TransferFlowScenario.RootedPhone,
+  );
 
   return (
     <>
       <HeaderReview />
       <ViewScreenFrame
         footer={
+          // A refused phone sees the refusal alone, in Transfer's place: nothing beside it may offer a way to approve.
           phoneRefused ? (
-            <BannerNotice
-              tone="negative"
-              message={t("common.rooted_phone.body")}
-            />
+            <BannerFlowNotice step={TransferFlowStep.Reviewing} />
           ) : (
-            <ButtonConfirmTransfer
-              draft={draft}
-              onPhoneRefused={() => {
-                setPhoneRefused(true);
-              }}
-            />
+            <ButtonConfirmTransfer draft={draft} />
           )
         }
       >

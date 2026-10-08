@@ -45,12 +45,8 @@ import { useSendTransferApproval } from "./hooks/use-send-transfer-approval";
 
 interface Props {
   draft: TransferDraft;
-  onPhoneRefused: () => void;
 }
-export default function ButtonConfirmTransfer({
-  draft,
-  onPhoneRefused,
-}: Props) {
+export default function ButtonConfirmTransfer({ draft }: Props) {
   const { t } = useTranslation("transfer");
   const queryClient = useQueryClient();
   const lookup = useLookupRecipient(draft.recipient);
@@ -133,7 +129,10 @@ export default function ButtonConfirmTransfer({
     // Leaving review while the check runs voids the press, even if they come back: nothing is approved behind them.
     if (reviewLeaveCountRef.current !== leaveCountAtPress) return;
     if (phoneRefusesApproval) {
-      onPhoneRefused();
+      dispatchTransferFlow({
+        type: TransferFlowActionType.CreateNotSent,
+        notice: TransferFlowScenario.RootedPhone,
+      });
       return;
     }
     if (approvalPinLocked) {
