@@ -51,7 +51,8 @@
     "title": "Transfer",
     "mobile_label": "DuitNow mobile number",
     "mobile_placeholder": "012-345 6789",
-    "continue": "Continue"
+    "continue": "Continue",
+    "home": "Back to Home"
   },
   "amount": {
     "title": "Amount",

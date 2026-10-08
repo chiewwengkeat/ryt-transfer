@@ -1,4 +1,5 @@
 import { router, Stack } from "expo-router";
+import { HeaderBackButton } from "expo-router/react-navigation";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -28,7 +29,22 @@ export default function TransferRecipientScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: t("recipient.title") }} />
+      <Stack.Screen
+        options={{
+          title: t("recipient.title"),
+          // The flow's first step: the root stack's header, which would go back, is hidden over the flow.
+          headerLeft: (props) => (
+            <HeaderBackButton
+              {...props}
+              displayMode="minimal"
+              accessibilityLabel={t("recipient.home")}
+              onPress={() => {
+                router.dismissTo("/");
+              }}
+            />
+          ),
+        }}
+      />
       <ViewScreenFrame
         footer={
           <ButtonPrimary

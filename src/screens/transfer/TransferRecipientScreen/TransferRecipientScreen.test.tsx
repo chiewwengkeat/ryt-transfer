@@ -20,6 +20,19 @@ it.each(["012-345 6789", "60123456789", "+60 12 345 6789"])(
   },
 );
 
+it("leaves for Home from its header, even when the transfer opened with nothing beneath it", async () => {
+  const view = await renderRoute("/transfer");
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Back to Home" }),
+  );
+
+  expect(
+    await screen.findByRole("button", { name: "Transfer" }),
+  ).toBeOnTheScreen();
+  expect(view.getPathname()).toBe("/");
+});
+
 it("says what is wrong with a number that is not a Malaysian mobile number, and stays", async () => {
   const view = await renderRoute("/transfer");
 
