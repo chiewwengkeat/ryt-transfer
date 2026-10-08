@@ -7,6 +7,7 @@ import { StyleSheet, View } from "react-native";
 
 import {
   getListTransfersOptions,
+  isTransferHistoryCached,
   resetTransferHistory,
   useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
@@ -45,9 +46,7 @@ export default function TransferHistoryScreen() {
   // Each open fetches the newest page: people check here before paying again. Not on a cold cache, whose own
   // first fetch is that page: a reset would cancel it and ask twice.
   useEffect(() => {
-    if (
-      queryClient.getQueryData(getListTransfersOptions().queryKey) !== undefined
-    )
+    if (isTransferHistoryCached(queryClient))
       void resetTransferHistory(queryClient);
   }, [queryClient]);
 

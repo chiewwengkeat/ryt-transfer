@@ -70,9 +70,7 @@ export function useListTransfers() {
 }
 
 // Module-level so its identity holds: TanStack re-runs a new select over every loaded transfer.
-export function selectTransferHistory(
-  history: InfiniteData<ListTransfersResponse>,
-) {
+function selectTransferHistory(history: InfiniteData<ListTransfersResponse>) {
   const daySummaries: Record<string, ListTransfersResponse["days"][number]> =
     {};
   // A day split across two pages comes with its whole-day summary in both: keep one, never add them.
@@ -123,6 +121,24 @@ export function findTransferInHistory(
     .getQueryData(getListTransfersOptions().queryKey)
     ?.pages.flatMap(({ items }) => items)
     .find((transfer) => transfer.transferId === transferId);
+}
+
+export function isTransferHistoryCached(queryClient: QueryClient) {
+  return (
+    queryClient.getQueryData(getListTransfersOptions().queryKey) !== undefined
+  );
+}
+
+export function countLoadedTransfersOnDay(
+  queryClient: QueryClient,
+  date: string,
+) {
+  const history = queryClient.getQueryData(getListTransfersOptions().queryKey);
+  return history
+    ? selectTransferHistory(history).transfers.filter(
+        ({ malaysianDate }) => malaysianDate === date,
+      ).length
+    : 0;
 }
 
 // After a transfer: a page fetch already under way would land on pages the new transfer has shifted.

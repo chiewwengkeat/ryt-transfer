@@ -4,9 +4,8 @@ import { useRef, useState } from "react";
 
 import {
   askForNextTransferHistoryPage,
-  getListTransfersOptions,
+  countLoadedTransfersOnDay,
   resetTransferHistory,
-  selectTransferHistory,
   type useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
 
@@ -47,22 +46,13 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
   });
   const listRef = useRef<FlashListRef<(typeof dataItems)[number]>>(null);
 
-  // From the cache, not this render's rows: closing over those would redraw every row on each page.
-  const countLoadedTransfersOn = (date: string) => {
-    const history = queryClient.getQueryData(
-      getListTransfersOptions().queryKey,
-    );
-    return history
-      ? selectTransferHistory(history).transfers.filter(
-          ({ malaysianDate }) => malaysianDate === date,
-        ).length
-      : 0;
-  };
-
+  // Counted from the cache, not this render's rows: closing over those would redraw every row on each page.
   const toggleTransferDay = (date: string, wasExpanded: boolean) => {
     setCollapsedDayRowCounts((counts) => ({
       ...counts,
-      [date]: wasExpanded ? countLoadedTransfersOn(date) : undefined,
+      [date]: wasExpanded
+        ? countLoadedTransfersOnDay(queryClient, date)
+        : undefined,
     }));
   };
 
@@ -117,7 +107,7 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
             Object.entries(counts).filter(
               ([date, collapsedAt]) =>
                 collapsedAt !== undefined &&
-                countLoadedTransfersOn(date) <= collapsedAt,
+                countLoadedTransfersOnDay(queryClient, date) <= collapsedAt,
             ),
           ),
         );

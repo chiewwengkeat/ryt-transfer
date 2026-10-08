@@ -8,7 +8,12 @@ import {
 } from "../get-transfer/get-transfer.type";
 import { RecipientIdType } from "../lookup-recipient/lookup-recipient.type";
 import { transferKeys } from "../transfer.keys";
-import { patchTransferInHistory, resetTransferHistory } from "./list-transfers";
+import {
+  countLoadedTransfersOnDay,
+  isTransferHistoryCached,
+  patchTransferInHistory,
+  resetTransferHistory,
+} from "./list-transfers";
 import type { ListTransfersResponse } from "./list-transfers.type";
 
 const transferAt = (version: number, status: TransferStatus): Transfer => ({
@@ -76,4 +81,40 @@ it("keeps only the newest page of history after a transfer", async () => {
 
   expect(history.read()?.pages).toHaveLength(1);
   expect(history.read()?.pageParams).toEqual([0]);
+});
+
+it("finds history cached only once a page of it has landed", () => {
+  const coldCache = new QueryClient();
+  coldCache
+    .getQueryCache()
+    .build(coldCache, { queryKey: transferKeys.history() });
+
+  expect(isTransferHistoryCached(coldCache)).toBe(false);
+  expect(
+    isTransferHistoryCached(
+      historyHolding([transferAt(1, TransferStatus.Completed)]).queryClient,
+    ),
+  ).toBe(true);
+});
+
+it("counts a Malaysian day's loaded transfers across pages, one whose time cannot be read on its neighbour's day", () => {
+  const transferSentAt = (transferId: string, createdAt: string) => ({
+    ...transferAt(1, TransferStatus.Completed),
+    transferId,
+    createdAt,
+  });
+  const history = historyHolding(
+    [
+      transferSentAt("trf_1", "2026-10-07T09:30:00+08:00"),
+      transferSentAt("trf_2", "2026-10-06T23:30:00Z"),
+    ],
+    [
+      transferSentAt("trf_3", "not a time"),
+      transferSentAt("trf_4", "2026-10-06T09:30:00+08:00"),
+    ],
+  );
+
+  expect(countLoadedTransfersOnDay(history.queryClient, "2026-10-07")).toBe(3);
+  expect(countLoadedTransfersOnDay(history.queryClient, "2026-10-06")).toBe(1);
+  expect(countLoadedTransfersOnDay(new QueryClient(), "2026-10-07")).toBe(0);
 });
