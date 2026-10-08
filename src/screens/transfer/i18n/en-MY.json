@@ -38,6 +38,28 @@
     "outcome_unexpected": {
       "body": "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
       "retry": "Try again"
+    },
+    "section_transfer_details": {
+      "status": "Status",
+      "status_and_money": "{{status}} — {{money}}",
+      "money": {
+        "no_money_moved": "no money moved",
+        "money_moved": "money moved",
+        "not_confirmed_yet": "not confirmed yet",
+        "money_returned": "money returned"
+      },
+      "amount": "Amount",
+      "sent_to": "Sent to",
+      "received_from": "Received from",
+      "mobile": "Mobile number",
+      "bank": "Bank",
+      "note": "Note",
+      "reference": "Reference",
+      "sent_at": "Sent",
+      "received_at": "Received",
+      "completed_at": "Completed",
+      "refunded_at": "Refunded",
+      "unsuccessful_at": "Unsuccessful"
     }
   },
   "recipient": {
