@@ -26,7 +26,7 @@ it("forgets the approval keys a reinstalled app finds left from before", async (
       expect(kvStoreDouble.getItemSync("install-marker")).not.toBeNull();
     });
 
-    expect(await approvalKeys.approvalKeysOnFile()).toBe(false);
+    expect(await approvalKeys.hasApprovalKeysOnFile()).toBe(false);
     expect(phoneKeyOptions()).toEqual([]);
   });
 });
@@ -50,7 +50,7 @@ it("keeps the approval keys when the app was not reinstalled", async () => {
     // Storage runs writes and wipes in the order asked, so this settles only after any wipe the launch asked for.
     await writeSecureRecord({ namespace: "test", name: "launch-settled" }, "");
 
-    expect(await approvalKeys.approvalKeysOnFile()).toBe(true);
+    expect(await approvalKeys.hasApprovalKeysOnFile()).toBe(true);
     expect(phoneKeyOptions()).toHaveLength(2);
   });
 });

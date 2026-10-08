@@ -61,7 +61,7 @@ const BIOMETRIC_KEY_OPTIONS = {
   allowDeviceCredentials: false,
 } as const;
 
-export async function approvalKeysOnFile() {
+export async function hasApprovalKeysOnFile() {
   const keyIds = await Promise.all([
     readSecureRecord(POSSESSION_KEY_ID_RECORD),
     readSecureRecord(BIOMETRIC_KEY_ID_RECORD),

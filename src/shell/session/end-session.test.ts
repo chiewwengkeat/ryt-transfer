@@ -2,7 +2,7 @@ import type { InfiniteData } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 
 import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
-import { approvalKeysOnFile } from "@/domains/approval/hooks/approval-keys";
+import { hasApprovalKeysOnFile } from "@/domains/approval/hooks/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
@@ -54,7 +54,7 @@ it("leaves nothing of the customer's behind — their transfer history, the open
 
   expect(cachedHistory()).toEqual([]);
   expect(await listPendingTransfers(customerId)).toEqual([]);
-  expect(await approvalKeysOnFile()).toBe(true);
+  expect(await hasApprovalKeysOnFile()).toBe(true);
   expect(transferFlowStore.getState()).toEqual(
     transferFlowStore.getInitialState(),
   );
