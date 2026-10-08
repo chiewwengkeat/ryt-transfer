@@ -47,6 +47,7 @@ import {
   reportedScenarios,
 } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
+import { pressHandlerOf } from "@/test/press-handler-of";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -172,23 +173,12 @@ it(
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
     await openReviewOfRm100();
-    const transferButton = await screen.findByRole("button", {
-      name: "Transfer",
-    });
-    // fireEvent flushes each press, so a second one would hit a busy button and prove nothing.
-    type PressFiber = {
-      return: PressFiber | null;
-      memoizedProps: { onPress?: () => void } | null;
-    };
-    let fiber: PressFiber | null = (
-      transferButton as unknown as { unstable_fiber: PressFiber }
-    ).unstable_fiber;
-    while (fiber !== null && fiber.memoizedProps?.onPress === undefined)
-      fiber = fiber.return;
-    const pressTransfer = fiber?.memoizedProps?.onPress;
-    if (pressTransfer === undefined)
-      throw new Error("Nothing handles a press on Transfer.");
+    const pressTransfer = pressHandlerOf(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
 
+    // ⛔ Not two fireEvent.press calls: awaited, the second meets a busy button; together, their acts overlap.
+    // Both presses in one act land before the re-render, so only the flow's own guard can refuse the second.
     await act(() => {
       pressTransfer();
       pressTransfer();

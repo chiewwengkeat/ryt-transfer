@@ -13,6 +13,7 @@ import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
+import { pressHandlerOf } from "@/test/press-handler-of";
 import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -153,14 +154,9 @@ it("opens one review when Review is pressed twice before the step redraws, and o
   const view = await openAmountStep();
   await screen.findByText("RM 12,845.50");
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  let fiber = (
-    screen.getByRole("button", { name: "Review" }) as unknown as {
-      unstable_fiber: PressFiber;
-    }
-  ).unstable_fiber;
-  while (typeof fiber.memoizedProps.onPress !== "function")
-    fiber = fiber.return;
-  const pressReview = fiber.memoizedProps.onPress as () => void;
+  const pressReview = pressHandlerOf(
+    screen.getByRole("button", { name: "Review" }),
+  );
 
   // ⛔ Not two fireEvent.press calls: their acts overlap. In one act both presses land before the redraw.
   await act(() => {
@@ -331,5 +327,3 @@ it("opens the recipient step instead when no recipient is chosen yet", async () 
   ).toBeOnTheScreen();
   expect(view.getPathname()).toBe("/transfer");
 });
-
-type PressFiber = { memoizedProps: { onPress?: unknown }; return: PressFiber };
