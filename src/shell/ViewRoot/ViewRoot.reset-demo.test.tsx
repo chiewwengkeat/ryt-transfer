@@ -1,4 +1,5 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
@@ -42,6 +43,35 @@ async function sendRm100FromHomeAndReturn() {
   await fireEvent.press(await screen.findByRole("button", { name: "Done" }));
 }
 
+async function startRm100TransferFromHomeUnderNoBiometrics() {
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Demo menu" }),
+  );
+  await fireEvent.press(screen.getByRole("radio", { name: "No biometrics" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(
+    await screen.findByLabelText("Amount (RM)"),
+    "100",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+}
+
+async function approveWithPin(pin: string) {
+  for (const digit of pin)
+    await fireEvent.press(await screen.findByRole("button", { name: digit }));
+  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
+}
+
 it("puts Home back to the demo's opening balance and limit, and a transfer after the reset still goes through", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/");
@@ -60,6 +90,30 @@ it("puts Home back to the demo's opening balance and limit, and a transfer after
   expect(
     screen.getByText("You can send RM 4,900.00 more today"),
   ).toBeOnTheScreen();
+});
+
+it("keeps no PIN lock past Reset demo, so the next transfer gets its keypad", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/");
+  await startRm100TransferFromHomeUnderNoBiometrics();
+  await approveWithPin("111111");
+  await screen.findByText("That PIN is incorrect. You have 2 tries left.");
+  await approveWithPin("111111");
+  await screen.findByText("That PIN is incorrect. You have 1 try left.");
+  await approveWithPin("111111");
+  await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
+  await act(() => {
+    router.dismissTo("/");
+  });
+
+  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Reset demo" }));
+  // A transfer begun while the reset runs has its flow reset beneath it.
+  await act(() => jest.advanceTimersByTimeAsync(5_000));
+  await startRm100TransferFromHomeUnderNoBiometrics();
+
+  expect(await screen.findByRole("button", { name: "2" })).toBeOnTheScreen();
+  expect(screen.getByLabelText("PIN, 0 of 6 digits entered")).toBeOnTheScreen();
 });
 
 it("checks an earlier transfer again once they sign back in after the reset, and says it was sent", async () => {
