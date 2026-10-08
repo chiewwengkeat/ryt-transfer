@@ -1,4 +1,5 @@
 import { fireEvent, screen, userEvent } from "@testing-library/react-native";
+import { AccessibilityInfo } from "react-native";
 
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { parseTypedAmount } from "@/shared/lib/money/money";
@@ -158,6 +159,25 @@ it("sends to an account number at the bank picked from a search", async () => {
   expect(await screen.findByText("•••• 8901")).toBeOnTheScreen();
   expect(screen.getByText("Account number")).toBeOnTheScreen();
   expect(screen.getByText("Public Bank")).toBeOnTheScreen();
+});
+
+it("says, and announces, that no bank matches a search", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  await renderRoute("/transfer");
+  await fireEvent.press(
+    await screen.findByRole("radio", { name: "Account number" }),
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Bank" }));
+
+  await fireEvent.changeText(
+    await screen.findByLabelText("Search banks"),
+    "zzz",
+  );
+
+  expect(
+    await screen.findByText("No bank matches your search."),
+  ).toBeOnTheScreen();
+  expect(announce).toHaveBeenCalledWith("No bank matches your search.");
 });
 
 it("asks for the account's bank before moving on", async () => {

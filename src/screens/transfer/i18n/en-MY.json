@@ -280,6 +280,7 @@
     "bank_missing": "Choose the bank the account is with.",
     "bank_sheet_title": "Choose a bank",
     "bank_search_label": "Search banks",
+    "bank_no_match": "No bank matches your search.",
     "close_sheet": "Close",
     "continue": "Continue",
     "home": "Back to Home"

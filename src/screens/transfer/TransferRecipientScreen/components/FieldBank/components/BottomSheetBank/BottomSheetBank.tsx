@@ -6,6 +6,7 @@ import { useListBanks } from "@/domains/transfer/api/list-banks/list-banks";
 import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
 import { useIsOffline } from "@/shared/platform/offline";
 import { colors, minTouchTarget, typography } from "@/shared/theme/theme";
+import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import Loader from "@/shared/ui/Loader/Loader";
 
@@ -19,6 +20,11 @@ export default function BottomSheetBank({ onBankChosen, onClose }: Props) {
   // The shell's offline notice already explains a list that cannot load.
   const offline = useIsOffline();
   const [bankSearch, setBankSearch] = useState("");
+  const matchingBanks =
+    banks.data &&
+    [...banks.data.values()].filter((bank) =>
+      bank.name.toLowerCase().includes(bankSearch.trim().toLowerCase()),
+    );
 
   return (
     <BottomSheetFrame
@@ -39,25 +45,23 @@ export default function BottomSheetBank({ onBankChosen, onClose }: Props) {
             }}
           />
         )
-      ) : banks.data === undefined ? (
+      ) : matchingBanks === undefined ? (
         <Loader />
+      ) : matchingBanks.length === 0 ? (
+        <BannerNotice message={t("recipient.bank_no_match")} />
       ) : (
-        [...banks.data.values()]
-          .filter((bank) =>
-            bank.name.toLowerCase().includes(bankSearch.trim().toLowerCase()),
-          )
-          .map((bank) => (
-            <Pressable
-              key={bank.bankCode}
-              accessibilityRole="button"
-              onPress={() => {
-                onBankChosen(bank.bankCode);
-              }}
-              style={styles.bank}
-            >
-              <Text style={styles.bankName}>{bank.name}</Text>
-            </Pressable>
-          ))
+        matchingBanks.map((bank) => (
+          <Pressable
+            key={bank.bankCode}
+            accessibilityRole="button"
+            onPress={() => {
+              onBankChosen(bank.bankCode);
+            }}
+            style={styles.bank}
+          >
+            <Text style={styles.bankName}>{bank.name}</Text>
+          </Pressable>
+        ))
       )}
     </BottomSheetFrame>
   );
