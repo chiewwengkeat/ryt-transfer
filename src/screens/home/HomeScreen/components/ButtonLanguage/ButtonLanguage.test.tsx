@@ -1,8 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import * as Localization from "expo-localization";
 
-import { relaunchApp } from "@/test/relaunch-app";
-import { renderRoute } from "@/test/render-route";
+import { relaunchApp, renderRoute } from "@/test/render-route";
 
 function setPhoneLanguage(languageCode: string) {
   jest

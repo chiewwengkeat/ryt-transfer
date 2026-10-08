@@ -5,10 +5,13 @@ import {
   getMockContext,
   type MockContextConfig,
 } from "expo-router/testing-library";
+import { changeLanguage } from "i18next";
 import { useEffect, type ReactNode } from "react";
 
 import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
+import { AppLanguage, initTranslations } from "@/shared/i18n/i18n";
 import { queryClient } from "@/shell/query-client";
+import { TRANSLATION_BUNDLES } from "@/shell/translations";
 
 // renderRoute's fake timers last one test: left on, they stall the next test's msw delay().
 afterEach(() => {
@@ -48,8 +51,8 @@ export function askOpenAppToReadAgain(queryKey: QueryKey) {
   void queryClient.invalidateQueries({ queryKey });
 }
 
-// What a killed app keeps is what it stored: its timers, cache and flow die with it, and a stray timer
-// left running would let the old app's approval answer navigate the new one.
+// What a killed app keeps is what it stored: its timers, cache, flow and language die with it. A stray timer
+// would let the old app's approval answer navigate the new one; a language left set would pass for a kept pick.
 export async function relaunchApp(
   view: Awaited<ReturnType<typeof renderRoute>>,
 ) {
@@ -59,5 +62,7 @@ export async function relaunchApp(
     mutation.destroy();
   queryClient.clear();
   transferFlowStore.setState(transferFlowStore.getInitialState(), true);
+  await changeLanguage(AppLanguage.English);
+  initTranslations(TRANSLATION_BUNDLES);
   return renderRoute("/");
 }
