@@ -12,7 +12,7 @@ import Loader from "@/shared/ui/Loader/Loader";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
 export default function CardBalance() {
-  const { t } = useTranslation(["account", "transfer"]);
+  const { t } = useTranslation("account");
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
 
@@ -21,10 +21,10 @@ export default function CardBalance() {
       <Card>
         <BannerNotice
           tone="negative"
-          message={t("transfer:common.start_unexpected.body")}
+          message={t("common.start_unexpected.body")}
         />
         <ButtonSecondary
-          label={t("transfer:common.start_unexpected.retry")}
+          label={t("common.start_unexpected.retry")}
           onPress={() => {
             void account.refetch();
             void limits.refetch();
@@ -41,7 +41,7 @@ export default function CardBalance() {
         <Text style={styles.balance}>{formatMoney(account.data.balance)}</Text>
       </View>
       <TextBody>
-        {t("transfer:common.balance_and_limit_shown.remaining_today", {
+        {t("common.balance_and_limit_shown.remaining_today", {
           amount: formatMoney(limits.data.remainingToday),
         })}
       </TextBody>

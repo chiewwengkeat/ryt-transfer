@@ -1,12 +1,5 @@
 {
   "common": {
-    "balance_and_limit_shown": {
-      "remaining_today": "You can send {{amount}} more today"
-    },
-    "start_unexpected": {
-      "body": "Something unexpected went wrong.",
-      "retry": "Try again"
-    },
     "badly_formed_input": {
       "mobile": "Enter a Malaysian mobile number, like 012-345 6789.",
       "amount": "Enter an amount in ringgit, with up to two decimal places."
