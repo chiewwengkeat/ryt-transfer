@@ -65,7 +65,20 @@ export default function ViewRoot() {
           // Production has no Demo header to hide, so its root need not re-render as sheets open.
           onSheetOpenChange={demoLayer === null ? undefined : setAppSheetOpen}
         >
-          <Stack key={navigatorMounts} screenOptions={screenTransitionOptions}>
+          <Stack
+            key={navigatorMounts}
+            // Android's header pads for the status bar itself, a place the Demo header has already taken.
+            screenOptions={
+              demoLayer === null
+                ? screenTransitionOptions
+                : () => ({
+                    ...screenTransitionOptions(),
+                    unstable_nativeProps: {
+                      headerConfig: { disableTopInsetApplication: true },
+                    },
+                  })
+            }
+          >
             <Stack.Screen name="transfer" options={{ headerShown: false }} />
           </Stack>
           <BannerOffline />
