@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
+import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
@@ -650,7 +651,13 @@ it("still says the bank is unreachable once it stops answering, after answering 
       return statusReads === 1 ? undefined : HttpResponse.error();
     }),
   );
-  await renderRoute(`/transfer/result/${created.transfer.transferId}`);
+  await renderRoute("/");
+  await act(() => {
+    router.push({
+      pathname: "/transfer/result/[transferId]",
+      params: { transferId: created.transfer.transferId },
+    });
+  });
   await screen.findByRole("header", { name: "Checking your transfer" });
   await act(() => jest.advanceTimersByTimeAsync(14_000));
   expect(
@@ -667,9 +674,16 @@ it("still says the bank is unreachable once it stops answering, after answering 
 it("checks a transfer whose approval drew an answer the app does not know, under that answer's own id", async () => {
   const { created } = await startTestTransfer(10_000);
 
-  await renderRoute(
-    `/transfer/result/${created.transfer.transferId}?checking=transfer.approval_unknown_answer`,
-  );
+  await renderRoute("/");
+  await act(() => {
+    router.push({
+      pathname: "/transfer/result/[transferId]",
+      params: {
+        transferId: created.transfer.transferId,
+        checking: "transfer.approval_unknown_answer",
+      },
+    });
+  });
 
   expect(
     await screen.findByRole("header", { name: "Checking your transfer" }),
