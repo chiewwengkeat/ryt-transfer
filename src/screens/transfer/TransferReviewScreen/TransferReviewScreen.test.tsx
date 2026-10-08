@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { Platform } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import {
@@ -1278,4 +1279,153 @@ it("says something unexpected stopped the transfer when the name check answers i
     ),
   ).toBeOnTheScreen();
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+});
+
+function countSent(method: string, pathEnd: string) {
+  return sentRequests.filter(
+    (request) =>
+      request.method === method &&
+      new URL(request.url).pathname.endsWith(pathEnd),
+  ).length;
+}
+
+it(
+  "says the balance or a limit no longer covers the amount, and reads both again for the amount step",
+  scenarioTest("transfer.balance_or_limit_short_at_confirmation", async () => {
+    await openReviewOfRm100();
+    const transferButton = await screen.findByRole("button", {
+      name: "Transfer",
+    });
+    const balanceReadsBefore = countSent("GET", "/accounts/primary");
+
+    await fireEvent.press(transferButton);
+
+    expect(
+      await screen.findByText(
+        "Your balance or a limit no longer covers this amount. Go back to change it.",
+      ),
+    ).toBeOnTheScreen();
+    await waitFor(() => {
+      expect(countSent("GET", "/accounts/primary")).toBeGreaterThan(
+        balanceReadsBefore,
+      );
+    });
+    expect(countSent("POST", "/approve")).toBe(0);
+  }),
+);
+
+it(
+  "asks to confirm the recipient again once the name check has expired, and checks the name afresh",
+  scenarioTest("transfer.name_check_expired", async () => {
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "The recipient check has expired. Confirm the recipient again.",
+      ),
+    ).toBeOnTheScreen();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+    });
+    expect(countSent("POST", "/recipients/lookup")).toBe(2);
+  }),
+);
+
+it(
+  "says transfers are unavailable right now when maintenance begins mid-transfer",
+  scenarioTest("transfer.under_maintenance", async () => {
+    // Today's limit loaded before the maintenance began, so the amount step lets the transfer on to review.
+    mswServer.use(
+      http.get("*/transfer-limits", () =>
+        HttpResponse.json({
+          daily: {
+            limit: { minor: 500_000, currency: "MYR" },
+            usedToday: { minor: 0, currency: "MYR" },
+            remaining: { minor: 500_000, currency: "MYR" },
+          },
+          perTransferMax: { minor: 5_000_000, currency: "MYR" },
+        } satisfies GetTransferLimitsResponse),
+      ),
+    );
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "Transfers are unavailable right now. Try again later.",
+      ),
+    ).toBeOnTheScreen();
+    expect(countSent("POST", "/approve")).toBe(0);
+  }),
+);
+
+it(
+  "says something unexpected stopped the transfer when the bank answers Confirm in a way the app does not know",
+  scenarioTest("transfer.review_unexpected", async () => {
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "Something unexpected stopped the transfer — no money moved.",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+  }),
+);
+
+it("treats a key the bank says was used for other details as something unexpected", async () => {
+  mswServer.use(
+    http.post("*/transfers", () =>
+      HttpResponse.json(
+        { error: { code: "IDEMPOTENCY_KEY_REUSED", message: "Test." } },
+        { status: 409 },
+      ),
+    ),
+  );
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      "Something unexpected stopped the transfer — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  expect(countSent("POST", "/transfers")).toBe(1);
+});
+
+it("returns to the amount step when the bank cannot accept the amount as entered, and says so there", async () => {
+  mswServer.use(
+    http.post("*/transfers", () =>
+      HttpResponse.json(
+        { error: { code: "AMOUNT_INVALID", message: "Test." } },
+        { status: 422 },
+      ),
+    ),
+  );
+  const view = await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      "The bank could not accept the amount or note as entered. Check them, then review again.",
+    ),
+  ).toBeOnTheScreen();
+  expect(view.getPathname()).toBe("/transfer/amount");
 });

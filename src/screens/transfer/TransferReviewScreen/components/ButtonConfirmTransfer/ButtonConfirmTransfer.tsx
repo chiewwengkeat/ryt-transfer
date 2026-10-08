@@ -3,7 +3,12 @@ import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 
+import { accountKeys } from "@/domains/account/api/account.keys";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
+import {
+  CreateTransferErrorCode,
+  type CreateTransferResponse,
+} from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { refreshAccountAndHistoryAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import {
@@ -15,6 +20,7 @@ import {
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
+import { TransportError } from "@/shared/http/transport-error";
 import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 
@@ -54,21 +60,62 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     )
       return;
 
-    const created = await createTransfer
-      .mutateAsync({
+    let created: CreateTransferResponse;
+    try {
+      created = await createTransfer.mutateAsync({
         request: {
           recipientRef: confirmedLookup.recipientRef,
           amount: draft.amount,
         },
         idempotencyKey,
-      })
-      .catch(() => null);
-    if (created === null) {
-      dispatchTransferFlow({
-        type: TransferFlowActionType.CreateNotSent,
-        notice: TransferFlowScenario.ReviewUnexpected,
       });
-      return;
+    } catch (error) {
+      switch (error instanceof TransportError ? error.code : undefined) {
+        case CreateTransferErrorCode.InsufficientFunds:
+        case CreateTransferErrorCode.DailyLimitExceeded:
+        case CreateTransferErrorCode.AbovePerTransferMax:
+          // The figures the amount step checked against are stale now, so it reads them again.
+          void queryClient.invalidateQueries({ queryKey: accountKeys.all });
+          dispatchTransferFlow({
+            type: TransferFlowActionType.CreateNotSent,
+            notice: TransferFlowScenario.BalanceOrLimitShortAtConfirmation,
+          });
+          return;
+        case CreateTransferErrorCode.AmountInvalid:
+        case CreateTransferErrorCode.NoteInvalid:
+          if (
+            dispatchTransferFlow({
+              type: TransferFlowActionType.CreateReturnedToAmount,
+              notice: TransferFlowScenario.BadlyFormedInput,
+            })
+          )
+            router.dismissTo("/transfer/amount");
+          return;
+        case CreateTransferErrorCode.RecipientRefExpired:
+          dispatchTransferFlow({
+            type: TransferFlowActionType.CreateNotSent,
+            notice: TransferFlowScenario.NameCheckExpired,
+          });
+          void lookup.refetch();
+          return;
+        case CreateTransferErrorCode.ServiceUnavailable:
+          // Home reads maintenance off the limits, so they are read again before the person returns there.
+          void queryClient.invalidateQueries({
+            queryKey: accountKeys.transferLimits,
+          });
+          dispatchTransferFlow({
+            type: TransferFlowActionType.CreateNotSent,
+            notice: TransferFlowScenario.UnderMaintenance,
+          });
+          return;
+        case undefined:
+        default:
+          dispatchTransferFlow({
+            type: TransferFlowActionType.CreateNotSent,
+            notice: TransferFlowScenario.ReviewUnexpected,
+          });
+          return;
+      }
     }
     if (
       !dispatchTransferFlow({
@@ -85,7 +132,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   return (
     <ButtonPrimary
       label={t("review.transfer")}
-      loading={sending}
+      loading={sending || lookup.isFetching}
       disabledReason={offline ? t("common.offline.disabled_reason") : undefined}
       onPress={() => {
         void createAndApproveTransfer().catch(() => {

@@ -2,8 +2,8 @@ import { useState } from "react";
 
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
+import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
 import { TransferFlowStep, transferFlowStore } from "../state/transfer-flow";
-import BannerReviewNotice from "./components/BannerReviewNotice/BannerReviewNotice";
 import ButtonConfirmTransfer from "./components/ButtonConfirmTransfer/ButtonConfirmTransfer";
 import HeaderReview from "./components/HeaderReview/HeaderReview";
 import SectionReviewDetails from "./components/SectionReviewDetails/SectionReviewDetails";
@@ -24,7 +24,7 @@ export default function TransferReviewScreen() {
       <ViewScreenFrame footer={<ButtonConfirmTransfer draft={draft} />}>
         <SectionReviewDetails draft={draft} />
         <TextSendingTransfer />
-        <BannerReviewNotice />
+        <BannerFlowNotice step={TransferFlowStep.Reviewing} />
       </ViewScreenFrame>
     </>
   );

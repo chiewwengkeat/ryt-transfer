@@ -7,10 +7,13 @@ import {
 } from "@/screens/transfer/state/transfer-flow";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 
-export default function BannerReviewNotice() {
+interface Props {
+  step: TransferFlowStep.Editing | TransferFlowStep.Reviewing;
+}
+export default function BannerFlowNotice({ step }: Props) {
   const { t } = useTranslation("transfer");
   const notice = useTransferFlow((flow) =>
-    flow.step === TransferFlowStep.Reviewing ? flow.notice : undefined,
+    flow.step === step ? flow.notice : undefined,
   );
   if (notice === undefined) return null;
   const noticeName = notice.replace(

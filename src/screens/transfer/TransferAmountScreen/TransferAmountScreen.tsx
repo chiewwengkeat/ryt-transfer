@@ -10,9 +10,11 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import FieldText from "@/shared/ui/FieldText/FieldText";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
+import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
+  TransferFlowStep,
   useTransferFlow,
 } from "../state/transfer-flow";
 
@@ -91,6 +93,7 @@ export default function TransferAmountScreen() {
           />
         }
       >
+        <BannerFlowNotice step={TransferFlowStep.Editing} />
         <CardBalance unexpectedScenario="amount_unexpected" />
         <FieldText
           label={t("amount.label")}
