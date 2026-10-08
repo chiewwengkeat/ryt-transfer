@@ -31,7 +31,8 @@ async function sendRm100FromHomeToTheResultPage() {
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
-  await screen.findByRole("button", { name: "Done" });
+  // Long enough for an approval whose answer is lost to be sent twice more, seconds apart.
+  await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 });
   return view;
 }
 
