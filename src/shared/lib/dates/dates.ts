@@ -24,15 +24,12 @@ export function formatMalaysianDateTime(
   instant: string,
   t: TFunction<Namespace>,
 ) {
-  const wallClock = new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS);
-  const hour = wallClock.getUTCHours();
   return t("common:date.date_time", {
-    date: formatDayMonthYear(wallClock, t),
-    time: t("common:date.time", {
-      hour: hour % 12 || 12,
-      minute: String(wallClock.getUTCMinutes()).padStart(2, "0"),
-      period: hour < 12 ? t("common:date.am") : t("common:date.pm"),
-    }),
+    date: formatDayMonthYear(
+      new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS),
+      t,
+    ),
+    time: formatMalaysianTime(instant, t),
   });
 }
 
