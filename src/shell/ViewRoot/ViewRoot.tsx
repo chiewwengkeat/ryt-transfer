@@ -23,6 +23,7 @@ export default function ViewRoot() {
   usePendingTransfersAtLaunch();
   const [sessionEnded, setSessionEnded] = useState(false);
   const [demoSheetOpen, setDemoSheetOpen] = useState(false);
+  const [navigatorMounts, setNavigatorMounts] = useState(0);
   useEffect(
     () =>
       addUnauthorizedListener(() => {
@@ -42,7 +43,7 @@ export default function ViewRoot() {
     <QueryClientProvider client={queryClient}>
       <View aria-hidden={sessionEnded || demoSheetOpen} style={styles.app}>
         <ViewBottomSheetHost>
-          <Stack>
+          <Stack key={navigatorMounts}>
             <Stack.Screen name="transfer" options={{ headerShown: false }} />
           </Stack>
           <BannerOffline />
@@ -76,6 +77,8 @@ export default function ViewRoot() {
             await deleteAllSecureRecords();
             await deleteApprovalKeys();
             await demoLayer?.pairPhoneAtFirstLaunch();
+            // Remounts every screen: endSession's clear() leaves their reads on removed queries, which no later answer reaches.
+            setNavigatorMounts((mounts) => mounts + 1);
           }}
           onSheetOpenChange={setDemoSheetOpen}
         />
