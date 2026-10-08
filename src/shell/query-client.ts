@@ -13,8 +13,17 @@ import { subscribeToPhoneConnection } from "@/shared/platform/network";
 
 onlineManager.setEventListener(subscribeToPhoneConnection);
 focusManager.setEventListener((setFocused) => {
+  let backgroundSinceActive = false;
+  // Never on "inactive": a face or fingerprint prompt passes through it, and must refetch nothing.
   const subscription = AppState.addEventListener("change", (state) => {
-    setFocused(state === "active");
+    if (state === "background") {
+      backgroundSinceActive = true;
+      setFocused(false);
+    }
+    if (state === "active" && backgroundSinceActive) {
+      backgroundSinceActive = false;
+      setFocused(true);
+    }
   });
   return () => {
     subscription.remove();

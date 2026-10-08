@@ -94,7 +94,10 @@ it("keeps the recent recipients already listed under that message when reloading
   // Back in the foreground, every query reads afresh.
   for (const [eventName, listener] of jest.mocked(AppState).addEventListener
     .mock.calls)
-    if (eventName === "change") listener("active");
+    if (eventName === "change") {
+      listener("background");
+      listener("active");
+    }
 
   expect(
     await screen.findByText("Something unexpected went wrong."),

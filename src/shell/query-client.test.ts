@@ -78,6 +78,27 @@ it("fetches a stale read again when the app comes back to the front, not when it
   client.unmount();
 });
 
+it("fetches nothing again when a face or fingerprint prompt closes and the app is active once more", async () => {
+  const client = createQueryClient();
+  client.mount();
+  const queryFn = jest.fn(() => Promise.resolve("balance"));
+  const stopObserving = new QueryObserver(client, {
+    queryKey: ["balance"],
+    queryFn,
+    gcTime: 0,
+  }).subscribe(() => undefined);
+  await letPendingFetchesRun();
+
+  moveAppTo("inactive");
+  await letPendingFetchesRun();
+  moveAppTo("active");
+  await letPendingFetchesRun();
+
+  expect(queryFn).toHaveBeenCalledTimes(1);
+  stopObserving();
+  client.unmount();
+});
+
 // ⛔ Keep these after the offline write, which ends offline: they prove each test starts online.
 it.each([
   {
