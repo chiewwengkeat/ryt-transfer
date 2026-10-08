@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
+import { AccessibilityInfo } from "react-native";
 
 import {
   TransferDirection,
@@ -36,6 +37,7 @@ const TAN_ON_6_OCTOBER = buildHistoryTransfer({
 });
 const OFFLINE = { isConnected: false, isInternetReachable: false };
 const ONLINE = { isConnected: true, isInternetReachable: true };
+const OUT_OF_DATE = "Couldn't refresh — this list may be out of date";
 
 it("lists the first page's transfers under their day, asking the bank once", async () => {
   await renderRoute("/transfer-history");
@@ -284,6 +286,11 @@ it("asks for the newest page once back online when History opened offline, and s
     router.push("/transfer-history");
   });
   await act(() => jest.advanceTimersByTimeAsync(5000));
+  expect(screen.getByText(OUT_OF_DATE)).toBeOnTheScreen();
+  expect(
+    screen.queryByLabelText("Loading more transfers"),
+  ).not.toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Retry" })).not.toBeOnTheScreen();
 
   await act(() => {
     setPhoneNetwork(ONLINE);
@@ -317,24 +324,129 @@ it("offers Try again when the first page fails, and lists the transfers once it 
   ).toBeOnTheScreen();
 });
 
-it("takes the rows away when a refresh fails, so old ones never pass as current", async () => {
+it("keeps the rows under a notice when a refresh fails, and refreshes them on Try again", async () => {
   await renderRoute("/transfer-history");
   const aisyah = await screen.findByRole("button", { name: /^Aisyah Rahman/ });
   const recoverFirstPage = failTransferHistoryPages("first");
 
   await fireEvent(aisyah, "refresh");
 
+  expect(await screen.findByText(OUT_OF_DATE)).toBeOnTheScreen();
   expect(
-    await screen.findByText("Couldn't load your transfers."),
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
   ).toBeOnTheScreen();
   expect(
-    screen.queryByRole("button", { name: /^Aisyah Rahman/ }),
+    screen.queryByText("Couldn't load your transfers."),
   ).not.toBeOnTheScreen();
   recoverFirstPage();
+  serveTransferHistoryPages([[LIM_ON_4_OCTOBER]]);
   await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+  expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
+});
+
+it("keeps the rows it has under the notice when History opens offline", async () => {
+  await renderRoute("/");
+  await act(() => {
+    router.push("/transfer-history");
+  });
   expect(
     await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
   ).toBeOnTheScreen();
+  await act(() => {
+    router.back();
+  });
+  await act(() => {
+    setPhoneNetwork(OFFLINE);
+  });
+
+  await act(() => {
+    router.push("/transfer-history");
+  });
+  await act(() => jest.advanceTimersByTimeAsync(60_000));
+
+  expect(screen.getByText(OUT_OF_DATE)).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+  expect(sentTransferHistoryCursors()).toEqual([null]);
+});
+
+it("keeps the rows under the notice when pulled offline, and refreshes them once back online", async () => {
+  await renderRoute("/transfer-history");
+  const aisyah = await screen.findByRole("button", { name: /^Aisyah Rahman/ });
+  serveTransferHistoryPages([[LIM_ON_4_OCTOBER]]);
+  await act(() => {
+    setPhoneNetwork(OFFLINE);
+  });
+
+  await fireEvent(aisyah, "refresh");
+
+  expect(await screen.findByText(OUT_OF_DATE)).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+  await act(() => {
+    setPhoneNetwork(ONLINE);
+  });
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+  expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
+});
+
+it("says it couldn't load the transfers when History first opens offline, and lists them once back online", async () => {
+  await renderRoute("/");
+  await act(() => {
+    setPhoneNetwork(OFFLINE);
+  });
+
+  await act(() => {
+    router.push("/transfer-history");
+  });
+
+  expect(
+    await screen.findByText("Couldn't load your transfers."),
+  ).toBeOnTheScreen();
+  expect(screen.queryByLabelText("Loading")).not.toBeOnTheScreen();
+  await act(() => {
+    setPhoneNetwork(ONLINE);
+  });
+  expect(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+});
+
+it("announces no failure left from an earlier visit, only one from this visit", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  await renderRoute("/");
+  await act(() => {
+    router.push("/transfer-history");
+  });
+  const aisyah = await screen.findByRole("button", { name: /^Aisyah Rahman/ });
+  failTransferHistoryPages("first");
+  await fireEvent(aisyah, "refresh");
+  expect(await screen.findByText(OUT_OF_DATE)).toBeOnTheScreen();
+  await act(() => {
+    router.back();
+  });
+  const releaseFirstPage = holdTransferHistoryPages("first");
+  announce.mockClear();
+
+  await act(() => {
+    router.push("/transfer-history");
+  });
+
+  expect(
+    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+  expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
+  expect(announce).not.toHaveBeenCalled();
+  releaseFirstPage();
+  expect(await screen.findByText(OUT_OF_DATE)).toBeOnTheScreen();
+  expect(announce).toHaveBeenCalledWith(OUT_OF_DATE);
 });
 
 it("hands a 401 to the session-ended view", async () => {

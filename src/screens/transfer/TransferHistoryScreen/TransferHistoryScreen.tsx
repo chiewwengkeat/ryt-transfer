@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { StyleSheet, View } from "react-native";
 
 import {
   getListTransfersOptions,
@@ -14,6 +15,7 @@ import Loader from "@/shared/ui/Loader/Loader";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
+import BannerOutOfDate from "./components/BannerOutOfDate/BannerOutOfDate";
 import SectionTransferAccordion from "./components/SectionTransferAccordion/SectionTransferAccordion";
 
 export default function TransferHistoryScreen() {
@@ -32,10 +34,9 @@ export default function TransferHistoryScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t("history.title") }} />
-      {transferHistory.isPending ? (
+      {transferHistory.isPending && !transferHistory.isPaused ? (
         <Loader />
-      ) : transferHistory.isLoadingError || transferHistory.isRefetchError ? (
-        // A failed refresh too: its cached rows would be a list that may be stale, passing as current.
+      ) : transferHistory.data === undefined ? (
         <ViewScreenFrame
           footer={
             <ButtonPrimary
@@ -51,15 +52,27 @@ export default function TransferHistoryScreen() {
             message={t("history.first_page_failed")}
           />
         </ViewScreenFrame>
-      ) : transferHistory.data.transfers.length === 0 ? (
-        <ViewMessage
-          title={t("history.empty.title")}
-          message={t("history.empty.body")}
-          actions={undefined}
-        />
       ) : (
-        <SectionTransferAccordion transferHistory={transferHistory} />
+        <View style={styles.history}>
+          {/* A failure from an earlier visit is not this one's: shown on reopening, it would be announced as current. */}
+          {((transferHistory.isRefetchError &&
+            transferHistory.isFetchedAfterMount) ||
+            transferHistory.isPaused) && <BannerOutOfDate />}
+          {transferHistory.data.transfers.length === 0 ? (
+            <ViewMessage
+              title={t("history.empty.title")}
+              message={t("history.empty.body")}
+              actions={undefined}
+            />
+          ) : (
+            <SectionTransferAccordion transferHistory={transferHistory} />
+          )}
+        </View>
       )}
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  history: { flex: 1 },
+});

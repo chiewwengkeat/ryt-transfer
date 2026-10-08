@@ -85,6 +85,7 @@
       "body": "Transfers you send or receive will show here."
     },
     "first_page_failed": "Couldn't load your transfers.",
+    "out_of_date": "Couldn't refresh — this list may be out of date",
     "try_again": "Try again",
     "day": {
       "title": "{{day}} ({{count}})",
