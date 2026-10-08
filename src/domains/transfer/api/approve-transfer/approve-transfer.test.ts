@@ -1,4 +1,21 @@
-import { buildSignedApprovalText } from "@/domains/transfer/api/approve-transfer/approve-transfer";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, renderHook } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
+import { createElement, type ReactNode } from "react";
+
+import {
+  buildSignedApprovalText,
+  useApproveTransfer,
+} from "@/domains/transfer/api/approve-transfer/approve-transfer";
+import { getTransferOptions } from "@/domains/transfer/api/get-transfer/get-transfer";
+import {
+  TransferDirection,
+  TransferFunds,
+  TransferStatus,
+  type Transfer,
+} from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import { mswServer } from "@/test/msw-server";
 
 const REVIEWED_TRANSFER = {
   transferId: "trf_8c1f3a",
@@ -9,6 +26,55 @@ const REVIEWED_TRANSFER = {
   bankCode: "MBB",
   amount: { minor: 12550, currency: "MYR" as const },
 };
+
+const transferAt = (version: number, status: TransferStatus): Transfer => ({
+  transferId: "trf_1",
+  version,
+  direction: TransferDirection.Out,
+  status,
+  funds: TransferFunds.Debited,
+  counterparty: {
+    registeredName: "TAN WEI MING",
+    idType: RecipientIdType.Mobile,
+    idValueMasked: "•••• 6789",
+    bankName: "Maybank",
+  },
+  amount: { minor: 10_000, currency: "MYR" },
+  createdAt: "2026-10-07T09:30:00+08:00",
+  updatedAt: "2026-10-07T09:30:05+08:00",
+});
+
+async function approveWithTheBankAnswering(answer: Transfer, held?: Transfer) {
+  // No gc timers: a cache entry's 5-minute timer holds a single-file run open.
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { gcTime: Infinity },
+      mutations: { gcTime: Infinity },
+    },
+  });
+  if (held)
+    queryClient.setQueryData(
+      getTransferOptions(held.transferId).queryKey,
+      held,
+    );
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", () =>
+      HttpResponse.json({ transfer: answer }),
+    ),
+  );
+  const { result } = await renderHook(useApproveTransfer, {
+    wrapper: ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: queryClient }, children),
+  });
+  await act(() =>
+    result.current.mutateAsync({
+      transferId: answer.transferId,
+      request: { keyId: "key_1", signature: "c2lnbmF0dXJl" },
+      idempotencyKey: "approve-1",
+    }),
+  );
+  return queryClient;
+}
 
 it("signs the reviewed details as JSON in the fixed key order", () => {
   expect(buildSignedApprovalText({ ...REVIEWED_TRANSFER, note: "Lunch" })).toBe(
@@ -27,4 +93,32 @@ it("keeps the note's key as null when there is no note", () => {
   expect(buildSignedApprovalText({ ...REVIEWED_TRANSFER, note: "" })).toBe(
     expected,
   );
+});
+
+it("keeps the copy of a transfer it holds when the approval answers the same version", async () => {
+  const queryClient = await approveWithTheBankAnswering(
+    transferAt(2, TransferStatus.Completed),
+    transferAt(2, TransferStatus.Processing),
+  );
+
+  expect(
+    queryClient.getQueryData(getTransferOptions("trf_1").queryKey)?.status,
+  ).toBe(TransferStatus.Processing);
+});
+
+it("keeps the approval's copy of a transfer when a later read answers the same version", async () => {
+  const queryClient = await approveWithTheBankAnswering(
+    transferAt(2, TransferStatus.Completed),
+  );
+  mswServer.use(
+    http.get("*/transfers/:transferId", () =>
+      HttpResponse.json({ transfer: transferAt(2, TransferStatus.Processing) }),
+    ),
+  );
+
+  await queryClient.fetchQuery(getTransferOptions("trf_1"));
+
+  expect(
+    queryClient.getQueryData(getTransferOptions("trf_1").queryKey)?.status,
+  ).toBe(TransferStatus.Completed);
 });

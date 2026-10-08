@@ -19,7 +19,7 @@ export const getTransferOptions = (transferId: string) =>
     // An answer that left before a newer copy arrived must not replace it.
     structuralSharing: (held: unknown, received: unknown) =>
       held !== undefined &&
-      (held as Transfer).version > (received as Transfer).version
+      (held as Transfer).version >= (received as Transfer).version
         ? held
         : received,
   });

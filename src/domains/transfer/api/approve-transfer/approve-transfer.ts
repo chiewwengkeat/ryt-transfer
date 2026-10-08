@@ -48,7 +48,7 @@ export function useApproveTransfer() {
       queryClient.setQueryData(
         getTransferOptions(transfer.transferId).queryKey,
         (held) =>
-          held !== undefined && held.version > transfer.version
+          held !== undefined && held.version >= transfer.version
             ? held
             : transfer,
       );
