@@ -184,7 +184,7 @@
     "outcome_unexpected": {
       "title": "发送后出现意外问题",
       "body": "目前无法显示结果。再次转账前，请先查看历史记录——尚未确认。",
-      "retry": "重新加载结果"
+      "load_again": "重新加载结果"
     },
     "approval_unanswered": {
       "title": "批准无响应",

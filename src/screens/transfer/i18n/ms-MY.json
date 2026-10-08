@@ -184,7 +184,7 @@
     "outcome_unexpected": {
       "title": "Sesuatu yang tidak dijangka selepas menghantar",
       "body": "Keputusan tidak dapat dipaparkan sekarang. Semak Sejarah sebelum menghantar pindahan ini sekali lagi — belum disahkan.",
-      "retry": "Muat semula keputusan"
+      "load_again": "Muat semula keputusan"
     },
     "approval_unanswered": {
       "title": "Tiada jawapan kepada kelulusan",

@@ -94,7 +94,7 @@ it(
       focusManager.setFocused(false);
       focusManager.setFocused(true);
     });
-    await screen.findByRole("button", { name: "Try again" });
+    await screen.findByRole("button", { name: "Load the result again" });
 
     expect(notificationHaptics.mock.calls).toEqual([
       [Haptics.NotificationFeedbackType.Warning],
