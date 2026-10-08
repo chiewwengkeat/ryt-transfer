@@ -7,6 +7,7 @@ import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
+import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top";
 import { addUnauthorizedListener } from "@/shared/http/transport";
 import { screenTransitionOptions } from "@/shared/lib/motion/motion";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
@@ -61,29 +62,31 @@ export default function ViewRoot() {
   const appWithSessionEndedView = (
     <>
       <View aria-hidden={sessionEnded} style={styles.app}>
-        <ViewBottomSheetHost
-          // Production has no Demo header to hide, so its root need not re-render as sheets open.
-          onSheetOpenChange={demoLayer === null ? undefined : setAppSheetOpen}
-        >
-          <Stack
-            key={navigatorMounts}
-            // Android's header pads for the status bar itself, a place the Demo header has already taken.
-            screenOptions={
-              demoLayer === null
-                ? screenTransitionOptions
-                : () => ({
-                    ...screenTransitionOptions(),
-                    unstable_nativeProps: {
-                      headerConfig: { disableTopInsetApplication: true },
-                    },
-                  })
-            }
+        <ScreensCoveredContext value={sessionEnded}>
+          <ViewBottomSheetHost
+            // Production has no Demo header to hide, so its root need not re-render as sheets open.
+            onSheetOpenChange={demoLayer === null ? undefined : setAppSheetOpen}
           >
-            <Stack.Screen name="transfer" options={{ headerShown: false }} />
-          </Stack>
-          <BannerOffline />
-          <ViewPinSheetHost />
-        </ViewBottomSheetHost>
+            <Stack
+              key={navigatorMounts}
+              // Android's header pads for the status bar itself, a place the Demo header has already taken.
+              screenOptions={
+                demoLayer === null
+                  ? screenTransitionOptions
+                  : () => ({
+                      ...screenTransitionOptions(),
+                      unstable_nativeProps: {
+                        headerConfig: { disableTopInsetApplication: true },
+                      },
+                    })
+              }
+            >
+              <Stack.Screen name="transfer" options={{ headerShown: false }} />
+            </Stack>
+            <BannerOffline />
+            <ViewPinSheetHost />
+          </ViewBottomSheetHost>
+        </ScreensCoveredContext>
       </View>
       {sessionEnded && (
         <View style={styles.layer}>

@@ -11,7 +11,9 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { requestJson } from "@/shared/http/transport";
+import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { reportedScenarios } from "@/test/harness/recording-sink";
@@ -24,6 +26,23 @@ function HomeBalance() {
     queryFn: () => requestJson<{ amount: string }>("/balance"),
   });
   return <Text>{data?.amount ?? "Loading balance"}</Text>;
+}
+
+const BALANCE_FAILURE = "Your balance can't be shown right now.";
+
+function HomeBalanceOrItsFailure() {
+  const balance = useQuery({
+    queryKey: ["balance"],
+    queryFn: () => requestJson<{ amount: string }>("/balance"),
+  });
+  useTrackScenarioShown(
+    balance.isError ? "transfer.start_unexpected" : undefined,
+  );
+  return balance.isError ? (
+    <BannerNotice message={BALANCE_FAILURE} />
+  ) : (
+    <Text>{balance.data?.amount ?? "Loading balance"}</Text>
+  );
 }
 
 function answerBalance(amount: string) {
@@ -103,6 +122,27 @@ it("reports only the session's end when the screens beneath review read again in
   expect(reportedScenarios().slice(scenariosReportedOnTheWay)).toEqual([
     "transfer.session_ended",
   ]);
+});
+
+it("reports and announces only the session's end when the screen on top fails its own read into a 401", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  mswServer.use(
+    http.get("*/balance", () => new HttpResponse(null, { status: 401 })),
+  );
+
+  await renderRoute("/", {
+    appDir: "src/app",
+    overrides: { index: HomeBalanceOrItsFailure },
+  });
+
+  expect(
+    await screen.findByRole("header", { name: "Your session has ended" }),
+  ).toBeOnTheScreen();
+  // ⛔ Keep this wait: without it the reports are read before the screen has failed, and this passes either way.
+  await screen.findByText(BALANCE_FAILURE, { includeHiddenElements: true });
+  expect(reportedScenarios()).toEqual(["transfer.session_ended"]);
+  expect(announce).not.toHaveBeenCalledWith(BALANCE_FAILURE);
 });
 
 it("moves a screen reader to the session-ended view's title", async () => {

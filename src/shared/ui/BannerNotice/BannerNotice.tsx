@@ -1,7 +1,7 @@
-import { useIsFocused } from "expo-router";
 import { useEffect, useRef } from "react";
 import { AccessibilityInfo, StyleSheet, View } from "react-native";
 
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import { colors, radii, spacing } from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
@@ -10,15 +10,15 @@ interface Props {
   tone?: "warning" | "negative";
 }
 export default function BannerNotice({ message, tone = "warning" }: Props) {
-  const screenFocused = useIsFocused();
+  const screenOnTop = useIsScreenOnTop();
   const announcedMessageRef = useRef<string>(undefined);
   // Announced outright, which iOS needs; a live region as well could make TalkBack say it twice.
   // Once per message, and only on top: a covered screen stays mounted and would talk over the one above it.
   useEffect(() => {
-    if (!screenFocused || announcedMessageRef.current === message) return;
+    if (!screenOnTop || announcedMessageRef.current === message) return;
     announcedMessageRef.current = message;
     AccessibilityInfo.announceForAccessibility(message);
-  }, [message, screenFocused]);
+  }, [message, screenOnTop]);
 
   return (
     <View accessibilityRole="alert" style={[styles.banner, styles[tone]]}>
