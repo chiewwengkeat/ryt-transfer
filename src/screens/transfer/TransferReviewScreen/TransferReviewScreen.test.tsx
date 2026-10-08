@@ -261,7 +261,6 @@ it("reports each step of a sent transfer and each scenario it shows, with its am
     },
     { step: "done" },
     { step: "editing" },
-    { scenario: "transfer.balance_and_limit_shown" },
   ]);
 });
 

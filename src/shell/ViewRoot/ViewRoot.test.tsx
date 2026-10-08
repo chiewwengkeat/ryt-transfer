@@ -2,7 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
-import { AccessibilityInfo, Pressable, Text } from "react-native";
+import { AccessibilityInfo, AppState, Pressable, Text } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { askForApprovalPin } from "@/domains/approval/hooks/approval-pin-sheet";
@@ -14,6 +14,7 @@ import {
 import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pressHardwareBack } from "@/test/hardware-back";
+import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 
@@ -55,6 +56,53 @@ it("covers the app with the session-ended view when a request answers 401", asyn
   expect(
     screen.getByText("RM 10.00", { includeHiddenElements: true }),
   ).toBeOnTheScreen();
+});
+
+it("reports only the session's end when the screens beneath review read again into a 401", async () => {
+  await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(
+    await screen.findByLabelText("Amount (RM)"),
+    "100",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await screen.findByRole("button", { name: "Transfer" });
+  const scenariosReportedOnTheWay = reportedScenarios().length;
+  mswServer.use(http.all("*", () => new HttpResponse(null, { status: 401 })));
+
+  // Back from the background, the reads of every screen in the stack go again; review's answered name check does not.
+  const { calls, results } = jest.mocked(AppState).addEventListener.mock;
+  await act(() => {
+    calls.forEach(([eventName, listener], index) => {
+      const subscription = results[index]?.value as { remove: jest.Mock };
+      if (eventName !== "change" || subscription.remove.mock.calls.length > 0)
+        return;
+      listener("background");
+      listener("active");
+    });
+  });
+
+  expect(
+    await screen.findByRole("header", { name: "Your session has ended" }),
+  ).toBeOnTheScreen();
+  // Covered screens render late: read the reports before they show their failure and this passes either way.
+  await waitFor(() => {
+    expect(
+      screen.getAllByText("Something unexpected went wrong.", {
+        includeHiddenElements: true,
+      }),
+    ).toHaveLength(4);
+  });
+  expect(reportedScenarios().slice(scenariosReportedOnTheWay)).toEqual([
+    "transfer.session_ended",
+  ]);
 });
 
 it("moves a screen reader to the session-ended view's title", async () => {
