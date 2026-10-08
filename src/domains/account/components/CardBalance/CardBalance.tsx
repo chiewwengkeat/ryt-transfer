@@ -3,6 +3,11 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { useGetTransferLimits } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
+import { GetTransferLimitsErrorCode } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
+import {
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
 import { colors, typography } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
@@ -11,20 +16,35 @@ import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
-export default function CardBalance() {
+interface Props {
+  unexpectedScenario: "start_unexpected" | "amount_unexpected";
+}
+export default function CardBalance({ unexpectedScenario }: Props) {
   const { t } = useTranslation("account");
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
+  // Maintenance pauses transfers, not the balance: the balance still shows, and Transfer says why it waits.
+  const limitsPausedForMaintenance =
+    limits.error instanceof TransportError &&
+    limits.error.code === GetTransferLimitsErrorCode.ServiceUnavailable;
+  const failure =
+    account.error ?? (limitsPausedForMaintenance ? null : limits.error);
 
-  if (account.isError || limits.isError)
+  if (failure !== null) {
+    const failedToReachBank =
+      failure instanceof TransportError &&
+      (failure.kind === TransportErrorKind.Network ||
+        failure.kind === TransportErrorKind.Timeout ||
+        (failure.kind === TransportErrorKind.Http &&
+          (failure.status ?? 0) >= 500));
+    const scenario = failedToReachBank
+      ? "balance_unavailable"
+      : unexpectedScenario;
     return (
       <Card>
-        <BannerNotice
-          tone="negative"
-          message={t("common.start_unexpected.body")}
-        />
+        <BannerNotice tone="negative" message={t(`common.${scenario}.body`)} />
         <ButtonSecondary
-          label={t("common.start_unexpected.retry")}
+          label={t(`common.${scenario}.retry`)}
           onPress={() => {
             void account.refetch();
             void limits.refetch();
@@ -32,7 +52,8 @@ export default function CardBalance() {
         />
       </Card>
     );
-  if (account.isPending || limits.isPending) return <Loader />;
+  }
+  if (account.data === undefined || limits.isPending) return <Loader />;
 
   return (
     <Card>
@@ -40,11 +61,13 @@ export default function CardBalance() {
         <TextBody tone="secondary">{t("card_balance.label")}</TextBody>
         <Text style={styles.balance}>{formatMoney(account.data.balance)}</Text>
       </View>
-      <TextBody>
-        {t("common.balance_and_limit_shown.remaining_today", {
-          amount: formatMoney(limits.data.remainingToday),
-        })}
-      </TextBody>
+      {limits.data !== undefined && (
+        <TextBody>
+          {t("common.balance_and_limit_shown.remaining_today", {
+            amount: formatMoney(limits.data.remainingToday),
+          })}
+        </TextBody>
+      )}
     </Card>
   );
 }

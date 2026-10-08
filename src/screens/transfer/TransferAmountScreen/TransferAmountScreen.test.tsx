@@ -115,23 +115,18 @@ it(
 );
 
 it(
-  "leaves an amount the limits could not check to the bank, which moves no money for it",
+  "holds back an amount the limits could not check, so no money moves for it",
   scenarioTest("transfer.amount_unexpected", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    await openAmountStep();
-    await screen.findByRole("button", { name: "Try again" });
+    const view = await openAmountStep();
+    expect(
+      await screen.findByText("Something unexpected went wrong."),
+    ).toBeOnTheScreen();
 
     await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "6000");
     await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Transfer" }),
-    );
 
-    expect(
-      await screen.findByText(
-        "Something unexpected stopped the transfer — no money moved.",
-      ),
-    ).toBeOnTheScreen();
+    expect(view.getPathname()).toBe("/transfer/amount");
     expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(1_284_550);
   }),
 );
@@ -147,13 +142,46 @@ it("moves on to review with an amount within the balance and both limits", async
 });
 
 it(
+  "shows a new customer's lower daily limit again on the amount step, and names it when the amount is over",
+  scenarioTest("transfer.new_customer_daily_limit", async () => {
+    await openAmountStep();
+    expect(
+      await screen.findByText("You can send RM 1,000.00 more today"),
+    ).toBeOnTheScreen();
+
+    await fireEvent.changeText(
+      screen.getByLabelText("Amount (RM)"),
+      "1,000.01",
+    );
+
+    expect(
+      screen.getByHintText(
+        "That is more than the RM 1,000.00 you can still send today.",
+      ),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it(
+  "says something unexpected went wrong on the amount step, and holds Review until the limit loads",
+  scenarioTest("transfer.amount_unexpected", async () => {
+    await openAmountStep();
+
+    expect(
+      await screen.findByText("Something unexpected went wrong."),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Review" })).toBeDisabled();
+  }),
+);
+
+it(
   "asks for an amount before moving on, and for one with at most two decimals",
   scenarioTest("transfer.badly_formed_input", async () => {
     const view = await openAmountStep();
+    await screen.findByText("RM 12,845.50");
 
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Review" }),
-    );
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
     expect(screen.getByHintText("Enter the amount to send.")).toBeOnTheScreen();
 
     await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "12.345");

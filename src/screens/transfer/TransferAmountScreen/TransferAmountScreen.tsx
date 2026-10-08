@@ -72,6 +72,11 @@ export default function TransferAmountScreen() {
         footer={
           <ButtonPrimary
             label={t("amount.review")}
+            disabledReason={
+              account.isSuccess && limits.isSuccess
+                ? undefined
+                : t("common.balance_unavailable.disabled_reason")
+            }
             onPress={() => {
               setReviewPressed(true);
               if (amount === null || amount.minor === 0 || amountError) return;
@@ -86,7 +91,7 @@ export default function TransferAmountScreen() {
           />
         }
       >
-        <CardBalance />
+        <CardBalance unexpectedScenario="amount_unexpected" />
         <FieldText
           label={t("amount.label")}
           placeholder={t("amount.placeholder")}

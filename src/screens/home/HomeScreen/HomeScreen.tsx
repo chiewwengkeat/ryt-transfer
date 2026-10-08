@@ -14,7 +14,7 @@ export default function HomeScreen() {
     <>
       <Stack.Screen options={{ title: t("home.title") }} />
       <ViewScreenFrame footer={<ButtonStartTransfer />}>
-        <CardBalance />
+        <CardBalance unexpectedScenario="start_unexpected" />
         <ButtonTransferHistory />
         <SectionRecentRecipientsHome />
       </ViewScreenFrame>

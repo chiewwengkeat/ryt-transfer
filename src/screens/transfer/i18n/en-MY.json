@@ -7,11 +7,15 @@
       "title": "New customer's lower daily limit"
     },
     "balance_unavailable": {
-      "title": "Balance or limit can't load"
+      "title": "Balance or limit can't load",
+      "body": "Your balance couldn't be loaded.",
+      "retry": "Try again",
+      "disabled_reason": "You can send once your balance and today's limit have loaded."
     },
     "under_maintenance": {
       "title": "Transfers under maintenance",
-      "body": "Transfers are unavailable right now."
+      "body": "Transfers are unavailable right now. Try again later.",
+      "until": "Transfers are unavailable right now, until {{time}}."
     },
     "offline": {
       "title": "Offline",
@@ -61,7 +65,9 @@
       "over_per_transfer_max": "That is more than {{amount}}, the most you can send in one transfer."
     },
     "amount_unexpected": {
-      "title": "Something unexpected while entering the amount"
+      "title": "Something unexpected while entering the amount",
+      "body": "Something unexpected went wrong.",
+      "retry": "Try again"
     },
     "recipient_found": {
       "title": "Recipient found"
