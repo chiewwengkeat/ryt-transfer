@@ -3,5 +3,11 @@
     "title": "Home",
     "transfer": "Transfer",
     "transfer_history": "Transfer history"
-  }
+  },
+
+  "next_launch_notices": {},
+
+  "maintenance": {},
+
+  "recents": {}
 }
