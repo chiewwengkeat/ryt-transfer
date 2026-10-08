@@ -154,7 +154,9 @@
     "biometrics_unavailable": {
       "title": "Face or fingerprint unavailable",
       "body": "Face or fingerprint approval isn't available, so approve with your PIN.",
-      "turned_off": "It's turned off in this app's settings."
+      "turned_off": "It's turned off in this app's settings.",
+      "not_set_up": "No face or fingerprint is set up on this phone.",
+      "no_sensor": "This phone has no face or fingerprint sensor the app can use."
     },
     "biometrics_changed": {
       "title": "Fingerprints or face changed",

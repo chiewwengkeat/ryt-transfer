@@ -5,7 +5,12 @@ import { approvalPinSheetStore } from "@/domains/approval/hooks/approval-pin-she
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
 import { readBankBalanceMinor } from "@/test/bank-client";
-import { biometricPromptsShown } from "@/test/biometrics-double";
+import {
+  biometricPromptsShown,
+  changeEnrolledBiometrics,
+  failNextBiometricPrompt,
+  reportBiometricSensorUnavailable,
+} from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { sentRequests } from "@/test/msw-server";
@@ -15,8 +20,12 @@ import { scenarioTest } from "@/test/scenario-test";
 const DEMO_PIN = "246810";
 
 async function confirmRm100ApprovedByPin() {
-  await pairPhoneAsTheDemoLaunchDoes();
   approvalSettingsStore.setState({ biometricApprovalOn: false });
+  await confirmRm100Transfer();
+}
+
+async function confirmRm100Transfer() {
+  await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/transfer");
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
@@ -148,3 +157,114 @@ it("keeps a refused PIN nowhere once the sheet is closed on review", async () =>
   expect(await approveRequests().at(-1)?.text()).toContain("111111");
   expect(await readWhatTheAppStillHolds()).not.toContain("111111");
 });
+
+it(
+  "says the face or fingerprint was not recognised, sends nothing, and leaves Transfer to try again",
+  scenarioTest("transfer.biometrics_not_recognised", async () => {
+    failNextBiometricPrompt("AUTHENTICATION_FAILED");
+    await confirmRm100Transfer();
+
+    expect(
+      await screen.findByText(
+        "Your face or fingerprint was not recognised. You can try again, or use your PIN.",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+    expect(approveRequests()).toEqual([]);
+  }),
+);
+
+it(
+  "turns a prompt the phone locked after too many attempts into the PIN sheet, which approves",
+  scenarioTest("transfer.biometrics_locked_out", async () => {
+    failNextBiometricPrompt("BIOMETRIC_LOCKOUT");
+    await confirmRm100Transfer();
+
+    expect(
+      await screen.findByText(
+        "There were too many attempts, so approve with your PIN.",
+      ),
+    ).toBeOnTheScreen();
+    await approveWithPin(DEMO_PIN);
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  }),
+);
+
+it("opens the PIN sheet with no prompt while the phone reports face and fingerprint locked", async () => {
+  reportBiometricSensorUnavailable("BIOMETRY_LOCKOUT");
+  await confirmRm100Transfer();
+
+  expect(
+    await screen.findByText(
+      "There were too many attempts, so approve with your PIN.",
+    ),
+  ).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toEqual([]);
+});
+
+it.each([
+  [
+    "nothing is enrolled",
+    "BIOMETRY_NOT_ENROLLED",
+    "No face or fingerprint is set up on this phone.",
+  ],
+  [
+    "the phone has no usable sensor",
+    "BIOMETRY_NOT_AVAILABLE",
+    "This phone has no face or fingerprint sensor the app can use.",
+  ],
+])("asks for the PIN, saying why, when %s", async (_, sensorCode, reason) => {
+  reportBiometricSensorUnavailable(sensorCode);
+  await confirmRm100Transfer();
+
+  expect(await screen.findByText(reason)).toBeOnTheScreen();
+  expect(
+    screen.getByText(
+      "Face or fingerprint approval isn't available, so approve with your PIN.",
+    ),
+  ).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toEqual([]);
+});
+
+it(
+  "approves with the PIN when a new face or fingerprint has killed the phone's key",
+  scenarioTest("transfer.biometrics_changed", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    changeEnrolledBiometrics();
+    await confirmRm100Transfer();
+
+    expect(
+      await screen.findByText(
+        "Your fingerprints or face changed. Your PIN approves this transfer and turns face or fingerprint approval back on.",
+      ),
+    ).toBeOnTheScreen();
+    expect(biometricPromptsShown()).toEqual([]);
+    await approveWithPin(DEMO_PIN);
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  }),
+);
+
+it("says the transfer was not sent when the prompt is closed with Android's cancel", async () => {
+  failNextBiometricPrompt("USER_CANCELED");
+  await confirmRm100Transfer();
+
+  expect(
+    await screen.findByText("The transfer was not sent — no money moved."),
+  ).toBeOnTheScreen();
+  expect(approveRequests()).toEqual([]);
+});
+
+it(
+  "stops before anything is sent when the prompt fails in a way the app does not name",
+  scenarioTest("transfer.approval_unexpected", async () => {
+    failNextBiometricPrompt("SIGNATURE_CREATION_FAILED");
+    await confirmRm100Transfer();
+
+    expect(
+      await screen.findByText(
+        "Something unexpected stopped the approval before it was sent — no money moved.",
+      ),
+    ).toBeOnTheScreen();
+    expect(approveRequests()).toEqual([]);
+  }),
+);

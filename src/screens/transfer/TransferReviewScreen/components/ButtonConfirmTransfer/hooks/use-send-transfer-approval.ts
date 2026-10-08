@@ -6,6 +6,7 @@ import { Platform } from "react-native";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
+  BiometricSignOutcome,
   signWithBiometricKey,
   signWithPossessionKey,
 } from "@/domains/approval/hooks/approval-keys";
@@ -209,7 +210,7 @@ export function useSendTransferApproval() {
       amount: formatMoney(draft.amount),
       name: lookup.recipient.registeredName,
     };
-    const biometricSignature = await signWithBiometricKey(signedText, {
+    const signing = await signWithBiometricKey(signedText, {
       title:
         Platform.OS === "ios"
           ? t("review.prompt_title_ios", amountAndName)
@@ -217,11 +218,44 @@ export function useSendTransferApproval() {
       subtitle: t("review.prompt_subtitle", amountAndName),
       cancel: t("review.prompt_cancel"),
     });
-    if (biometricSignature === null) {
-      leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled);
-      return;
+    switch (signing.outcome) {
+      case BiometricSignOutcome.Signed: {
+        const attempt = await sendApproval({
+          keyId: signing.keyId,
+          signature: signing.signature,
+        });
+        if (attempt !== null) await settleApprovalAnswer(attempt.failure);
+        return;
+      }
+      case BiometricSignOutcome.Cancelled:
+        leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled);
+        return;
+      case BiometricSignOutcome.NotRecognised:
+        leaveApprovalNotSent(TransferFlowScenario.BiometricsNotRecognised);
+        return;
+      case BiometricSignOutcome.LockedOut:
+        await approveWithPin({
+          message: t("common.biometrics_locked_out.body"),
+        });
+        return;
+      case BiometricSignOutcome.NotSetUp:
+        await approveWithPin({
+          message: t("common.biometrics_unavailable.body"),
+          detail: t("common.biometrics_unavailable.not_set_up"),
+        });
+        return;
+      case BiometricSignOutcome.NoSensor:
+        await approveWithPin({
+          message: t("common.biometrics_unavailable.body"),
+          detail: t("common.biometrics_unavailable.no_sensor"),
+        });
+        return;
+      case BiometricSignOutcome.KeyChanged:
+        await approveWithPin({ message: t("common.biometrics_changed.body") });
+        return;
+      case BiometricSignOutcome.Failed:
+        leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
+        return;
     }
-    const attempt = await sendApproval(biometricSignature);
-    if (attempt !== null) await settleApprovalAnswer(attempt.failure);
   };
 }
