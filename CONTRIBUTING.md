@@ -92,12 +92,17 @@ Test a route the way a person uses it, against the mock bank:
 
 - `renderRoute(url)` (`src/test/render-route.tsx`) mounts the app's own routes at that URL with their real providers. Every request goes to the mock bank, and a request no handler answers fails the test. It switches Jest to fake timers until the test ends: Testing Library's `findBy` queries and `waitFor` advance them, a test that waits out a timeout advances them itself, and one that reads the mock bank directly first returns to real timers with `readBankOnRealTimers`, since the bank answers after a delay the fake timers hold.
 - `scenarioTest("transfer.<name>", run)` (`src/test/scenario-test.ts`) picks a scenario for one test. Give the id as a string literal: the matrix test reads that argument to fail an id the matrix lacks, and an id built at runtime escapes that check.
-- Every scenario in the matrix needs a route test that picks it, renders the route and asserts what the person sees.
+- Every scenario in the matrix needs a route test that picks it, renders the route and asserts what the person sees. The matrix test fails a scenario with none: it counts a test only when the test passes the id to `scenarioTest`, calls `expect`, and sits in a file that calls `renderRoute`. A skipped test counts for nothing, and neither does any test in a file holding a focused one.
 - A screen's route tests sit beside it in `<Name>Screen.test.tsx`. Tests of one concern that would crowd that file move to a sibling named for the concern, `<Name>Screen.<concern>.test.tsx`, such as `.offline`, `.language` or `.phone-security`, so a file's name says which behaviour it covers. A test of the demo build's own behaviour carries `.demo` in its name. Jest runs as production, so a test that must run as the demo build imports `@/test/demo-build` before anything else.
+- A shared component's route tests sit beside the component, in `<Component>.test.tsx`, rather than in the suites of the screens they walk: `src/shared/ui/FieldText/FieldText.test.tsx` renders the amount and recipient steps to test the field.
 - Query by accessible name, through `accessibilityRole` and `accessibilityLabel`; lint bans `testID`.
 - Assert what a person could observe: text, roles, where they ended up, and the requests that left the app. Never assert on component state or on which module a value passed through.
 
-Only these are tested below the route: the money and date helpers, the transport, the platform wrappers, the translation bundles and the scenario matrix's checks, a state no route can stage, such as a launch after a reinstall, and other logic with more cases than a route test can meaningfully cover, such as the mock bank's rules or the query client's retries. A component is tested through a route that renders it.
+Only these are tested below the route: the money and date helpers, the transport, the platform wrappers, the translation bundles and the scenario matrix's checks, a state no route can stage, such as a launch after a reinstall, and other logic with more cases than a route test can meaningfully cover, such as the mock bank's rules or the query client's retries. A component is tested through a route that renders it, except three shared pieces whose behaviour no route test can reach, which keep suites of their own:
+
+- `src/shared/ui/BottomSheetFrame/`: a body taller than the sheet still scrolls, which needs a layout pass Jest never runs, and a sheet that may not be dismissed holds Back and the escape gesture, which no route leaves reachable.
+- `src/shared/ui/ViewScreenFrame/`: the footer height it publishes changes only on layout, which a route render never fires.
+- `src/shared/observability/render-trace.ts`: the trace is compiled only into development builds, and every route test runs as production.
 
 ## Translations
 
@@ -116,7 +121,10 @@ Three tests read the bundles, each a different way:
 - `src/test/translation-parity.test.tsx` reads every namespace, the Demo menu's included, and fails when a Malay or Chinese bundle lacks a key English has, carries one English lacks, changes a string's placeholders, or holds a plural whose twins differ.
 - `src/test/translation-bundles.test.ts` reads every bundle file on disk, and fails on a key repeated inside one object, or on a matrix id with no strings under the transfer bundle's `common`.
 
-`src/test/scenarios/transfer-matrix.test.ts` holds the retry-word rule: under a scenario whose **Never** forbids a resend, it fails any string of `common.<name>` but its `body` that carries a retry word.
+`src/test/scenarios/transfer-matrix.test.ts` holds two of the rules above, over the bundles the app registers:
+
+- The money phrase: for a scenario whose **Tell them** ends in a money state, it fails each language in which no string of `common.<name>` carries that state's phrase. A longer phrase holding the shorter one does not count, so "no money moved" never passes for "money moved".
+- The retry words: under a scenario whose **Never** forbids a resend, it fails any string of `common.<name>` but its `body` that carries a retry word.
 
 ## Build variants
 
