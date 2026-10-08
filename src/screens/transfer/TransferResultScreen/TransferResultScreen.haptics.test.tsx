@@ -109,6 +109,29 @@ it(
   }),
 );
 
+it("warns once when an approval lost before the bank then lapses on the page, as the money state stays the same", async () => {
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", () => HttpResponse.error(), {
+      once: true,
+    }),
+  );
+  await walkToReviewFromHome();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  await screen.findByText(/^The bank's answer did not arrive\./);
+
+  // Back once the approval window has lapsed: returning to the app is what rereads the transfer.
+  jest.setSystemTime(Date.now() + 120_000);
+  await act(() => {
+    focusManager.setFocused(false);
+    focusManager.setFocused(true);
+  });
+  await screen.findByText(/^The result cannot be shown right now\./);
+
+  expect(notificationHaptics.mock.calls).toEqual([
+    [Haptics.NotificationFeedbackType.Warning],
+  ]);
+});
+
 it(
   "warns once for a result whose status cannot be reached, and not again when loading it again fails",
   scenarioTest("transfer.status_unreachable", async () => {
