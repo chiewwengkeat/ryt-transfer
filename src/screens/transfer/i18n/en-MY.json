@@ -39,6 +39,15 @@
       "body": "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
       "retry": "Try again"
     },
+    "transfer_status": {
+      "sent": "Successful",
+      "received": "Received",
+      "processing": "Processing",
+      "held": "Held for a security check",
+      "unsuccessful": "Unsuccessful",
+      "awaiting_approval": "Awaiting approval",
+      "expired": "Expired"
+    },
     "section_transfer_details": {
       "status": "Status",
       "status_and_money": "{{status}} — {{money}}",
@@ -118,16 +127,7 @@
       "label_without_net_other": "{{day}}, {{count}} transfers"
     },
     "transfer": {
-      "time_and_status": "{{time}} · {{status}}",
-      "status": {
-        "sent": "Successful",
-        "received": "Received",
-        "processing": "Processing",
-        "held": "Held for a security check",
-        "unsuccessful": "Unsuccessful",
-        "awaiting_approval": "Awaiting approval",
-        "expired": "Expired"
-      }
+      "time_and_status": "{{time}} · {{status}}"
     },
     "footer": {
       "loading": "Loading more transfers",

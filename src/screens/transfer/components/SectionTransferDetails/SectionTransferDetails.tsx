@@ -6,6 +6,7 @@ import {
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { useTransferStatusWord } from "@/screens/transfer/hooks/use-transfer-status-word";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { formatMoney } from "@/shared/lib/money/money";
 import Card from "@/shared/ui/Card/Card";
@@ -16,20 +17,8 @@ interface Props {
 }
 export default function SectionTransferDetails({ transfer }: Props) {
   const { t } = useTranslation("transfer");
+  const statusWord = useTransferStatusWord(transfer);
   const received = transfer.direction === TransferDirection.In;
-  const statusWord = {
-    [TransferStatus.AwaitingApproval]: t(
-      "history.transfer.status.awaiting_approval",
-    ),
-    [TransferStatus.Processing]: transfer.underReview
-      ? t("history.transfer.status.held")
-      : t("history.transfer.status.processing"),
-    [TransferStatus.Completed]: received
-      ? t("history.transfer.status.received")
-      : t("history.transfer.status.sent"),
-    [TransferStatus.Unsuccessful]: t("history.transfer.status.unsuccessful"),
-    [TransferStatus.Expired]: t("history.transfer.status.expired"),
-  } satisfies Record<TransferStatus, string>;
   // No phrase where the matrix has none (received, approval in flight), nor "money returned" before a refund lands.
   const moneyState = received
     ? undefined
@@ -78,9 +67,9 @@ export default function SectionTransferDetails({ transfer }: Props) {
         label={t("common.section_transfer_details.status")}
         value={
           moneyState === undefined
-            ? statusWord[transfer.status]
+            ? statusWord
             : t("common.section_transfer_details.status_and_money", {
-                status: statusWord[transfer.status],
+                status: statusWord,
                 money: moneyState,
               })
         }

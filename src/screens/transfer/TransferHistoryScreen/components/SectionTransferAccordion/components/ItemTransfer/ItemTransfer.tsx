@@ -2,12 +2,9 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import {
-  TransferDirection,
-  TransferStatus,
-  type Transfer,
-} from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import type { Transfer } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { MONEY_MOVED_SIGN } from "@/domains/transfer/api/list-transfers/list-transfers";
+import { useTransferStatusWord } from "@/screens/transfer/hooks/use-transfer-status-word";
 import { formatMalaysianTime } from "@/shared/lib/dates/dates";
 import { asSen, formatMoney, parseWireAmount } from "@/shared/lib/money/money";
 import {
@@ -25,20 +22,7 @@ interface Props {
 export default function ItemTransfer({ transfer }: Props) {
   useRenderTrace("row", transfer.transferId);
   const { t } = useTranslation("transfer");
-  const statusWord = {
-    [TransferStatus.AwaitingApproval]: t(
-      "history.transfer.status.awaiting_approval",
-    ),
-    [TransferStatus.Processing]: transfer.underReview
-      ? t("history.transfer.status.held")
-      : t("history.transfer.status.processing"),
-    [TransferStatus.Completed]:
-      transfer.direction === TransferDirection.In
-        ? t("history.transfer.status.received")
-        : t("history.transfer.status.sent"),
-    [TransferStatus.Unsuccessful]: t("history.transfer.status.unsuccessful"),
-    [TransferStatus.Expired]: t("history.transfer.status.expired"),
-  } satisfies Record<TransferStatus, string>;
+  const statusWord = useTransferStatusWord(transfer);
   const amount = parseWireAmount(transfer.amount);
   const moneyMovedSign = MONEY_MOVED_SIGN[transfer.funds];
   const transferTime = traceFormatCalls(formatMalaysianTime)(
@@ -61,10 +45,10 @@ export default function ItemTransfer({ transfer }: Props) {
         <TextBody strong>{transfer.counterparty.registeredName}</TextBody>
         <TextBody tone="secondary">
           {transferTime === null
-            ? statusWord[transfer.status]
+            ? statusWord
             : t("history.transfer.time_and_status", {
                 time: transferTime,
-                status: statusWord[transfer.status],
+                status: statusWord,
               })}
         </TextBody>
       </View>
