@@ -87,7 +87,8 @@ export function useTransferStatusCheck(
     bankUnreachable:
       readFailure === TransferReadFailure.BankUnreached &&
       transfer.dataUpdatedAt < openedAtMs &&
-      transfer.errorUpdateCount - failedReadsBeforeOpening >=
+      // One past the scheduled reads: with no answer since opening, the read on opening failed too.
+      transfer.errorUpdateCount - failedReadsBeforeOpening >
         UNANSWERED_READS_BEFORE_UNREACHABLE,
   };
 }

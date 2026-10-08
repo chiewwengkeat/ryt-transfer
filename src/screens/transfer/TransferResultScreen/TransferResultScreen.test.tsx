@@ -563,14 +563,18 @@ it(
 );
 
 it(
-  "says the bank is still unreachable once four reads get no answer, quoting the transfer's id",
+  "says the bank is still unreachable once its reads at 2, 4, 8 and 16 seconds get no answer, quoting the transfer's id",
   scenarioTest("transfer.status_unreachable", async () => {
     const view = await sendRm100FromHome();
     expect(
       await screen.findByRole("header", { name: "Checking your transfer" }),
     ).toBeOnTheScreen();
+    await act(() => jest.advanceTimersByTimeAsync(14_000));
+    expect(
+      screen.queryByRole("header", { name: "Still checking your transfer" }),
+    ).toBeNull();
 
-    await act(() => jest.advanceTimersByTimeAsync(9_000));
+    await act(() => jest.advanceTimersByTimeAsync(3_000));
 
     expect(
       await screen.findByRole("header", {
