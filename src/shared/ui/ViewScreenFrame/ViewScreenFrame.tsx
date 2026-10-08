@@ -27,6 +27,15 @@ export default function ViewScreenFrame({ children, footer }: Props) {
   const frameId = useId();
   const [measuredFooterHeight, setMeasuredFooterHeight] = useState(0);
   const footerHeight = footer === undefined ? 0 : measuredFooterHeight;
+  const floatingNoticeSpace = useSyncExternalStore(
+    (reader) => {
+      floatingNoticeSpaceReaders.add(reader);
+      return () => {
+        floatingNoticeSpaceReaders.delete(reader);
+      };
+    },
+    () => reservedFloatingNoticeSpace,
+  );
   useEffect(() => {
     footerHeightByFrame.set(frameId, 0);
     return () => {
@@ -59,7 +68,11 @@ export default function ViewScreenFrame({ children, footer }: Props) {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={[
             styles.content,
-            footer === undefined && { paddingBottom: spacing.lg + bottom },
+            {
+              paddingBottom:
+                (footer === undefined ? spacing.lg + bottom : spacing.md) +
+                floatingNoticeSpace,
+            },
           ]}
         >
           {children}
@@ -109,4 +122,12 @@ export function useScreenFooterHeight() {
     },
     () => [...footerHeightByFrame.values()].at(-1) ?? 0,
   );
+}
+
+let reservedFloatingNoticeSpace = 0;
+const floatingNoticeSpaceReaders = new Set<() => void>();
+
+export function reserveScreenSpaceForFloatingNotice(space: number) {
+  reservedFloatingNoticeSpace = space;
+  for (const reader of floatingNoticeSpaceReaders) reader();
 }
