@@ -312,6 +312,6 @@ export interface TransferScenario {
   conditions?: BankConditions;
   // Given the bank's own handlers, so an overlay can let a write commit and then lose its answer.
   handlers?: (bankHandlers: RequestHandler[]) => RequestHandler[];
-  // Acted out by the phone, through the demo layer, while the bank behaves normally.
+  // Lists the pick right after No biometrics, which is phone-side too but listed by hand: flagging it lists it twice.
   phoneSide?: true;
 }
