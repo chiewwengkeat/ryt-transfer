@@ -315,12 +315,6 @@ it("says it couldn't load a transfer opened offline with nothing loaded, and sho
 it.each([
   ["a sent transfer", {}, "Successful — money moved", "Completed"],
   [
-    "an unsuccessful transfer whose money never left",
-    { status: TransferStatus.Unsuccessful, funds: TransferFunds.NotDebited },
-    "Unsuccessful — no money moved",
-    "Unsuccessful",
-  ],
-  [
     "an unsuccessful transfer whose money came back",
     { status: TransferStatus.Unsuccessful, funds: TransferFunds.Refunded },
     "Unsuccessful — money returned",
@@ -340,20 +334,19 @@ it.each([
   },
 );
 
-it("shows a refund still on its way as Unsuccessful alone, beside when it failed", async () => {
+it("shows a refund still on its way as Unsuccessful alone, with only when it was sent", async () => {
   await openTransferDetails({
     ...AISYAH_IN_FULL,
     status: TransferStatus.Unsuccessful,
     funds: TransferFunds.RefundPending,
   });
 
-  expect(await screen.findByText(SETTLED_AT)).toBeOnTheScreen();
-  expect(screen.getAllByText("Unsuccessful")).toHaveLength(2);
+  expect(await screen.findByText("Unsuccessful")).toBeOnTheScreen();
   expect(
     screen.queryByText(/money moved|money returned|not confirmed yet/),
   ).not.toBeOnTheScreen();
-  expect(screen.queryByText("Refunded")).not.toBeOnTheScreen();
   expect(screen.getByText(SENT_AT)).toBeOnTheScreen();
+  expect(screen.queryByText(SETTLED_AT)).not.toBeOnTheScreen();
 });
 
 it.each([
@@ -366,6 +359,11 @@ it.each([
     "a transfer held for a security check",
     { status: TransferStatus.Processing },
     "Held for a security check — not confirmed yet",
+  ],
+  [
+    "an unsuccessful transfer whose money never left",
+    { status: TransferStatus.Unsuccessful, funds: TransferFunds.NotDebited },
+    "Unsuccessful — no money moved",
   ],
 ])(
   "shows %s with when it was sent, and no time it settled",

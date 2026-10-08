@@ -49,7 +49,7 @@ export default function SectionTransferDetails({ transfer }: Props) {
       [TransferStatus.Unsuccessful]:
         transfer.funds === TransferFunds.Refunded
           ? t("common.section_transfer_details.refunded_at")
-          : t("common.section_transfer_details.unsuccessful_at"),
+          : undefined,
       [TransferStatus.Expired]: undefined,
     } satisfies Record<TransferStatus, string | undefined>
   )[transfer.status];

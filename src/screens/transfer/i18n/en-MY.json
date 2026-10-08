@@ -67,8 +67,7 @@
       "sent_at": "Sent",
       "received_at": "Received",
       "completed_at": "Completed",
-      "refunded_at": "Refunded",
-      "unsuccessful_at": "Unsuccessful"
+      "refunded_at": "Refunded"
     }
   },
   "recipient": {
