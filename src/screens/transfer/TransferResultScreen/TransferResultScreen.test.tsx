@@ -193,6 +193,7 @@ it(
         "The bank stopped this transfer to protect you, and will contact you about it — no money moved.",
       ),
     ).toBeOnTheScreen();
+    expect(screen.queryByText(/quote this reference/)).toBeNull();
     expect(buttonsOnTheResultPage()).toEqual(["Done"]);
   }),
 );

@@ -11,6 +11,11 @@ import { formatMoney } from "@/shared/lib/money/money";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import TextHeading from "@/shared/ui/TextHeading/TextHeading";
 
+import {
+  MONEY_STATE_BY_OUTCOME,
+  MoneyState,
+} from "../../transfer-outcome-money-states";
+
 interface Props {
   scenario: TransferOutcomeScenario;
   transfer: ReturnType<typeof useGetTransfer>["data"];
@@ -24,15 +29,9 @@ export default function TextOutcome({ scenario, transfer, transferId }: Props) {
   ) as `${TransferOutcomeScenario}` extends `transfer.${infer Name}`
     ? Name
     : never;
-  // Every other outcome leaves the money not confirmed yet, so support needs something to look it up by.
-  const moneyConfirmed = [
-    TransferOutcomeScenario.Completed,
-    TransferOutcomeScenario.FraudBlocked,
-    TransferOutcomeScenario.RecipientAccountInactive,
-    TransferOutcomeScenario.RefundedAfterProcessing,
-    TransferOutcomeScenario.BalanceOrLimitShortAtApproval,
-    TransferOutcomeScenario.ApprovalExpired,
-  ].includes(scenario);
+  // While the money is not confirmed yet, support needs something to look the transfer up by.
+  const moneyNotConfirmedYet =
+    MONEY_STATE_BY_OUTCOME[scenario] === MoneyState.NotConfirmedYet;
   const navigation =
     useNavigation<NativeStackNavigationProp<Record<string, object>>>();
   const [pageOpened, setPageOpened] = useState(false);
@@ -66,7 +65,7 @@ export default function TextOutcome({ scenario, transfer, transferId }: Props) {
     <>
       <TextHeading autoFocus={pageOpened}>{outcomeHeading}</TextHeading>
       <TextBody>{outcomeBody}</TextBody>
-      {!moneyConfirmed && (
+      {moneyNotConfirmedYet && (
         <TextBody tone="secondary">
           {t("result.reference_to_quote", {
             reference: transfer?.reference ?? transferId,

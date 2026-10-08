@@ -4,8 +4,8 @@ import * as Haptics from "expo-haptics";
 import { delay, http, HttpResponse } from "msw";
 
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { mswServer, sentRequests } from "@/test/msw-server";
+import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 const notificationHaptics = jest.spyOn(Haptics, "notificationAsync");
@@ -20,7 +20,7 @@ beforeEach(() => {
 
 async function walkToReviewFromHome() {
   await pairPhoneAsTheDemoLaunchDoes();
-  await renderRoute("/");
+  const view = await renderRoute("/");
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
@@ -33,6 +33,7 @@ async function walkToReviewFromHome() {
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   await screen.findByRole("button", { name: "Transfer" });
+  return view;
 }
 
 async function walkToStillUnreachable() {
@@ -95,6 +96,63 @@ it(
     expect(notificationHaptics.mock.calls).toEqual([
       [Haptics.NotificationFeedbackType.Warning],
       [Haptics.NotificationFeedbackType.Success],
+    ]);
+  }),
+);
+
+it(
+  "gives one error haptic when the bank's fraud check stops the transfer, as no money moved",
+  scenarioTest("transfer.fraud_blocked", async () => {
+    await walkToReviewFromHome();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    await screen.findByRole("header", { name: "Transfer stopped" });
+
+    expect(notificationHaptics.mock.calls).toEqual([
+      [Haptics.NotificationFeedbackType.Error],
+    ]);
+  }),
+);
+
+it(
+  "warns again when a processing transfer is refunded, as money that came back is news of its own",
+  scenarioTest("transfer.refunded_after_processing", async () => {
+    await walkToReviewFromHome();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    await screen.findByRole("header", { name: "Transfer processing" });
+
+    await act(() => jest.advanceTimersByTimeAsync(32_000));
+    await screen.findByRole("header", { name: "Transfer refunded" });
+
+    expect(notificationHaptics.mock.calls).toEqual([
+      [Haptics.NotificationFeedbackType.Warning],
+      [Haptics.NotificationFeedbackType.Warning],
+    ]);
+  }),
+);
+
+it(
+  "warns once when the app reopens on the transfer it was closed during",
+  scenarioTest("transfer.app_closed_during_approval", async () => {
+    mswServer.use(
+      http.post(
+        "*/transfers/:transferId/approve",
+        () => new Promise<never>(() => undefined),
+        { once: true },
+      ),
+    );
+    const view = await walkToReviewFromHome();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    await waitFor(() => {
+      expect(sentRequests.some(({ url }) => url.endsWith("/approve"))).toBe(
+        true,
+      );
+    });
+
+    await relaunchApp(view);
+    await screen.findByRole("header", { name: "Checking your last transfer" });
+
+    expect(notificationHaptics.mock.calls).toEqual([
+      [Haptics.NotificationFeedbackType.Warning],
     ]);
   }),
 );
