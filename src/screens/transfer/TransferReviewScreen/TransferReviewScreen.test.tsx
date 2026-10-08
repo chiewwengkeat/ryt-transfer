@@ -49,12 +49,14 @@ function readRootTransferScreenGestureEnabled() {
     return: Fiber | null;
     child: Fiber | null;
     sibling: Fiber | null;
+    stateNode: unknown;
     memoizedProps: { screenId?: unknown; gestureEnabled?: unknown } | null;
   };
   let fiber = (screen.root as unknown as { unstable_fiber: Fiber })
     .unstable_fiber;
   while (fiber.return) fiber = fiber.return;
-  const pending = [fiber];
+  // The walk up can end in React's stale copy of the tree, which still holds an earlier render's options.
+  const pending = [(fiber.stateNode as { current: Fiber }).current];
   for (let next = pending.pop(); next; next = pending.pop()) {
     const props = next.memoizedProps;
     if (
@@ -313,6 +315,21 @@ it(
     await screen.findByRole("button", { name: "Back to Home" });
 
     expect(readRootTransferScreenGestureEnabled()).toBe(false);
+  }),
+);
+
+it(
+  "turns the swipe back on when the bank refuses the approval and nothing was sent",
+  scenarioTest("transfer.approval_not_verified", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await openReviewOfRm100("/");
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByText("The transfer was not sent — no money moved.");
+
+    expect(readRootTransferScreenGestureEnabled()).not.toBe(false);
   }),
 );
 
