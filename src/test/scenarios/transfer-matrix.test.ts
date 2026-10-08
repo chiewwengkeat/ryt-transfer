@@ -2,6 +2,8 @@ import { TRANSFER_SCENARIOS } from "@/mocks/scenarios/transfer-scenarios";
 import { AppLanguage } from "@/shared/i18n/i18n";
 import { TRANSLATION_BUNDLES } from "@/shell/translations";
 
+import { findRouteTestedScenarioIds } from "./find-route-tested-scenario-ids";
+
 // Jest defines it; the app's types deliberately leave out Node's globals.
 declare const __dirname: string;
 
@@ -500,4 +502,23 @@ it("declares no scenario test for an id the matrix lacks", () => {
     );
 
   expect(declaredIds.filter((id) => !matrixIds.includes(id))).toEqual([]);
+});
+
+it("gives every scenario a route test that names it and asserts", () => {
+  const routeTestedIds = new Set(
+    readdirSync(SOURCE_ROOT, { recursive: true })
+      .filter((file) => /\.tsx?$/.test(file))
+      .flatMap((file) =>
+        findRouteTestedScenarioIds(
+          `src/${file}`,
+          readFileSync(`${SOURCE_ROOT}/${file}`, "utf8"),
+        ),
+      ),
+  );
+
+  expect(
+    scenarioSections
+      .map((section) => section.id)
+      .filter((id) => !routeTestedIds.has(id)),
+  ).toEqual([]);
 });
