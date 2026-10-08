@@ -12,7 +12,7 @@ import {
 } from "@/domains/transfer/hooks/pending-transfers";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { mswServer } from "@/test/msw-server";
+import { mswServer, sentRequests } from "@/test/msw-server";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -67,6 +67,34 @@ it(
     ).toBeOnTheScreen();
   }),
 );
+
+it("goes on warning about the earlier transfer while this one's approval is in flight, and leaves this one to its own answer", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const earlier = await reviewANewTransferWhileAnEarlierOneIsProcessing();
+  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", async () => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 20_000);
+      });
+    }),
+  );
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  await act(() => jest.advanceTimersByTimeAsync(16_000));
+
+  expect(screen.getByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+  expect(
+    sentRequests.filter(
+      ({ method, url }) =>
+        method === "GET" &&
+        /\/transfers\/[\w-]+$/.test(url) &&
+        !url.endsWith(`/transfers/${earlier.transfer.transferId}`),
+    ),
+  ).toEqual([]);
+});
 
 it(
   "quotes the bank's reference that the result page quoted, after a relaunch whose read of the transfer fails",

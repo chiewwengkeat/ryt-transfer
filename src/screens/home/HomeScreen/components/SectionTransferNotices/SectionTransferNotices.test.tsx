@@ -122,6 +122,29 @@ it(
   }),
 );
 
+it("keeps checking a transfer Home warns about while Home stays open, and tells Home how it ended once the bank answers", async () => {
+  const { bankAnswer, recipientName } =
+    await launchWithATransferLastSeenProcessing({
+      status: TransferStatus.Processing,
+      funds: TransferFunds.Debited,
+    });
+  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+  bankAnswer.transfer = {
+    ...bankAnswer.transfer,
+    status: TransferStatus.Completed,
+    version: bankAnswer.transfer.version + 1,
+  };
+
+  await act(() => jest.advanceTimersByTimeAsync(15_000));
+
+  expect(
+    await screen.findByText(
+      `Your transfer of RM 100.00 to ${recipientName} was sent — money moved.`,
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.queryByText(STILL_BEING_CHECKED)).toBeNull();
+});
+
 it("keeps quoting the bank's reference a launch's check found, after a later launch's read of the transfer fails", async () => {
   const { view } = await launchWithATransferLastSeenProcessing({
     status: TransferStatus.Processing,

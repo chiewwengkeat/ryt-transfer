@@ -36,9 +36,12 @@ const NEXT_LAUNCH_NOTICE_OF_OUTCOME: Record<
   [TransferOutcomeScenario.ApprovalExpired]: NextLaunchNotice.Declined,
 };
 
-// No query function: whose records these are is known only to the code that changes them, which refills this.
+// No query function: whose records these are is known only to the code that changes them, so each refill says.
 const getPendingTransferNoticesOptions = () =>
-  queryOptions<Awaited<ReturnType<typeof listPendingTransfers>>>({
+  queryOptions<{
+    customerId: string;
+    records: Awaited<ReturnType<typeof listPendingTransfers>>;
+  }>({
     queryKey: [...transferKeys.all, "pending"],
     queryFn: skipToken,
   });
@@ -47,19 +50,20 @@ export async function refreshPendingTransferNotices(
   queryClient: QueryClient,
   customerId: string,
 ) {
-  queryClient.setQueryData(
-    getPendingTransferNoticesOptions().queryKey,
-    await listPendingTransfers(customerId),
-  );
+  queryClient.setQueryData(getPendingTransferNoticesOptions().queryKey, {
+    customerId,
+    records: await listPendingTransfers(customerId),
+  });
 }
 
 export function usePendingTransferNotices() {
-  const records = useQuery(getPendingTransferNoticesOptions()).data ?? [];
+  const { customerId, records = [] } =
+    useQuery(getPendingTransferNoticesOptions()).data ?? {};
   const transfers = useQueries({
     queries: records.map(({ transferId }) => ({
       ...getTransferOptions(transferId),
       select: selectTransferWithOutcome,
-      // Only Result and the launch check read a transfer's status; a notice shows what they last found.
+      // Never read from here: a read must also move its record along, which only the status checks do.
       enabled: false,
     })),
   });
@@ -73,6 +77,7 @@ export function usePendingTransferNotices() {
     })
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   return {
+    customerId,
     unconfirmed: newestFirst.filter(({ notice }) => notice === undefined),
     settled: newestFirst.flatMap(({ transfer, notice, ...record }) =>
       transfer && notice ? [{ ...record, transfer, notice }] : [],
