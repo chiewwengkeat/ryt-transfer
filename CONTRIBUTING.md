@@ -25,7 +25,7 @@ A screens folder and a domain about the same thing share a singular name, as `sr
 
 | Folder        | Holds                                                                                                                                           |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/app/`    | The routes, kept thin: a screen's route re-exports the screen and an `ErrorBoundary`.                                                           |
+| `src/app/`    | The routes, kept thin: they re-export the screens and the shell's views, and the layouts and `+native-intent.tsx` hold the navigation.          |
 | `src/shell/`  | The app's root: its views, its providers, the query client, the translation bundles it registers, and the only code that may load `src/mocks/`. |
 | `src/shared/` | Code that knows nothing about banking: UI, theme, i18n, HTTP, config, platform wrappers, observability, plain helpers.                          |
 | `src/mocks/`  | The mock bank and its scenarios, for development and demo builds only.                                                                          |
@@ -36,7 +36,8 @@ A screens folder and a domain about the same thing share a singular name, as `sr
 - A screens folder holds `<Name>Screen/` folders beside `components/`, `hooks/`, `state/` and `i18n/`, and nothing else. The transfer folder also keeps the scenario matrix in `scenarios/`.
 - A domain holds `api/`, `components/`, `hooks/` and `i18n/`, and nothing else. Each endpoint has a folder of its own in `api/`: `<endpoint>.type.ts` holds its request and response types, and `<endpoint>.ts` the code that calls it or works on its cached data, including any hook a component calls. Lint fails a component that calls `useQuery`, `useMutation` or `useInfiniteQuery` itself, so a component reads and writes through such a hook. The types can land before the rest, while only the mock bank answers the endpoint. A domain's query keys all come from its `api/<area>.keys.ts`.
 - A domain's `hooks/` holds its public modules that are not components: its hooks, and any plain module another slice calls.
-- A screen's route in `src/app/` re-exports the screen's entry file, `<Name>Screen/<Name>Screen.tsx`.
+- A screen's route in `src/app/` re-exports the screen's entry file, `<Name>Screen/<Name>Screen.tsx`, and an `ErrorBoundary`.
+- A flow's layout in `src/app/` holds the flow's navigator, the guard on which of its routes may open, and what leaving the flow does. `src/app/+native-intent.tsx` filters the links that open the app.
 - A slice's strings go in its `i18n/` folder, one bundle per language, registered in `src/shell/translations.ts`.
 
 The placement check fails any other entry in a slice (`scripts/slice-layout.js`).
