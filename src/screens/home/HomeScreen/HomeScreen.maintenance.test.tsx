@@ -12,8 +12,10 @@ import { scenarioTest } from "@/test/scenario-test";
 it(
   "stops saying how much more can be sent today once maintenance answers a later read, while the amount check keeps the limit already loaded",
   scenarioTest("transfer.under_maintenance", async () => {
-    const { body } = await sendToBank<BankErrorBody>("GET", "/transfer-limits");
-    // Home's read lands before the maintenance begins; every read after meets it.
+    const { body: maintenanceAnswer } = await sendToBank<BankErrorBody>(
+      "GET",
+      "/transfer-limits",
+    );
     mswServer.use(
       http.get(
         "*/transfer-limits",
@@ -55,7 +57,7 @@ it(
     await pressHardwareBack();
     expect(
       await screen.findByText(
-        `Transfers are unavailable right now, until ${formatMalaysianDateTime(body.error.until ?? "")}.`,
+        `Transfers are unavailable right now, until ${formatMalaysianDateTime(maintenanceAnswer.error.until ?? "")}.`,
       ),
     ).toBeOnTheScreen();
     expect(screen.queryByText(/more today/)).toBeNull();

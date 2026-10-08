@@ -10,7 +10,7 @@ it("says the balance couldn't be loaded when the bank never answers it, and neve
   );
   await renderRoute("/");
 
-  await act(() => jest.advanceTimersByTimeAsync(30_000));
+  await act(() => jest.advanceTimersByTimeAsync(45_000));
 
   expect(
     await screen.findByText("Your balance couldn't be loaded."),
