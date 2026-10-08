@@ -9,6 +9,7 @@ import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
 import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
+import Loader from "@/shared/ui/Loader/Loader";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import {
@@ -57,6 +58,17 @@ export default function TransferRecipientScreen() {
   const chosenRecent = recents.data?.find(
     (recent) => recent.recentId === chosenRecentId,
   );
+  // Never the form in a chosen recent's place unannounced: a list that has yet to answer, or failed
+  // offline where the shell's notice says why, is waited for; else the catch-all stands until they type.
+  // Not `isPending`: the form's own list refetches a failed list on mount, which would flip it back.
+  const chosenRecentAwaited =
+    chosenRecentId !== undefined &&
+    recents.data === undefined &&
+    (!recents.isFetched || offline);
+  const chosenRecentMissing =
+    chosenRecentId !== undefined &&
+    chosenRecent === undefined &&
+    !chosenRecentAwaited;
 
   return (
     <>
@@ -80,6 +92,7 @@ export default function TransferRecipientScreen() {
         footer={
           <ButtonPrimary
             label={t("recipient.continue")}
+            loading={chosenRecentAwaited}
             onPress={() => {
               if (chosenRecent !== undefined) {
                 if (
@@ -127,7 +140,16 @@ export default function TransferRecipientScreen() {
           />
         }
       >
-        {chosenRecent === undefined ? (
+        {chosenRecent !== undefined ? (
+          <CardRecentRecipientChosen
+            recent={chosenRecent}
+            onChange={() => {
+              setChosenRecentId(undefined);
+            }}
+          />
+        ) : chosenRecentAwaited ? (
+          <Loader />
+        ) : (
           <>
             <ChipIdType
               idType={idType}
@@ -136,6 +158,7 @@ export default function TransferRecipientScreen() {
                 setTypedId("");
                 setIdError(undefined);
                 setBankError(undefined);
+                setChosenRecentId(undefined);
               }}
             />
             <FieldRecipientId
@@ -144,6 +167,7 @@ export default function TransferRecipientScreen() {
               onChangeText={(text) => {
                 setTypedId(text);
                 setIdError(undefined);
+                setChosenRecentId(undefined);
               }}
               error={idError}
             />
@@ -152,6 +176,7 @@ export default function TransferRecipientScreen() {
                 onMobilePicked={(mobileId) => {
                   setTypedId(mobileId);
                   setIdError(undefined);
+                  setChosenRecentId(undefined);
                 }}
               />
             )}
@@ -165,7 +190,7 @@ export default function TransferRecipientScreen() {
                 error={bankError}
               />
             )}
-            {recents.isError && !offline && (
+            {((recents.isError && !offline) || chosenRecentMissing) && (
               <BannerRecipientUnexpected
                 onRetry={() => {
                   void recents.refetch();
@@ -174,13 +199,6 @@ export default function TransferRecipientScreen() {
             )}
             <SectionRecentRecipients onRecentChosen={setChosenRecentId} />
           </>
-        ) : (
-          <CardRecentRecipientChosen
-            recent={chosenRecent}
-            onChange={() => {
-              setChosenRecentId(undefined);
-            }}
-          />
         )}
       </ViewScreenFrame>
     </>
