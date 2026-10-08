@@ -12,6 +12,7 @@ import { queryClient } from "@/shell/query-client";
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
 import "@/shell/translations";
 
+import BannerOffline from "./components/BannerOffline/BannerOffline";
 import ViewSessionEnded from "./components/ViewSessionEnded/ViewSessionEnded";
 import { usePendingTransfersAtLaunch } from "./hooks/use-pending-transfers-at-launch";
 
@@ -41,6 +42,7 @@ export default function ViewRoot() {
           <Stack>
             <Stack.Screen name="transfer" options={{ headerShown: false }} />
           </Stack>
+          <BannerOffline />
         </ViewBottomSheetHost>
       </View>
       {sessionEnded && (

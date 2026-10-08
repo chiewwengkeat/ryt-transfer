@@ -9,6 +9,7 @@ import {
   TransportErrorKind,
 } from "@/shared/http/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
+import { useIsOffline } from "@/shared/platform/offline";
 import { colors, typography } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
@@ -21,8 +22,10 @@ interface Props {
 }
 export default function CardBalance({ unexpectedScenario }: Props) {
   const { t } = useTranslation("account");
-  const account = useGetPrimaryAccount();
-  const limits = useGetTransferLimits();
+  // Only a request that reaches the bank ends offline, so the card keeps asking while it lasts.
+  const refetchInterval = useIsOffline() ? 10_000 : false;
+  const account = useGetPrimaryAccount({ refetchInterval });
+  const limits = useGetTransferLimits({ refetchInterval });
   // Maintenance pauses transfers, not the balance: the balance still shows, and Transfer says why it waits.
   const limitsPausedForMaintenance =
     limits.error instanceof TransportError &&

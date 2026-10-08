@@ -19,7 +19,8 @@
     },
     "offline": {
       "title": "Offline",
-      "disabled_reason": "You're offline, so sending is paused."
+      "disabled_reason": "You're offline, so sending is paused.",
+      "notice": "You're offline. Sending is paused until Ryt can be reached."
     },
     "earlier_transfer_unconfirmed": {
       "title": "Earlier transfer still being checked"

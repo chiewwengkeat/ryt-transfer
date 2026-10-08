@@ -22,6 +22,8 @@ export const getTransferLimitsOptions = () =>
     },
   });
 
-export function useGetTransferLimits() {
-  return useQuery(getTransferLimitsOptions());
+export function useGetTransferLimits(
+  options: { refetchInterval?: number | false } = {},
+) {
+  return useQuery({ ...getTransferLimitsOptions(), ...options });
 }

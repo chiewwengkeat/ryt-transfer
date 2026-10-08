@@ -21,6 +21,8 @@ export const getPrimaryAccountOptions = () =>
     },
   });
 
-export function useGetPrimaryAccount() {
-  return useQuery(getPrimaryAccountOptions());
+export function useGetPrimaryAccount(
+  options: { refetchInterval?: number | false } = {},
+) {
+  return useQuery({ ...getPrimaryAccountOptions(), ...options });
 }

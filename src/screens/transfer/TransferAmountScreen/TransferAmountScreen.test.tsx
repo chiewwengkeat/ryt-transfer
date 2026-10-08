@@ -176,6 +176,21 @@ it(
 );
 
 it(
+  "says sending is paused on a transfer step too, where typing stays open",
+  scenarioTest("transfer.offline", async () => {
+    await openAmountStep();
+
+    expect(
+      await screen.findByText(
+        "You're offline. Sending is paused until Ryt can be reached.",
+      ),
+    ).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+    expect(screen.getByLabelText("Amount (RM)")).toHaveDisplayValue("100");
+  }),
+);
+
+it(
   "asks for an amount before moving on, and for one with at most two decimals",
   scenarioTest("transfer.badly_formed_input", async () => {
     const view = await openAmountStep();

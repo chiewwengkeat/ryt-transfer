@@ -194,3 +194,39 @@ it("keeps that message off Home while the phone has no connection", async () => 
     screen.getByText("You're offline, so sending is paused."),
   ).toBeOnTheScreen();
 });
+
+it(
+  "says sending is paused, and why Transfer waits, while no request reaches the bank",
+  scenarioTest("transfer.offline", async () => {
+    await renderRoute("/");
+
+    expect(
+      await screen.findByText(
+        "You're offline. Sending is paused until Ryt can be reached.",
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      await screen.findByRole("button", { name: "Transfer" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByText("You're offline, so sending is paused."),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it("asks for the balance again every 10 seconds while offline, and resumes sending once a read gets through", async () => {
+  mswServer.use(http.all("*", () => HttpResponse.error()));
+  await renderRoute("/");
+  await screen.findByRole("button", { name: "Try again" });
+  mswServer.resetHandlers();
+
+  await act(() => jest.advanceTimersByTimeAsync(10_000));
+
+  expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
+  expect(
+    screen.queryByText(
+      "You're offline. Sending is paused until Ryt can be reached.",
+    ),
+  ).toBeNull();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+});
