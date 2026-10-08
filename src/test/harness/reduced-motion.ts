@@ -3,16 +3,20 @@ import { AccessibilityInfo } from "react-native";
 import * as Reanimated from "react-native-reanimated";
 
 export async function turnOnPhoneReduceMotion() {
-  const listenersAdded: [string, unknown][] =
-    jest.mocked(AccessibilityInfo).addEventListener.mock.calls;
-  const appListeners = listenersAdded.filter(
-    ([eventName]) => eventName === "reduceMotionChanged",
-  );
+  const appListeners = jest
+    .mocked<{
+      addEventListener(
+        eventName: string,
+        hearReduceMotion: (reduces: boolean) => void,
+      ): unknown;
+    }>(AccessibilityInfo)
+    .addEventListener.mock.calls.filter(
+      ([eventName]) => eventName === "reduceMotionChanged",
+    );
   if (appListeners.length === 0)
     throw new Error("Nothing in the app listens for reduce motion yet.");
   await act(() => {
-    for (const [, hearReduceMotion] of appListeners)
-      (hearReduceMotion as (reduces: boolean) => void)(true);
+    for (const [, hearReduceMotion] of appListeners) hearReduceMotion(true);
   });
 }
 
