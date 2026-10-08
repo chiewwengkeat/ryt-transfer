@@ -16,9 +16,11 @@ export const getTransferOptions = (transferId: string) =>
           { signal },
         )
       ).transfer,
-    // An answer that left before a newer copy arrived must not replace it.
+    // An answer that left before a newer copy arrived must not replace it. Query also runs this on select
+    // results, where the held copy can belong to the transfer shown before.
     structuralSharing: (held: unknown, received: unknown) =>
       held !== undefined &&
+      (held as Transfer).transferId === (received as Transfer).transferId &&
       (held as Transfer).version >= (received as Transfer).version
         ? held
         : received,
