@@ -595,6 +595,29 @@ it(
   }),
 );
 
+it("still says the bank is unreachable once it stops answering, after answering the page's first read", async () => {
+  const { created } = await startTestTransfer(10_000);
+  let statusReads = 0;
+  mswServer.use(
+    http.get("*/transfers/:transferId", () => {
+      statusReads += 1;
+      return statusReads === 1 ? undefined : HttpResponse.error();
+    }),
+  );
+  await renderRoute(`/transfer/result/${created.transfer.transferId}`);
+  await screen.findByRole("header", { name: "Checking your transfer" });
+  await act(() => jest.advanceTimersByTimeAsync(14_000));
+  expect(
+    screen.queryByRole("header", { name: "Still checking your transfer" }),
+  ).toBeNull();
+
+  await act(() => jest.advanceTimersByTimeAsync(3_000));
+
+  expect(
+    await screen.findByRole("header", { name: "Still checking your transfer" }),
+  ).toBeOnTheScreen();
+});
+
 it("checks a transfer whose approval drew an answer the app does not know, under that answer's own id", async () => {
   const { created } = await startTestTransfer(10_000);
 

@@ -1,4 +1,8 @@
-import { type QueryClient, useQueryClient } from "@tanstack/react-query";
+import {
+  hashKey,
+  type QueryClient,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import {
@@ -55,9 +59,32 @@ export function useTransferStatusCheck(
       return nextReadAtMs - elapsedMs;
     },
   });
-  const [failedReadsBeforeOpening] = useState(transfer.errorUpdateCount);
+  const [unansweredReads, setUnansweredReads] = useState(0);
   const readFailure = classifyTransferReadFailure(transfer.error);
   const outcome = transfer.data?.outcome;
+
+  // Read by read: the query's error count cannot say whether its read on opening, not a scheduled one, failed.
+  useEffect(() => {
+    const transferQueryHash = hashKey(getTransferOptions(transferId).queryKey);
+    let openingReadSettled = false;
+    return queryClient.getQueryCache().subscribe((event) => {
+      if (
+        event.type !== "updated" ||
+        event.query.queryHash !== transferQueryHash
+      )
+        return;
+      const { action } = event;
+      if (action.type !== "success" && action.type !== "error") return;
+      if (
+        openingReadSettled &&
+        action.type === "error" &&
+        classifyTransferReadFailure(action.error) ===
+          TransferReadFailure.BankUnreached
+      )
+        setUnansweredReads((count) => count + 1);
+      openingReadSettled = true;
+    });
+  }, [queryClient, transferId]);
 
   useEffect(() => {
     if (customerId === undefined) return;
@@ -86,10 +113,7 @@ export function useTransferStatusCheck(
     readFailure,
     bankUnreachable:
       readFailure === TransferReadFailure.BankUnreached &&
-      transfer.dataUpdatedAt < openedAtMs &&
-      // One past the scheduled reads: with no answer since opening, the read on opening failed too.
-      transfer.errorUpdateCount - failedReadsBeforeOpening >
-        UNANSWERED_READS_BEFORE_UNREACHABLE,
+      unansweredReads >= UNANSWERED_READS_BEFORE_UNREACHABLE,
   };
 }
 
