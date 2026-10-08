@@ -383,7 +383,8 @@
       "last_transfer_not_found": "Transfer not found",
       "recovery_unexpected": "Outcome not confirmed"
     },
-    "reference_to_quote": "If you contact us, quote this reference: {{reference}}"
+    "reference_to_quote": "If you contact us, quote this reference: {{reference}}",
+    "outcome_announcement": "{{heading}}. {{body}}"
   },
   "history": {
     "title": "Transfer history",

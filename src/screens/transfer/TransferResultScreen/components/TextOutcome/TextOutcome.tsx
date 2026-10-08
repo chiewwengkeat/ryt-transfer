@@ -1,4 +1,6 @@
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { AccessibilityInfo } from "react-native";
 
 import {
   TransferOutcomeScenario,
@@ -30,16 +32,28 @@ export default function TextOutcome({ scenario, transfer, transferId }: Props) {
     TransferOutcomeScenario.BalanceOrLimitShortAtApproval,
     TransferOutcomeScenario.ApprovalExpired,
   ].includes(scenario);
+  const outcomeHeading = t(`result.heading.${scenarioName}`);
+  const outcomeBody = t(`common.${scenarioName}.body`, {
+    amount: transfer && formatMoney(transfer.amount),
+    name: transfer?.counterparty.registeredName,
+  });
+  // Never the outcome the page opens with: the heading's focus reads that, and announcing it too says it twice.
+  const spokenScenarioRef = useRef(scenario);
+  useEffect(() => {
+    if (spokenScenarioRef.current === scenario) return;
+    spokenScenarioRef.current = scenario;
+    AccessibilityInfo.announceForAccessibility(
+      t("result.outcome_announcement", {
+        heading: outcomeHeading,
+        body: outcomeBody,
+      }),
+    );
+  }, [scenario, outcomeHeading, outcomeBody, t]);
 
   return (
     <>
-      <TextHeading autoFocus>{t(`result.heading.${scenarioName}`)}</TextHeading>
-      <TextBody>
-        {t(`common.${scenarioName}.body`, {
-          amount: transfer && formatMoney(transfer.amount),
-          name: transfer?.counterparty.registeredName,
-        })}
-      </TextBody>
+      <TextHeading autoFocus>{outcomeHeading}</TextHeading>
+      <TextBody>{outcomeBody}</TextBody>
       {!moneyConfirmed && (
         <TextBody tone="secondary">
           {t("result.reference_to_quote", {
