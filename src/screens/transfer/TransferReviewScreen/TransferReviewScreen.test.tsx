@@ -578,7 +578,7 @@ it(
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
-    await screen.findByText("Transfer sent", { timeout: 10_000 });
+    await screen.findByText("Transfer sent", {}, { timeout: 10_000 });
     await pressHardwareBack();
 
     expect(view.getPathname()).toBe("/");
@@ -611,7 +611,7 @@ it(
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
-    await screen.findByText("Transfer sent", { timeout: 10_000 });
+    await screen.findByText("Transfer sent", {}, { timeout: 10_000 });
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 
     expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
@@ -1120,6 +1120,7 @@ it.each<[string, () => Response, number]>([
     expect(
       await screen.findByText(
         "This transfer is being checked, so don't send it again — not confirmed yet.",
+        {},
         { timeout: 10_000 },
       ),
     ).toBeOnTheScreen();
