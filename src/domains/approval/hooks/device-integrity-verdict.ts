@@ -17,7 +17,6 @@ export function warmUpDeviceIntegrityCheck() {
 }
 
 export async function isApprovalRefusedOnThisPhone() {
-  // Emulators read as rooted, so development and demo builds never ask.
   if (!isProductionBuild)
     return rootedPhoneDemoPickStore.getState().rootedPhonePicked;
   const integrity = await checkDeviceIntegrity();

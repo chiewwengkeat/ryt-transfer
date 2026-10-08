@@ -78,7 +78,7 @@ The menu, top to bottom:
 
 ### What the demo build does differently
 
-Production blocks screenshots and screen recording on every screen but the two receipts, and refuses approval on a phone that reports it is rooted, jailbroken or hooked. The demo and development builds do neither by default: capture stays allowed so the demo can be recorded, and the phone check is skipped because an emulator reads as rooted. **Screenshots blocked** and **Rooted, jailbroken or tampered phone** in the Demo menu each switch production's behaviour on, in the demo build.
+Production blocks screenshots and screen recording on every screen but the two receipts, and refuses approval on a phone that reports it is rooted, jailbroken or hooked. The demo and development builds do neither by default: capture stays allowed so the demo can be recorded, and the phone check is skipped, so the demo approves on any test phone, emulator or simulator. **Screenshots blocked** and **Rooted, jailbroken or tampered phone** in the Demo menu each switch production's behaviour on, in the demo build.
 
 ### Scenarios you cause yourself
 
