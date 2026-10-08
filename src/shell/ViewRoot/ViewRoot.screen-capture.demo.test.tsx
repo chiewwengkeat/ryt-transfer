@@ -3,6 +3,7 @@ import { router } from "expo-router";
 
 import "@/test/demo-build";
 import { isScreenCaptureBlocked } from "@/test/harness/native-doubles";
+import { waitPastReceiptSettle } from "@/test/harness/receipt-settle";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -11,6 +12,7 @@ it(
   scenarioTest("transfer.screen_capture_blocked", async () => {
     await renderRoute("/");
     await screen.findByText("RM 12,845.50");
+    await waitPastReceiptSettle();
     const blockedOnHome = isScreenCaptureBlocked();
 
     await act(() => {
@@ -33,7 +35,10 @@ it("allows capture on Home in a demo build until Screenshots blocked is picked f
   await fireEvent.press(
     screen.getByRole("radio", { name: "Screenshots blocked" }),
   );
+  const blockedOnPick = isScreenCaptureBlocked();
+  await waitPastReceiptSettle();
 
   expect(blockedBeforePick).toBe(false);
+  expect(blockedOnPick).toBe(true);
   expect(isScreenCaptureBlocked()).toBe(true);
 });

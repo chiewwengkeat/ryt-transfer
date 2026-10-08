@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { renderRoute } from "@/test/render-route";
 
 import { isScreenCaptureBlocked } from "./native-doubles";
+import { waitPastReceiptSettle } from "./receipt-settle";
 
 // ⛔ Keep these two alone in this file, in this order: the first sees the app's own launch, the second
 // what the first leaves behind.
@@ -24,6 +25,7 @@ it("starts the next test blocked too, as a production launch does, and keeps Hom
   const blockedAtLaunch = isScreenCaptureBlocked();
   await renderRoute("/");
   await screen.findByText("RM 12,845.50");
+  await waitPastReceiptSettle();
 
   expect(blockedAtLaunch).toBe(true);
   expect(isScreenCaptureBlocked()).toBe(true);
