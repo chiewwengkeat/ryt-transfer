@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { notificationAsync, NotificationFeedbackType } from "expo-haptics";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,6 +18,10 @@ import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import SectionTransferDetails from "../components/SectionTransferDetails/SectionTransferDetails";
 import TextOutcome from "./components/TextOutcome/TextOutcome";
+import {
+  MONEY_STATE_BY_OUTCOME,
+  MoneyState,
+} from "./transfer-outcome-money-states";
 
 export default function TransferResultScreen() {
   const { t } = useTranslation("transfer");
@@ -69,6 +74,21 @@ export default function TransferResultScreen() {
     if (outcomeSettled && !openedSettled)
       void refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
   }, [outcomeSettled, openedSettled, queryClient]);
+  const displayedMoneyState = MONEY_STATE_BY_OUTCOME[scenario];
+  useEffect(() => {
+    switch (displayedMoneyState) {
+      case MoneyState.MoneyMoved:
+        void notificationAsync(NotificationFeedbackType.Success);
+        break;
+      case MoneyState.NotConfirmedYet:
+      case MoneyState.MoneyReturned:
+        void notificationAsync(NotificationFeedbackType.Warning);
+        break;
+      case MoneyState.NoMoneyMoved:
+        void notificationAsync(NotificationFeedbackType.Error);
+        break;
+    }
+  }, [displayedMoneyState]);
 
   return (
     <>
