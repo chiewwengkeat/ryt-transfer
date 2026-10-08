@@ -1156,7 +1156,7 @@ it(
 
     expect(
       await screen.findByText(
-        "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
+        "It's usually instant, but can take up to one business day. The result will show here and in History — not confirmed yet.",
       ),
     ).toBeOnTheScreen();
     expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
@@ -1176,7 +1176,7 @@ it(
 
     expect(
       await screen.findByText(
-        "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
+        "It was not sent because your balance or limit changed — no money moved.",
       ),
     ).toBeOnTheScreen();
     expect(screen.queryByText(/— money moved\./)).toBeNull();
@@ -1207,20 +1207,55 @@ it(
 
 // ⛔ No INVALID_REQUEST row: that answer is ruled to move to the approval step's catch-all.
 it.each([
-  [410, ApproveTransferErrorCode.ApprovalExpired, {}],
-  [403, ApproveTransferErrorCode.ApprovalInvalid, {}],
-  [422, ApproveTransferErrorCode.PinIncorrect, { attemptsRemaining: 2 }],
-  [423, ApproveTransferErrorCode.PinLocked, {}],
-  [409, ApproveTransferErrorCode.KeyNotRegistered, {}],
+  [
+    410,
+    ApproveTransferErrorCode.ApprovalExpired,
+    {},
+    "The approval timed out — no money moved.",
+  ],
+  [
+    403,
+    ApproveTransferErrorCode.ApprovalInvalid,
+    {},
+    "The approval couldn't be verified — no money moved.",
+  ],
+  [
+    422,
+    ApproveTransferErrorCode.PinIncorrect,
+    { attemptsRemaining: 2 },
+    "Something unexpected stopped the approval before it was sent — no money moved.",
+  ],
+  [
+    423,
+    ApproveTransferErrorCode.PinLocked,
+    {},
+    "Something unexpected stopped the approval before it was sent — no money moved.",
+  ],
+  [
+    409,
+    ApproveTransferErrorCode.KeyNotRegistered,
+    {},
+    "Approval needs setting up again on this phone.",
+  ],
   [
     403,
     ApproveTransferErrorCode.CoolingOff,
-    { until: "2026-10-07T21:30:00+08:00", reason: "DEVICE_PAIRED" },
+    // An hour ahead of the clock the app reads, so the wait has not passed by the time it is shown.
+    {
+      until: new Date(Date.now() + 60 * 60_000).toISOString(),
+      reason: "DEVICE_PAIRED",
+    },
+    /^You can send money from .+ — a security wait after pairing this phone\.$/,
   ],
-  [403, ApproveTransferErrorCode.AccountLocked, {}],
+  [
+    403,
+    ApproveTransferErrorCode.AccountLocked,
+    {},
+    "Your account is locked. Contact Ryt to unlock it.",
+  ],
 ])(
-  "says the transfer was not sent, and offers it again, when the bank refuses the approval with %i %s",
-  async (status, code, details) => {
+  "keeps the transfer on review, saying why, when the bank refuses the approval with %i %s",
+  async (status, code, details, reason) => {
     await pairPhoneAsTheDemoLaunchDoes();
     mswServer.use(
       http.post("*/transfers/:transferId/approve", () =>
@@ -1230,21 +1265,19 @@ it.each([
         ),
       ),
     );
-    await openReviewOfRm100();
+    const view = await openReviewOfRm100();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
 
-    expect(
-      await screen.findByText("The transfer was not sent — no money moved."),
-    ).toBeOnTheScreen();
+    expect(await screen.findByText(reason)).toBeOnTheScreen();
     expect(
       screen.queryByText(
         "This transfer is being checked, so don't send it again — not confirmed yet.",
       ),
     ).toBeNull();
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+    expect(view.getPathname()).toBe("/transfer/review");
     expect(countPostsTo(/\/approve$/)).toBe(1);
   },
 );
