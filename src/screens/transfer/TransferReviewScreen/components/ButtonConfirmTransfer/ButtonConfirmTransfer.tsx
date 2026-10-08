@@ -215,7 +215,9 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
         }}
       />
       <ButtonUsePinInstead
-        transferPressable={!sending && transferDisabledReason === undefined}
+        pinTryAvailable={
+          !sending && transferDisabledReason === undefined && !approvalPinLocked
+        }
         onPress={() => {
           void createAndApproveTransfer(ApprovalPath.Pin).catch(
             settleUnexpectedConfirmFailure,

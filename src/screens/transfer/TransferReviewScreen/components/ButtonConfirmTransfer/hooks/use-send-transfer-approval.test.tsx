@@ -159,6 +159,22 @@ it(
   }),
 );
 
+it("offers no PIN instead once the bank has locked the PIN, and leaves face or fingerprint to approve", async () => {
+  await openReviewOfRm100();
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  );
+  await approveWithPin("111111");
+  await screen.findByText("That PIN is incorrect. You have 2 tries left.");
+  await approveWithPin("111111");
+  await screen.findByText("That PIN is incorrect. You have 1 try left.");
+  await approveWithPin("111111");
+  await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
+
+  expect(await screen.findByRole("button", { name: "Transfer" })).toBeEnabled();
+  expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
+});
+
 it("creates no transfer once the bank has locked the PIN, while face or fingerprint approval is off", async () => {
   await confirmRm100ApprovedByPin();
   await approveWithPin("111111");

@@ -11,11 +11,11 @@ import { approvalSettingsStore } from "@/domains/approval/hooks/approval-setting
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
 interface Props {
-  transferPressable: boolean;
+  pinTryAvailable: boolean;
   onPress: () => void;
 }
 export default function ButtonUsePinInstead({
-  transferPressable,
+  pinTryAvailable,
   onPress,
 }: Props) {
   const { t } = useTranslation("transfer");
@@ -48,7 +48,7 @@ export default function ButtonUsePinInstead({
   }, []);
 
   // Transfer asks for the PIN itself while face or fingerprint approval is off or unavailable.
-  if (!transferPressable || !biometricApprovalOn || biometricSensorUnavailable)
+  if (!pinTryAvailable || !biometricApprovalOn || biometricSensorUnavailable)
     return null;
   return (
     <ButtonSecondary label={t("common.pin_chosen.choose")} onPress={onPress} />
