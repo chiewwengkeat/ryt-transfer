@@ -20,7 +20,7 @@ import {
 } from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { buildSignedApprovalText } from "@/domains/transfer/api/approve-transfer/approve-transfer";
-import { isFlowOnAnotherTransfer } from "@/screens/transfer/state/approval-events";
+import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
 import {
   ApproveTransferErrorCode,
   type ApproveTransferErrorResponse,
@@ -58,11 +58,11 @@ export function useSendTransferApproval() {
     const approving = transferFlowStore.getState();
     if (approving.step !== TransferFlowStep.Approving) return;
     const { transferId, lookup, draft } = approving;
-    // ⛔ Any wait here can end with the flow on another transfer, whose flow and sheet this call leaves alone.
-    const onAnotherTransfer = () =>
-      isFlowOnAnotherTransfer(transferFlowStore.getState(), transferId);
+    // ⛔ Any wait here can end with the flow off this transfer, and whatever it is on now this call leaves alone.
+    const noLongerOnThisTransfer = () =>
+      isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId);
     const leaveApprovalNotSent = (notice: TransferFlowScenario) => {
-      if (onAnotherTransfer()) return;
+      if (noLongerOnThisTransfer()) return;
       closeApprovalPinSheet();
       dispatchTransferFlow({
         type: TransferFlowActionType.ApprovalNotSent,
@@ -100,12 +100,12 @@ export function useSendTransferApproval() {
         queryClient,
       });
     const setUpApprovalAgain = async (pinInHand?: string) => {
-      if (!onAnotherTransfer())
+      if (!noLongerOnThisTransfer())
         dispatchTransferFlow({
           type: TransferFlowActionType.ApprovalAttemptRefused,
         });
       await forgetPendingTransfer();
-      return registerApprovalKeysAgain(onAnotherTransfer, pinInHand);
+      return registerApprovalKeysAgain(noLongerOnThisTransfer, pinInHand);
     };
 
     // Resolves with the PIN only once the bank has accepted it, so nothing reuses a PIN that may be wrong.
@@ -113,7 +113,7 @@ export function useSendTransferApproval() {
       words: { message: string; detail?: string },
       afterSetUp: { pinInHand?: string; keysSetUpAgain?: boolean } = {},
     ) => {
-      if (onAnotherTransfer()) return null;
+      if (noLongerOnThisTransfer()) return null;
       dispatchTransferFlow({
         type: TransferFlowActionType.ApprovalPathChosen,
         path: ApprovalPath.Pin,
@@ -153,7 +153,7 @@ export function useSendTransferApproval() {
             : undefined;
         if (pinRefusal?.code === ApproveTransferErrorCode.PinIncorrect) {
           await forgetPendingTransfer();
-          if (!onAnotherTransfer())
+          if (!noLongerOnThisTransfer())
             dispatchTransferFlow({
               type: TransferFlowActionType.ApprovalAttemptRefused,
             });
@@ -164,7 +164,7 @@ export function useSendTransferApproval() {
         }
         if (pinRefusal?.code === ApproveTransferErrorCode.PinLocked) {
           await forgetPendingTransfer();
-          if (!onAnotherTransfer())
+          if (!noLongerOnThisTransfer())
             dispatchTransferFlow({
               type: TransferFlowActionType.ApprovalAttemptRefused,
             });

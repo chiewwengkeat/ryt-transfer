@@ -14,7 +14,7 @@ import {
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import { isFlowOnAnotherTransfer } from "@/screens/transfer/state/approval-events";
+import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
 import { refreshAccountAndHistoryAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import {
   dispatchTransferFlow,
@@ -50,7 +50,7 @@ export async function settleApprovalAnswer({
   }
   const returnRefusedApprovalToReview = async (event: ApprovalEvent) => {
     await forgetPendingTransfer();
-    if (!isFlowOnAnotherTransfer(transferFlowStore.getState(), transferId))
+    if (!isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId))
       dispatchTransferFlow(event);
   };
 

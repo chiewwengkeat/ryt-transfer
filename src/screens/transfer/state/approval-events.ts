@@ -61,9 +61,9 @@ export function reduceApprovalEvent(
   }
 }
 
-export function isFlowOnAnotherTransfer(
+export function isFlowNoLongerOnTransfer(
   flow: TransferFlowState,
   transferId: string,
 ) {
-  return "transferId" in flow && flow.transferId !== transferId;
+  return !("transferId" in flow) || flow.transferId !== transferId;
 }

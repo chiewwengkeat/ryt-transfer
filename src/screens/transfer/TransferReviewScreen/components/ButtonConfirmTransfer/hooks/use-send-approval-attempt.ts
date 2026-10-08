@@ -3,7 +3,7 @@ import { randomUUID } from "expo-crypto";
 import { closeApprovalPinSheet } from "@/domains/approval/hooks/approval-pin-sheet";
 import { useApproveTransfer } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import type { ApproveTransferRequest } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
-import { isFlowOnAnotherTransfer } from "@/screens/transfer/state/approval-events";
+import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
@@ -19,9 +19,9 @@ export function useSendApprovalAttempt() {
     transferId: string;
     request: ApproveTransferRequest;
   }) => {
-    // ⛔ A late call must not send once the flow is on another transfer, nor close that transfer's sheet.
+    // ⛔ A late call must not send once the flow has left this transfer, nor close a newer one's sheet.
     if (
-      isFlowOnAnotherTransfer(transferFlowStore.getState(), attempt.transferId)
+      isFlowNoLongerOnTransfer(transferFlowStore.getState(), attempt.transferId)
     )
       return null;
     const attemptKey = randomUUID();

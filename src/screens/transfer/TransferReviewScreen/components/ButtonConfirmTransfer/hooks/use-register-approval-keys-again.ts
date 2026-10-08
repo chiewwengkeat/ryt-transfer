@@ -23,7 +23,7 @@ import { reportError } from "@/shared/observability/observability";
 export function useRegisterApprovalKeysAgain() {
   const { t } = useTranslation("transfer");
 
-  return async (onAnotherTransfer: () => boolean, pinInHand?: string) => {
+  return async (noLongerOnThisTransfer: () => boolean, pinInHand?: string) => {
     const words = {
       message: t("common.approval_key_unknown.body"),
       detail: t("common.approval_key_unknown.pin"),
@@ -50,8 +50,8 @@ export function useRegisterApprovalKeysAgain() {
       // Reported before the guard: a transfer the person left shows nothing, but its failure is still seen.
       if (failedUnexpectedly)
         reportError(failure, { boundary: "approval_key_registration" });
-      // ⛔ Left during the call: a sheet or prompt now would cover the newer transfer's, whose answer then never comes.
-      if (onAnotherTransfer())
+      // ⛔ Left during the call: a sheet or prompt now would cover whatever they moved on to, a newer transfer's sheet included.
+      if (noLongerOnThisTransfer())
         return { notice: TransferFlowScenario.ApprovalCancelled };
       if (failure === undefined) return { pin };
       // The bank asks for a PIN without saying it is locked, so the lock it reported earlier answers instead.

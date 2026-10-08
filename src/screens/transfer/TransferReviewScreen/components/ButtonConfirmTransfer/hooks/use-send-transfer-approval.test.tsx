@@ -1199,6 +1199,59 @@ it("still reports setting approval up again failing unexpectedly for a transfer 
   expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
 });
 
+it("opens no PIN sheet over Home when the bank asks for a PIN to set approval up again for a transfer the person left", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  let keyRegistrationHeld = false;
+  let askForThePin: () => void = () => undefined;
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      () =>
+        HttpResponse.json(
+          { error: { code: "KEY_NOT_REGISTERED", message: "Test." } },
+          { status: 409 },
+        ),
+      { once: true },
+    ),
+    http.post(
+      "*/approval-keys",
+      () =>
+        new Promise<Response>((answer) => {
+          keyRegistrationHeld = true;
+          askForThePin = () => {
+            answer(
+              HttpResponse.json(
+                { error: { code: "PIN_REQUIRED", message: "Test." } },
+                { status: 403 },
+              ),
+            );
+          };
+        }),
+      { once: true },
+    ),
+  );
+  await confirmRm100Transfer();
+  await waitFor(() => {
+    expect(keyRegistrationHeld).toBe(true);
+  });
+
+  await act(() => {
+    router.dismissTo("/");
+  });
+  await screen.findByRole("button", { name: "Transfer" });
+  await act(async () => {
+    askForThePin();
+    await jest.advanceTimersByTimeAsync(1_000);
+  });
+
+  expect(
+    screen.queryByText(
+      "Enter your PIN to set it up and approve this transfer.",
+    ),
+  ).toBeNull();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+});
+
 it(
   "sets face or fingerprint approval up again with the PIN that approved the transfer, so the next one needs no PIN",
   scenarioTest("transfer.biometrics_changed", async () => {
