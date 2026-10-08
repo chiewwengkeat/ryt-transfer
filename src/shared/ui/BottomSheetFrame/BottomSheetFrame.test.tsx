@@ -6,7 +6,7 @@ import {
   screen,
 } from "@testing-library/react-native";
 import { useState } from "react";
-import { BackHandler, DeviceEventEmitter, Text } from "react-native";
+import { BackHandler, DeviceEventEmitter, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
@@ -183,6 +183,33 @@ it("keeps a sheet that may not be dismissed open on Back, with no way to close i
   expect(screen.getByRole("header", { name: "Banks" })).toBeOnTheScreen();
   expect(screen.queryByRole("button", { name: "Close" })).not.toBeOnTheScreen();
   expect(backBehindTheSheet).not.toHaveBeenCalled();
+});
+
+it("closes on VoiceOver's escape gesture", async () => {
+  await render(<ScreenWithBankSheet />);
+  await openBankSheet();
+
+  await fireEvent(screen.getByText("Every bank"), "accessibilityEscape");
+
+  expect(screen.queryByRole("header", { name: "Banks" })).not.toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: "Choose a bank" }),
+  ).toBeOnTheScreen();
+});
+
+it("keeps a sheet that may not be dismissed open on VoiceOver's escape gesture, and keeps the gesture from what holds the sheet", async () => {
+  const escapeOutsideTheSheet = jest.fn();
+  await render(
+    <View onAccessibilityEscape={escapeOutsideTheSheet}>
+      <ScreenWithBankSheet dismissable={false} />
+    </View>,
+  );
+  await openBankSheet();
+
+  await fireEvent(screen.getByText("Every bank"), "accessibilityEscape");
+
+  expect(screen.getByRole("header", { name: "Banks" })).toBeOnTheScreen();
+  expect(escapeOutsideTheSheet).not.toHaveBeenCalled();
 });
 
 it("tells its mounter when a sheet opens and when the last one closes", async () => {

@@ -88,6 +88,10 @@ export default function BottomSheetFrame({
       <Animated.View
         entering={FadeIn}
         exiting={FadeOut}
+        // Handled even when it cannot close, as Back is: iOS hands an unhandled escape on up to what holds the sheet.
+        onAccessibilityEscape={() => {
+          if (dismissable) onClose();
+        }}
         style={styles.sheetLayer}
       >
         {/* Hidden too: TalkBack stops on any pressable view whatever `accessible` says. ✕ and Back still close. */}
