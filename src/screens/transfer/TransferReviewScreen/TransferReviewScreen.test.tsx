@@ -88,13 +88,6 @@ async function openReviewOfRm100(
   return view;
 }
 
-function countPostsTo(pathname: RegExp) {
-  return sentRequests.filter(
-    (request) =>
-      request.method === "POST" && pathname.test(new URL(request.url).pathname),
-  ).length;
-}
-
 // The swipe is native and never reaches JS, so this reads the setting the root stack hands its transfer screen.
 function readRootTransferScreenGestureEnabled() {
   type Fiber = {
@@ -185,8 +178,8 @@ it(
     });
 
     await screen.findByText("Transfer sent");
-    expect(countPostsTo(/\/transfers$/)).toBe(1);
-    expect(countPostsTo(/\/approve$/)).toBe(1);
+    expect(countSent("POST", "/transfers")).toBe(1);
+    expect(countSent("POST", "/approve")).toBe(1);
     expect(biometricPromptsShown()).toHaveLength(1);
     expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
       balanceBeforeMinor - 10_000,
@@ -789,7 +782,7 @@ it("takes an approval lost as the phone goes offline to the result page, which r
     await screen.findByRole("button", { name: "Transfer" }),
   );
   await waitFor(() => {
-    expect(countPostsTo(/\/approve$/)).toBe(1);
+    expect(countSent("POST", "/approve")).toBe(1);
   });
 
   await act(() => {
@@ -1019,7 +1012,7 @@ it("offers to try again or leave when something unexpected fails before the tran
     ),
   ).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
-  expect(countPostsTo(/\/transfers$/)).toBe(0);
+  expect(countSent("POST", "/transfers")).toBe(0);
 });
 
 it("never says no money moved when something unexpected fails after the bank answers the approval", async () => {
@@ -1127,7 +1120,7 @@ it.each<[string, () => Response, number]>([
     expect(screen.queryByText(/no money moved/)).toBeNull();
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
     expect(screen.getByRole("button", { name: "Done" })).toBeOnTheScreen();
-    expect(countPostsTo(/\/approve$/)).toBe(approvesSent);
+    expect(countSent("POST", "/approve")).toBe(approvesSent);
   },
 );
 
@@ -1174,7 +1167,7 @@ it("never offers to send again when the bank answers none of three tries at the 
   ).toBeOnTheScreen();
   expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
-  expect(countPostsTo(/\/approve$/)).toBe(3);
+  expect(countSent("POST", "/approve")).toBe(3);
   releaseApprovals();
 });
 
@@ -1511,7 +1504,7 @@ it.each([
       ),
     ).toBeNull();
     expect(view.getPathname()).toBe("/transfer/review");
-    expect(countPostsTo(/\/approve$/)).toBe(1);
+    expect(countSent("POST", "/approve")).toBe(1);
   },
 );
 
