@@ -73,7 +73,8 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     };
   }, [hold, coolingOffUntil]);
   const offline = useIsOffline();
-  const approvalPinLocked = useApprovalPinLocked();
+  const { pinLocked: approvalPinLocked, isPinLockedNow } =
+    useApprovalPinLocked();
   const { checkingPhone, checkPhoneAllowsThisApproval } =
     usePhoneCheckBeforeApproval();
   const startWatchingForReviewLeave = useReviewLeaveWatch();
@@ -107,14 +108,16 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const createAndApproveTransfer = async (path: ApprovalPath) => {
     const hasLeftReviewSincePress = startWatchingForReviewLeave();
     if (!(await checkPhoneAllowsThisApproval(hasLeftReviewSincePress))) return;
-    const sensorRefusalOutcome = approvalPinLocked
+    // Read now, not from the render pressed in: the lock can land while the check runs.
+    const pinLockedAfterCheck = isPinLockedNow();
+    const sensorRefusalOutcome = pinLockedAfterCheck
       ? (await readBiometricSensorRefusal())?.outcome
       : undefined;
     // ⛔ Read after every wait: once review is left the press is void, so nothing is created or prompted behind them.
     if (hasLeftReviewSincePress()) return;
     // ⛔ The bank refuses every PIN while it holds the lock, so a transfer only a PIN could approve is never created.
     if (
-      approvalPinLocked &&
+      pinLockedAfterCheck &&
       (path === ApprovalPath.Pin ||
         !approvalSettingsStore.getState().biometricApprovalOn ||
         sensorRefusalOutcome === BiometricSignOutcome.NotSetUp ||

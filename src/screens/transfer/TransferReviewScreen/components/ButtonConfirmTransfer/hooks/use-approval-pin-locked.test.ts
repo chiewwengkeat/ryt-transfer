@@ -14,18 +14,22 @@ it("reads a lock the bank set before the reader mounted", async () => {
 
   const { result } = await renderHook(useApprovalPinLocked);
 
-  await waitFor(() => expect(result.current).toBe(true));
+  await waitFor(() => expect(result.current.pinLocked).toBe(true));
+  expect(result.current.isPinLockedNow()).toBe(true);
 });
 
 it("follows the bank's lock and the reset that lifts it while mounted", async () => {
   const { result } = await renderHook(useApprovalPinLocked);
 
   await act(() => rememberApprovalPinLocked());
-  const lockedOnceRefused = result.current;
+  const lockedOnceRefused = result.current.pinLocked;
+  const lockedNowOnceRefused = result.current.isPinLockedNow();
   await act(() => forgetApprovalPinLock());
 
   expect(lockedOnceRefused).toBe(true);
-  expect(result.current).toBe(false);
+  expect(lockedNowOnceRefused).toBe(true);
+  expect(result.current.pinLocked).toBe(false);
+  expect(result.current.isPinLockedNow()).toBe(false);
 });
 
 it("agrees with the approve path when the phone could not keep the lock", async () => {
@@ -37,5 +41,6 @@ it("agrees with the approve path when the phone could not keep the lock", async 
   await act(() => rememberApprovalPinLocked());
 
   expect(await isApprovalPinLocked()).toBe(false);
-  expect(result.current).toBe(false);
+  expect(result.current.pinLocked).toBe(false);
+  expect(result.current.isPinLockedNow()).toBe(false);
 });

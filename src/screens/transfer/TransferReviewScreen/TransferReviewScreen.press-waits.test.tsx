@@ -6,6 +6,7 @@ import { rememberApprovalPinLocked } from "@/domains/approval/hooks/approval-pin
 import {
   biometricPromptsShown,
   biometricsLibraryDouble,
+  holdDeviceIntegrityChecks,
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
@@ -83,6 +84,31 @@ it("creates and approves nothing when review is left while Transfer reads the se
     "/transfers",
     expect.stringMatching(/^\/transfers\/[\w-]+\/approve$/),
   ]);
+});
+
+it("shows Use PIN instead's PIN-locked sheet and creates nothing when the bank's PIN lock is remembered while the phone check runs", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const answerHeldChecks = holdDeviceIntegrityChecks();
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+  // As a late refusal of an earlier transfer's PIN does: that lock holds for every transfer.
+  await act(async () => {
+    await rememberApprovalPinLocked();
+    answerHeldChecks({});
+  });
+
+  expect(
+    await screen.findByText(
+      "Your PIN is locked. Reset it in the app's security settings.",
+    ),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByText("Enter your bank PIN to approve this transfer."),
+  ).toBeNull();
+  expect(transferWritesSent()).toEqual([]);
 });
 
 it("frees Transfer and Use PIN instead when the phone check throws, and approves from the same review", async () => {

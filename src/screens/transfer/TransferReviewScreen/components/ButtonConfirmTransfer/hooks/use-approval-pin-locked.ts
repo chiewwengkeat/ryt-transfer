@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   isApprovalPinLocked,
@@ -7,19 +7,23 @@ import {
 
 export function useApprovalPinLocked() {
   const [pinLocked, setPinLocked] = useState(false);
+  const pinLockedNowRef = useRef(false);
   useEffect(() => {
     let mountReadOutdated = false;
     const unsubscribe = subscribeToApprovalPinLock((pinLockedNow) => {
       mountReadOutdated = true;
+      pinLockedNowRef.current = pinLockedNow;
       setPinLocked(pinLockedNow);
     });
     void isApprovalPinLocked().then((pinLockedAtMount) => {
-      if (!mountReadOutdated) setPinLocked(pinLockedAtMount);
+      if (mountReadOutdated) return;
+      pinLockedNowRef.current = pinLockedAtMount;
+      setPinLocked(pinLockedAtMount);
     });
     return () => {
       mountReadOutdated = true;
       unsubscribe();
     };
   }, []);
-  return pinLocked;
+  return { pinLocked, isPinLockedNow: () => pinLockedNowRef.current };
 }
