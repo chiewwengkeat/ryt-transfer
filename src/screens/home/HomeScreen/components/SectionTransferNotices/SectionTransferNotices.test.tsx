@@ -91,10 +91,14 @@ it.each([
     ).toBeOnTheScreen();
     expect(screen.queryByText(STILL_BEING_CHECKED)).toBeNull();
 
-    await fireEvent.press(screen.getByRole("button", { name: "Dismiss" }));
+    await fireEvent.press(
+      screen.getByRole("button", {
+        name: `Dismiss the notice about RM 100.00 to ${recipientName}`,
+      }),
+    );
 
     await waitFor(() => {
-      expect(screen.queryByRole("button", { name: "Dismiss" })).toBeNull();
+      expect(screen.queryByRole("button", { name: /^Dismiss/ })).toBeNull();
     });
     expect(await listPendingTransfers(customerId)).toEqual([]);
   },
@@ -109,9 +113,70 @@ it(
     });
 
     expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
-    expect(screen.queryByRole("button", { name: "Dismiss" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Dismiss/ })).toBeNull();
   }),
 );
+
+it("names each notice's transfer on its dismiss control, and dismisses only that notice", async () => {
+  const {
+    body: { customerId },
+  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+  const first = await startTestTransfer(10_000);
+  const second = await startTestTransfer(5_000);
+  await writePendingTransfer(customerId, {
+    transferId: first.created.transfer.transferId,
+    idempotencyKey: "first-approval-key",
+    createdAt: "2026-10-07T01:30:00.000Z",
+    stage: PendingTransferStage.Processing,
+  });
+  await writePendingTransfer(customerId, {
+    transferId: second.created.transfer.transferId,
+    idempotencyKey: "second-approval-key",
+    createdAt: "2026-10-07T01:40:00.000Z",
+    stage: PendingTransferStage.Processing,
+  });
+  mswServer.use(
+    http.get("*/transfers/:transferId", ({ params }) => {
+      const { created } =
+        params.transferId === first.created.transfer.transferId
+          ? first
+          : second;
+      return HttpResponse.json({
+        transfer: { ...created.transfer, status: TransferStatus.Completed },
+      });
+    }),
+  );
+  const recipientName = first.lookup.recipient.registeredName;
+
+  await renderRoute("/");
+
+  expect(
+    await screen.findByRole("button", {
+      name: `Dismiss the notice about RM 100.00 to ${recipientName}`,
+    }),
+  ).toBeOnTheScreen();
+  await fireEvent.press(
+    await screen.findByRole("button", {
+      name: `Dismiss the notice about RM 50.00 to ${recipientName}`,
+    }),
+  );
+
+  await waitFor(() => {
+    expect(
+      screen.queryByText(
+        `Your transfer of RM 50.00 to ${recipientName} was sent — money moved.`,
+      ),
+    ).toBeNull();
+  });
+  expect(
+    screen.getByText(
+      `Your transfer of RM 100.00 to ${recipientName} was sent — money moved.`,
+    ),
+  ).toBeOnTheScreen();
+  expect(await listPendingTransfers(customerId)).toEqual([
+    expect.objectContaining({ transferId: first.created.transfer.transferId }),
+  ]);
+});
 
 it("checks a pending transfer again once they sign back in, and tells Home how it ended", async () => {
   const { bankAnswer, recipientName } =

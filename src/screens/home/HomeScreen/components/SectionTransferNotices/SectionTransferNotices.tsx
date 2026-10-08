@@ -23,28 +23,31 @@ export default function SectionTransferNotices() {
   return (
     <>
       <BannerEarlierTransferUnconfirmed />
-      {settled.map(({ transferId, transfer, notice }) => (
-        <Fragment key={transferId}>
-          <BannerNotice
-            message={t(`next_launch_notices.${notice}`, {
-              amount: formatMoney(transfer.amount),
-              name: transfer.counterparty.registeredName,
-            })}
-          />
-          <ButtonSecondary
-            label={t("next_launch_notices.dismiss")}
-            onPress={() => {
-              if (customerId === undefined) return;
-              void (async () => {
-                await clearPendingTransfer(customerId, transferId);
-                await refreshPendingTransferNotices(queryClient, customerId);
-              })().catch((error: unknown) => {
-                reportError(error, { boundary: "pending_transfer" });
-              });
-            }}
-          />
-        </Fragment>
-      ))}
+      {settled.map(({ transferId, transfer, notice }) => {
+        const amountAndName = {
+          amount: formatMoney(transfer.amount),
+          name: transfer.counterparty.registeredName,
+        };
+        return (
+          <Fragment key={transferId}>
+            <BannerNotice
+              message={t(`next_launch_notices.${notice}`, amountAndName)}
+            />
+            <ButtonSecondary
+              label={t("next_launch_notices.dismiss", amountAndName)}
+              onPress={() => {
+                if (customerId === undefined) return;
+                void (async () => {
+                  await clearPendingTransfer(customerId, transferId);
+                  await refreshPendingTransferNotices(queryClient, customerId);
+                })().catch((error: unknown) => {
+                  reportError(error, { boundary: "pending_transfer" });
+                });
+              }}
+            />
+          </Fragment>
+        );
+      })}
     </>
   );
 }
