@@ -58,7 +58,7 @@ Colocation first: a piece of code lives as close to its users as possible. Most 
 3. Used by two or more screens folders, or by the shell → `src/domains/<area>/components/<Component>/`, in the area whose data it shows.
 4. Knows nothing about banking → `src/shared/ui/`.
 
-Hooks climb the same ladder in `hooks/` folders. A component that only one other component uses nests in that component's own `components/`. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
+Hooks climb the same ladder in `hooks/` folders, except that a hook that knows nothing about banking and that only the shell uses stays in `src/shell/` until code outside the shell uses it. A component that only one other component uses nests in that component's own `components/`. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
 
 `scripts/check-placement-ladder.js` fails a component or hook placed higher than its users need, and the import rules fail one placed too low. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case, the script is the authority, not this summary.
 
