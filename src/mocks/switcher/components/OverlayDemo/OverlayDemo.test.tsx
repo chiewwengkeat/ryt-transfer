@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import i18next from "i18next";
+import { Text } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
@@ -7,6 +8,9 @@ import {
   type TransferScenario,
   type TransferScenarioId,
 } from "@/mocks/scenarios/transfer-scenarios";
+import { spacing } from "@/shared/theme/theme";
+import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
+import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import {
   pairTestPhone,
   sendToBank,
@@ -86,6 +90,45 @@ async function lockDemoPinWithThreeWrongTries() {
     });
 }
 
+function OverlayDemoOverAnAppSheet({
+  appSheetOpen,
+}: {
+  appSheetOpen: boolean;
+}) {
+  return (
+    <SafeAreaProvider initialMetrics={PHONE_METRICS}>
+      <ViewBottomSheetHost>
+        {appSheetOpen && (
+          <BottomSheetFrame
+            title="Approve with your PIN"
+            closeLabel="Close the PIN sheet"
+            onClose={() => undefined}
+          >
+            <Text>Keypad</Text>
+          </BottomSheetFrame>
+        )}
+      </ViewBottomSheetHost>
+      <OverlayDemo
+        onResetDemo={() => Promise.resolve()}
+        onSheetOpenChange={jest.fn()}
+      />
+    </SafeAreaProvider>
+  );
+}
+
+async function layOutTheAppSheet(panel: { top: number; height: number }) {
+  // From the ✕: inside the sheet's body, the scroll view's own layout handler takes the event first.
+  await fireEvent(
+    screen.getByRole("button", { name: "Close the PIN sheet" }),
+    "layout",
+    {
+      nativeEvent: {
+        layout: { x: 0, y: panel.top, width: 390, height: panel.height },
+      },
+    },
+  );
+}
+
 function menuEntryPositions(expectedEntries: unknown[]) {
   const shownEntries = screen.getAllByRole(/^(button|radio)$/);
   return shownEntries.map((entry) => expectedEntries.indexOf(entry));
@@ -135,4 +178,40 @@ it("puts Unlock PIN first, tagged demo only, but only while the demo PIN is lock
     ]).slice(0, 2),
   ).toEqual([0, 1]);
   expect(screen.getByText("Demo only")).toBeOnTheScreen();
+});
+
+it("lifts the pill above an open sheet by the sheet's measured height, and lowers it once the sheet closes", async () => {
+  const view = await render(<OverlayDemoOverAnAppSheet appSheetOpen />);
+
+  await layOutTheAppSheet({ top: 500, height: 344 });
+
+  expect(screen.getByRole("button", { name: "Demo menu" })).toHaveStyle({
+    bottom: 344 + spacing.sm,
+  });
+  await view.rerender(<OverlayDemoOverAnAppSheet appSheetOpen={false} />);
+  expect(screen.getByRole("button", { name: "Demo menu" })).toHaveStyle({
+    bottom: PHONE_METRICS.insets.bottom + spacing.sm,
+  });
+});
+
+it("keeps the pill above a sheet the keyboard has raised, clear of the whole sheet", async () => {
+  await render(<OverlayDemoOverAnAppSheet appSheetOpen />);
+
+  await layOutTheAppSheet({ top: 200, height: 344 });
+
+  expect(screen.getByRole("button", { name: "Demo menu" })).toHaveStyle({
+    bottom: PHONE_METRICS.frame.height - 200 + spacing.sm,
+  });
+});
+
+it("keeps the pill reachable over an open sheet, opening the Demo menu with the sheet still open", async () => {
+  await render(<OverlayDemoOverAnAppSheet appSheetOpen />);
+  await layOutTheAppSheet({ top: 500, height: 344 });
+
+  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
+
+  expect(
+    screen.getByRole("button", { name: "Close the demo menu" }),
+  ).toBeOnTheScreen();
+  expect(screen.getByText("Keypad")).toBeOnTheScreen();
 });
