@@ -92,7 +92,9 @@ it("keeps the app's write rule: a write goes once, at once, even offline", async
     appDir: "src/app",
     overrides: { index: ScreenThatSendsAWrite },
   });
-  setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+  await act(() => {
+    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+  });
 
   await fireEvent.press(screen.getByRole("button", { name: "Send" }));
 
