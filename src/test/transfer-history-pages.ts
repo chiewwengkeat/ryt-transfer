@@ -45,32 +45,44 @@ export function buildHistoryTransfer({
 export function serveTransferHistoryPages(pages: Transfer[][]) {
   // createdAt carries +08:00, so its first ten characters are the Malaysian date.
   const dateOf = (transfer: Transfer) => transfer.createdAt.slice(0, 10);
+  serveTransferHistoryResponses(
+    pages.map((items) => ({
+      items,
+      days: [...new Set(items.map(dateOf))].map((date) => {
+        const dayTransfers = pages
+          .flat()
+          .filter((transfer) => dateOf(transfer) === date);
+        return {
+          date,
+          count: dayTransfers.length,
+          net: {
+            minor: dayTransfers.reduce(
+              (net, { funds, amount }) =>
+                net + MONEY_MOVED_SIGN[funds] * amount.minor,
+              0,
+            ),
+            currency: "MYR",
+          },
+        };
+      }),
+    })),
+  );
+}
+
+// Each page's summaries exactly as given: a day can change between one page and the next.
+export function serveTransferHistoryResponses(
+  pages: Omit<ListTransfersResponse, "nextCursor">[],
+) {
   mswServer.use(
     http.get(BANK_PATHS.transfers, ({ request }) => {
       const cursor = new URL(request.url).searchParams.get("cursor");
       const pageNumber =
         cursor === null ? 1 : Number(cursor.replace("page-", ""));
-      const items = pages[pageNumber - 1] ?? [];
       return HttpResponse.json({
-        items,
+        items: [],
+        days: [],
+        ...pages[pageNumber - 1],
         nextCursor: pageNumber < pages.length ? `page-${pageNumber + 1}` : null,
-        days: [...new Set(items.map(dateOf))].map((date) => {
-          const dayTransfers = pages
-            .flat()
-            .filter((transfer) => dateOf(transfer) === date);
-          return {
-            date,
-            count: dayTransfers.length,
-            net: {
-              minor: dayTransfers.reduce(
-                (net, { funds, amount }) =>
-                  net + MONEY_MOVED_SIGN[funds] * amount.minor,
-                0,
-              ),
-              currency: "MYR",
-            },
-          };
-        }),
       } satisfies ListTransfersResponse);
     }),
   );
