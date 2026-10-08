@@ -85,6 +85,36 @@ it("creates and approves nothing when review is left while Transfer reads the se
   ]);
 });
 
+it("frees Transfer and Use PIN instead when the phone check throws, and approves from the same review", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+  jest
+    .spyOn(biometricsLibraryDouble, "getDeviceIntegrityStatus")
+    .mockImplementationOnce(() => {
+      throw new Error("The integrity library threw before answering.");
+    });
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      "Something unexpected stopped the transfer — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Transfer" })).not.toBeBusy();
+  expect(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(transferWritesSent()).toEqual([
+    "/transfers",
+    expect.stringMatching(/^\/transfers\/[\w-]+\/approve$/),
+  ]);
+});
+
 it("asks for no approval of a transfer whose review is popped while it is being created, and approves from review opened again", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   let releaseCreate = () => {};

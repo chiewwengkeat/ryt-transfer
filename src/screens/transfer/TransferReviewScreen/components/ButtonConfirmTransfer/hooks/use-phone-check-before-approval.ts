@@ -14,8 +14,11 @@ export function usePhoneCheckBeforeApproval() {
     hasLeftReviewSincePress: () => boolean,
   ) => {
     setCheckingPhone(true);
-    const phoneRefusesApproval = await isApprovalRefusedOnThisPhone();
-    setCheckingPhone(false);
+    const phoneRefusesApproval = await isApprovalRefusedOnThisPhone().finally(
+      () => {
+        setCheckingPhone(false);
+      },
+    );
     // A press left while the check runs is void, so not even its refusal shows.
     if (hasLeftReviewSincePress()) return false;
     if (phoneRefusesApproval)
