@@ -19,9 +19,10 @@ const BUNDLE_MARKERS = [
     text: "transferHandlers",
     carriedBy: DEMO_LAYER_VARIANTS,
   },
+  // Not a scenario id: the app reports those as each scenario shows.
   {
     source: "src/mocks/scenarios",
-    text: "transfer.balance_and_limit_shown",
+    text: "TRANSFER_SCENARIOS",
     carriedBy: DEMO_LAYER_VARIANTS,
   },
   {
