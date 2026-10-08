@@ -1318,25 +1318,6 @@ it(
   }),
 );
 
-it(
-  "never says money moved when the bank finds the balance or limit short as the approval arrives",
-  scenarioTest("transfer.balance_or_limit_short_at_approval", async () => {
-    await pairPhoneAsTheDemoLaunchDoes();
-    await openReviewOfRm100();
-
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Transfer" }),
-    );
-
-    expect(
-      await screen.findByText(
-        "It was not sent because your balance or limit changed — no money moved.",
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.queryByText(/— money moved\./)).toBeNull();
-  }),
-);
-
 it("sends a transfer to a passport recipient through review and its approval, and debits once", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const balanceBeforeMinor = await readBankBalanceMinor();

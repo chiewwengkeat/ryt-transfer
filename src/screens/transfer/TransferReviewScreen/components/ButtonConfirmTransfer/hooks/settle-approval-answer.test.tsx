@@ -97,6 +97,7 @@ it(
         "It was not sent because your balance or limit changed — no money moved.",
       ),
     ).toBeOnTheScreen();
+    expect(screen.queryByText(/— money moved\./)).toBeNull();
     expect(view.getPathname()).toBe("/transfer/review");
     await pressHardwareBack();
     expect(view.getPathname()).toBe("/transfer/amount");
