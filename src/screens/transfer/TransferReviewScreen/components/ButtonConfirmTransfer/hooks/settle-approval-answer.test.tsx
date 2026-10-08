@@ -175,6 +175,24 @@ it.each([
   },
 );
 
+it.each([
+  ["PIN_INCORRECT", 422],
+  ["PIN_LOCKED", 423],
+])(
+  "takes a face or fingerprint approval answered %s to the result page as a lost answer, since the approval had left the phone",
+  async (code, status) => {
+    answerEveryApprovalWith(status, { code, message: "Test." });
+    const view = await approveRm100Transfer();
+
+    expect(
+      await screen.findByText(
+        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(view.getPathname()).toMatch(RESULT_PATH);
+  },
+);
+
 it(
   "takes a transfer the bank's fraud check stopped to the result page, never back to sending",
   scenarioTest("transfer.fraud_blocked", async () => {

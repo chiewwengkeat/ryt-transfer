@@ -107,15 +107,15 @@ export async function settleApprovalAnswer({
         },
       });
       return;
-    // The PIN path answers its own PIN refusals, so one arriving here is unexpected.
-    case ApproveTransferErrorCode.PinIncorrect:
-    case ApproveTransferErrorCode.PinLocked:
     case ApproveTransferErrorCode.InvalidRequest:
       await returnRefusedApprovalToReview({
         type: TransferFlowActionType.ApprovalNotSent,
         notice: TransferFlowScenario.ApprovalUnexpected,
       });
       return;
+    // The PIN path answers its own PIN refusals; one here came after the approval left the phone, so it is a lost answer.
+    case ApproveTransferErrorCode.PinIncorrect:
+    case ApproveTransferErrorCode.PinLocked:
     case ApproveTransferErrorCode.TransferNotFound:
     case ApproveTransferErrorCode.IdempotencyKeyReused:
     case ApproveTransferErrorCode.RequestInProgress:
