@@ -25,10 +25,8 @@ async function openReviewOfRm100() {
     "012-345 6789",
   );
   await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await fireEvent.changeText(
-    await screen.findByLabelText("Amount (RM)"),
-    "100",
-  );
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   return view;
 }

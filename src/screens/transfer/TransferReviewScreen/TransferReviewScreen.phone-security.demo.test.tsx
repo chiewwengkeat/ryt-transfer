@@ -4,6 +4,7 @@ import "@/test/demo-build";
 import {
   biometricPromptsShown,
   deviceIntegrityChecksAsked,
+  failNextBiometricPrompt,
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { sentRequests } from "@/test/msw-server";
@@ -13,7 +14,7 @@ import { scenarioTest } from "@/test/scenario-test";
 const PHONE_REFUSAL =
   "This phone's security can't be confirmed, so transfers are off on it.";
 const PIN_OFFER =
-  "Face or fingerprint approval isn't available, so approve with your PIN.";
+  "Your face or fingerprint was not recognised. You can try again, or use your PIN.";
 
 async function openReviewOfRm100() {
   await renderRoute("/transfer");
@@ -22,10 +23,8 @@ async function openReviewOfRm100() {
     "012-345 6789",
   );
   await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await fireEvent.changeText(
-    await screen.findByLabelText("Amount (RM)"),
-    "100",
-  );
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
 }
 
@@ -83,20 +82,22 @@ it("lets approval go ahead in a demo build once another scenario replaces the ro
   expect(biometricPromptsShown()).toHaveLength(1);
 });
 
-it("shows the refusal with no earlier notice beside it that offers the PIN", async () => {
+it("shows the refusal with no earlier notice or button beside it that offers the PIN", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
+  failNextBiometricPrompt("AUTHENTICATION_FAILED");
   await openReviewOfRm100();
-  await pickDemoScenario("No biometrics");
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
   expect(await screen.findByText(PIN_OFFER)).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
 
   await pickDemoScenario("Rooted, jailbroken or tampered phone");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
 
   expect(await screen.findByText(PHONE_REFUSAL)).toBeOnTheScreen();
   expect(screen.queryByText(PIN_OFFER)).toBeNull();
+  expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
 });
