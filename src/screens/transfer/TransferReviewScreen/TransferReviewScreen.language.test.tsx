@@ -10,7 +10,7 @@ it("tells a screen reader that a transfer's fields and review rows are in Bahasa
   );
   await fireEvent.press(screen.getByRole("radio", { name: "Bahasa Malaysia" }));
   await fireEvent.press(
-    await screen.findByRole("button", { name: "Pindahan" }),
+    await screen.findByRole("button", { name: "Pindahan", disabled: false }),
   );
   const mobileField = await screen.findByLabelText(
     "Nombor telefon bimbit DuitNow",
