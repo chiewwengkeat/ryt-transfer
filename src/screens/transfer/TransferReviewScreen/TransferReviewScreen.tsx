@@ -152,7 +152,7 @@ export default function TransferReviewScreen() {
       ) {
         dispatchTransferFlow({ type: TransferFlowActionType.NotSent });
         setNotSentMessage(t("common.approval_cancelled.body"));
-      } else
+      } else {
         setAnswerLostMessage(
           error instanceof TransportError &&
             error.code !== undefined &&
@@ -162,6 +162,9 @@ export default function TransferReviewScreen() {
             ? t("common.approval_unknown_answer.body")
             : t("common.approval_unanswered.body"),
         );
+        // It may have debited, and Home would keep showing the balance it read before.
+        void refreshAccountAndHistoryAfterApproval(queryClient);
+      }
       return;
     }
     void refreshAccountAndHistoryAfterApproval(queryClient);
@@ -206,10 +209,12 @@ export default function TransferReviewScreen() {
                         type: TransferFlowActionType.NotSent,
                       });
                       setNotSentMessage(t("common.approval_unexpected.body"));
-                    } else
+                    } else {
                       setAnswerLostMessage(
                         t("common.approval_unanswered.body"),
                       );
+                      void refreshAccountAndHistoryAfterApproval(queryClient);
+                    }
                   });
                 }}
               />

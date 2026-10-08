@@ -271,6 +271,23 @@ it(
 );
 
 it(
+  "re-reads the balance after a lost answer, so Home shows the debit the bank made",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await openReviewOfRm100("/");
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Back to Home" }),
+    );
+
+    expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
+  }),
+);
+
+it(
   "starts the next transfer blank after going Home from an approval whose answer was lost",
   scenarioTest("transfer.approval_unanswered", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
