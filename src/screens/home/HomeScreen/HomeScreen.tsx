@@ -5,6 +5,8 @@ import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
+import ButtonTransferHistory from "./components/ButtonTransferHistory/ButtonTransferHistory";
+
 export default function HomeScreen() {
   const { t } = useTranslation("home");
   return (
@@ -21,6 +23,7 @@ export default function HomeScreen() {
         }
       >
         <CardBalance />
+        <ButtonTransferHistory />
       </ViewScreenFrame>
     </>
   );

@@ -1,6 +1,7 @@
 {
   "home": {
     "title": "Home",
-    "transfer": "Transfer"
+    "transfer": "Transfer",
+    "transfer_history": "Transfer history"
   }
 }
