@@ -12,6 +12,8 @@ import {
 
 const NO_CONNECTION = { isConnected: false, isInternetReachable: false };
 const CONNECTED = { isConnected: true, isInternetReachable: true };
+const BALANCE_READ = "GET /accounts/primary";
+const STATUS_READ = "GET /transfers/trf_1";
 
 it("reads online while the phone has a connection and requests reach the bank", async () => {
   const { result } = await renderHook(useIsOffline);
@@ -38,11 +40,45 @@ it("is offline once a request finds no network, and stays so through a timeout a
   const { result } = await renderHook(useIsOffline);
 
   await act(() => {
-    reportRequestOutcome(TransportErrorKind.Network);
-    reportRequestOutcome(TransportErrorKind.Timeout);
-    reportRequestOutcome(TransportErrorKind.Aborted);
+    reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
+    reportRequestOutcome(BALANCE_READ, TransportErrorKind.Timeout);
+    reportRequestOutcome(BALANCE_READ, TransportErrorKind.Aborted);
   });
 
+  expect(result.current).toBe(true);
+});
+
+it("stays online when a request loses its answer again after the bank answered another", async () => {
+  const { result } = await renderHook(useIsOffline);
+  await act(() => {
+    reportRequestOutcome(STATUS_READ, TransportErrorKind.Network);
+    reportRequestOutcome(BALANCE_READ);
+  });
+
+  await act(() => {
+    reportRequestOutcome(STATUS_READ, TransportErrorKind.Network);
+  });
+
+  expect(result.current).toBe(false);
+});
+
+it("is offline again when another request finds no network, or that request does once it has been answered", async () => {
+  const { result } = await renderHook(useIsOffline);
+  await act(() => {
+    reportRequestOutcome(STATUS_READ, TransportErrorKind.Network);
+    reportRequestOutcome(BALANCE_READ);
+  });
+
+  await act(() => {
+    reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
+  });
+  const offlineWhenAnotherRequestFoundNone = result.current;
+  await act(() => {
+    reportRequestOutcome(STATUS_READ);
+    reportRequestOutcome(STATUS_READ, TransportErrorKind.Network);
+  });
+
+  expect(offlineWhenAnotherRequestFoundNone).toBe(true);
   expect(result.current).toBe(true);
 });
 
@@ -55,11 +91,11 @@ it.each([
   async (_, outcome) => {
     const { result } = await renderHook(useIsOffline);
     await act(() => {
-      reportRequestOutcome(TransportErrorKind.Network);
+      reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
     });
 
     await act(() => {
-      reportRequestOutcome(outcome);
+      reportRequestOutcome(BALANCE_READ, outcome);
     });
 
     expect(result.current).toBe(false);
@@ -70,8 +106,8 @@ it("stays online through a timeout and an abort", async () => {
   const { result } = await renderHook(useIsOffline);
 
   await act(() => {
-    reportRequestOutcome(TransportErrorKind.Timeout);
-    reportRequestOutcome(TransportErrorKind.Aborted);
+    reportRequestOutcome(BALANCE_READ, TransportErrorKind.Timeout);
+    reportRequestOutcome(BALANCE_READ, TransportErrorKind.Aborted);
   });
 
   expect(result.current).toBe(false);
@@ -84,7 +120,7 @@ it("stays offline while the phone reports no connection, whatever a request gets
   });
 
   await act(() => {
-    reportRequestOutcome();
+    reportRequestOutcome(BALANCE_READ);
   });
 
   expect(result.current).toBe(true);
@@ -114,9 +150,9 @@ it("reports a listener that throws once a request reaches the bank again, and st
   const stopListenerAfterTheFailingOne = addBankReachedAgainListener(
     listenerAfterTheFailingOne,
   );
-  reportRequestOutcome(TransportErrorKind.Network);
+  reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
 
-  reportRequestOutcome();
+  reportRequestOutcome(BALANCE_READ);
   stopFailingListener();
   stopListenerAfterTheFailingOne();
 

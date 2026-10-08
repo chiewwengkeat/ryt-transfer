@@ -933,13 +933,13 @@ it("offers no PIN instead while the last request found no network, and offers it
   ).toBeOnTheScreen();
 
   await act(() => {
-    reportRequestOutcome(TransportErrorKind.Network);
+    reportRequestOutcome("GET /accounts/primary", TransportErrorKind.Network);
   });
 
   expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
   expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
   await act(() => {
-    reportRequestOutcome();
+    reportRequestOutcome("GET /accounts/primary");
   });
   expect(
     screen.getByRole("button", { name: "Use PIN instead" }),

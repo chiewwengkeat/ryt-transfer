@@ -95,17 +95,25 @@ it("never checks an answered name again once a request reaches the bank after on
   expect(screen.getByText(recipient.registeredName)).toBeOnTheScreen();
 });
 
-it("checks the name again only once while it still finds no network, so the offline notice clears and review keeps its Try again", async () => {
+it("checks the name again only once while it still finds no network, never bringing the offline notice back, and review keeps its Try again", async () => {
   await openReviewWhileNoRequestReachesTheBank();
   mswServer.resetHandlers();
   mswServer.use(http.post("*/recipients/lookup", () => HttpResponse.error()));
+  const countNameChecksSent = () =>
+    sentRequests.filter(({ url }) => url.endsWith("/recipients/lookup")).length;
+  const nameChecksBeforeTheBankAnswered = countNameChecksSent();
 
   await act(() => jest.advanceTimersByTimeAsync(10_000));
+  const nameChecksOnceTheBankAnswered = countNameChecksSent();
   const offlineOnceTheCheckFoundNoNetworkAgain =
     screen.queryByText(OFFLINE_NOTICE) !== null;
   await act(() => jest.advanceTimersByTimeAsync(11_000));
 
-  expect(offlineOnceTheCheckFoundNoNetworkAgain).toBe(true);
+  expect(nameChecksOnceTheBankAnswered).toBeGreaterThan(
+    nameChecksBeforeTheBankAnswered,
+  );
+  expect(countNameChecksSent()).toBe(nameChecksOnceTheBankAnswered);
+  expect(offlineOnceTheCheckFoundNoNetworkAgain).toBe(false);
   expect(screen.queryByText(OFFLINE_NOTICE)).toBeNull();
   expect(
     screen.getByText(

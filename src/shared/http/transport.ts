@@ -87,7 +87,7 @@ export async function requestJson<Data>(
       : timedOut
         ? TransportErrorKind.Timeout
         : TransportErrorKind.Aborted;
-    reportRequestOutcome(failure);
+    reportRequestOutcome(`${method} ${path}`, failure);
     throw new TransportError(failure);
   } finally {
     clearTimeout(timer);
@@ -95,7 +95,7 @@ export async function requestJson<Data>(
   }
 
   // An error status or an unreadable body still proves the bank was reached.
-  reportRequestOutcome();
+  reportRequestOutcome(`${method} ${path}`);
   if (response.ok) {
     try {
       return JSON.parse(text) as Data;

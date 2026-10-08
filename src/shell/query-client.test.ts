@@ -13,6 +13,7 @@ import { createQueryClient } from "./query-client";
 // ⛔ gcTime 0 on every query and mutation here: a cached entry's 5-minute timer keeps a single-file run alive.
 
 const OFFLINE = { isConnected: false, isInternetReachable: false };
+const BALANCE_READ = "GET /accounts/primary";
 
 function letPendingFetchesRun() {
   return new Promise((resolve) => setTimeout(resolve, 10));
@@ -168,13 +169,13 @@ it("reads a query that found no network again once a request reaches the bank, a
     gcTime: 0,
   }).subscribe(() => undefined);
   await letPendingFetchesRun();
-  reportRequestOutcome(TransportErrorKind.Network);
-  reportRequestOutcome();
+  reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
+  reportRequestOutcome(BALANCE_READ);
   await letPendingFetchesRun();
   const readsOnceTheBankWasFirstReachedAgain = queryFn.mock.calls.length;
 
-  reportRequestOutcome(TransportErrorKind.Network);
-  reportRequestOutcome();
+  reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
+  reportRequestOutcome(BALANCE_READ);
   await letPendingFetchesRun();
 
   expect(readsOnceTheBankWasFirstReachedAgain).toBe(2);
@@ -202,14 +203,14 @@ it("reads a query that found no network again after an answer, though it was rea
   });
   const stopObserving = observer.subscribe(() => undefined);
   await letPendingFetchesRun();
-  reportRequestOutcome(TransportErrorKind.Network);
-  reportRequestOutcome();
+  reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
+  reportRequestOutcome(BALANCE_READ);
   await letPendingFetchesRun();
   await observer.refetch();
   await observer.refetch();
-  reportRequestOutcome(TransportErrorKind.Network);
+  reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
 
-  reportRequestOutcome();
+  reportRequestOutcome(BALANCE_READ);
   await letPendingFetchesRun();
 
   expect(queryFn).toHaveBeenCalledTimes(5);
@@ -237,9 +238,9 @@ it("reads a query again with the retries of the screen reading it, not of one th
     retryDelay: 0,
     gcTime: 0,
   }).subscribe(() => undefined);
-  reportRequestOutcome(TransportErrorKind.Network);
+  reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
 
-  reportRequestOutcome();
+  reportRequestOutcome(BALANCE_READ);
   await letPendingFetchesRun();
 
   expect(queryFn).toHaveBeenCalledTimes(2);
@@ -273,10 +274,10 @@ it("lets a read already on its way land, rather than send it again, once a reque
   const stopObserving = observer.subscribe(() => undefined);
   await letPendingFetchesRun();
   await observer.refetch();
-  reportRequestOutcome(TransportErrorKind.Network);
+  reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
   void observer.refetch();
 
-  reportRequestOutcome();
+  reportRequestOutcome(BALANCE_READ);
   releaseHeldAnswer();
   await letPendingFetchesRun();
 
@@ -324,9 +325,9 @@ it.each([
       gcTime: 0,
     }).subscribe(() => undefined);
     await letPendingFetchesRun();
-    reportRequestOutcome(TransportErrorKind.Network);
+    reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
 
-    reportRequestOutcome();
+    reportRequestOutcome(BALANCE_READ);
     await letPendingFetchesRun();
 
     expect(queryFn).toHaveBeenCalledTimes(1);

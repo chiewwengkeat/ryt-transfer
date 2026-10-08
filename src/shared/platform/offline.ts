@@ -7,6 +7,8 @@ import { subscribeToPhoneConnection } from "./network";
 
 let phoneConnected = true;
 let lastRequestFoundNoNetwork = false;
+const requestsFindingNoNetworkSinceTheBankAnswered = new Set<string>();
+const requestsLostWhileTheBankAnswersOthers = new Set<string>();
 const offlineListeners = new Set<() => void>();
 const bankReachedAgainListeners = new Set<() => void>();
 let stopReadingPhoneConnection = () => {};
@@ -34,7 +36,10 @@ export function useIsOffline() {
   );
 }
 
-export function reportRequestOutcome(failure?: TransportErrorKind) {
+export function reportRequestOutcome(
+  request: string,
+  failure?: TransportErrorKind,
+) {
   // Neither says the connection is down: the bank may only be slow, and an abort is the app's own.
   if (
     failure === TransportErrorKind.Timeout ||
@@ -42,6 +47,17 @@ export function reportRequestOutcome(failure?: TransportErrorKind) {
   )
     return;
   const foundNoNetwork = failure === TransportErrorKind.Network;
+  if (foundNoNetwork) {
+    // Its answer is lost while others' arrive: the trouble is this request's, and counting it would flap offline.
+    if (requestsLostWhileTheBankAnswersOthers.has(request)) return;
+    requestsFindingNoNetworkSinceTheBankAnswered.add(request);
+  } else {
+    requestsLostWhileTheBankAnswersOthers.delete(request);
+    requestsFindingNoNetworkSinceTheBankAnswered.delete(request);
+    for (const lostRequest of requestsFindingNoNetworkSinceTheBankAnswered)
+      requestsLostWhileTheBankAnswersOthers.add(lostRequest);
+    requestsFindingNoNetworkSinceTheBankAnswered.clear();
+  }
   if (foundNoNetwork === lastRequestFoundNoNetwork) return;
   lastRequestFoundNoNetwork = foundNoNetwork;
   for (const listener of offlineListeners) listener();
@@ -56,6 +72,12 @@ export function reportRequestOutcome(failure?: TransportErrorKind) {
       });
     }
   }
+}
+
+export function forgetRequestOutcomes() {
+  lastRequestFoundNoNetwork = false;
+  requestsFindingNoNetworkSinceTheBankAnswered.clear();
+  requestsLostWhileTheBankAnswersOthers.clear();
 }
 
 export function addBankReachedAgainListener(listener: () => void) {
