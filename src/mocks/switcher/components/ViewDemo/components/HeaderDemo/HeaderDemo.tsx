@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStore } from "zustand";
@@ -17,6 +18,7 @@ interface Props {
 }
 export default function HeaderDemo({ onOpenMenu }: Props) {
   const { t, scenarioTitle } = useDemoTranslation();
+  const { i18n } = useTranslation();
   const scenarioId = useStore(switcherStore, (pick) => pick.scenarioId);
   const { top } = useSafeAreaInsets();
 
@@ -30,12 +32,16 @@ export default function HeaderDemo({ onOpenMenu }: Props) {
     >
       {scenarioId !== null && (
         <>
-          <Text style={styles.scenarioMessage}>
+          <Text
+            accessibilityLanguage={i18n.language}
+            style={styles.scenarioMessage}
+          >
             {t("banner_demo.message", { title: scenarioTitle(scenarioId) })}
           </Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("banner_demo.clear")}
+            accessibilityLanguage={i18n.language}
             onPress={clearTransferScenario}
             style={styles.clearButton}
           >
@@ -48,6 +54,7 @@ export default function HeaderDemo({ onOpenMenu }: Props) {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("pill_demo.open_menu")}
+        accessibilityLanguage={i18n.language}
         onPress={onOpenMenu}
         style={styles.menuButton}
       >

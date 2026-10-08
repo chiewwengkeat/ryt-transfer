@@ -23,7 +23,7 @@ interface Props {
   unexpectedScenario: "start_unexpected" | "amount_unexpected";
 }
 export default function CardBalance({ unexpectedScenario }: Props) {
-  const { t } = useTranslation("account");
+  const { t, i18n } = useTranslation("account");
   // Only a request that reaches the bank ends offline, so the card keeps asking while it lasts.
   const refetchInterval = useIsOffline() ? 10_000 : false;
   const account = useGetPrimaryAccount({ refetchInterval });
@@ -74,7 +74,11 @@ export default function CardBalance({ unexpectedScenario }: Props) {
 
   return (
     <Card>
-      <View accessible>
+      <View
+        accessible
+        // The group, not its texts: a screen reader reads the group as one element, in the group's language.
+        accessibilityLanguage={i18n.language}
+      >
         <TextBody tone="secondary">{t("card_balance.label")}</TextBody>
         <Text style={styles.balance}>{formatMoney(account.data.balance)}</Text>
       </View>

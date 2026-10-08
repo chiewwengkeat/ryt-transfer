@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   AccessibilityInfo,
   StyleSheet,
@@ -26,6 +27,7 @@ interface Props extends Omit<
   error?: string;
 }
 export default function FieldText({ label, error, ...inputProps }: Props) {
+  const { i18n } = useTranslation();
   // A screen reader stays on the input, so an error that appears below it would go unheard.
   useEffect(() => {
     if (error !== undefined) AccessibilityInfo.announceForAccessibility(error);
@@ -40,6 +42,7 @@ export default function FieldText({ label, error, ...inputProps }: Props) {
       <TextInput
         accessibilityLabel={label}
         accessibilityHint={error}
+        accessibilityLanguage={i18n.language}
         placeholderTextColor={colors.textSecondary}
         style={[styles.input, error !== undefined && styles.inputInvalid]}
         {...inputProps}

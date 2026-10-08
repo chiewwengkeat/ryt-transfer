@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import {
@@ -13,10 +14,12 @@ interface Props {
   onPress: () => void;
 }
 export default function ItemScenarioDemo({ label, checked, onPress }: Props) {
+  const { i18n } = useTranslation();
   return (
     <Pressable
       accessibilityRole="radio"
       accessibilityLabel={label}
+      accessibilityLanguage={i18n.language}
       accessibilityState={{ checked }}
       onPress={onPress}
       style={styles.item}

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import i18next from "i18next";
+import i18next, { changeLanguage } from "i18next";
 import { Text } from "react-native";
 import {
   SafeAreaProvider,
@@ -11,6 +11,7 @@ import {
   type TransferScenario,
   type TransferScenarioId,
 } from "@/mocks/scenarios/transfer-scenarios";
+import { AppLanguage } from "@/shared/i18n/i18n";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import {
@@ -193,4 +194,27 @@ it("opens the Demo menu while an app sheet is open, leaving the sheet open benea
   expect(
     screen.getByText("Keypad", { includeHiddenElements: true }),
   ).toBeOnTheScreen();
+});
+
+it("tells a screen reader that the demo's menu button, menu and scenario line are in Bahasa Malaysia once it is picked", async () => {
+  await changeLanguage(AppLanguage.Malay);
+  await renderDemoAroundAnApp();
+
+  const menuButton = screen.getByRole("button", { name: "Menu demo" });
+  expect(menuButton).toHaveProp("accessibilityLanguage", "ms-MY");
+  await fireEvent.press(menuButton);
+  const screenshotsBlocked = screen.getByRole("radio", {
+    name: "Tangkapan skrin disekat",
+  });
+  expect(screenshotsBlocked).toHaveProp("accessibilityLanguage", "ms-MY");
+  await fireEvent.press(screenshotsBlocked);
+
+  expect(screen.getByText("Demo · Tangkapan skrin disekat")).toHaveProp(
+    "accessibilityLanguage",
+    "ms-MY",
+  );
+  expect(screen.getByRole("button", { name: "Kembali normal" })).toHaveProp(
+    "accessibilityLanguage",
+    "ms-MY",
+  );
 });
