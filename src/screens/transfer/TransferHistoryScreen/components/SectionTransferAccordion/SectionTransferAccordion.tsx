@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 
 import { TransferStatus } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import {
+  askForNextTransferHistoryPage,
   findTransferInHistory,
   getListTransfersOptions,
   patchTransferInHistory,
@@ -156,21 +157,13 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
       }
       onEndReachedThreshold={1}
       onEndReached={() => {
-        // Not after a failure, or a failing bank is asked again each time the end shows: the footer's Retry does it.
-        // Not while any fetch is under way or waiting offline: fetchNextPage cancels it, a refresh included.
-        if (
-          transferHistory.hasNextPage &&
-          transferHistory.fetchStatus === "idle" &&
-          !transferHistory.isFetchNextPageError
-        )
-          void transferHistory.fetchNextPage();
+        askForNextTransferHistoryPage(queryClient, transferHistory);
       }}
       ListFooterComponent={
         <ViewTransferHistoryFooter
           hasNextPage={transferHistory.hasNextPage}
           isFetchingNextPage={transferHistory.isFetchingNextPage}
           isFetchNextPageError={transferHistory.isFetchNextPageError}
-          isPaused={transferHistory.isPaused}
           onRetry={() => {
             void transferHistory.fetchNextPage();
           }}

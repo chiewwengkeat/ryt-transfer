@@ -11,14 +11,12 @@ interface Props {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   isFetchNextPageError: boolean;
-  isPaused: boolean;
   onRetry: () => void;
 }
 export default function ViewTransferHistoryFooter({
   hasNextPage,
   isFetchingNextPage,
   isFetchNextPageError,
-  isPaused,
   onRetry,
 }: Props) {
   const { t } = useTranslation("transfer");
@@ -38,8 +36,7 @@ export default function ViewTransferHistoryFooter({
       ) : !hasNextPage ? (
         <TextBody tone="secondary">{t("history.footer.end")}</TextBody>
       ) : (
-        // Offline nothing loads, and the notice above the list says why.
-        !isPaused && (
+        isFetchingNextPage && (
           <ActivityIndicator
             accessibilityLabel={t("history.footer.loading")}
             color={colors.accent}

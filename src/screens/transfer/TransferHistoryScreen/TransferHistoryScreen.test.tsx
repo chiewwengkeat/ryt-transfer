@@ -320,7 +320,7 @@ it("trims to the newest page on a pull, asking again for none of the older ones"
   ).toBeOnTheScreen();
 });
 
-it("loads no more while a refresh is on its way, then pages on from the new first page", async () => {
+it("loads no more and shows no spinner while a refresh is on its way, then pages on from the new first page", async () => {
   serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
   await renderRoute("/transfer-history");
   const lim = await screen.findByRole("button", { name: /^Lim Wei Jie/ });
@@ -330,15 +330,24 @@ it("loads no more while a refresh is on its way, then pages on from the new firs
   await act(() => jest.advanceTimersByTimeAsync(1000));
 
   expect(sentTransferHistoryCursors()).toEqual([null, "page-2", null]);
+  expect(
+    screen.queryByLabelText("Loading more transfers"),
+  ).not.toBeOnTheScreen();
+  const releaseLaterPages = holdTransferHistoryPages("later");
   releaseFirstPage();
-  await waitFor(() => {
-    expect(sentTransferHistoryCursors()).toEqual([
-      null,
-      "page-2",
-      null,
-      "page-2",
-    ]);
-  });
+  expect(
+    await screen.findByLabelText("Loading more transfers"),
+  ).toBeOnTheScreen();
+  expect(sentTransferHistoryCursors()).toEqual([
+    null,
+    "page-2",
+    null,
+    "page-2",
+  ]);
+  releaseLaterPages();
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
 });
 
 it("asks for the newest page once back online when History opened offline, and shows it", async () => {

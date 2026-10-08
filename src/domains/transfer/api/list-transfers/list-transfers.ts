@@ -93,6 +93,28 @@ export function selectTransferHistory(
   };
 }
 
+// Never cancels a fetch under way, a refresh held offline included. A list resting at its end asks only when its rows
+// change: after a fetch leaving them unchanged, asks again while they are still shown. After a failed page, Retry asks.
+export function askForNextTransferHistoryPage(
+  queryClient: QueryClient,
+  transferHistory: ReturnType<typeof useListTransfers>,
+) {
+  if (!transferHistory.hasNextPage || transferHistory.isFetchNextPageError)
+    return;
+  void transferHistory
+    .fetchNextPage({ cancelRefetch: false })
+    .then((settled) => {
+      if (
+        settled.data === transferHistory.data &&
+        queryClient
+          .getQueryCache()
+          .find({ queryKey: getListTransfersOptions().queryKey })
+          ?.isActive()
+      )
+        askForNextTransferHistoryPage(queryClient, settled);
+    });
+}
+
 export function findTransferInHistory(
   queryClient: QueryClient,
   transferId: string,
