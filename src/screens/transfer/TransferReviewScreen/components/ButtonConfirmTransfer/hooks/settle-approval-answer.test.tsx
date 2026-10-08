@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { t } from "i18next";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
@@ -156,7 +157,7 @@ it.each([
       until: securityWaitEndsAt,
       reason: "DEVICE_PAIRED",
     },
-    `You can send money from ${formatMalaysianDateTime(securityWaitEndsAt)} — a security wait after pairing this phone.`,
+    `You can send money from ${formatMalaysianDateTime(securityWaitEndsAt, t)} — a security wait after pairing this phone.`,
   ],
 ])(
   "holds Transfer on review, saying why and offering no PIN instead, with no record to recheck, when %s after the transfer was created",

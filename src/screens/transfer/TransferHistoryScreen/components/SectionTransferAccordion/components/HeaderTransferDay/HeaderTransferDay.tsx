@@ -30,6 +30,7 @@ export default function HeaderTransferDay({
   const dayLabel = traceFormatCalls(formatMalaysianDayHeader)(
     summary.date,
     today,
+    t,
   );
   const parsedNet = parseWireAmount(summary.net);
   const netText =

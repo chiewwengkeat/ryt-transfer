@@ -92,7 +92,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
               hold.reason === CoolingOffReason.NewAccount
                 ? "common.cooling_off_new_account.disabled_reason"
                 : "common.cooling_off_new_phone.disabled_reason",
-              { time: formatMalaysianDateTime(hold.until) },
+              { time: formatMalaysianDateTime(hold.until, t) },
             );
   // A disabled button's reason is never read out unless focus lands on it, so a hold that appears says so.
   useEffect(() => {

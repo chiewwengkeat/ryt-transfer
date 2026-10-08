@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { t } from "i18next";
 import { http, HttpResponse } from "msw";
 import { AppState } from "react-native";
 
@@ -84,7 +85,7 @@ it(
     expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
     expect(
       screen.getByText(
-        `Transfers are unavailable right now, until ${formatMalaysianDateTime(body.error.until ?? "")}.`,
+        `Transfers are unavailable right now, until ${formatMalaysianDateTime(body.error.until ?? "", t)}.`,
       ),
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();

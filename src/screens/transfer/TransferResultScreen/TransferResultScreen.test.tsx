@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
 import { router } from "expo-router";
+import { t } from "i18next";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
@@ -103,7 +104,7 @@ it(
       ),
     );
     expect(
-      screen.getByText(formatMalaysianDateTime(body.transfer.updatedAt)),
+      screen.getByText(formatMalaysianDateTime(body.transfer.updatedAt, t)),
     ).toBeOnTheScreen();
     expect(screen.getByText(body.transfer.reference ?? "")).toBeOnTheScreen();
 

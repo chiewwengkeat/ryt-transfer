@@ -19,7 +19,7 @@ export function useStartTransferDisabledReason() {
     ? t("common.offline.disabled_reason")
     : maintenance?.until !== undefined
       ? t("common.under_maintenance.until", {
-          time: formatMalaysianDateTime(maintenance.until),
+          time: formatMalaysianDateTime(maintenance.until, t),
         })
       : maintenance !== undefined
         ? t("common.under_maintenance.body")

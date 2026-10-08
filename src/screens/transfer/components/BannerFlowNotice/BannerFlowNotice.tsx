@@ -39,7 +39,7 @@ export default function BannerFlowNotice({ step }: Props) {
         notice === TransferFlowScenario.UnderMaintenance &&
         noticeDetail?.until !== undefined
           ? t("common.under_maintenance.until", {
-              time: formatMalaysianDateTime(noticeDetail.until),
+              time: formatMalaysianDateTime(noticeDetail.until, t),
             })
           : notice === TransferFlowScenario.BalanceOrLimitShortAtConfirmation &&
               noticeDetail?.code !== undefined

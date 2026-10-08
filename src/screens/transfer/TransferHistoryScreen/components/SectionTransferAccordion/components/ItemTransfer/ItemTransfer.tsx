@@ -27,6 +27,7 @@ export default function ItemTransfer({ transfer }: Props) {
   const moneyMovedSign = MONEY_MOVED_SIGN[transfer.funds];
   const transferTime = traceFormatCalls(formatMalaysianTime)(
     transfer.createdAt,
+    t,
   );
 
   return (

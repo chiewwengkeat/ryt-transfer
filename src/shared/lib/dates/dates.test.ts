@@ -1,9 +1,14 @@
+import { getFixedT } from "i18next";
+
 import {
   formatMalaysianDateTime,
   formatMalaysianDayHeader,
   formatMalaysianTime,
   toMalaysianDateKey,
 } from "./dates";
+
+// A screen's t, bound to a namespace that holds no date words.
+const transferT = getFixedT(null, "transfer");
 
 it.each([
   ["2026-10-06T07:42:00Z", "6 Oct 2026, 3:42 pm"],
@@ -12,7 +17,7 @@ it.each([
   ["2026-10-06T16:00:00Z", "7 Oct 2026, 12:00 am"],
   ["2026-10-06T04:00:00Z", "6 Oct 2026, 12:00 pm"],
 ])("shows %s in Malaysia time as %s", (instant, text) => {
-  expect(formatMalaysianDateTime(instant)).toBe(text);
+  expect(formatMalaysianDateTime(instant, transferT)).toBe(text);
 });
 
 it.each([
@@ -23,11 +28,15 @@ it.each([
   ["2026-10-06T15:59:59Z", "2026-10-05", "Yesterday"],
   ["2026-10-31T16:00:00Z", "2026-10-31", "Yesterday"],
 ])("at %s, heads the day %s as %s", (now, dateKey, header) => {
-  expect(formatMalaysianDayHeader(dateKey, new Date(now))).toBe(header);
+  expect(formatMalaysianDayHeader(dateKey, new Date(now), transferT)).toBe(
+    header,
+  );
 });
 
 it("refuses an instant it cannot read", () => {
-  expect(() => formatMalaysianDateTime("not a date")).toThrow(RangeError);
+  expect(() => formatMalaysianDateTime("not a date", transferT)).toThrow(
+    RangeError,
+  );
 });
 
 it.each([
@@ -37,7 +46,7 @@ it.each([
   ["2026-10-06T16:00:00Z", "12:00 am"],
   ["2026-10-06T04:00:00Z", "12:00 pm"],
 ])("tells the time of %s in Malaysia as %s", (instant, text) => {
-  expect(formatMalaysianTime(instant)).toBe(text);
+  expect(formatMalaysianTime(instant, transferT)).toBe(text);
 });
 
 it.each([
@@ -50,6 +59,6 @@ it.each([
 });
 
 it("gives no time or day for an instant it cannot read", () => {
-  expect(formatMalaysianTime("not a date")).toBeNull();
+  expect(formatMalaysianTime("not a date", transferT)).toBeNull();
   expect(toMalaysianDateKey("not a date")).toBeNull();
 });

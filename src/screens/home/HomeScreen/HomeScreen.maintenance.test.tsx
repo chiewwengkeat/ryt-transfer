@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { t } from "i18next";
 import { http, HttpResponse } from "msw";
 
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
@@ -58,7 +59,7 @@ it(
     await pressHardwareBack();
     expect(
       await screen.findByText(
-        `Transfers are unavailable right now, until ${formatMalaysianDateTime(maintenanceAnswer.error.until ?? "")}.`,
+        `Transfers are unavailable right now, until ${formatMalaysianDateTime(maintenanceAnswer.error.until ?? "", t)}.`,
       ),
     ).toBeOnTheScreen();
     expect(screen.queryByText(/more today/)).toBeNull();

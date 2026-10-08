@@ -57,10 +57,10 @@ export default function SectionTransferDetails({ transfer }: Props) {
   // History keeps a row whose time it cannot read, and formatting such a time throws.
   const sentAt = Number.isNaN(Date.parse(transfer.createdAt))
     ? undefined
-    : formatMalaysianDateTime(transfer.createdAt);
+    : formatMalaysianDateTime(transfer.createdAt, t);
   const settledAt = Number.isNaN(Date.parse(transfer.updatedAt))
     ? undefined
-    : formatMalaysianDateTime(transfer.updatedAt);
+    : formatMalaysianDateTime(transfer.updatedAt, t);
 
   return (
     <Card>

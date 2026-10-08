@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
+import { t } from "i18next";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo, Platform } from "react-native";
 
@@ -1845,7 +1846,7 @@ it(
 
     expect(
       await screen.findByText(
-        `Transfers are unavailable right now, until ${formatMalaysianDateTime(body.error.until ?? "")}.`,
+        `Transfers are unavailable right now, until ${formatMalaysianDateTime(body.error.until ?? "", t)}.`,
       ),
     ).toBeOnTheScreen();
     expect(countSent("POST", "/approve")).toBe(0);
@@ -1943,7 +1944,7 @@ it(
   "says from when money can be sent while a newly paired phone waits, announces it, and holds the transfer",
   scenarioTest("transfer.cooling_off_new_phone", async () => {
     const { body } = await askBankToCreateRm100();
-    const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "")} — a security wait after pairing this phone.`;
+    const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "", t)} — a security wait after pairing this phone.`;
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
     await openReviewOfRm100();
 
@@ -1966,7 +1967,7 @@ it(
   "says from when money can be sent in a new account's first hour, announces it, and holds the transfer",
   scenarioTest("transfer.cooling_off_new_account", async () => {
     const { body } = await askBankToCreateRm100();
-    const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "")} — a security wait after opening your account.`;
+    const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "", t)} — a security wait after opening your account.`;
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
     await openReviewOfRm100();
 
@@ -2036,7 +2037,7 @@ it(
   "lifts the hold once the security wait ends, and offers Transfer again",
   scenarioTest("transfer.cooling_off_new_account", async () => {
     const { body } = await askBankToCreateRm100();
-    const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "")} — a security wait after opening your account.`;
+    const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "", t)} — a security wait after opening your account.`;
     await openReviewOfRm100();
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -2078,7 +2079,7 @@ it("words a cooling-off whose reason the app does not know as a newly paired pho
 
   expect(
     await screen.findByText(
-      `You can send money from ${formatMalaysianDateTime(until)} — a security wait after pairing this phone.`,
+      `You can send money from ${formatMalaysianDateTime(until, t)} — a security wait after pairing this phone.`,
     ),
   ).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
