@@ -15,6 +15,7 @@ import type * as ContextStubs from "expo-router/build/testing-library/context-st
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
 import { setObservabilitySink } from "@/shared/observability/observability";
+import { reportRequestOutcome } from "@/shared/platform/offline";
 // Ahead of every test, as at launch: loaded with the first route instead, its reinstall wipe would erase keys a
 // test paired before rendering.
 import "@/shell/app-launch";
@@ -23,8 +24,16 @@ import "@/shell/translations";
 
 import type * as BiometricsDouble from "./biometrics-double";
 import { resetBiometricsDouble } from "./biometrics-double";
+import {
+  contactsNativeDouble,
+  resetContactsNativeDouble,
+} from "./harness/contacts-native-double";
 import type * as NativeDoubles from "./harness/native-doubles";
 import { resetNativeDoubles } from "./harness/native-doubles";
+import {
+  obscuredTouchGuardNativeDouble,
+  resetObscuredTouchGuardDouble,
+} from "./harness/obscured-touch-guard-double";
 import { observedRecords, recordObservation } from "./harness/recording-sink";
 import {
   mswServer,
@@ -32,6 +41,10 @@ import {
   sentRequests,
   unhandledRequests,
 } from "./msw-server";
+
+// expo-contacts binds its native module as it loads, so no import above may load it before this line runs.
+globalThis.expo.modules.ExpoContactsNext = contactsNativeDouble;
+globalThis.expo.modules.ObscuredTouchGuard = obscuredTouchGuardNativeDouble;
 
 // jest-expo leaves these native modules inert: the kv-store throws, the rest answer undefined.
 jest.mock("expo-sqlite/kv-store", () => {
@@ -145,6 +158,10 @@ afterEach(() => {
   resetNativeDoubles();
   resetBiometricsDouble();
   approvalSettingsStore.setState(approvalSettingsStore.getInitialState(), true);
+  resetContactsNativeDouble();
+  resetObscuredTouchGuardDouble();
+  // A test that a request left offline would start the next one offline.
+  reportRequestOutcome();
   mswServer.resetHandlers();
   sentRequests.splice(0);
   // The app sees the throw above as a 500, which an error-state test could mistake for its scenario.

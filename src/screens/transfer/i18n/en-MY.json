@@ -14,7 +14,8 @@
       "body": "Transfers are unavailable right now."
     },
     "offline": {
-      "title": "Offline"
+      "title": "Offline",
+      "disabled_reason": "You're offline, so sending is paused."
     },
     "earlier_transfer_unconfirmed": {
       "title": "Earlier transfer still being checked"

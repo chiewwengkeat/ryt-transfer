@@ -15,6 +15,7 @@ import {
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
+import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 
 import { useSendTransferApproval } from "./hooks/use-send-transfer-approval";
@@ -34,6 +35,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       flow.step === TransferFlowStep.Approving ||
       flow.step === TransferFlowStep.Submitting,
   );
+  const offline = useIsOffline();
   const confirmedLookup = lookup.data;
   if (confirmedLookup === undefined) return null;
 
@@ -84,6 +86,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     <ButtonPrimary
       label={t("review.transfer")}
       loading={sending}
+      disabledReason={offline ? t("common.offline.disabled_reason") : undefined}
       onPress={() => {
         void createAndApproveTransfer().catch(() => {
           // Before the approval leaves the phone nothing can have moved, so review offers it again.

@@ -1,13 +1,9 @@
 import {
   isObscuredTouchGuardOn,
-  obscuredTouchGuardNativeDouble,
   touchThroughOverlay,
 } from "@/test/harness/obscured-touch-guard-double";
 
 import { enableObscuredTouchGuard } from "./obscured-touch-guard";
-
-// Until jest-setup.ts installs the double for every test.
-globalThis.expo.modules.ObscuredTouchGuard = obscuredTouchGuardNativeDouble;
 
 it("keeps the guard on from the first hold until the last release", () => {
   const releaseFirst = enableObscuredTouchGuard(jest.fn());

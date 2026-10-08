@@ -23,7 +23,10 @@ import {
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
-import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
+import {
+  secureStoreNativeDouble,
+  setPhoneNetwork,
+} from "@/test/harness/native-doubles";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
@@ -1192,3 +1195,23 @@ it.each([
     expect(countPostsTo(/\/approve$/)).toBe(1);
   },
 );
+
+it("pauses sending on review while the phone reports no connection", async () => {
+  await openReviewOfRm100();
+  const transferButton = await screen.findByRole("button", {
+    name: "Transfer",
+  });
+
+  await act(() => {
+    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+  });
+  expect(transferButton).toBeDisabled();
+  expect(
+    screen.getByText("You're offline, so sending is paused."),
+  ).toBeOnTheScreen();
+
+  await act(() => {
+    setPhoneNetwork({ isConnected: true, isInternetReachable: true });
+  });
+  expect(transferButton).toBeEnabled();
+});

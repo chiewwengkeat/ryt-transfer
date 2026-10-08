@@ -1,7 +1,9 @@
+import { act, renderHook } from "@testing-library/react-native";
 import { delay, http, HttpResponse } from "msw";
 
 import { API_BASE_URL } from "@/shared/config/config";
 import { setObservabilitySink } from "@/shared/observability/observability";
+import { useIsOffline } from "@/shared/platform/offline";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 
@@ -176,6 +178,31 @@ it("rejects as network when the network is dead", async () => {
     kind: TransportErrorKind.Network,
   });
 });
+
+it.each([
+  ["an answer", () => HttpResponse.json({})],
+  ["an error status", () => HttpResponse.json({}, { status: 500 })],
+  ["an answer it cannot read", () => new HttpResponse("<html>")],
+])(
+  "counts the app offline once a request finds no network, and online again once one gets %s",
+  async (_, answer) => {
+    const { result } = await renderHook(useIsOffline);
+    mswServer.use(
+      http.get(PROBE_URL, () => HttpResponse.error(), { once: true }),
+    );
+    await act(async () => {
+      await requestJson("/probe").catch(() => undefined);
+    });
+    const offlineAfterDeadNetwork = result.current;
+
+    mswServer.use(http.get(PROBE_URL, answer));
+    await act(async () => {
+      await requestJson("/probe").catch(() => undefined);
+    });
+
+    expect([offlineAfterDeadNetwork, result.current]).toEqual([true, false]);
+  },
+);
 
 it("rejects as timeout when the answer outlives the request's timeout", async () => {
   mswServer.use(

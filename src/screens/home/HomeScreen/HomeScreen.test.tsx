@@ -1,6 +1,8 @@
 import { fireEvent, screen } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
 
 import { clearTransferScenario } from "@/test/clear-transfer-scenario";
+import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -33,3 +35,20 @@ it(
     expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
   }),
 );
+
+it("pauses sending once a request finds no network, and resumes once a request reaches the bank", async () => {
+  mswServer.use(http.all("*", () => HttpResponse.error()));
+  await renderRoute("/");
+  const tryAgain = await screen.findByRole("button", { name: "Try again" });
+  const pausedReason = screen.getByText(
+    "You're offline, so sending is paused.",
+  );
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+
+  mswServer.resetHandlers();
+  await fireEvent.press(tryAgain);
+  await screen.findByText("RM 12,845.50");
+
+  expect(pausedReason).not.toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+});

@@ -8,10 +8,6 @@ import { reportRequestOutcome, useIsOffline } from "./offline";
 const NO_CONNECTION = { isConnected: false, isInternetReachable: false };
 const CONNECTED = { isConnected: true, isInternetReachable: true };
 
-beforeEach(() => {
-  reportRequestOutcome();
-});
-
 it("reads online while the phone has a connection and requests reach the bank", async () => {
   const { result } = await renderHook(useIsOffline);
 

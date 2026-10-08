@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "@/shared/config/config";
 import { reportError } from "@/shared/observability/observability";
+import { reportRequestOutcome } from "@/shared/platform/offline";
 
 import { TransportError, TransportErrorKind } from "./transport-error";
 
@@ -81,16 +82,20 @@ export async function requestJson<Data>(
     });
     text = await response.text();
   } catch {
-    if (!controller.signal.aborted)
-      throw new TransportError(TransportErrorKind.Network);
-    throw new TransportError(
-      timedOut ? TransportErrorKind.Timeout : TransportErrorKind.Aborted,
-    );
+    const failure = !controller.signal.aborted
+      ? TransportErrorKind.Network
+      : timedOut
+        ? TransportErrorKind.Timeout
+        : TransportErrorKind.Aborted;
+    reportRequestOutcome(failure);
+    throw new TransportError(failure);
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener("abort", abortForCaller);
   }
 
+  // An error status or an unreadable body still proves the bank was reached.
+  reportRequestOutcome();
   if (response.ok) {
     try {
       return JSON.parse(text) as Data;
