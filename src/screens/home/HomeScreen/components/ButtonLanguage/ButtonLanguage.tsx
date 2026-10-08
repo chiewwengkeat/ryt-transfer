@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text } from "react-native";
 
-import { APP_LANGUAGE_NAMES, type AppLanguage } from "@/shared/i18n/i18n";
+import { APP_LANGUAGE_NAMES, AppLanguage } from "@/shared/i18n/i18n";
 import {
   colors,
   minTouchTarget,
@@ -15,7 +15,11 @@ import BottomSheetLanguage from "./components/BottomSheetLanguage/BottomSheetLan
 export default function ButtonLanguage() {
   const { t, i18n } = useTranslation("home");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const shortName = APP_LANGUAGE_NAMES[i18n.language as AppLanguage].short;
+  const shortName = (
+    Object.entries(APP_LANGUAGE_NAMES).find(
+      ([language]) => language === i18n.language,
+    )?.[1] ?? APP_LANGUAGE_NAMES[AppLanguage.English]
+  ).short;
   return (
     <>
       <Pressable

@@ -21,7 +21,7 @@ export const APP_LANGUAGE_NAMES = {
   [AppLanguage.English]: { full: "English", short: "EN" },
   [AppLanguage.Malay]: { full: "Bahasa Malaysia", short: "BM" },
   [AppLanguage.Chinese]: { full: "中文", short: "中文" },
-};
+} satisfies Record<AppLanguage, { full: string; short: string }>;
 
 const APP_LANGUAGE_BY_PHONE_LANGUAGE = new Map([
   ["en", AppLanguage.English],
