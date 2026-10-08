@@ -387,7 +387,9 @@ it(
     expect(view.getPathname()).toBe("/transfer/review");
     releaseApproval();
 
-    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    expect(
+      await screen.findByText("Transfer sent", { timeout: 10_000 }),
+    ).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
     expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
       balanceBeforeMinor - 10_000,
@@ -538,7 +540,7 @@ it(
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
-    await screen.findByText("Transfer sent");
+    await screen.findByText("Transfer sent", { timeout: 10_000 });
 
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
     await fireEvent.press(
@@ -570,7 +572,9 @@ it("never reopens review while its transfer is being sent, even from the amount 
             resolve(HttpResponse.error());
           };
         }),
+      { once: true },
     ),
+    http.post("*/transfers/:transferId/approve", () => HttpResponse.error()),
   );
   const view = await openReviewOfRm100();
   await fireEvent.press(
@@ -589,7 +593,7 @@ it("never reopens review while its transfer is being sent, even from the amount 
   expect(view.getPathname()).toBe("/transfer/amount");
   expect(screen.queryByText("This screen stopped working.")).toBeNull();
   answerApproval();
-  await screen.findByRole("button", { name: "Done" });
+  await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 });
 });
 
 it("never moves on from the recipient step while a transfer is still being created", async () => {
@@ -645,6 +649,7 @@ it("takes a lost approval answer to the result page, which never offers to send 
   expect(
     await screen.findByText(
       "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      { timeout: 10_000 },
     ),
   ).toBeOnTheScreen();
   expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
@@ -673,7 +678,7 @@ it("keeps the transfer on the phone before its approval leaves, under the key th
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
-  await screen.findByRole("button", { name: "Done" });
+  await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 });
 
   expect(pendingWhenApprovalArrived).toEqual([
     expect.objectContaining({
@@ -741,7 +746,9 @@ it("ignores Android's Back while the transfer is being sent", async () => {
             resolve(HttpResponse.error());
           };
         }),
+      { once: true },
     ),
+    http.post("*/transfers/:transferId/approve", () => HttpResponse.error()),
   );
   const view = await openReviewOfRm100();
   await fireEvent.press(
@@ -756,7 +763,9 @@ it("ignores Android's Back while the transfer is being sent", async () => {
   answerApproval();
 
   expect(pathnameWhileSending).toBe("/transfer/review");
-  expect(await screen.findByRole("button", { name: "Done" })).toBeOnTheScreen();
+  expect(
+    await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 }),
+  ).toBeOnTheScreen();
 });
 
 it("offers to try again or leave when the bank's answer to the transfer cannot be read", async () => {

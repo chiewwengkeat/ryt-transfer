@@ -190,6 +190,67 @@ it("keeps a refused PIN nowhere once the sheet is closed on review", async () =>
   expect(await readWhatTheAppStillHolds()).not.toContain("111111");
 });
 
+it("sends an approval whose answer was lost twice more, 2 and then 4 seconds on, as the same bytes under the same key", async () => {
+  const approvalsSeen: { atMs: number; key: string | null; body: string }[] =
+    [];
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", async ({ request }) => {
+      approvalsSeen.push({
+        atMs: Date.now(),
+        key: request.headers.get("Idempotency-Key"),
+        body: await request.clone().text(),
+      });
+    }),
+    http.post("*/transfers/:transferId/approve", () => HttpResponse.error(), {
+      once: true,
+    }),
+    http.post("*/transfers/:transferId/approve", () => HttpResponse.error(), {
+      once: true,
+    }),
+  );
+  await confirmRm100Transfer();
+
+  expect(
+    await screen.findByText("Transfer sent", { timeout: 10_000 }),
+  ).toBeOnTheScreen();
+  const [firstSend, firstResend, secondResend] = approvalsSeen;
+  expect(approvalsSeen).toHaveLength(3);
+  expect(firstSend?.key).toEqual(expect.any(String));
+  expect(firstResend).toMatchObject({
+    key: firstSend?.key,
+    body: firstSend?.body,
+  });
+  expect(secondResend).toMatchObject({
+    key: firstSend?.key,
+    body: firstSend?.body,
+  });
+  expect(
+    (firstResend?.atMs ?? 0) - (firstSend?.atMs ?? 0),
+  ).toBeGreaterThanOrEqual(2_000);
+  expect(
+    (secondResend?.atMs ?? 0) - (firstResend?.atMs ?? 0),
+  ).toBeGreaterThanOrEqual(4_000);
+});
+
+it("never sends an approval again once the bank has answered it, a server error included", async () => {
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", () =>
+      HttpResponse.json(
+        { error: { code: "INTERNAL_ERROR", message: "Test." } },
+        { status: 500 },
+      ),
+    ),
+  );
+  await confirmRm100Transfer();
+
+  expect(
+    await screen.findByText(
+      "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+    ),
+  ).toBeOnTheScreen();
+  expect(approveRequests()).toHaveLength(1);
+});
+
 it(
   "says the face or fingerprint was not recognised, sends nothing, and leaves Transfer to try again",
   scenarioTest("transfer.biometrics_not_recognised", async () => {

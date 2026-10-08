@@ -1,6 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { requestJson } from "@/shared/http/transport";
+import {
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport-error";
 import type { WireMoney } from "@/shared/lib/money/money.type";
 
 import {
@@ -43,15 +47,36 @@ export function useApproveTransfer() {
           { cause },
         );
       });
-      return await requestJson<ApproveTransferResponse>(
-        `/transfers/${encodeURIComponent(transferId)}/approve`,
-        {
-          method: "POST",
-          body: request,
-          idempotencyKey,
-          timeoutMs: 30_000,
-        },
-      );
+      const sendApproveRequest = () =>
+        requestJson<ApproveTransferResponse>(
+          `/transfers/${encodeURIComponent(transferId)}/approve`,
+          {
+            method: "POST",
+            body: request,
+            idempotencyKey,
+            timeoutMs: 30_000,
+          },
+        );
+      // Asked again as the same signed bytes under the same key, which the bank acts on at most once.
+      for (const resendDelayMs of [2_000, 4_000]) {
+        try {
+          return await sendApproveRequest();
+        } catch (failure) {
+          if (
+            !(failure instanceof TransportError) ||
+            ![
+              TransportErrorKind.Network,
+              TransportErrorKind.Timeout,
+              TransportErrorKind.Unreadable,
+            ].includes(failure.kind)
+          )
+            throw failure;
+        }
+        await new Promise((resolve) => {
+          setTimeout(resolve, resendDelayMs);
+        });
+      }
+      return await sendApproveRequest();
     },
     onSuccess: ({ transfer }) => {
       queryClient.setQueryData(
