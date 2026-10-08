@@ -27,7 +27,7 @@ interface Props {
   error?: string;
 }
 export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
-  const { t } = useTranslation("transfer");
+  const { t, i18n } = useTranslation("transfer");
   const banks = useListBanks();
   const [bankSheetOpen, setBankSheetOpen] = useState(false);
   const bankName =
@@ -45,6 +45,7 @@ export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("recipient.bank_label")}
+        accessibilityLanguage={i18n.language}
         accessibilityValue={{ text: bankName }}
         accessibilityHint={error}
         onPress={() => {

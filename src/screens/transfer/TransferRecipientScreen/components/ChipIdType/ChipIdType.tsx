@@ -15,7 +15,7 @@ interface Props {
   onIdTypeChange: (idType: RecipientIdType) => void;
 }
 export default function ChipIdType({ idType, onIdTypeChange }: Props) {
-  const { t } = useTranslation("transfer");
+  const { t, i18n } = useTranslation("transfer");
   return (
     <View
       accessibilityRole="radiogroup"
@@ -33,6 +33,7 @@ export default function ChipIdType({ idType, onIdTypeChange }: Props) {
         <Pressable
           key={chipIdType}
           accessibilityRole="radio"
+          accessibilityLanguage={i18n.language}
           accessibilityState={{ checked: chipIdType === idType }}
           onPress={() => {
             onIdTypeChange(chipIdType);

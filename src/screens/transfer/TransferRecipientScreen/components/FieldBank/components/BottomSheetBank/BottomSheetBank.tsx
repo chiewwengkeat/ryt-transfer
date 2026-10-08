@@ -15,7 +15,7 @@ interface Props {
   onClose: () => void;
 }
 export default function BottomSheetBank({ onBankChosen, onClose }: Props) {
-  const { t } = useTranslation("transfer");
+  const { t, i18n } = useTranslation("transfer");
   const banks = useListBanks();
   // The shell's offline notice already explains a list that cannot load.
   const offline = useIsOffline();
@@ -54,6 +54,7 @@ export default function BottomSheetBank({ onBankChosen, onClose }: Props) {
           <Pressable
             key={bank.bankCode}
             accessibilityRole="button"
+            accessibilityLanguage={i18n.language}
             onPress={() => {
               onBankChosen(bank.bankCode);
             }}

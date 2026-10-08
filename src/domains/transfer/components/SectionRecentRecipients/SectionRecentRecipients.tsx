@@ -18,7 +18,7 @@ export default function SectionRecentRecipients({
   onRecentChosen,
   disabledReason,
 }: Props) {
-  const { t } = useTranslation("transfer");
+  const { t, i18n } = useTranslation("transfer");
   const recents = useListRecentRecipients();
   // A shortcut only: while it loads or when it fails, the screen works without it.
   if (recents.data === undefined || recents.data.length === 0) return null;
@@ -32,6 +32,7 @@ export default function SectionRecentRecipients({
           key={recent.recentId}
           accessibilityRole="button"
           accessibilityHint={disabledReason}
+          accessibilityLanguage={i18n.language}
           accessibilityState={{ disabled }}
           disabled={disabled}
           onPress={() => {

@@ -19,7 +19,7 @@ export default function BottomSheetContactMobiles({
   onMobileChosen,
   onClose,
 }: Props) {
-  const { t } = useTranslation("transfer");
+  const { t, i18n } = useTranslation("transfer");
   return (
     <BottomSheetFrame
       title={t("recipient.contact_mobiles_title")}
@@ -30,6 +30,7 @@ export default function BottomSheetContactMobiles({
         <Pressable
           key={contactMobile.id}
           accessibilityRole="button"
+          accessibilityLanguage={i18n.language}
           onPress={() => {
             onMobileChosen(contactMobile.mobileId);
           }}
