@@ -141,6 +141,7 @@
     "not_found": "Couldn't find this transfer.",
     "back": "Back",
     "failed": "Couldn't load this transfer.",
-    "try_again": "Try again"
+    "try_again": "Try again",
+    "out_of_date": "Couldn't refresh — these details may be out of date"
   }
 }

@@ -9,22 +9,20 @@ import Loader from "@/shared/ui/Loader/Loader";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import SectionTransferDetails from "../components/SectionTransferDetails/SectionTransferDetails";
+import BannerDetailsOutOfDate from "./components/BannerDetailsOutOfDate/BannerDetailsOutOfDate";
 import { useGetTransferWithHistoryPlaceholder } from "./hooks/use-get-transfer-with-history-placeholder";
 
 export default function TransferDetailsScreen() {
   const { t } = useTranslation("transfer");
   const { transferId } = useLocalSearchParams<{ transferId: string }>();
-  const transfer = useGetTransferWithHistoryPlaceholder(transferId);
+  const { transferQuery, transfer } =
+    useGetTransferWithHistoryPlaceholder(transferId);
 
   return (
     <>
       <Stack.Screen options={{ title: t("details.title") }} />
-      {transfer.data ? (
-        <ViewScreenFrame>
-          <SectionTransferDetails transfer={transfer.data} />
-        </ViewScreenFrame>
-      ) : transfer.error instanceof TransportError &&
-        transfer.error.code === GetTransferErrorCode.TransferNotFound ? (
+      {transferQuery.error instanceof TransportError &&
+      transferQuery.error.code === GetTransferErrorCode.TransferNotFound ? (
         <ViewScreenFrame
           footer={
             <ButtonPrimary
@@ -37,13 +35,26 @@ export default function TransferDetailsScreen() {
         >
           <BannerNotice tone="negative" message={t("details.not_found")} />
         </ViewScreenFrame>
-      ) : transfer.isError ? (
+      ) : transfer ? (
+        <ViewScreenFrame>
+          {/* A failure from an earlier visit is not this one's: shown on reopening, it would be announced as current. */}
+          {((transferQuery.isError && transferQuery.isFetchedAfterMount) ||
+            transferQuery.isPaused) && (
+            <BannerDetailsOutOfDate
+              onTryAgain={() => {
+                void transferQuery.refetch();
+              }}
+            />
+          )}
+          <SectionTransferDetails transfer={transfer} />
+        </ViewScreenFrame>
+      ) : transferQuery.isError || transferQuery.isPaused ? (
         <ViewScreenFrame
           footer={
             <ButtonPrimary
               label={t("details.try_again")}
               onPress={() => {
-                void transfer.refetch();
+                void transferQuery.refetch();
               }}
             />
           }
