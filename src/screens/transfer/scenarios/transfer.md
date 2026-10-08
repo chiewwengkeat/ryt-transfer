@@ -382,8 +382,8 @@ Every situation someone can meet while sending money, from opening a transfer to
 `transfer.approval_key_unknown`
 - **When:** the bank does not know the key this phone signed with (`KEY_NOT_REGISTERED`), for example after the app was reinstalled or restored
 - **Money:** no money moved
-- **Shown as:** on the review step, then the PIN sheet if the bank already holds keys for them
-- **Tell them:** approval needs setting up again on this phone, with their PIN if the bank asks for it
+- **Shown as:** the PIN sheet on the review step, when the bank already holds keys for them and they have not typed their PIN yet; otherwise nothing extra — a PIN they already typed sets approval up again as the transfer is approved
+- **Tell them:** approval needs setting up again on this phone, with their PIN
 - **They can:** set approval up again, then approve
 - **Never:** set up a new key without the PIN while the bank holds their keys
 - **Why:** a new key is a new way to move money, so once keys are on file only the PIN can add one
