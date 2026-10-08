@@ -55,7 +55,8 @@ export const getListTransfersOptions = () =>
     },
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    // A refetch replays every loaded page, so history refreshes only through its reset.
+    // A refetch replays every loaded page, so history never refetches by itself and its reset fetches the newest page
+    // alone. Any other invalidation that reaches it, a broad one included, replays every page.
     staleTime: Infinity,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
