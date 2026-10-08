@@ -5,6 +5,18 @@
   "common": {
     "balance_and_limit_shown": {
       "remaining_today": "Anda masih boleh menghantar {{amount}} hari ini"
+    },
+    "start_unexpected": {
+      "body": "Berlaku masalah yang tidak dijangka.",
+      "retry": "Cuba lagi"
+    },
+    "amount_unexpected": {
+      "body": "Berlaku masalah yang tidak dijangka.",
+      "retry": "Cuba lagi"
+    },
+    "balance_unavailable": {
+      "body": "Baki anda tidak dapat dimuatkan.",
+      "retry": "Cuba lagi"
     }
   }
 }
