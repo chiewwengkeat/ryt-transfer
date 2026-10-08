@@ -53,7 +53,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-const MOBILE = "012-345 6789";
+const RECIPIENT_MOBILE = "012-345 6789";
 
 // Home holds Transfer back until its first reads land, so a press made sooner does nothing.
 async function waitForHomeToOfferTransfer() {
@@ -73,7 +73,7 @@ async function openReviewOfRm100(
   }
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
-    MOBILE,
+    RECIPIENT_MOBILE,
   );
   await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
   await screen.findByText("RM 12,845.50");
@@ -121,7 +121,7 @@ function readRootTransferScreenGestureEnabled() {
 it(
   "shows the name and bank the bank holds for the number, and the number masked",
   scenarioTest("transfer.recipient_found", async () => {
-    const { recipient } = await lookUpTestRecipient(MOBILE);
+    const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
     await openReviewOfRm100();
 
     expect(await screen.findByText(recipient.registeredName)).toBeOnTheScreen();
@@ -203,7 +203,7 @@ it(
 
 it("signs the name, masked number, bank and amount review shows, and no note", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  const { recipient } = await lookUpTestRecipient(MOBILE);
+  const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
   const releasePrompt = holdNextBiometricPrompt();
   await openReviewOfRm100();
 
@@ -344,7 +344,7 @@ it(
   "hands the iOS face or fingerprint prompt a title stating the amount and the recipient's registered name",
   scenarioTest("transfer.biometrics_recognised", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    const { recipient } = await lookUpTestRecipient(MOBILE);
+    const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
     await openReviewOfRm100();
 
     await fireEvent.press(
@@ -364,7 +364,7 @@ it(
   "hands the Android face or fingerprint prompt the amount and the recipient's registered name under its title",
   scenarioTest("transfer.biometrics_recognised", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    const { recipient } = await lookUpTestRecipient(MOBILE);
+    const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
     await openReviewOfRm100();
     const platformOs = jest.replaceProperty(Platform, "OS", "android");
 
@@ -654,7 +654,7 @@ it(
     ).toHaveDisplayValue("");
     await fireEvent.changeText(
       screen.getByLabelText("DuitNow mobile number"),
-      MOBILE,
+      RECIPIENT_MOBILE,
     );
     await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
 
@@ -1607,7 +1607,7 @@ it.each([
 ])(
   "stops offering Transfer once review's name check, asked again, answers %s",
   async (code, status, message) => {
-    const { recipient } = await lookUpTestRecipient(MOBILE);
+    const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
     await openReviewOfRm100();
     await screen.findByText(recipient.registeredName);
     mswServer.use(
@@ -1826,7 +1826,7 @@ it(
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await fireEvent.changeText(
       await screen.findByLabelText("DuitNow mobile number"),
-      MOBILE,
+      RECIPIENT_MOBILE,
     );
     await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
     await fireEvent.changeText(
@@ -1932,7 +1932,7 @@ it(
 );
 
 async function askBankToCreateRm100() {
-  const { recipientRef } = await lookUpTestRecipient(MOBILE);
+  const { recipientRef } = await lookUpTestRecipient(RECIPIENT_MOBILE);
   return sendToBank<BankErrorBody>("POST", "/transfers", {
     body: { recipientRef, amount: { minor: 10_000, currency: "MYR" } },
   });
@@ -2513,7 +2513,7 @@ it("reopens review without saying the details changed when the same recipient is
 });
 
 it("reopens review without saying the details changed when nothing changed after Ryt did not answer", async () => {
-  const { recipient } = await lookUpTestRecipient(MOBILE);
+  const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
   loseEveryTryOfTheFirstCreate();
   await openReviewOfRm100();
   await fireEvent.press(
@@ -2618,7 +2618,7 @@ it.each([
     );
     await fireEvent.changeText(
       await screen.findByLabelText("DuitNow mobile number"),
-      MOBILE,
+      RECIPIENT_MOBILE,
     );
     await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
     await screen.findByText("RM 12,845.50");

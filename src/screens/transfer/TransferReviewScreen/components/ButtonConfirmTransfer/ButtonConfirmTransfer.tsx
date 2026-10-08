@@ -49,7 +49,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const lookup = useLookupRecipient(draft.recipient);
   const createTransfer = useCreateTransfer();
   const sendTransferApproval = useSendTransferApproval();
-  const sending = useTransferFlow(
+  const transferBeingSent = useTransferFlow(
     (flow) =>
       flow.step === TransferFlowStep.Creating ||
       flow.step === TransferFlowStep.Approving ||
@@ -201,7 +201,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     <>
       <ButtonPrimary
         label={t("review.transfer")}
-        loading={sending || lookup.isFetching}
+        loading={transferBeingSent || lookup.isFetching}
         disabledReason={transferDisabledReason}
         onPress={() => {
           void createAndApproveTransfer(ApprovalPath.Biometric).catch(() => {
@@ -211,7 +211,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       />
       <ButtonUsePinInstead
         pinTryAvailable={
-          !sending &&
+          !transferBeingSent &&
           !lookup.isFetching &&
           transferDisabledReason === undefined &&
           !approvalPinLocked
