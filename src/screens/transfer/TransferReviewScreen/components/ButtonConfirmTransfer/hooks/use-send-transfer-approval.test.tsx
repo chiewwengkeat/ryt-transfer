@@ -251,10 +251,9 @@ it("never sends an approval again once the bank has answered it, a server error 
   expect(approveRequests()).toHaveLength(1);
 });
 
-it("gets the bank's first answer back for a resend whose first copy already moved the money, which moves once", async () => {
-  const balanceBeforeMinor = await readBankBalanceMinor();
+// Later copies go to the bank untouched, so a resend gets back whatever the bank answered the first.
+function deliverFirstApprovalButLoseItsAnswer() {
   let firstCopyLost = false;
-  // The first copy reaches the bank but its answer is lost; later copies go to the bank untouched.
   mswServer.use(
     http.post("*/transfers/:transferId/approve", async ({ request }) => {
       if (firstCopyLost) return undefined;
@@ -266,6 +265,11 @@ it("gets the bank's first answer back for a resend whose first copy already move
       return HttpResponse.error();
     }),
   );
+}
+
+it("gets the bank's first answer back for a resend whose first copy already moved the money, which moves once", async () => {
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  deliverFirstApprovalButLoseItsAnswer();
   await confirmRm100Transfer();
 
   expect(
@@ -273,6 +277,27 @@ it("gets the bank's first answer back for a resend whose first copy already move
   ).toBeOnTheScreen();
   jest.useRealTimers();
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+});
+
+it("keeps the tries left that a wrong PIN was told when its refusal answers a resend, which the bank does not count again", async () => {
+  deliverFirstApprovalButLoseItsAnswer();
+  await confirmRm100ApprovedByPin();
+
+  await approveWithPin("111111");
+
+  expect(
+    await screen.findByText("That PIN is incorrect. You have 2 tries left.", {
+      timeout: 10_000,
+    }),
+  ).toBeOnTheScreen();
+  await approveWithPin(DEMO_PIN);
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  const attemptKeys = approveRequests().map((request) =>
+    request.headers.get("Idempotency-Key"),
+  );
+  const rightPinKey = attemptKeys.pop();
+  expect(new Set(attemptKeys).size).toBe(1);
+  expect(rightPinKey).not.toBe(attemptKeys[0]);
 });
 
 it(
@@ -468,6 +493,98 @@ it("lets an approval's answer change nothing once the person has left it and sta
   );
   expect(secondTransferId).not.toBe(firstTransferId);
   expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
+  jest.useRealTimers();
+  const {
+    body: { customerId },
+  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+  expect(await listPendingTransfers(customerId)).toContainEqual(
+    expect.objectContaining({ transferId: firstTransferId }),
+  );
+});
+
+it("lets a lost approval answer change nothing once the person has left it, though it is sent twice more and answered while another transfer is being sent", async () => {
+  let firstTransferId: string | undefined;
+  let firstTransferCopies = 0;
+  let releaseLastCopy: () => void = () => undefined;
+  const lastCopyHeld = new Promise<void>((release) => {
+    releaseLastCopy = () => {
+      release();
+    };
+  });
+  let releaseSecondApproval: () => void = () => undefined;
+  const secondApprovalHeld = new Promise<void>((release) => {
+    releaseSecondApproval = () => {
+      release();
+    };
+  });
+  // Released, a held approval falls through to the bank, which completes its transfer.
+  mswServer.use(
+    http.post<{ transferId: string }>(
+      "*/transfers/:transferId/approve",
+      async ({ params: { transferId } }) => {
+        firstTransferId ??= transferId;
+        if (transferId !== firstTransferId) {
+          await secondApprovalHeld;
+          return undefined;
+        }
+        firstTransferCopies += 1;
+        if (firstTransferCopies < 3) return HttpResponse.error();
+        await lastCopyHeld;
+        return undefined;
+      },
+    ),
+  );
+  await confirmRm100Transfer();
+  await screen.findByText(
+    "Sending your transfer. The bank's answer comes next.",
+  );
+
+  // Review offers no way back while sending, so this stands in for any route that still could.
+  await act(() => {
+    router.back();
+  });
+  await act(() => {
+    router.back();
+  });
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(2_000);
+  });
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(await screen.findByLabelText("Amount (RM)"), "50");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(4_000);
+  });
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText(
+    "Sending your transfer. The bank's answer comes next.",
+  );
+  releaseLastCopy();
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(1_000);
+  });
+
+  expect(
+    screen.getByText("Sending your transfer. The bank's answer comes next."),
+  ).toBeOnTheScreen();
+  expect(screen.queryByText("Transfer sent")).toBeNull();
+  releaseSecondApproval();
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
+  const firstTransferKeys = approveRequests()
+    .filter(
+      (request) =>
+        new URL(request.url).pathname.split("/")[2] === firstTransferId,
+    )
+    .map((request) => request.headers.get("Idempotency-Key"));
+  expect(firstTransferKeys).toHaveLength(3);
+  expect(new Set(firstTransferKeys).size).toBe(1);
   jest.useRealTimers();
   const {
     body: { customerId },
