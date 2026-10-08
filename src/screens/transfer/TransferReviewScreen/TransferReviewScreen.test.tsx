@@ -368,26 +368,78 @@ it(
   }),
 );
 
+it.each<[TransferFlowStep, (stepHeld: Promise<void>) => void]>([
+  [
+    TransferFlowStep.Creating,
+    (stepHeld) => {
+      mswServer.use(
+        http.post(
+          "*/transfers",
+          async () => {
+            await stepHeld;
+          },
+          { once: true },
+        ),
+      );
+    },
+  ],
+  [
+    TransferFlowStep.Approving,
+    (stepHeld) => {
+      const readFromTheDouble = secureStoreNativeDouble.getValueWithKeyAsync;
+      jest
+        .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
+        .mockImplementationOnce(async (key) => {
+          await stepHeld;
+          return readFromTheDouble(key);
+        });
+    },
+  ],
+  [
+    TransferFlowStep.Submitting,
+    (stepHeld) => {
+      mswServer.use(
+        http.post(
+          "*/transfers/:transferId/approve",
+          async () => {
+            await stepHeld;
+          },
+          { once: true },
+        ),
+      );
+    },
+  ],
+])(
+  "turns off the swipe that would close the whole transfer flow while the transfer is %s",
+  async (step, holdStep) => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    let releaseStep: () => void = () => undefined;
+    holdStep(
+      new Promise<void>((release) => {
+        releaseStep = () => {
+          release();
+        };
+      }),
+    );
+    await openReviewOfRm100("/");
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await waitFor(() => {
+      expect(transferFlowStore.getState().step).toBe(step);
+    });
+
+    expect(readRootTransferScreenGestureEnabled()).toBe(false);
+    releaseStep();
+    await screen.findByText("Transfer sent");
+  },
+);
+
 it(
-  "turns off the swipe that would close the whole transfer flow while the transfer is being sent",
+  "keeps the swipe that would close the whole transfer flow off once the approval's answer is lost",
   scenarioTest("transfer.approval_unanswered", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    let releaseCreate: () => void = () => undefined;
-    const createHeld = new Promise<void>((release) => {
-      releaseCreate = () => {
-        release();
-      };
-    });
-    // Holds the create so the swipe is read at its first sending step, then falls through to the scenario.
-    mswServer.use(
-      http.post(
-        "*/transfers",
-        async () => {
-          await createHeld;
-        },
-        { once: true },
-      ),
-    );
     await openReviewOfRm100("/");
     const transferButton = await screen.findByRole("button", {
       name: "Transfer",
@@ -395,9 +447,6 @@ it(
     expect(readRootTransferScreenGestureEnabled()).not.toBe(false);
 
     await fireEvent.press(transferButton);
-    await screen.findByRole("button", { name: "Transfer", busy: true });
-    expect(readRootTransferScreenGestureEnabled()).toBe(false);
-    releaseCreate();
     await screen.findByRole("button", { name: "Back to Home" });
 
     expect(readRootTransferScreenGestureEnabled()).toBe(false);
