@@ -29,6 +29,24 @@ function readPlaceholdersByKeyPath(
   );
 }
 
+// Hermes lacks Intl.PluralRules, so i18next reads `_one` for a count of 1 in every language: in Malay and
+// Chinese it must say what `_other` says.
+function findPluralsWithoutEqualTwin(
+  strings: unknown,
+  keyPrefix = "",
+): string[] {
+  if (typeof strings !== "object" || strings === null) return [];
+  const stringsByKey = new Map<string, unknown>(Object.entries(strings));
+  return [...stringsByKey].flatMap(([key, value]) => {
+    if (typeof value !== "string")
+      return findPluralsWithoutEqualTwin(value, `${keyPrefix}${key}.`);
+    return key.endsWith("_other") &&
+      stringsByKey.get(key.replace(/_other$/, "_one")) !== value
+      ? [`${keyPrefix}${key}`]
+      : [];
+  });
+}
+
 function findTranslationsOutOfStep(registered: Resource) {
   const english = registered[AppLanguage.English] ?? {};
   return Object.values(AppLanguage)
@@ -62,6 +80,9 @@ function findTranslationsOutOfStep(registered: Resource) {
               ([keyPath]) =>
                 `${where}${keyPath} does not match English's placeholders`,
             ),
+          ...findPluralsWithoutEqualTwin(translated[namespace]).map(
+            (keyPath) => `${where}${keyPath} differs from its _one twin`,
+          ),
         ];
       });
     });
@@ -93,7 +114,35 @@ it("finds a missing key, a stray key, changed placeholders and an unregistered b
   ]);
 });
 
-it("registers every English key in Malay and Chinese, with English's placeholders", async () => {
+it("finds a Malay or Chinese plural whose `_one` says something other than its `_other`", () => {
+  expect(
+    findTranslationsOutOfStep({
+      "en-MY": {
+        demo: {
+          list: {
+            count_one: "{{count}} entry",
+            count_other: "{{count}} entries",
+          },
+        },
+      },
+      "ms-MY": {
+        demo: {
+          list: {
+            count_one: "{{count}} entri",
+            count_other: "{{count}} entri",
+          },
+        },
+      },
+      "zh-MY": {
+        demo: {
+          list: { count_one: "{{count}} 项", count_other: "{{count}} 个条目" },
+        },
+      },
+    }),
+  ).toEqual(["zh-MY demo:list.count_other differs from its _one twin"]);
+});
+
+it("registers every English key in Malay and Chinese, with English's placeholders and equal plural twins", async () => {
   // The demo menu registers its strings when it first renders, not at launch.
   await render(
     <SafeAreaProvider
