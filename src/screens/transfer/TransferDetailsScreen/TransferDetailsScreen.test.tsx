@@ -9,6 +9,7 @@ import {
   TransferStatus,
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { sentRequests } from "@/test/msw-server";
@@ -41,6 +42,14 @@ const AISYAH_IN_FULL = buildHistoryTransfer({
 });
 const SENT_AT = "5 Oct 2026, 3:42 pm";
 const SETTLED_AT = "6 Oct 2026, 9:05 am";
+const RECIPIENT_ID_LABELS = [
+  ["Mobile number", RecipientIdType.Mobile],
+  ["NRIC number", RecipientIdType.Nric],
+  ["Account number", RecipientIdType.AccountNumber],
+  ["Passport number", RecipientIdType.Passport],
+  ["Business registration number", RecipientIdType.Brn],
+  ["Army or police number", RecipientIdType.ArmyPolice],
+] as const;
 const OFFLINE = { isConnected: false, isInternetReachable: false };
 const ONLINE = { isConnected: true, isInternetReachable: true };
 const OUT_OF_DATE = "Couldn't refresh — these details may be out of date";
@@ -420,6 +429,23 @@ it("shows a received transfer with who sent it, and no word on the money", async
   expect(screen.getByText("Completed")).toBeOnTheScreen();
   expect(screen.getByText(SETTLED_AT)).toBeOnTheScreen();
 });
+
+it.each(RECIPIENT_ID_LABELS)(
+  "labels the recipient's ID by its type alone: %s",
+  async (idLabel, idType) => {
+    await openTransferDetails({
+      ...AISYAH,
+      counterparty: { ...AISYAH.counterparty, idType },
+    });
+
+    expect(await screen.findByText("•••• 4321")).toBeOnTheScreen();
+    expect(
+      RECIPIENT_ID_LABELS.filter(([label]) => screen.queryByText(label)).map(
+        ([label]) => label,
+      ),
+    ).toEqual([idLabel]);
+  },
+);
 
 it("shows one time for a transfer that settled in the minute it was sent", async () => {
   await openTransferDetails({
