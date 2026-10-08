@@ -121,6 +121,7 @@ export async function checkPendingTransferOnce(
 }
 
 // Undefined while there is no data: a read that has not answered yet has not settled anything.
+// An outcome the app cannot name leaves the money unconfirmed, so its record stays and it is read again.
 function transferStillSettling(
   outcome: TransferOutcomeScenario | null | undefined,
 ) {
@@ -128,7 +129,8 @@ function transferStillSettling(
     outcome === undefined ||
     outcome === null ||
     outcome === TransferOutcomeScenario.Processing ||
-    outcome === TransferOutcomeScenario.HeldForReview
+    outcome === TransferOutcomeScenario.HeldForReview ||
+    outcome === TransferOutcomeScenario.OutcomeUnexpected
   );
 }
 

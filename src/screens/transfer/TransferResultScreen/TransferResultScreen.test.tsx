@@ -412,6 +412,74 @@ it(
   }),
 );
 
+function answerApprovalAndReadsWithAnUnnamedOutcome(
+  recipient: Awaited<ReturnType<typeof lookUpTestRecipient>>["recipient"],
+  readAnswer: () => Partial<GetTransferResponse["transfer"]> = () => ({}),
+) {
+  const unnamedOutcome = (transferId: unknown) => ({
+    transferId: String(transferId),
+    version: 2,
+    direction: TransferDirection.Out,
+    status: TransferStatus.Unsuccessful,
+    funds: TransferFunds.Debited,
+    failureReason: TransferFailureReason.RecipientBankRejected,
+    counterparty: recipient,
+    amount: { minor: 10_000, currency: "MYR" },
+    reference: "20261007C0FFEE00",
+    createdAt: "2026-10-07T09:30:00+08:00",
+    updatedAt: "2026-10-07T09:30:05+08:00",
+  });
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", ({ params }) =>
+      HttpResponse.json({ transfer: unnamedOutcome(params.transferId) }),
+    ),
+    http.get("*/transfers/:transferId", ({ params }) =>
+      HttpResponse.json({
+        transfer: { ...unnamedOutcome(params.transferId), ...readAnswer() },
+      }),
+    ),
+  );
+}
+
+it(
+  "keeps checking a transfer whose outcome the app cannot name, and shows the refund once the bank names it",
+  scenarioTest("transfer.outcome_unexpected", async () => {
+    const { recipient } = await lookUpTestRecipient("012-345 6789");
+    let refunded = false;
+    answerApprovalAndReadsWithAnUnnamedOutcome(recipient, () =>
+      refunded ? { version: 3, funds: TransferFunds.Refunded } : {},
+    );
+    await sendRm100FromHome();
+    await screen.findByRole("header", { name: "Result not available" });
+    refunded = true;
+
+    await act(() => jest.advanceTimersByTimeAsync(3_000));
+
+    expect(
+      await screen.findByRole("header", { name: "Transfer refunded" }),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it(
+  "keeps warning on Home not to send again a transfer whose outcome the app cannot name",
+  scenarioTest("transfer.outcome_unexpected", async () => {
+    const { recipient } = await lookUpTestRecipient("012-345 6789");
+    answerApprovalAndReadsWithAnUnnamedOutcome(recipient);
+    await sendRm100FromHome();
+    await screen.findByRole("header", { name: "Result not available" });
+    await act(() => jest.advanceTimersByTimeAsync(3_000));
+
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+
+    expect(
+      await screen.findByText(
+        "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00",
+      ),
+    ).toBeOnTheScreen();
+  }),
+);
+
 async function readCustomerId() {
   const { body } = await sendToBank<GetPrimaryAccountResponse>(
     "GET",
