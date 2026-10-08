@@ -9,6 +9,7 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { listPendingTransfers } from "@/domains/transfer/hooks/pending-transfers";
+import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
@@ -137,20 +138,28 @@ it("says the same on review when it is today's limit the bank finds short as the
   expect(view.getPathname()).toBe("/transfer/review");
 });
 
+// Read against the clock the app reads: a fixed time stops being ahead once it has passed.
+const securityWaitEndsAt = new Date(Date.now() + 60 * 60_000).toISOString();
+
 it.each([
-  ["the account was locked", { code: "ACCOUNT_LOCKED", message: "Test." }],
+  [
+    "the account was locked",
+    { code: "ACCOUNT_LOCKED", message: "Test." },
+    "Your account is locked. Contact Ryt to unlock it.",
+  ],
   [
     "a security wait began",
     {
       code: "COOLING_OFF",
       message: "Test.",
-      until: "2026-10-09T09:00:00+08:00",
+      until: securityWaitEndsAt,
       reason: "DEVICE_PAIRED",
     },
+    `You can send money from ${formatMalaysianDateTime(securityWaitEndsAt)} — a security wait after pairing this phone.`,
   ],
 ])(
-  "keeps review open with no record to recheck when %s after the transfer was created",
-  async (_, error) => {
+  "holds Transfer on review, saying why and offering no PIN instead, with no record to recheck, when %s after the transfer was created",
+  async (_, error, holdReason) => {
     let answerApproval: (response: Response) => void = () => undefined;
     mswServer.use(
       http.post(
@@ -170,6 +179,11 @@ it.each([
       expect(screen.queryByText(SENDING_MESSAGE)).toBeNull();
     });
     expect(view.getPathname()).toBe("/transfer/review");
+    expect(await screen.findByText(holdReason)).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Use PIN instead" }),
+    ).toBeNull();
     expect(
       screen.queryByText("The transfer was not sent — no money moved."),
     ).toBeNull();
