@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TextInputProps } from "react-native";
 
@@ -16,6 +17,7 @@ interface Props {
 }
 export default function FieldRecipientId({ idType, ...fieldProps }: Props) {
   const { t } = useTranslation("transfer");
+  const [fieldFocused, setFieldFocused] = useState(false);
   const { characters, longestIdLength } = RECIPIENT_ID_FORMATS[idType];
   const keyboardProps = (
     {
@@ -34,6 +36,15 @@ export default function FieldRecipientId({ idType, ...fieldProps }: Props) {
 
   return (
     <FieldText
+      // A new field per keyboard, taking the old one's focus: iOS keeps a focused field's keys, and Android its case.
+      key={characters}
+      autoFocus={fieldFocused}
+      onFocus={() => {
+        setFieldFocused(true);
+      }}
+      onBlur={() => {
+        setFieldFocused(false);
+      }}
       {...fieldProps}
       {...keyboardProps}
       // A separator may sit between any two characters, so no typed ID the bank's rule takes is cut.

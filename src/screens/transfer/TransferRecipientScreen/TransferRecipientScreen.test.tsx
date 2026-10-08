@@ -133,6 +133,34 @@ it.each([
   },
 );
 
+it("brings the keyboard back with the new ID's keys when the chip changes while the ID is being typed", async () => {
+  await renderRoute("/transfer");
+  const mobileField = await screen.findByLabelText("DuitNow mobile number");
+  await fireEvent(mobileField, "focus");
+
+  await fireEvent.press(screen.getByRole("radio", { name: "Passport" }));
+
+  // Jest has no keyboard: a new field asking for focus is the nearest thing it can see.
+  const passportField = screen.getByLabelText("Passport number");
+  expect(passportField).not.toBe(mobileField);
+  expect(passportField).toHaveProp("autoFocus", true);
+  expect(passportField).toHaveProp("autoCapitalize", "characters");
+});
+
+it("raises no keyboard when the chip changes after the ID stopped being typed", async () => {
+  await renderRoute("/transfer");
+  const mobileField = await screen.findByLabelText("DuitNow mobile number");
+  await fireEvent(mobileField, "focus");
+  await fireEvent(mobileField, "blur");
+
+  await fireEvent.press(screen.getByRole("radio", { name: "Passport" }));
+
+  expect(screen.getByLabelText("Passport number")).not.toHaveProp(
+    "autoFocus",
+    true,
+  );
+});
+
 it("shows review a passport recipient under its own label, masked", async () => {
   await renderRoute("/transfer");
   await fireEvent.press(await screen.findByRole("radio", { name: "Passport" }));
