@@ -1,4 +1,7 @@
-import type { CoolingOffReason } from "@/domains/transfer/api/create-transfer/create-transfer.type";
+import type {
+  CoolingOffReason,
+  CreateTransferErrorCode,
+} from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import type {
   LookupRecipientRequest,
   LookupRecipientResponse,
@@ -86,6 +89,11 @@ export type TransferHold =
       reason: CoolingOffReason;
     };
 
+export type TransferNoticeDetail = {
+  until?: string;
+  code?: CreateTransferErrorCode;
+};
+
 export type TransferFlowState =
   | {
       step: TransferFlowStep.Editing;
@@ -96,6 +104,7 @@ export type TransferFlowState =
       step: TransferFlowStep.Reviewing;
       draft: TransferDraft;
       notice?: TransferFlowScenario;
+      noticeDetail?: TransferNoticeDetail;
       hold?: TransferHold;
       // A create whose answer never arrived may have run, so the next Confirm repeats it under the same key.
       createKeyToReuse?: string;
@@ -136,7 +145,11 @@ export type ReviewAndCreateEvent =
       challenge: string;
       expiresInSeconds: number;
     }
-  | { type: TransferFlowActionType.CreateNotSent; notice: TransferFlowScenario }
+  | {
+      type: TransferFlowActionType.CreateNotSent;
+      notice: TransferFlowScenario;
+      noticeDetail?: TransferNoticeDetail;
+    }
   | {
       type: TransferFlowActionType.CreateUnanswered;
       notice: TransferFlowScenario;
