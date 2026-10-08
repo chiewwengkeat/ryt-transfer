@@ -23,12 +23,13 @@ export default function KeypadPin({
   onPressDigit,
   onPressDelete,
 }: Props) {
-  const { t } = useTranslation("approval");
+  const { t, i18n } = useTranslation("approval");
   const digitKey = (digit: string) => (
     <Pressable
       key={digit}
       accessibilityRole="button"
       accessibilityLabel={digit}
+      accessibilityLanguage={i18n.language}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={() => {
@@ -48,6 +49,7 @@ export default function KeypadPin({
           entered: digitsEntered,
           length: pinLength,
         })}
+        accessibilityLanguage={i18n.language}
         style={styles.dots}
       >
         {Array.from({ length: pinLength }, (_, position) => (
@@ -68,6 +70,7 @@ export default function KeypadPin({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("keypad_pin.delete")}
+          accessibilityLanguage={i18n.language}
           accessibilityState={{ disabled }}
           disabled={disabled}
           onPress={onPressDelete}
