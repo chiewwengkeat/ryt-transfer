@@ -15,7 +15,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 | not confirmed yet | belum disahkan | 尚未确认 |
 | money returned | wang telah dipulangkan | 款项已退回 |
 
-**Retry words.** Where **Never** reads "offer to send it again", nothing the person can press carries one of these words: no button or action label, in any language. Messages keep their warnings, such as "shouldn't send it again" or "check History before sending again".
+**Retry words.** Where **Never** reads "offer to send it again", nothing the person can press carries one of these words: no button or action label, in any language. Where **Never** reads "offer to send it again", no language's message offers it. Messages keep their warnings, such as "shouldn't send it again" or "check History before sending again".
 
 | Retry word | Language |
 | --- | --- |
