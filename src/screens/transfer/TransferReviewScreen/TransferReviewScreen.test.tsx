@@ -30,6 +30,7 @@ import {
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
+  holdNextBiometricPrompt,
   phoneKeyOptions,
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
@@ -197,6 +198,36 @@ it(
     );
   }),
 );
+
+it("signs the name, masked number, bank and amount review shows, and no note", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const { recipient } = await lookUpTestRecipient(MOBILE);
+  const releasePrompt = holdNextBiometricPrompt();
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await waitFor(() => {
+    expect(biometricPromptsShown()).toHaveLength(1);
+  });
+
+  const [prompt] = biometricPromptsShown();
+  expect(JSON.parse(prompt?.data ?? "")).toMatchObject({
+    registeredName: recipient.registeredName,
+    idValueMasked: recipient.idValueMasked,
+    bankCode: recipient.bankCode,
+    amountMinor: 10_000,
+    currency: "MYR",
+    note: null,
+  });
+  expect(screen.getByText(recipient.registeredName)).toBeOnTheScreen();
+  expect(screen.getByText(recipient.idValueMasked)).toBeOnTheScreen();
+  expect(screen.getByText(recipient.bankName)).toBeOnTheScreen();
+  expect(screen.getByText("RM 100.00")).toBeOnTheScreen();
+  releasePrompt();
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+});
 
 it("reports each step of a sent transfer with its amount, never with the recipient", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
