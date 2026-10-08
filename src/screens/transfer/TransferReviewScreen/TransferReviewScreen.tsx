@@ -5,13 +5,11 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BackHandler } from "react-native";
 
-import { accountKeys } from "@/domains/account/api/account.keys";
 import {
   APPROVAL_REFUSAL_CODES,
   useApproveTransfer,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
-import { resetTransferHistory } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import type { LookupRecipientResponse } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
@@ -25,6 +23,7 @@ import Loader from "@/shared/ui/Loader/Loader";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
+import { refreshAccountAndHistoryAfterApproval } from "../state/refresh-after-approval";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
@@ -149,8 +148,7 @@ export default function TransferReviewScreen() {
       } else setAnswerLost(true);
       return;
     }
-    void queryClient.invalidateQueries({ queryKey: accountKeys.all });
-    void resetTransferHistory(queryClient);
+    void refreshAccountAndHistoryAfterApproval(queryClient);
     // From Home, so Back from the result never reopens a transfer already sent.
     router.dismissTo("/");
     router.push(`/transfer/result/${transferId}`);
