@@ -2,23 +2,12 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
-import {
-  AccessibilityInfo,
-  DeviceEventEmitter,
-  Pressable,
-  Text,
-} from "react-native";
+import { AccessibilityInfo, Pressable, Text } from "react-native";
 
 import { requestJson } from "@/shared/http/transport";
+import { pressHardwareBack } from "@/test/hardware-back";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
-
-// Jest runs as iOS, whose BackHandler ignores every listener: Android's lets a test press Back.
-jest.mock("react-native/Libraries/Utilities/BackHandler", () =>
-  jest.requireActual<object>(
-    "react-native/Libraries/Utilities/BackHandler.android",
-  ),
-);
 
 function HomeBalance() {
   const { data } = useQuery({
@@ -38,12 +27,6 @@ async function endSessionWithAnyRequest() {
   );
   await act(async () => {
     await requestJson("/any-request").catch(() => undefined);
-  });
-}
-
-async function pressHardwareBack() {
-  await act(() => {
-    DeviceEventEmitter.emit("hardwareBackPress");
   });
 }
 

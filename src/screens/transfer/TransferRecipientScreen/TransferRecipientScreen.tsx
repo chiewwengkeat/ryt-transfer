@@ -10,13 +10,18 @@ import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
+  TransferFlowStep,
   useTransferFlow,
 } from "../state/transfer-flow";
 
 export default function TransferRecipientScreen() {
   const { t } = useTranslation("transfer");
+  // Never an unconfirmed transfer's number: offering it again invites paying twice.
   const chosenMobile = useTransferFlow((flow) =>
-    "draft" in flow ? flow.draft.recipient?.idValue : undefined,
+    flow.step === TransferFlowStep.Editing ||
+    flow.step === TransferFlowStep.Reviewing
+      ? flow.draft.recipient?.idValue
+      : undefined,
   );
   const [mobile, setMobile] = useState(chosenMobile ?? "");
   const [mobileError, setMobileError] = useState<string>();

@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query";
 import type * as ContextStubs from "expo-router/build/testing-library/context-stubs";
 
+import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
 import { setObservabilitySink } from "@/shared/observability/observability";
 // Ahead of every test, as at launch: loaded with the first route instead, its reinstall wipe would erase keys a
 // test paired before rendering.
@@ -75,6 +76,12 @@ jest.mock("expo-router/build/testing-library/context-stubs", () => {
     },
   };
 });
+// Jest runs as iOS, whose BackHandler ignores every listener: Android's lets a test press Back.
+jest.mock("react-native/Libraries/Utilities/BackHandler", () =>
+  jest.requireActual<object>(
+    "react-native/Libraries/Utilities/BackHandler.android",
+  ),
+);
 // Replaced whole: the library throws as it loads when no native module is registered.
 jest.mock(
   "@sbaiahmed1/react-native-biometrics",
@@ -127,6 +134,8 @@ afterEach(() => {
   onlineManager.setOnline(true);
   focusManager.setFocused(undefined);
   observedRecords.splice(0);
+  // Leaving the flow keeps an unconfirmed approval, so only this clears one before the next test.
+  transferFlowStore.setState(transferFlowStore.getInitialState(), true);
   resetNativeDoubles();
   resetBiometricsDouble();
   mswServer.resetHandlers();

@@ -8,6 +8,7 @@ import {
   phoneKeyOptions,
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { pressHardwareBack } from "@/test/hardware-back";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -160,6 +161,80 @@ it.each([
       mayHaveMoved,
     );
   },
+);
+
+it(
+  "keeps review open when Back is pressed mid-approval, so the lost answer is told and one intended transfer debits once",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    let releaseApproval: () => void = () => undefined;
+    const approvalHeld = new Promise<void>((release) => {
+      releaseApproval = () => {
+        release();
+      };
+    });
+    // Holds the approval in flight, then falls through to the scenario, which commits it and loses the answer.
+    mswServer.use(
+      http.post(
+        "*/transfers/:transferId/approve",
+        async () => {
+          await approvalHeld;
+        },
+        { once: true },
+      ),
+    );
+    const view = await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByText(
+      "Sending your transfer. The bank's answer comes next.",
+    );
+    await pressHardwareBack();
+    releaseApproval();
+
+    expect(
+      await screen.findByText(
+        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    await pressHardwareBack();
+    expect(view.getPathname()).toBe("/transfer/review");
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+  }),
+);
+
+it(
+  "starts the next transfer blank after going Home from an approval whose answer was lost",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await openReviewOfRm100();
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Back to Home" }),
+    );
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    expect(
+      await screen.findByLabelText("DuitNow mobile number"),
+    ).toHaveDisplayValue("");
+    await fireEvent.changeText(
+      screen.getByLabelText("DuitNow mobile number"),
+      MOBILE,
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByLabelText("Amount (RM)")).toHaveDisplayValue("");
+    expect(view.getPathname()).toBe("/transfer/amount");
+  }),
 );
 
 it("never offers to send again when the approval's answer is lost", async () => {

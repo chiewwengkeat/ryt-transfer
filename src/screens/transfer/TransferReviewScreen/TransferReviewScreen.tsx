@@ -1,8 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
 import { router, Stack } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { BackHandler } from "react-native";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
 import {
@@ -53,12 +54,23 @@ export default function TransferReviewScreen() {
   // The approval left the phone and no answer proves where it ended, so sending again could pay twice.
   const [answerLost, setAnswerLost] = useState(false);
 
-  const answerAwaited = step === TransferFlowStep.Submitting && !answerLost;
   const sending =
     step === TransferFlowStep.Creating ||
     step === TransferFlowStep.Approving ||
-    answerAwaited;
+    step === TransferFlowStep.Submitting;
+  const answerAwaited = step === TransferFlowStep.Submitting && !answerLost;
   const shownLookup = lookup.data;
+  // No way back while sending, Android's Back key included: the bank's answer shows only here.
+  useEffect(() => {
+    if (!sending) return;
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => true,
+    );
+    return () => {
+      subscription.remove();
+    };
+  }, [sending]);
 
   const sendTransfer = async (confirmedLookup: LookupRecipientResponse) => {
     setNotSentMessage(undefined);

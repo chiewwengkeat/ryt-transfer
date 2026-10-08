@@ -4,10 +4,12 @@ import {
   dispatchTransferFlow,
   TransferFlowActionType,
 } from "@/screens/transfer/state/transfer-flow";
+import { asSen } from "@/shared/lib/money/money";
 
-afterEach(() => {
-  dispatchTransferFlow({ type: TransferFlowActionType.FlowLeft });
-});
+const TEST_RECIPIENT = {
+  idType: RecipientIdType.Mobile,
+  idValue: "+60123456789",
+} as const;
 
 it.each([
   ["ryt://transfer", "/transfer"],
@@ -32,8 +34,48 @@ it("leaves the router's own paths alone", () => {
 it("drops a link that arrives while a transfer draft is open", () => {
   dispatchTransferFlow({
     type: TransferFlowActionType.RecipientChosen,
-    recipient: { idType: RecipientIdType.Mobile, idValue: "+60123456789" },
+    recipient: TEST_RECIPIENT,
   });
 
   expect(redirectSystemPath({ path: "ryt://transfer-history" })).toBeNull();
+});
+
+it("still drops links after the transfer's screens close on an approval whose answer never came", () => {
+  dispatchTransferFlow({
+    type: TransferFlowActionType.RecipientChosen,
+    recipient: TEST_RECIPIENT,
+  });
+  dispatchTransferFlow({
+    type: TransferFlowActionType.AmountEntered,
+    amount: { minor: asSen(10_000), currency: "MYR" },
+  });
+  dispatchTransferFlow({
+    type: TransferFlowActionType.Confirmed,
+    lookup: {
+      recipient: {
+        registeredName: "NG CHEE KEONG",
+        idType: RecipientIdType.Mobile,
+        idValueMasked: "•••• 6789",
+        bankName: "Maybank",
+        bankCode: "MBBEMYKL",
+      },
+      recipientRef: "rref_test",
+      refExpiresInSeconds: 600,
+      firstTransfer: false,
+    },
+    idempotencyKey: "create-key",
+  });
+  dispatchTransferFlow({
+    type: TransferFlowActionType.Created,
+    transferId: "trf_test",
+    challenge: "challenge",
+  });
+  dispatchTransferFlow({
+    type: TransferFlowActionType.ApprovalSent,
+    attemptKey: "approve-key",
+  });
+
+  dispatchTransferFlow({ type: TransferFlowActionType.FlowLeft });
+
+  expect(redirectSystemPath({ path: "ryt://transfer" })).toBeNull();
 });

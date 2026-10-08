@@ -69,6 +69,12 @@ function reduceTransferFlow(
 ): TransferFlowState {
   switch (action.type) {
     case TransferFlowActionType.RecipientChosen:
+      // Review offers no way back while submitting, so this is a new transfer after leaving an unconfirmed one.
+      if (flow.step === TransferFlowStep.Submitting)
+        return {
+          step: TransferFlowStep.Editing,
+          draft: { recipient: action.recipient },
+        };
       if (
         flow.step !== TransferFlowStep.Editing &&
         flow.step !== TransferFlowStep.Reviewing
@@ -129,7 +135,8 @@ function reduceTransferFlow(
       if (flow.step !== TransferFlowStep.Submitting) return flow;
       return { step: TransferFlowStep.Done, transferId: flow.transferId };
     case TransferFlowActionType.FlowLeft:
-      return STARTING_FLOW;
+      // An approval that left the phone may have moved money, so its record outlives the screens.
+      return flow.step === TransferFlowStep.Submitting ? flow : STARTING_FLOW;
   }
 }
 
