@@ -10,11 +10,17 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { colors, spacing } from "@/shared/theme/theme";
+import {
+  colors,
+  minTouchTarget,
+  spacing,
+  typography,
+} from "@/shared/theme/theme";
 
 interface Props {
   children: ReactNode;
@@ -24,6 +30,8 @@ export default function ViewScreenFrame({ children, footer }: Props) {
   const { bottom } = useSafeAreaInsets();
   const frameRef = useRef<View>(null);
   const [frameTopInWindow, setFrameTopInWindow] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollOffsetRef = useRef(0);
   const frameId = useId();
   const [measuredFooterHeight, setMeasuredFooterHeight] = useState(0);
   const footerHeight = footer === undefined ? 0 : measuredFooterHeight;
@@ -65,6 +73,35 @@ export default function ViewScreenFrame({ children, footer }: Props) {
         style={styles.keyboardClear}
       >
         <ScrollView
+          ref={scrollViewRef}
+          scrollEventThrottle={16}
+          onScroll={(event) => {
+            scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+          }}
+          onLayout={(event) => {
+            const shownHeight = event.nativeEvent.layout.height;
+            if (frameRef.current === null) return;
+            // As the keyboard shrinks this, the field being typed in keeps room below it for one labelled control: the next one.
+            TextInput.State.currentlyFocusedInput()?.measureLayout(
+              frameRef.current,
+              (_x, fieldTopShown, _width, fieldHeight) => {
+                const roomShort =
+                  fieldTopShown +
+                  fieldHeight +
+                  spacing.md +
+                  typography.label.lineHeight +
+                  spacing.xs +
+                  minTouchTarget -
+                  shownHeight;
+                if (roomShort > 0)
+                  scrollViewRef.current?.scrollTo({
+                    y:
+                      scrollOffsetRef.current +
+                      Math.min(fieldTopShown, roomShort),
+                  });
+              },
+            );
+          }}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={[
             styles.content,
