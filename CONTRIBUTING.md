@@ -94,7 +94,7 @@ Test a route the way a person uses it, against the mock bank:
 - Query by accessible name, through `accessibilityRole` and `accessibilityLabel`; lint bans `testID`.
 - Assert what a person could observe: text, roles, where they ended up, and the requests that left the app. Never assert on component state or on which module a value passed through.
 
-Below the route go only the money, date and validation helpers, the transport, the translation checks, and other logic with more cases than a route test can meaningfully cover, such as the mock bank's rules or the query client's retries. A component is tested through a route that renders it.
+Only these are tested below the route: the money, date and validation helpers, the transport, the translation bundles, and other logic with more cases than a route test can meaningfully cover, such as the mock bank's rules or the query client's retries. A component is tested through a route that renders it.
 
 ## Translations
 
