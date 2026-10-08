@@ -34,8 +34,12 @@ export function useGetTransferLimits(
 }
 
 export function getTransferLimitsMaintenance(error: unknown) {
-  return error instanceof TransportError &&
-    error.code === GetTransferLimitsErrorCode.ServiceUnavailable
-    ? (error.body as GetTransferLimitsErrorResponse).error
-    : undefined;
+  if (
+    !(error instanceof TransportError) ||
+    error.code !== GetTransferLimitsErrorCode.ServiceUnavailable
+  )
+    return undefined;
+  const { until } = (error.body as GetTransferLimitsErrorResponse).error;
+  // An unreadable time is dropped: formatting it throws, and the words without a time still serve.
+  return { until: Number.isNaN(Date.parse(until ?? "")) ? undefined : until };
 }

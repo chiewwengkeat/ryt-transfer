@@ -69,6 +69,36 @@ it(
   }),
 );
 
+it.each([
+  ["a time the app cannot read", { until: "soon" }],
+  ["no time", {}],
+])(
+  "says transfers are unavailable without a time when maintenance comes with %s",
+  async (_, untilField) => {
+    mswServer.use(
+      http.get("*/transfer-limits", () =>
+        HttpResponse.json(
+          {
+            error: {
+              code: "SERVICE_UNAVAILABLE",
+              message: "Test.",
+              ...untilField,
+            },
+          },
+          { status: 503 },
+        ),
+      ),
+    );
+    await renderRoute("/");
+
+    expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
+    expect(
+      screen.getByText("Transfers are unavailable right now. Try again later."),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+  },
+);
+
 it(
   "shows a new customer's lower daily limit as it shows any limit",
   scenarioTest("transfer.new_customer_daily_limit", async () => {

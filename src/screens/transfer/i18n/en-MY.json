@@ -101,11 +101,13 @@
     },
     "cooling_off_new_phone": {
       "title": "Phone paired less than 12 hours ago",
-      "disabled_reason": "You can send money from {{time}} — a security wait after pairing this phone."
+      "disabled_reason": "You can send money from {{time}} — a security wait after pairing this phone.",
+      "disabled_reason_without_time": "You can send money later — a security wait after pairing this phone."
     },
     "cooling_off_new_account": {
       "title": "Account opened less than an hour ago",
-      "disabled_reason": "You can send money from {{time}} — a security wait after opening your account."
+      "disabled_reason": "You can send money from {{time}} — a security wait after opening your account.",
+      "disabled_reason_without_time": "You can send money later — a security wait after opening your account."
     },
     "account_locked": {
       "title": "Account locked",

@@ -1459,6 +1459,41 @@ it(
   }),
 );
 
+it.each([
+  ["a time the app cannot read", { until: "soon" }],
+  ["no time", {}],
+])(
+  "says transfers are unavailable without a time when the bank answers Confirm with maintenance and %s",
+  async (_, untilField) => {
+    mswServer.use(
+      http.post("*/transfers", () =>
+        HttpResponse.json(
+          {
+            error: {
+              code: "SERVICE_UNAVAILABLE",
+              message: "Test.",
+              ...untilField,
+            },
+          },
+          { status: 503 },
+        ),
+      ),
+    );
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "Transfers are unavailable right now. Try again later.",
+      ),
+    ).toBeOnTheScreen();
+    expect(countSent("POST", "/approve")).toBe(0);
+  },
+);
+
 it(
   "says something unexpected stopped the transfer when the bank answers Confirm in a way the app does not know",
   scenarioTest("transfer.review_unexpected", async () => {
@@ -1520,6 +1555,46 @@ it(
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
     expect(countSent("POST", "/approve")).toBe(0);
   }),
+);
+
+it.each([
+  [
+    "DEVICE_PAIRED",
+    "You can send money later — a security wait after pairing this phone.",
+  ],
+  [
+    "NEW_ACCOUNT",
+    "You can send money later — a security wait after opening your account.",
+  ],
+])(
+  "holds the transfer without a time, and keeps holding it, when the bank's cooling-off for %s comes with a time the app cannot read",
+  async (reason, holdReason) => {
+    mswServer.use(
+      http.post("*/transfers", () =>
+        HttpResponse.json(
+          {
+            error: {
+              code: "COOLING_OFF",
+              message: "Test.",
+              until: "soon",
+              reason,
+            },
+          },
+          { status: 403 },
+        ),
+      ),
+    );
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    expect(await screen.findByText(holdReason)).toBeOnTheScreen();
+    await act(() => jest.advanceTimersByTimeAsync(10 * 60_000));
+
+    expect(screen.getByText(holdReason)).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+  },
 );
 
 it(

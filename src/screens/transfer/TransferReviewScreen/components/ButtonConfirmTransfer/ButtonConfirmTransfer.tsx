@@ -59,12 +59,18 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     hold?.kind === TransferHoldKind.AccountLocked
       ? t("common.account_locked.disabled_reason")
       : hold?.kind === TransferHoldKind.CoolingOff
-        ? t(
-            hold.reason === CoolingOffReason.NewAccount
-              ? "common.cooling_off_new_account.disabled_reason"
-              : "common.cooling_off_new_phone.disabled_reason",
-            { time: formatMalaysianDateTime(hold.until) },
-          )
+        ? Number.isNaN(Date.parse(hold.until))
+          ? t(
+              hold.reason === CoolingOffReason.NewAccount
+                ? "common.cooling_off_new_account.disabled_reason_without_time"
+                : "common.cooling_off_new_phone.disabled_reason_without_time",
+            )
+          : t(
+              hold.reason === CoolingOffReason.NewAccount
+                ? "common.cooling_off_new_account.disabled_reason"
+                : "common.cooling_off_new_phone.disabled_reason",
+              { time: formatMalaysianDateTime(hold.until) },
+            )
         : undefined;
   // A disabled button's reason is never read out unless focus lands on it, so a hold that appears says so.
   useEffect(() => {
@@ -174,7 +180,12 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
           dispatchTransferFlow({
             type: TransferFlowActionType.CreateNotSent,
             notice: TransferFlowScenario.UnderMaintenance,
-            noticeDetail: { until: refusal.until },
+            // An unreadable time is dropped: formatting it throws, and the words without a time still serve.
+            noticeDetail: {
+              until: Number.isNaN(Date.parse(refusal.until ?? ""))
+                ? undefined
+                : refusal.until,
+            },
           });
           return;
         // The bank is still on the first request under this key, so a repeat of it later gets that one's answer.
