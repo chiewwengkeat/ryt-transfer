@@ -125,7 +125,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 `transfer.recent_recipient_chosen`
 - **When:** they pick someone they've sent to before from their recent recipients
 - **Money:** no money moved
-- **Shown as:** on the recipient step, filled in
+- **Shown as:** on the recipient step, as the recipient picked, in place of the ID field
 - **Tell them:** who they picked; review then shows the name the bank holds today
 - **They can:** continue
 - **Why:** a recent recipient saves typing, but the name check still runs afresh, so a changed or reassigned number is never trusted from memory
