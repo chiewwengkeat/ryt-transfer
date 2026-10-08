@@ -366,6 +366,22 @@ it(
   "turns off the swipe that would close the whole transfer flow while the transfer is being sent",
   scenarioTest("transfer.approval_unanswered", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
+    let releaseCreate: () => void = () => undefined;
+    const createHeld = new Promise<void>((release) => {
+      releaseCreate = () => {
+        release();
+      };
+    });
+    // Holds the create so the swipe is read at its first sending step, then falls through to the scenario.
+    mswServer.use(
+      http.post(
+        "*/transfers",
+        async () => {
+          await createHeld;
+        },
+        { once: true },
+      ),
+    );
     await openReviewOfRm100("/");
     const transferButton = await screen.findByRole("button", {
       name: "Transfer",
@@ -373,6 +389,9 @@ it(
     expect(readRootTransferScreenGestureEnabled()).not.toBe(false);
 
     await fireEvent.press(transferButton);
+    await screen.findByRole("button", { name: "Transfer", busy: true });
+    expect(readRootTransferScreenGestureEnabled()).toBe(false);
+    releaseCreate();
     await screen.findByRole("button", { name: "Back to Home" });
 
     expect(readRootTransferScreenGestureEnabled()).toBe(false);
