@@ -130,7 +130,7 @@ export default function TransferResultScreen() {
             TransferOutcomeScenario.RecoveryUnexpected,
           ].includes(scenario) && (
             <ButtonSecondary
-              label={t("result.check_history")}
+              label={t("result.transfer_history")}
               onPress={() => {
                 router.replace("/transfer-history");
               }}

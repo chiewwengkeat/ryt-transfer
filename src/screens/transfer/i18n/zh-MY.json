@@ -227,7 +227,7 @@
     },
     "outcome_unexpected": {
       "title": "发送后出现意外问题",
-      "body": "目前无法显示结果。再次转账前，请先查看历史记录——尚未确认。",
+      "body": "目前无法显示结果。再次转账前，请先查看您的转账记录——尚未确认。",
       "load_again": "重新加载结果"
     },
     "approval_unanswered": {
@@ -244,7 +244,7 @@
     },
     "last_transfer_not_found": {
       "title": "找不到上一笔转账",
-      "body": "找不到您的上一笔转账。再次转账前，请先查看历史记录——尚未确认。"
+      "body": "找不到您的上一笔转账。再次转账前，请先查看您的转账记录——尚未确认。"
     },
     "session_ended": {
       "title": "会话已结束",
@@ -256,7 +256,7 @@
     },
     "recovery_unexpected": {
       "title": "核查时出现意外问题",
-      "body": "目前无法确认此转账的结果。再次转账前，请先查看历史记录——尚未确认。"
+      "body": "目前无法确认此转账的结果。再次转账前，请先查看您的转账记录——尚未确认。"
     },
     "transfer_status": {
       "sent": "成功",
@@ -366,7 +366,7 @@
     "reference": "参考编号",
     "completed_at": "完成时间",
     "done": "完成",
-    "check_history": "查看历史记录",
+    "transfer_history": "转账记录",
     "heading": {
       "completed": "转账已发送",
       "processing": "转账处理中",

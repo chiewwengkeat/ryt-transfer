@@ -227,7 +227,7 @@
     },
     "outcome_unexpected": {
       "title": "Sesuatu yang tidak dijangka selepas menghantar",
-      "body": "Keputusan tidak dapat dipaparkan sekarang. Semak Sejarah sebelum menghantar pindahan ini sekali lagi — belum disahkan.",
+      "body": "Keputusan tidak dapat dipaparkan sekarang. Semak sejarah pindahan anda sebelum menghantar pindahan ini sekali lagi — belum disahkan.",
       "load_again": "Muat semula keputusan"
     },
     "approval_unanswered": {
@@ -244,7 +244,7 @@
     },
     "last_transfer_not_found": {
       "title": "Pindahan terakhir tidak ditemui",
-      "body": "Pindahan terakhir anda tidak dapat ditemui. Semak Sejarah sebelum menghantarnya sekali lagi — belum disahkan."
+      "body": "Pindahan terakhir anda tidak dapat ditemui. Semak sejarah pindahan anda sebelum menghantarnya sekali lagi — belum disahkan."
     },
     "session_ended": {
       "title": "Sesi tamat",
@@ -256,7 +256,7 @@
     },
     "recovery_unexpected": {
       "title": "Sesuatu yang tidak dijangka semasa memeriksa",
-      "body": "Keputusan pindahan ini tidak dapat disahkan buat masa ini. Semak Sejarah sebelum menghantarnya sekali lagi — belum disahkan."
+      "body": "Keputusan pindahan ini tidak dapat disahkan buat masa ini. Semak sejarah pindahan anda sebelum menghantarnya sekali lagi — belum disahkan."
     },
     "transfer_status": {
       "sent": "Berjaya",
@@ -366,7 +366,7 @@
     "reference": "Rujukan",
     "completed_at": "Selesai pada",
     "done": "Selesai",
-    "check_history": "Semak Sejarah",
+    "transfer_history": "Sejarah pindahan",
     "heading": {
       "completed": "Pindahan dihantar",
       "processing": "Pindahan sedang diproses",

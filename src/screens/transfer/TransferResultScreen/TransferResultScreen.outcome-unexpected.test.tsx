@@ -53,7 +53,7 @@ it(
         .getAllByRole("button")
         .map((button) => button.props.accessibilityLabel as unknown)
         .sort(),
-    ).toEqual(["Check History", "Done", "Load the result again"]);
+    ).toEqual(["Done", "Load the result again", "Transfer history"]);
   }),
 );
 

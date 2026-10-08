@@ -351,7 +351,7 @@ it(
     ).toBeOnTheScreen();
     expect(
       screen.getByText(
-        "Your last transfer can't be found. Check History before sending it again — not confirmed yet.",
+        "Your last transfer can't be found. Check your transfer history before sending it again — not confirmed yet.",
       ),
     ).toBeOnTheScreen();
     expect(
@@ -359,10 +359,10 @@ it(
         `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
       ),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Check History", "Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Transfer history", "Done"]);
 
     await fireEvent.press(
-      screen.getByRole("button", { name: "Check History" }),
+      screen.getByRole("button", { name: "Transfer history" }),
     );
 
     expect(view.getPathname()).toBe("/transfer-history");
@@ -383,7 +383,7 @@ it(
     ).toBeOnTheScreen();
     expect(
       screen.getByText(
-        "This transfer's outcome can't be confirmed right now. Check History before sending it again — not confirmed yet.",
+        "This transfer's outcome can't be confirmed right now. Check your transfer history before sending it again — not confirmed yet.",
       ),
     ).toBeOnTheScreen();
     expect(
@@ -391,7 +391,7 @@ it(
         `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
       ),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Check History", "Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Transfer history", "Done"]);
   }),
 );
 
@@ -423,7 +423,7 @@ it(
     expect(
       screen.getByRole("header", { name: "Outcome not confirmed" }),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Check History", "Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Transfer history", "Done"]);
     expect(announcements).not.toHaveBeenCalled();
   }),
 );
@@ -494,7 +494,7 @@ it(
     ).toBeOnTheScreen();
     expect(
       screen.getByText(
-        "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
+        "The result cannot be shown right now. Check your transfer history before sending this again — not confirmed yet.",
       ),
     ).toBeOnTheScreen();
     expect(
@@ -503,7 +503,7 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(buttonsOnTheResultPage()).toEqual([
-      "Check History",
+      "Transfer history",
       "Load the result again",
       "Done",
     ]);
@@ -592,7 +592,7 @@ it(
     const readsBeforeLeaving = readsOfTheTransfer();
 
     await fireEvent.press(
-      screen.getByRole("button", { name: "Check History" }),
+      screen.getByRole("button", { name: "Transfer history" }),
     );
     await act(() => jest.advanceTimersByTimeAsync(32_000));
 

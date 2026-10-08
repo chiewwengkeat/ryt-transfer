@@ -227,7 +227,7 @@
     },
     "outcome_unexpected": {
       "title": "Something unexpected after sending",
-      "body": "The result cannot be shown right now. Check History before sending this again — not confirmed yet.",
+      "body": "The result cannot be shown right now. Check your transfer history before sending this again — not confirmed yet.",
       "load_again": "Load the result again"
     },
     "approval_unanswered": {
@@ -244,7 +244,7 @@
     },
     "last_transfer_not_found": {
       "title": "Last transfer not found",
-      "body": "Your last transfer can't be found. Check History before sending it again — not confirmed yet."
+      "body": "Your last transfer can't be found. Check your transfer history before sending it again — not confirmed yet."
     },
     "session_ended": {
       "title": "Session ended",
@@ -256,7 +256,7 @@
     },
     "recovery_unexpected": {
       "title": "Something unexpected while checking",
-      "body": "This transfer's outcome can't be confirmed right now. Check History before sending it again — not confirmed yet."
+      "body": "This transfer's outcome can't be confirmed right now. Check your transfer history before sending it again — not confirmed yet."
     },
     "transfer_status": {
       "sent": "Successful",
@@ -366,7 +366,7 @@
     "reference": "Reference",
     "completed_at": "Completed",
     "done": "Done",
-    "check_history": "Check History",
+    "transfer_history": "Transfer history",
     "heading": {
       "completed": "Transfer sent",
       "processing": "Transfer processing",
