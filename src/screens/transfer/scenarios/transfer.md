@@ -302,7 +302,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 
 ### Approval cancelled
 `transfer.approval_cancelled`
-- **When:** they cancel the face or fingerprint prompt, or close the PIN sheet without approving
+- **When:** they cancel the face or fingerprint prompt, or close the PIN sheet without approving; also when the phone closes its own prompt, as newer Android does when it locks the phone after too many failed tries, which reaches the app as their cancel
 - **Money:** no money moved
 - **Shown as:** on the review step
 - **Tell them:** the transfer was not sent — no money moved
@@ -321,7 +321,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 
 ### Too many face or fingerprint attempts
 `transfer.biometrics_locked_out`
-- **When:** the phone locks face and fingerprint recognition after too many failed tries
+- **When:** the phone locks face and fingerprint recognition after too many failed tries; newer Android handles the lockout inside its own prompt, so this also shows when the phone's key cannot sign after that prompt's own recovery with the phone's PIN
 - **Money:** no money moved
 - **Shown as:** the PIN sheet, over the review step
 - **Tell them:** there were too many attempts, so they approve with their PIN

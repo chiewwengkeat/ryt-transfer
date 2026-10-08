@@ -514,6 +514,36 @@ it(
   }),
 );
 
+it(
+  "turns a key that cannot sign after Android's own lockout recovery into the PIN sheet, which approves",
+  scenarioTest("transfer.biometrics_locked_out", async () => {
+    failNextBiometricPrompt("KEY_USER_NOT_AUTHENTICATED");
+    await confirmRm100Transfer();
+
+    expect(
+      await screen.findByText(
+        "There were too many attempts, so approve with your PIN.",
+      ),
+    ).toBeOnTheScreen();
+    await approveWithPin(DEMO_PIN);
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  }),
+);
+
+it("still offers Use PIN instead while the phone reports face and fingerprint locked", async () => {
+  reportBiometricSensorUnavailable("BIOMETRY_LOCKOUT");
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  );
+
+  expect(
+    await screen.findByText("Enter your bank PIN to approve this transfer."),
+  ).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toEqual([]);
+});
+
 it("opens the PIN sheet with no prompt while the phone reports face and fingerprint locked", async () => {
   reportBiometricSensorUnavailable("BIOMETRY_LOCKOUT");
   await confirmRm100Transfer();
@@ -580,6 +610,16 @@ it(
 
 it("says the transfer was not sent when the prompt is closed with Android's cancel", async () => {
   failNextBiometricPrompt("USER_CANCELED");
+  await confirmRm100Transfer();
+
+  expect(
+    await screen.findByText("The transfer was not sent — no money moved."),
+  ).toBeOnTheScreen();
+  expect(approveRequests()).toEqual([]);
+});
+
+it("says the transfer was not sent when Android cancels its own prompt", async () => {
+  failNextBiometricPrompt("SYSTEM_CANCELED");
   await confirmRm100Transfer();
 
   expect(

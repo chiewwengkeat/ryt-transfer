@@ -193,6 +193,8 @@ const SIGN_OUTCOME_BY_LIBRARY_CODE = new Map<
   ["BIOMETRIC_LOCKOUT", BiometricSignOutcome.LockedOut],
   ["BIOMETRIC_LOCKOUT_PERMANENT", BiometricSignOutcome.LockedOut],
   ["BIOMETRY_LOCKOUT", BiometricSignOutcome.LockedOut],
+  // After Android's own lockout recovery, the phone's PIN asked inside its prompt, the key refuses the match that follows.
+  ["KEY_USER_NOT_AUTHENTICATED", BiometricSignOutcome.LockedOut],
   ["NO_BIOMETRICS_ENROLLED", BiometricSignOutcome.NotSetUp],
   ["BIOMETRY_NOT_ENROLLED", BiometricSignOutcome.NotSetUp],
   ["BiometricErrorNoneEnrolled", BiometricSignOutcome.NotSetUp],
