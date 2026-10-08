@@ -175,32 +175,59 @@ it("offers no PIN instead once the bank has locked the PIN, and leaves face or f
   expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
 });
 
-it("creates no transfer once the bank has locked the PIN, while face or fingerprint approval is off", async () => {
-  await confirmRm100ApprovedByPin();
-  await approveWithPin("111111");
-  await screen.findByText("That PIN is incorrect. You have 2 tries left.");
-  await approveWithPin("111111");
-  await screen.findByText("That PIN is incorrect. You have 1 try left.");
-  await approveWithPin("111111");
-  await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
-  const countCreatesSent = () =>
-    sentRequests.filter(
-      (request) =>
-        request.method === "POST" &&
-        /\/transfers$/.test(new URL(request.url).pathname),
-    ).length;
-  const createsSentBeforeTheLock = countCreatesSent();
+it.each([
+  [
+    "face or fingerprint approval is off",
+    () => {
+      approvalSettingsStore.setState({ biometricApprovalOn: false });
+    },
+    "It's turned off in this app's settings.",
+  ],
+  [
+    "nothing is enrolled",
+    () => {
+      reportBiometricSensorUnavailable("BIOMETRY_NOT_ENROLLED");
+    },
+    "No face or fingerprint is set up on this phone.",
+  ],
+  [
+    "the phone has no usable sensor",
+    () => {
+      reportBiometricSensorUnavailable("BIOMETRY_NOT_AVAILABLE");
+    },
+    "This phone has no face or fingerprint sensor the app can use.",
+  ],
+])(
+  "creates no transfer once the bank has locked the PIN, and says why only the PIN could approve, when %s",
+  async (_, leaveOnlyThePinToApprove, reason) => {
+    await openReviewOfRm100();
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Use PIN instead" }),
+    );
+    await approveWithPin("111111");
+    await screen.findByText("That PIN is incorrect. You have 2 tries left.");
+    await approveWithPin("111111");
+    await screen.findByText("That PIN is incorrect. You have 1 try left.");
+    await approveWithPin("111111");
+    await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
+    await act(leaveOnlyThePinToApprove);
+    const countCreatesSent = () =>
+      sentRequests.filter(
+        (request) =>
+          request.method === "POST" &&
+          /\/transfers$/.test(new URL(request.url).pathname),
+      ).length;
+    const createsSentBeforeTheLock = countCreatesSent();
 
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
 
-  expect(
-    await screen.findByText("It's turned off in this app's settings."),
-  ).toBeOnTheScreen();
-  expect(screen.queryByRole("button", { name: "1" })).toBeNull();
-  expect(countCreatesSent()).toBe(createsSentBeforeTheLock);
-});
+    expect(await screen.findByText(reason)).toBeOnTheScreen();
+    expect(screen.queryByRole("button", { name: "1" })).toBeNull();
+    expect(countCreatesSent()).toBe(createsSentBeforeTheLock);
+  },
+);
 
 it("keeps no record to recheck once the bank refuses the PIN, as wrong or as locked", async () => {
   await pairPhoneAsTheDemoLaunchDoes();

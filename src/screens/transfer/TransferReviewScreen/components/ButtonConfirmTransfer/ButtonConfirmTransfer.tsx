@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AccessibilityInfo } from "react-native";
 
+import {
+  BiometricSignOutcome,
+  readBiometricSensorRefusal,
+} from "@/domains/approval/hooks/approval-keys";
 import { showApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
@@ -97,26 +101,40 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const confirmedLookup = lookup.data;
 
   const createAndApproveTransfer = async (path: ApprovalPath) => {
-    // ⛔ The bank refuses every PIN while it holds the lock, so a transfer only a PIN could approve is never created.
-    if (
-      approvalPinLocked &&
-      (path === ApprovalPath.Pin ||
-        !approvalSettingsStore.getState().biometricApprovalOn)
-    ) {
-      await showApprovalPinLocked({
-        ...(path === ApprovalPath.Pin
+    if (approvalPinLocked) {
+      const sensorRefusalOutcome = (await readBiometricSensorRefusal())
+        ?.outcome;
+      const biometricsUnavailableDetail = !approvalSettingsStore.getState()
+        .biometricApprovalOn
+        ? "turned_off"
+        : sensorRefusalOutcome === BiometricSignOutcome.NotSetUp
+          ? "not_set_up"
+          : sensorRefusalOutcome === BiometricSignOutcome.NoSensor
+            ? "no_sensor"
+            : undefined;
+      const pinOnlyWords =
+        path === ApprovalPath.Pin
           ? { message: t("common.pin_chosen.body") }
-          : {
-              message: t("common.biometrics_unavailable.body"),
-              detail: t("common.biometrics_unavailable.turned_off"),
-            }),
-        refusal: t("common.pin_locked.body"),
-      });
-      dispatchTransferFlow({
-        type: TransferFlowActionType.CreateNotSent,
-        notice: TransferFlowScenario.PinLocked,
-      });
-      return;
+          : biometricsUnavailableDetail === undefined
+            ? undefined
+            : {
+                message: t("common.biometrics_unavailable.body"),
+                detail: t(
+                  `common.biometrics_unavailable.${biometricsUnavailableDetail}`,
+                ),
+              };
+      // ⛔ The bank refuses every PIN while it holds the lock, so a transfer only a PIN could approve is never created.
+      if (pinOnlyWords !== undefined) {
+        await showApprovalPinLocked({
+          ...pinOnlyWords,
+          refusal: t("common.pin_locked.body"),
+        });
+        dispatchTransferFlow({
+          type: TransferFlowActionType.CreateNotSent,
+          notice: TransferFlowScenario.PinLocked,
+        });
+        return;
+      }
     }
     const reviewing = transferFlowStore.getState();
     // A name check run again answers with a new ref, and the bank refuses a kept key sent with another body.
