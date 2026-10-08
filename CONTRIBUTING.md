@@ -34,7 +34,7 @@ A screens folder and a domain about the same thing share a singular name, as `sr
 ### Adding a slice
 
 - A screens folder holds `<Name>Screen/` folders beside `components/`, `hooks/`, `state/` and `i18n/`, and nothing else. The transfer folder also keeps the scenario matrix in `scenarios/`.
-- A domain holds `api/`, `components/`, `hooks/` and `i18n/`, and nothing else. Each endpoint has a folder of its own, `api/<endpoint>/<endpoint>.ts`, with its request and response types beside it in `<endpoint>.type.ts`.
+- A domain holds `api/`, `components/`, `hooks/` and `i18n/`, and nothing else. Each endpoint has a folder of its own in `api/`: `<endpoint>.type.ts` holds its request and response types, and `<endpoint>.ts` the code that calls it or works on its cached data, including any hook a component calls. Lint fails a component that calls `useQuery`, `useMutation` or `useInfiniteQuery` itself, so a component reads and writes through such a hook. The types can land before the rest, while only the mock bank answers the endpoint. A domain's query keys all come from its `api/<area>.keys.ts`.
 - A domain's `hooks/` holds its public modules that are not components: its hooks, and any plain module another slice calls.
 - A screen's route in `src/app/` re-exports the screen's entry file, `<Name>Screen/<Name>Screen.tsx`.
 - A slice's strings go in its `i18n/` folder, one bundle per language, registered in `src/shell/translations.ts`.
