@@ -21,7 +21,7 @@ import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 it(
-  "announces an outcome that changes in place, and not the one the page opens with",
+  "announces an outcome that changes in place, not the one the page opens with, and nothing from Home's banners beneath it",
   scenarioTest("transfer.approval_unanswered", async () => {
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
     announce.mockClear();
@@ -70,12 +70,15 @@ it(
     expect(
       await screen.findByRole("header", { name: "Transfer sent" }),
     ).toBeOnTheScreen();
-    expect(announce).toHaveBeenCalledWith(
-      `Transfer sent. RM 100.00 sent to ${recipient.registeredName} — money moved.`,
-    );
-    expect(announce).not.toHaveBeenCalledWith(
-      expect.stringContaining("Checking your transfer"),
-    );
+    expect(announce.mock.calls).toEqual([
+      [
+        "This is your first transfer to this recipient. Check the name is who you expect.",
+      ],
+      ["You're offline. Sending is paused until Ryt can be reached."],
+      [
+        `Transfer sent. RM 100.00 sent to ${recipient.registeredName} — money moved.`,
+      ],
+    ]);
   }),
 );
 
