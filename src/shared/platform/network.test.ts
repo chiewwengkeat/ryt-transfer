@@ -1,4 +1,7 @@
-import { setPhoneNetwork } from "@/test/harness/native-doubles";
+import {
+  setPhoneNetwork,
+  setPhoneNetworkWithoutAnEvent,
+} from "@/test/harness/native-doubles";
 
 import { subscribeToPhoneConnection } from "./network";
 
@@ -8,6 +11,10 @@ const ONLINE = { isConnected: true, isInternetReachable: true };
 function settle() {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
+
+afterEach(() => {
+  jest.useRealTimers();
+});
 
 it("reports the phone's connection as soon as it subscribes", async () => {
   setPhoneNetwork(OFFLINE);
@@ -72,4 +79,40 @@ it("counts a phone that gives no answer as connected", async () => {
   unsubscribe();
 
   expect(heard).toEqual([true]);
+});
+
+it("reads the connection again every 2 seconds while the phone says it has none, until a reading says it is back", async () => {
+  jest.useFakeTimers();
+  setPhoneNetwork(OFFLINE);
+  const heard: boolean[] = [];
+  const unsubscribe = subscribeToPhoneConnection((connected) => {
+    heard.push(connected);
+  });
+
+  await jest.advanceTimersByTimeAsync(2_000);
+  setPhoneNetworkWithoutAnEvent(ONLINE);
+  await jest.advanceTimersByTimeAsync(2_000);
+  setPhoneNetworkWithoutAnEvent(OFFLINE);
+  await jest.advanceTimersByTimeAsync(10_000);
+  unsubscribe();
+
+  expect(heard).toEqual([false, false, true]);
+});
+
+it("keeps a change that arrives while a reading taken again is on its way", async () => {
+  jest.useFakeTimers();
+  setPhoneNetwork(OFFLINE);
+  const heard: boolean[] = [];
+  const unsubscribe = subscribeToPhoneConnection((connected) => {
+    heard.push(connected);
+  });
+  await jest.advanceTimersByTimeAsync(0);
+
+  // Synchronous, so the reading taken again is still on its way when the change arrives.
+  jest.advanceTimersByTime(2_000);
+  setPhoneNetwork(ONLINE);
+  await jest.advanceTimersByTimeAsync(0);
+  unsubscribe();
+
+  expect(heard).toEqual([false, true]);
 });

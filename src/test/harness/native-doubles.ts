@@ -97,6 +97,10 @@ export function setPhoneNetwork(state: NetworkState) {
   for (const listener of networkListeners) listener(state);
 }
 
+export function setPhoneNetworkWithoutAnEvent(state: NetworkState) {
+  phoneNetwork = state;
+}
+
 // Listeners stay: their owners remove them, and dropping one here would leave its owner deaf.
 export function resetNativeDoubles() {
   kvEntries.clear();
