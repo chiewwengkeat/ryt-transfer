@@ -231,6 +231,30 @@ it("signs the name, masked number, bank and amount review shows, and no note", a
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
 });
 
+it("signs the note review shows and sends it with the transfer, which the bank then approves", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const releasePrompt = holdNextBiometricPrompt();
+  await openReviewOfRm100("/transfer", "Lunch");
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await waitFor(() => {
+    expect(biometricPromptsShown()).toHaveLength(1);
+  });
+
+  const [prompt] = biometricPromptsShown();
+  expect(JSON.parse(prompt?.data ?? "")).toMatchObject({ note: "Lunch" });
+  const create = sentRequests.find(
+    (request) =>
+      request.method === "POST" &&
+      /\/transfers$/.test(new URL(request.url).pathname),
+  );
+  expect(await create?.json()).toMatchObject({ note: "Lunch" });
+  releasePrompt();
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+});
+
 it("reports each step of a sent transfer with its amount, never with the recipient", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await openReviewOfRm100();
