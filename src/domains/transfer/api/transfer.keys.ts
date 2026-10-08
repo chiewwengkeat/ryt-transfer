@@ -11,7 +11,8 @@ export const transferKeys = {
     ["transfer-history", filters] as const,
   recentRecipients: ["transfers", "recent-recipients"] as const,
   banks: ["transfers", "banks"] as const,
+  // Off the transfers prefix: a broad refetch would mint a new recipient reference under an open review.
   lookup: (
     recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }>,
-  ) => ["transfers", "lookup", recipient.idType, recipient.idValue] as const,
+  ) => ["recipient-lookup", recipient.idType, recipient.idValue] as const,
 };
