@@ -11,8 +11,8 @@ module.exports = {
   testMatch: TEST_FILES.map((glob) => `<rootDir>/${glob}`),
   globalSetup: "<rootDir>/jest.global-setup.js",
   setupFilesAfterEnv: [
-    "<rootDir>/src/test/demo-bank-setup.ts",
     "<rootDir>/src/test/jest-setup.ts",
+    "<rootDir>/src/test/demo-bank-setup.ts",
   ],
   // msw/node maps the react-native condition to null, so `node` must follow it.
   testEnvironmentOptions: {
