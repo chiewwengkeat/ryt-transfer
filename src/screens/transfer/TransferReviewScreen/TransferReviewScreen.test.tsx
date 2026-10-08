@@ -1632,17 +1632,21 @@ it("goes on with the transfer the bank made once a repeat gets the answer that w
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
 });
 
+function loseEveryTryOfTheFirstCreate() {
+  // Its Transfer and both repeats.
+  mswServer.use(
+    ...Array.from({ length: 3 }, () =>
+      http.post("*/transfers", () => HttpResponse.error(), { once: true }),
+    ),
+  );
+}
+
 it(
   "confirms changed details as a new transfer after Ryt did not answer",
   scenarioTest("transfer.details_changed_after_no_answer", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
-    // Every try of the first confirmation: its Transfer and both repeats.
-    mswServer.use(
-      ...Array.from({ length: 3 }, () =>
-        http.post("*/transfers", () => HttpResponse.error(), { once: true }),
-      ),
-    );
+    loseEveryTryOfTheFirstCreate();
     await openReviewOfRm100();
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -1680,6 +1684,60 @@ it(
 );
 
 it(
+  "says the details changed after Ryt did not answer when only the note changed",
+  scenarioTest("transfer.details_changed_after_no_answer", async () => {
+    loseEveryTryOfTheFirstCreate();
+    await openReviewOfRm100();
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByText(
+      "Ryt could not be reached — no money moved.",
+      {},
+      { timeout: 10_000 },
+    );
+
+    await pressHardwareBack();
+    await fireEvent.changeText(
+      screen.getByLabelText("Note (optional)"),
+      "Lunch",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+
+    expect(
+      await screen.findByText(
+        "Your details changed after Ryt did not answer. Check them, then confirm this as a new transfer.",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.getByText("Lunch")).toBeOnTheScreen();
+  }),
+);
+
+it("reopens review without saying the details changed when nothing changed after Ryt did not answer", async () => {
+  const { recipient } = await lookUpTestRecipient(MOBILE);
+  loseEveryTryOfTheFirstCreate();
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText(
+    "Ryt could not be reached — no money moved.",
+    {},
+    { timeout: 10_000 },
+  );
+
+  await pressHardwareBack();
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+
+  expect(await screen.findByText(recipient.registeredName)).toBeOnTheScreen();
+  expect(
+    screen.queryByText(
+      "Your details changed after Ryt did not answer. Check them, then confirm this as a new transfer.",
+    ),
+  ).toBeNull();
+});
+
+it(
   "starts one transfer when Transfer is tapped twice, and debits once",
   scenarioTest("transfer.double_tap_ignored", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
@@ -1688,78 +1746,100 @@ it(
     const transferButton = await screen.findByRole("button", {
       name: "Transfer",
     });
+    let fiber = (transferButton as unknown as { unstable_fiber: PressFiber })
+      .unstable_fiber;
+    while (typeof fiber.memoizedProps.onPress !== "function")
+      fiber = fiber.return;
+    const pressTransfer = fiber.memoizedProps.onPress as () => void;
 
-    await fireEvent.press(transferButton);
-    await fireEvent.press(transferButton);
+    // ⛔ Not two fireEvent.press calls: awaited, the second meets a busy button; together, their acts overlap.
+    // Both presses in one act land before the re-render, so only the flow's own guard can refuse the second.
+    await act(() => {
+      pressTransfer();
+      pressTransfer();
+    });
 
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
     expect(countSent("POST", "/transfers")).toBe(1);
+    expect(countSent("POST", "/approve")).toBe(1);
     jest.useRealTimers();
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
   }),
 );
 
-it("never moves a transfer left mid-confirmation, even once another is confirmed", async () => {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const balanceBeforeMinor = await readBankBalanceMinor();
-  let answerLeftTransfer = () => {};
-  const leftTransferAnswered = new Promise<void>((resolve) => {
-    answerLeftTransfer = resolve;
-  });
-  let answerNewTransfer = () => {};
-  const newTransferAnswered = new Promise<void>((resolve) => {
-    answerNewTransfer = resolve;
-  });
-  // Each holds one create in flight, then falls through to the bank.
-  mswServer.use(
-    http.post(
-      "*/transfers",
-      async () => {
-        await leftTransferAnswered;
-      },
-      { once: true },
-    ),
-    http.post(
-      "*/transfers",
-      async () => {
+it.each([
+  ["made", () => undefined],
+  [
+    "a refusal",
+    () =>
+      HttpResponse.json(
+        { error: { code: "AMOUNT_INVALID", message: "Test." } },
+        { status: 422 },
+      ),
+  ],
+  ["lost, even after its repeats", () => HttpResponse.error()],
+])(
+  "never lets a transfer left mid-confirmation move or stop the one confirmed since, when its answer is %s",
+  async (_, answerLeftTransferWith) => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    let answerLeftTransfer = () => {};
+    const leftTransferAnswered = new Promise<void>((resolve) => {
+      answerLeftTransfer = resolve;
+    });
+    let answerNewTransfer = () => {};
+    const newTransferAnswered = new Promise<void>((resolve) => {
+      answerNewTransfer = resolve;
+    });
+    // Holds both creates in flight; the newer one then falls through to the bank.
+    mswServer.use(
+      http.post("*/transfers", async ({ request }) => {
+        const { amount } = (await request.clone().json()) as {
+          amount: { minor: number };
+        };
+        if (amount.minor === 10_000) {
+          await leftTransferAnswered;
+          return answerLeftTransferWith();
+        }
         await newTransferAnswered;
-      },
-      { once: true },
-    ),
-  );
-  await openReviewOfRm100();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
+        return undefined;
+      }),
+    );
+    await openReviewOfRm100();
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
 
-  // Review offers no way out while confirming, so this stands in for any route that still could.
-  await act(() => {
-    router.dismissTo("/");
-  });
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    MOBILE,
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "50");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  await act(async () => {
-    answerLeftTransfer();
-    await jest.advanceTimersByTimeAsync(1_000);
-  });
-  answerNewTransfer();
+    // Review offers no way out while confirming, so this stands in for any route that still could.
+    await act(() => {
+      router.dismissTo("/");
+    });
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await fireEvent.changeText(
+      await screen.findByLabelText("DuitNow mobile number"),
+      MOBILE,
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByText("RM 12,845.50");
+    await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "50");
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await act(async () => {
+      answerLeftTransfer();
+      // Past a lost answer's two repeats, 2 s then 4 s apart, while the newer create is still held.
+      await jest.advanceTimersByTimeAsync(7_000);
+    });
+    answerNewTransfer();
 
-  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
-  jest.useRealTimers();
-  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 5_000);
-});
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    jest.useRealTimers();
+    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 5_000);
+  },
+);
 
 function refuseCreatesKeepingTheirBodies() {
   const createBodies: unknown[] = [];
@@ -1831,3 +1911,5 @@ it("returns to the amount step when the bank cannot accept the amount as entered
   ).toBeOnTheScreen();
   expect(view.getPathname()).toBe("/transfer/amount");
 });
+
+type PressFiber = { memoizedProps: { onPress?: unknown }; return: PressFiber };
