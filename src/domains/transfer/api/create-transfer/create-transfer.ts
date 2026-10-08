@@ -16,7 +16,11 @@ export function isCreateTransferUnanswered(error: unknown) {
     error instanceof TransportError &&
     (error.kind === TransportErrorKind.Network ||
       error.kind === TransportErrorKind.Timeout ||
-      error.kind === TransportErrorKind.Unreadable)
+      error.kind === TransportErrorKind.Unreadable ||
+      // A server error naming no bank code says nothing about the create, which may have run.
+      (error.kind === TransportErrorKind.Http &&
+        (error.status ?? 0) >= 500 &&
+        error.code === undefined))
   );
 }
 

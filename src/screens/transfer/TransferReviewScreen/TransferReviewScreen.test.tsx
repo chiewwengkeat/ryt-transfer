@@ -1632,6 +1632,40 @@ it("goes on with the transfer the bank made once a repeat gets the answer that w
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
 });
 
+it("treats a server error naming no bank code as no answer, repeating the create under its key until one gets through", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  mswServer.use(
+    ...Array.from({ length: 3 }, () =>
+      http.post(
+        "*/transfers",
+        () => new HttpResponse("<html>Bad gateway</html>", { status: 502 }),
+        { once: true },
+      ),
+    ),
+  );
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  expect(
+    await screen.findByText(
+      "Ryt could not be reached — no money moved.",
+      {},
+      { timeout: 10_000 },
+    ),
+  ).toBeOnTheScreen();
+  const [unansweredKey] = idempotencyKeysOfCreatesSent();
+  expect(idempotencyKeysOfCreatesSent()).toEqual(Array(3).fill(unansweredKey));
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(idempotencyKeysOfCreatesSent()).toEqual(Array(4).fill(unansweredKey));
+  jest.useRealTimers();
+  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+});
+
 function loseEveryTryOfTheFirstCreate() {
   // Its Transfer and both repeats.
   mswServer.use(
