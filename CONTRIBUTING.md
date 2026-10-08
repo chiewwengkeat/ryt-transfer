@@ -14,6 +14,8 @@ pnpm test    # Jest, then the tests of the repo's own scripts and lint rules
 
 The pre-commit hook lints, formats and secret-scans the staged files, then runs the placement check over the commit's own tree. The `commit-msg` hook lints the message, and CI lints every pushed message again.
 
+CI also runs `production-bundle`, a job of its own that exports the app in each variant, and with none set (`scripts/check-production-bundle.js`). It fails when an export does not finish, when a production or unset export carries code from `src/mocks/` or msw, or when a demo or development export lacks that code, since then a clean production export proves nothing.
+
 ## Layout
 
 The app is cut into vertical slices of two kinds:
