@@ -650,6 +650,36 @@ it(
   }),
 );
 
+it("reports a transfer whose amount the app cannot read, and claims no outcome for it", async () => {
+  const { created } = await startTestTransfer(10_000);
+  mswServer.use(
+    http.get("*/transfers/:transferId", () =>
+      HttpResponse.json({
+        transfer: {
+          ...created.transfer,
+          amount: { ...created.transfer.amount, currency: "USD" },
+        },
+      }),
+    ),
+  );
+  await renderRoute("/");
+  await act(() => {
+    router.push({
+      pathname: "/transfer/result/[transferId]",
+      params: { transferId: created.transfer.transferId },
+    });
+  });
+
+  expect(
+    await screen.findByRole("header", { name: "Outcome not confirmed" }),
+  ).toBeOnTheScreen();
+  expect(observedRecords).toContainEqual({
+    type: "event",
+    name: "unreadable_amount",
+    properties: { boundary: "transfer" },
+  });
+});
+
 it("still says the bank is unreachable once it stops answering, after answering the page's first read", async () => {
   const { created } = await startTestTransfer(10_000);
   let statusReads = 0;

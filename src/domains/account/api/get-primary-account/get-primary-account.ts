@@ -2,6 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { requestJson } from "@/shared/http/transport";
 import { parseWireAmount } from "@/shared/lib/money/money";
+import { trackEvent } from "@/shared/observability/observability";
 
 import { accountKeys } from "../account.keys";
 import type { GetPrimaryAccountResponse } from "./get-primary-account.type";
@@ -15,8 +16,10 @@ export const getPrimaryAccountOptions = () =>
         { signal },
       );
       const balance = parseWireAmount(account.balance);
-      if (!balance)
+      if (!balance) {
+        trackEvent("unreadable_amount", { boundary: "primary_account" });
         throw new TypeError("The primary account's balance is unreadable.");
+      }
       return { ...account, balance };
     },
   });

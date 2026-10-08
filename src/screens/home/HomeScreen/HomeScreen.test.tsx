@@ -11,6 +11,7 @@ import {
 import { clearTransferScenario } from "@/test/clear-transfer-scenario";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
+import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -137,6 +138,30 @@ it(
     expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
   }),
+);
+
+it.each([
+  ["balance", "/accounts/primary", "primary_account"],
+  ["limit", "/transfer-limits", "transfer_limits"],
+])(
+  "says something unexpected went wrong, and reports it, when the bank sends a %s the app cannot read",
+  async (_, path, boundary) => {
+    const { body } = await sendToBank<object>("GET", path);
+    const bodyInDollars = JSON.parse(
+      JSON.stringify(body).replaceAll('"MYR"', '"USD"'),
+    ) as object;
+    mswServer.use(http.get(`*${path}`, () => HttpResponse.json(bodyInDollars)));
+    await renderRoute("/");
+
+    expect(
+      await screen.findByText("Something unexpected went wrong."),
+    ).toBeOnTheScreen();
+    expect(observedRecords).toContainEqual({
+      type: "event",
+      name: "unreadable_amount",
+      properties: { boundary },
+    });
+  },
 );
 
 it(

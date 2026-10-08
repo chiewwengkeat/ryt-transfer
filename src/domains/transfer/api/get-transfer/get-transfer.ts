@@ -6,6 +6,7 @@ import {
 
 import { requestJson } from "@/shared/http/transport";
 import { parseWireAmount } from "@/shared/lib/money/money";
+import { trackEvent } from "@/shared/observability/observability";
 
 import { patchTransferInHistory } from "../list-transfers/list-transfers";
 import type { ListTransfersResponse } from "../list-transfers/list-transfers.type";
@@ -89,7 +90,10 @@ export function useGetTransfer(
 
 export function selectTransferWithOutcome(transfer: Transfer) {
   const amount = parseWireAmount(transfer.amount);
-  if (!amount) throw new TypeError("The transfer's amount is unreadable.");
+  if (!amount) {
+    trackEvent("unreadable_amount", { boundary: "transfer" });
+    throw new TypeError("The transfer's amount is unreadable.");
+  }
   return { ...transfer, amount, outcome: outcomeOfTransfer(transfer) };
 }
 
