@@ -1,42 +1,66 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http } from "msw";
 
-import ButtonPrimary from "./ButtonPrimary";
+import { mswServer } from "@/test/msw-server";
+import { renderRoute } from "@/test/render-route";
 
-it("acts on a press", async () => {
-  const onPress = jest.fn();
-  await render(<ButtonPrimary label="Continue" onPress={onPress} />);
-
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-
-  expect(onPress).toHaveBeenCalledTimes(1);
-});
-
-it("says why it is disabled, on screen and to a screen reader, and ignores a press", async () => {
-  const onPress = jest.fn();
-  await render(
-    <ButtonPrimary
-      label="Continue"
-      onPress={onPress}
-      disabledReason="Enter an amount first"
-    />,
+function holdTheRequest(path: string) {
+  let answer: () => void = () => undefined;
+  const held = new Promise<void>((release) => {
+    answer = release;
+  });
+  mswServer.use(
+    http.get(
+      path,
+      async () => {
+        await held;
+      },
+      { once: true },
+    ),
   );
-  const button = screen.getByRole("button", { name: "Continue" });
+  return answer;
+}
 
-  await fireEvent.press(button);
+it("says why Home's Transfer is disabled, on screen and to a screen reader, and ignores a press", async () => {
+  const loadingReason =
+    "You can send once your balance and today's limit have loaded.";
+  const answerBalance = holdTheRequest("*/accounts/primary");
+  const view = await renderRoute("/");
+  const transfer = screen.getByRole("button", { name: "Transfer" });
 
-  expect(button).toBeDisabled();
-  expect(screen.getByHintText("Enter an amount first")).toBe(button);
-  expect(screen.getByText("Enter an amount first")).toBeOnTheScreen();
-  expect(onPress).not.toHaveBeenCalled();
+  await fireEvent.press(transfer);
+
+  expect(transfer).toBeDisabled();
+  expect(screen.getByHintText(loadingReason)).toBe(transfer);
+  expect(screen.getByText(loadingReason)).toBeOnTheScreen();
+  expect(view.getPathname()).toBe("/");
+  answerBalance();
+  await screen.findByText("RM 12,845.50");
 });
 
-it("shows it is busy while loading, keeps its name, and ignores a press", async () => {
-  const onPress = jest.fn();
-  await render(<ButtonPrimary label="Send" onPress={onPress} loading />);
-  const button = screen.getByRole("button", { name: "Send" });
+it("shows Continue busy under its own name while a linked recent recipient loads, and ignores a press", async () => {
+  const answerRecents = holdTheRequest("*/recipients/recent");
+  const view = await renderRoute("/");
+  await act(() => {
+    router.push({
+      pathname: "/transfer",
+      params: { recentId: "rcp_linked_from_home" },
+    });
+  });
+  const continueButton = await screen.findByRole("button", {
+    name: "Continue",
+  });
 
-  await fireEvent.press(button);
+  await fireEvent.press(continueButton);
 
-  expect(button).toBeBusy();
-  expect(onPress).not.toHaveBeenCalled();
+  expect(continueButton).toBeBusy();
+  answerRecents();
+  await waitFor(() => {
+    expect(continueButton).not.toBeBusy();
+  });
+  expect(view.getPathname()).toBe("/transfer");
+  expect(
+    screen.queryByText("Enter a Malaysian mobile number, like 012-345 6789."),
+  ).toBeNull();
 });

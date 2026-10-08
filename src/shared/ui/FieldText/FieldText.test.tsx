@@ -1,74 +1,51 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
 
-import FieldText from "./FieldText";
+import { renderRoute } from "@/test/render-route";
+
+const OVER_TODAYS_LIMIT =
+  "That is more than the RM 5,000.00 you can still send today.";
+
+async function typeAnAmountOverTodaysLimit() {
+  await renderRoute("/transfer");
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "5,000.01");
+}
 
 afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it("hands typed text to its owner", async () => {
-  const onChangeText = jest.fn();
-  await render(
-    <FieldText label="Account number" value="" onChangeText={onChangeText} />,
-  );
-
-  await fireEvent.changeText(screen.getByLabelText("Account number"), "1234");
-
-  expect(onChangeText).toHaveBeenCalledWith("1234");
-});
-
-it("shows its error and announces it to a screen reader", async () => {
+it("shows the amount's error and announces it to a screen reader", async () => {
   const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
-  await render(
-    <FieldText
-      label="Account number"
-      value="12"
-      onChangeText={jest.fn()}
-      error="Enter all 12 digits"
-    />,
-  );
 
-  expect(screen.getByText("Enter all 12 digits")).toBeOnTheScreen();
-  expect(announce).toHaveBeenCalledWith("Enter all 12 digits");
+  await typeAnAmountOverTodaysLimit();
+
+  expect(screen.getByText(OVER_TODAYS_LIMIT)).toBeOnTheScreen();
+  expect(announce).toHaveBeenCalledWith(OVER_TODAYS_LIMIT);
 });
 
-it("names its input once, by its label, and keeps its error as the input's hint", async () => {
-  await render(
-    <FieldText
-      label="Account number"
-      value="12"
-      onChangeText={jest.fn()}
-      error="Enter all 12 digits"
-    />,
-  );
+it("names the amount's input once, by its label, and keeps its error as the input's hint", async () => {
+  await typeAnAmountOverTodaysLimit();
 
-  expect(screen.getByHintText("Enter all 12 digits")).toBe(
-    screen.getByLabelText("Account number"),
+  expect(screen.getByHintText(OVER_TODAYS_LIMIT)).toBe(
+    screen.getByLabelText("Amount (RM)"),
   );
-  expect(screen.queryByText("Account number")).toBeNull();
+  expect(screen.queryByText("Amount (RM)")).toBeNull();
   expect(
-    screen.getByText("Account number", { includeHiddenElements: true }),
+    screen.getByText("Amount (RM)", { includeHiddenElements: true }),
   ).toBeOnTheScreen();
 });
 
-it("passes the keyboard's learning settings through to the input", async () => {
-  await render(
-    <FieldText
-      label="Account number"
-      value=""
-      onChangeText={jest.fn()}
-      autoCorrect={false}
-      autoComplete="off"
-    />,
-  );
+it("keeps the keyboard from learning or correcting a recipient's mobile number", async () => {
+  await renderRoute("/transfer");
+  const mobileNumber = await screen.findByLabelText("DuitNow mobile number");
 
-  expect(screen.getByLabelText("Account number")).toHaveProp(
-    "autoCorrect",
-    false,
-  );
-  expect(screen.getByLabelText("Account number")).toHaveProp(
-    "autoComplete",
-    "off",
-  );
+  expect(mobileNumber).toHaveProp("autoCorrect", false);
+  expect(mobileNumber).toHaveProp("autoComplete", "tel");
 });
