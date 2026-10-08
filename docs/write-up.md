@@ -22,7 +22,15 @@ On Android, the PIN pad must ignore touches while another app draws over the scr
 
 ### A check that would have removed the warnings it guards
 
-Malay and Chinese ship as machine translations, so I decided on a check that fails any money message leaving out its money state's phrase, and anything that offers to send the money again where a scenario forbids it. The banned words were to cover "send it again" as well as "try again", in all three languages. But six scenarios must warn against resending: three tell the person they shouldn't send it again, and three to check History before sending again. Banning the words anywhere in a message would have failed all six, and rewording them to pass would have removed the very warnings the check exists to protect. So, as decided, the check's retry-word half reads only what a person can press, buttons and action labels, and messages keep their warnings; its other half still holds every money message to its state's phrase ([002](decisions/002-scenario-matrix.md)). The cost is that the check does not catch a message urging a resend in words.
+Malay and Chinese ship as machine translations, so I decided on a check that fails any money message leaving out its money state's phrase, and anything that offers to send the money again where a scenario forbids it. The banned words were to cover "send it again" as well as "try again", in all three languages. But six scenarios must warn against resending: three tell the person they shouldn't send it again, and three to check History before sending again. Banning the words anywhere in a message would have failed all six, and rewording them to pass would have removed the very warnings the check exists to protect. So, as decided, the check's retry-word half reads only what a person can press, buttons and action labels, and messages keep their warnings; the phrase half is the one that reads messages, each for its state's phrase ([002](decisions/002-scenario-matrix.md)). The cost is that the check does not catch a message urging a resend in words.
+
+### A press that outlived leaving review
+
+Every approval waits for a fresh check that the phone is not rooted or hooked, and on a slow phone that check takes a moment. An audit found that if someone pressed Transfer and went Back during that moment, the press still went through: the transfer was created, and the approval prompt rose over the amount screen they had gone back to. Locking Back and the swipe while the check ran would have closed that, at the cost of a screen that ignores someone trying to leave it. Instead, leaving review while the check runs cancels the press: nothing is created, no prompt appears, and they press again if they come back ([008](decisions/008-hardening.md)).
+
+### The capture block lifted a moment too soon
+
+The block lifts only on the two receipts, and the first version lifted it the moment a receipt's route opened. But a screen transition is still running then, and its first frames show the screen being left: the review, with the recipient and the amount. The shell is not told when a transition ends, so the block now stays on for 600 milliseconds after a receipt opens, an allowance meant to outlast the transition, and goes back on before the next screen is drawn when a receipt is left.
 
 ## The decisions
 
@@ -48,18 +56,20 @@ Nothing here ran on a physical phone: every device check used an emulator or a s
 - **The touch guard** is read from the code, not seen working: the emulator has no overlay app to test it with.
 - **Haptics and motion.** An emulator has no vibration motor, and its frame rate says nothing about a phone's, so the feel of the haptics and how the motion runs on a real phone are unchecked.
 - **The capture block on manufacturers' Android.** Only Google's emulator image is available to check it on; how other manufacturers' builds of Android honour it is unverified.
+- **History's speed on iOS.** The [re-render counts](history-re-render-counts.md) were taken on Android; iOS was not re-measured, since a release build's logs never reached iOS's log in the spike, and the iOS counts it did take matched Android's. No count says anything about frame rate.
 
 ## What the bank and the host app own
 
 - **Proving the phone's integrity.** The rooted-phone check runs on the phone, so it can be fooled, and it can refuse a genuine customer whose phone misreports. The refusal takes the place of the approval prompt and offers no appeal inside this module, and no way to approve anyway. The real control is the bank verifying the phone on its servers, through Google Play Integrity and Apple App Attest; this module names that step and builds none of it. Separately, Bank Negara Malaysia's Risk Management in Technology policy, in Appendix 11, paragraph 3, expects the bank to detect and end hijacked sessions promptly, and to warn a customer when a risky app raises their risk; that sits on the bank's side too.
 - **Apps that read the screen.** Blocking screenshots does not stop a malicious accessibility service or a remote-control app from reading the screen, a common route for Android banking scams in Malaysia. Android 14 can hide an app's views from all but genuine accessibility tools, but that needs native code I chose not to add yet; with the bank's server-side fraud signals, it is the production answer.
-- **Unblocked moments.** At worst, the capture block is off during the splash screen before the app's code loads, which shows no data, and through a transition into or out of a receipt, when the screen on the other side, such as the review with its recipient and amount, is drawn unblocked.
+- **Unblocked moments.** The capture block is off during the splash screen before the app's code loads, which shows no data. On the way into a receipt it stays on for 600 milliseconds after the receipt's route opens, an allowance meant to outlast the transition, so the screen being left, such as the review with its recipient and amount, is not captured as it slides away; on a phone slow enough that the transition outlasts it, the transition's last frames would be. Leaving a receipt puts the block back before the next screen is drawn.
 - **The host app.** Sign-in, device pairing, PIN setup and reset, the biometrics setting and session handling belong to the banking app this module runs inside.
 - **Someone holding the phone and the PIN** can approve through the PIN path. What acts against them is the bank's: every transfer and every biometric change is notified, and the account can be locked. Three wrong PINs lock the PIN at the bank, which stops someone guessing it, not someone who knows it.
 
 ## Languages and text size
 
 - Malay and Chinese are machine translations, used as they came and reviewed by no one. A glossary fixes the money phrases and the retry words, but the translations' overall quality is unknown.
+- On iOS, the app tells VoiceOver which language each text and control is in. Android has no such setting, so TalkBack reads Malay and Chinese in the phone's own speech language, and nothing here closes that. The screen titles, drawn by the native navigation bar, carry no language on either platform: a title of the app's own would lose the bar's own animation.
 - The Chinese is simplified. The app matches the phone's language on its language code alone, so a phone set to traditional Chinese gets the simplified text too.
 - The walk at 200% text is planned in English only, with Malay and Chinese at the default size on Android only, so Malay, which runs about a quarter longer than English, may clip at large sizes where nobody looks.
 - Typing an amount gives no haptic tick: the amount is typed on the phone's own keyboard, which already clicks or buzzes on each key on most phones.
