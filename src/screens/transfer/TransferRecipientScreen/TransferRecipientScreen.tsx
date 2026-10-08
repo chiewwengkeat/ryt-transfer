@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
-import FieldText from "@/shared/ui/FieldText/FieldText";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import {
@@ -15,18 +14,23 @@ import {
   TransferFlowStep,
   useTransferFlow,
 } from "../state/transfer-flow";
+import ChipIdType from "./components/ChipIdType/ChipIdType";
+import FieldRecipientId from "./components/FieldRecipientId/FieldRecipientId";
 
 export default function TransferRecipientScreen() {
   const { t } = useTranslation("transfer");
-  // Never an unconfirmed transfer's number: offering it again invites paying twice.
-  const chosenMobile = useTransferFlow((flow) =>
+  // Never an unconfirmed transfer's recipient: offering it again invites paying twice.
+  const draftRecipient = useTransferFlow((flow) =>
     flow.step === TransferFlowStep.Editing ||
     flow.step === TransferFlowStep.Reviewing
-      ? flow.draft.recipient?.idValue
+      ? flow.draft.recipient
       : undefined,
   );
-  const [mobile, setMobile] = useState(chosenMobile ?? "");
-  const [mobileError, setMobileError] = useState<string>();
+  const [idType, setIdType] = useState(
+    draftRecipient?.idType ?? RecipientIdType.Mobile,
+  );
+  const [typedId, setTypedId] = useState(draftRecipient?.idValue ?? "");
+  const [idError, setIdError] = useState<string>();
 
   return (
     <>
@@ -51,18 +55,19 @@ export default function TransferRecipientScreen() {
           <ButtonPrimary
             label={t("recipient.continue")}
             onPress={() => {
-              const mobileId = parseRecipientId(RecipientIdType.Mobile, mobile);
-              if (mobileId === null) {
-                setMobileError(t("common.badly_formed_input.mobile"));
+              const idValue = parseRecipientId(idType, typedId);
+              if (idValue === null) {
+                setIdError(
+                  t(
+                    `common.badly_formed_input.${idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+                  ),
+                );
                 return;
               }
               if (
                 dispatchTransferFlow({
                   type: TransferFlowActionType.RecipientChosen,
-                  recipient: {
-                    idType: RecipientIdType.Mobile,
-                    idValue: mobileId,
-                  },
+                  recipient: { idType, idValue },
                 })
               )
                 router.push("/transfer/amount");
@@ -70,18 +75,22 @@ export default function TransferRecipientScreen() {
           />
         }
       >
-        <FieldText
-          label={t("recipient.mobile_label")}
-          placeholder={t("recipient.mobile_placeholder")}
-          value={mobile}
-          onChangeText={(text) => {
-            setMobile(text);
-            setMobileError(undefined);
+        <ChipIdType
+          idType={idType}
+          onIdTypeChange={(chosenIdType) => {
+            setIdType(chosenIdType);
+            setTypedId("");
+            setIdError(undefined);
           }}
-          error={mobileError}
-          keyboardType="phone-pad"
-          textContentType="telephoneNumber"
-          autoComplete="tel"
+        />
+        <FieldRecipientId
+          idType={idType}
+          value={typedId}
+          onChangeText={(text) => {
+            setTypedId(text);
+            setIdError(undefined);
+          }}
+          error={idError}
         />
       </ViewScreenFrame>
     </>

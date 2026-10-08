@@ -1,6 +1,9 @@
 import { useTranslation } from "react-i18next";
 
-import type { LookupRecipientResponse } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import type {
+  LookupRecipientResponse,
+  RecipientIdType,
+} from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import RowDetail from "@/shared/ui/RowDetail/RowDetail";
 
 interface Props {
@@ -15,7 +18,9 @@ export default function SectionReviewRecipient({ recipient }: Props) {
         value={recipient.bankName}
       />
       <RowDetail
-        label={t("section_review_recipient.mobile")}
+        label={t(
+          `section_review_recipient.${recipient.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+        )}
         value={recipient.idValueMasked}
       />
     </>

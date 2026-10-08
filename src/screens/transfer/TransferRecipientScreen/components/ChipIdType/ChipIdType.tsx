@@ -1,0 +1,71 @@
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+
+import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import {
+  colors,
+  minTouchTarget,
+  radii,
+  spacing,
+  typography,
+} from "@/shared/theme/theme";
+
+interface Props {
+  idType: RecipientIdType;
+  onIdTypeChange: (idType: RecipientIdType) => void;
+}
+export default function ChipIdType({ idType, onIdTypeChange }: Props) {
+  const { t } = useTranslation("transfer");
+  return (
+    <View
+      accessibilityRole="radiogroup"
+      accessibilityLabel={t("recipient.id_type_label")}
+      style={styles.chips}
+    >
+      {[
+        RecipientIdType.Mobile,
+        RecipientIdType.Nric,
+        RecipientIdType.Passport,
+        RecipientIdType.Brn,
+        RecipientIdType.ArmyPolice,
+      ].map((chipIdType) => (
+        <Pressable
+          key={chipIdType}
+          accessibilityRole="radio"
+          accessibilityState={{ checked: chipIdType === idType }}
+          onPress={() => {
+            onIdTypeChange(chipIdType);
+          }}
+          style={[styles.chip, chipIdType === idType && styles.chipChosen]}
+        >
+          <Text
+            style={[
+              styles.chipLabel,
+              chipIdType === idType && styles.chipLabelChosen,
+            ]}
+          >
+            {t(
+              `recipient.id_type.${chipIdType.toLowerCase() as Lowercase<RecipientIdType>}`,
+            )}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  chip: {
+    minHeight: minTouchTarget,
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+  },
+  chipChosen: { borderColor: colors.accent, backgroundColor: colors.accent },
+  chipLabel: { ...typography.label, color: colors.textPrimary },
+  chipLabelChosen: { color: colors.onAccent },
+});

@@ -27,6 +27,11 @@
       "title": "Badly formed ID, amount or note",
       "body": "The bank could not accept the amount or note as entered. Check them, then review again.",
       "mobile": "Enter a Malaysian mobile number, like 012-345 6789.",
+      "nric": "Enter the 12 digits of the NRIC number.",
+      "passport": "Enter the passport number: a letter, then 5 to 11 letters or digits.",
+      "brn": "Enter the business registration number: 12 digits, or 6 or 7 digits and a letter.",
+      "army_police": "Enter the army or police number: 1 to 3 letters, then 4 to 8 digits.",
+      "account_number": "Enter the account number: 8 to 17 digits.",
       "amount": "Enter an amount in ringgit, with up to two decimal places."
     },
     "contacts_access_refused": {
@@ -241,7 +246,23 @@
   },
   "recipient": {
     "title": "Transfer",
-    "mobile_label": "DuitNow mobile number",
+    "id_type_label": "Send to",
+    "id_type": {
+      "mobile": "Mobile",
+      "nric": "NRIC",
+      "account_number": "Account number",
+      "passport": "Passport",
+      "brn": "Business registration",
+      "army_police": "Army/Police"
+    },
+    "id_label": {
+      "mobile": "DuitNow mobile number",
+      "nric": "NRIC number",
+      "account_number": "Account number",
+      "passport": "Passport number",
+      "brn": "Business registration number",
+      "army_police": "Army or police number"
+    },
     "mobile_placeholder": "012-345 6789",
     "continue": "Continue",
     "home": "Back to Home"
@@ -265,7 +286,12 @@
   },
   "section_review_recipient": {
     "bank": "Bank",
-    "mobile": "Mobile number"
+    "mobile": "Mobile number",
+    "nric": "NRIC number",
+    "account_number": "Account number",
+    "passport": "Passport number",
+    "brn": "Business registration number",
+    "army_police": "Army or police number"
   },
   "approval": {},
   "result": {
