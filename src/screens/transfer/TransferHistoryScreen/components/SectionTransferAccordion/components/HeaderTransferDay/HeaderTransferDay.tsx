@@ -26,7 +26,7 @@ export default function HeaderTransferDay({
   onToggle,
 }: Props) {
   useRenderTrace("header", summary.date);
-  const { t } = useTranslation("transfer");
+  const { t, i18n } = useTranslation("transfer");
   const dayLabel = traceFormatCalls(formatMalaysianDayHeader)(
     summary.date,
     today,
@@ -53,6 +53,7 @@ export default function HeaderTransferDay({
               net: netText,
             })
       }
+      accessibilityLanguage={i18n.language}
       onPress={onToggle}
       style={({ pressed }) => [styles.header, pressed && styles.headerPressed]}
     >

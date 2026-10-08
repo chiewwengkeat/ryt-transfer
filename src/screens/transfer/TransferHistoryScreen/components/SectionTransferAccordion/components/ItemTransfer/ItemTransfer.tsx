@@ -21,7 +21,7 @@ interface Props {
 }
 export default function ItemTransfer({ transfer }: Props) {
   useRenderTrace("row", transfer.transferId);
-  const { t } = useTranslation("transfer");
+  const { t, i18n } = useTranslation("transfer");
   const statusWord = useTransferStatusWord(transfer);
   const parsedAmount = parseWireAmount(transfer.amount);
   const moneyMovedSign = MONEY_MOVED_SIGN[transfer.funds];
@@ -33,6 +33,7 @@ export default function ItemTransfer({ transfer }: Props) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLanguage={i18n.language}
       onPress={() => {
         router.push({
           pathname: "/transfer-history/[transferId]",

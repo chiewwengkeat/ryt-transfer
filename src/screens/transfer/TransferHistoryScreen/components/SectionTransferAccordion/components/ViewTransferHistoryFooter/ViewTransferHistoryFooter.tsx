@@ -19,7 +19,7 @@ export default function ViewTransferHistoryFooter({
   isFetchNextPageError,
   onRetry,
 }: Props) {
-  const { t } = useTranslation("transfer");
+  const { t, i18n } = useTranslation("transfer");
   const { bottom } = useSafeAreaInsets();
 
   return (
@@ -39,6 +39,7 @@ export default function ViewTransferHistoryFooter({
         isFetchingNextPage && (
           <ActivityIndicator
             accessibilityLabel={t("history.footer.loading")}
+            accessibilityLanguage={i18n.language}
             color={colors.accent}
           />
         )
