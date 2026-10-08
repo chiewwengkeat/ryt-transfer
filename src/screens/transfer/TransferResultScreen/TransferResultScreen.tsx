@@ -132,7 +132,7 @@ export default function TransferResultScreen() {
             <ButtonSecondary
               label={t("result.check_history")}
               onPress={() => {
-                router.push("/transfer-history");
+                router.replace("/transfer-history");
               }}
             />
           )}

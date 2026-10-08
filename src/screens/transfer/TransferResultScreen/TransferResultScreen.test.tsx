@@ -28,6 +28,7 @@ import {
   startTestTransfer,
 } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { pressHardwareBack } from "@/test/hardware-back";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
@@ -574,6 +575,31 @@ it(
     expect(
       await screen.findByRole("header", { name: "Transfer refunded" }),
     ).toBeOnTheScreen();
+  }),
+);
+
+it(
+  "opens History in place of the result page, so the page stops reading beneath it and Back from History goes Home",
+  scenarioTest("transfer.outcome_unexpected", async () => {
+    const { recipient } = await lookUpTestRecipient("012-345 6789");
+    answerApprovalAndReadsWithAnUnnamedOutcome(recipient);
+    const view = await sendRm100FromHome();
+    await screen.findByRole("header", { name: "Result not available" });
+    const transferId = transferIdIn(view.getPathname());
+    const readsOfTheTransfer = () =>
+      sentRequests.filter(({ url }) => url.endsWith(`/transfers/${transferId}`))
+        .length;
+    const readsBeforeLeaving = readsOfTheTransfer();
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Check History" }),
+    );
+    await act(() => jest.advanceTimersByTimeAsync(32_000));
+
+    expect(view.getPathname()).toBe("/transfer-history");
+    expect(readsOfTheTransfer()).toBe(readsBeforeLeaving);
+    await pressHardwareBack();
+    expect(view.getPathname()).toBe("/");
   }),
 );
 
