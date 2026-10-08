@@ -40,7 +40,7 @@ A screens folder and a domain about the same thing share a singular name, as `sr
 - A domain's `hooks/` holds its public modules that are not components: its hooks, and any plain module another slice calls.
 - A screen's route in `src/app/` re-exports the screen's entry file, `<Name>Screen/<Name>Screen.tsx`, and an `ErrorBoundary`.
 - A flow's layout in `src/app/` holds the flow's navigator, the guard on which of its routes may open, and what leaving the flow does. `src/app/+native-intent.tsx` filters the links that open the app.
-- A slice's strings go in its `i18n/` folder, one bundle per language, registered in `src/shell/translations.ts`.
+- A slice's strings go in its `i18n/` folder, one bundle per language, registered in `src/shell/translations.ts`. The Demo menu's own strings, the `demo` namespace in `src/mocks/switcher/i18n/`, are the exception: the shell may not import `src/mocks/`, so the menu registers them itself the first time it renders.
 
 The placement check fails any other entry in a slice (`scripts/slice-layout.js`).
 
@@ -80,11 +80,11 @@ Lint fails a breach of each of these (`eslint.config.mjs`). On an edge case, the
 The scenario matrix, [`src/screens/transfer/scenarios/transfer.md`](src/screens/transfer/scenarios/transfer.md), is the one description of what can happen while someone sends money. Its header says how to read it and how to change it. A new scenario takes four edits, made in one commit:
 
 1. Its section in the matrix, written as the header says.
-2. Its id in `TRANSFER_SCENARIOS` (`src/mocks/scenarios/transfer-scenarios.ts`), under the same step, with what makes the mock bank behave that way: `conditions` change the bank's own state, `handlers` lay answers over the bank's, and an entry with neither is either the normal bank's own behaviour or caused on the phone or by what the person does. The matrix test, `src/test/scenarios/transfer-matrix.test.ts`, fails until the registry and the matrix hold the same ids under the same steps.
-3. Its words under `common.<name>` in the flow's bundles, where `<name>` is the id after `transfer.`.
+2. Its id in `TRANSFER_SCENARIOS` (`src/mocks/scenarios/transfer-scenarios.ts`), under the same step, with what makes the mock bank behave that way: `conditions` change the bank's own state, `handlers` lay answers over the bank's, and an entry with neither is either the normal bank's own behaviour or caused on the phone or by what the person does. The Demo menu lists every entry with `conditions` or `handlers` under its step; `phoneSide` lists one with neither near the top, for a production behaviour the demo build leaves off, such as the capture block. The matrix test, `src/test/scenarios/transfer-matrix.test.ts`, fails until the registry and the matrix hold the same ids under the same steps.
+3. Its words, in all three languages, under `common.<name>` in the flow's bundles, where `<name>` is the id after `transfer.`.
 4. Its route test, as below.
 
-With no scenario picked, the mock bank behaves as a normal bank. Every test starts that way, with the bank reset before it, and a scenario changes only what its entry names.
+With no scenario picked, the mock bank behaves as a normal bank. Every test starts that way, with the bank reset before it, and a scenario changes only what its entry names. In development and demo builds, the Demo menu picks one scenario at a time, and its Normal entry goes back to the normal bank without clearing what the bank holds.
 
 ## Adding a test
 
@@ -100,20 +100,26 @@ Only these are tested below the route: the money, date and validation helpers, t
 
 ## Translations
 
-Every string the production app shows comes from a bundle named by its language's code in `AppLanguage` (`src/shared/i18n/i18n.ts`): `en-MY` for English, `ms-MY` for Malay and `zh-MY` for Chinese. A Malay or Chinese string is a machine translation, set as it comes out, with no human review.
+Every string the production app shows comes from a bundle in English (`en-MY`), Malay (`ms-MY`) and Chinese (`zh-MY`), each named by its language's code in `AppLanguage` (`src/shared/i18n/i18n.ts`), except the language names: each is a constant in its own script, never a translation key, so it reads the same whichever language is picked. A Malay or Chinese string is a machine translation, set as it comes out, with no human review.
 
 - A slice's bundle groups its strings under one top-level key per screen, or per component that keeps its own (`review`, `card_balance`), plus `common` for what two or more of them share. A scenario's words sit under `common.<name>` even when only one screen shows them. A leaf key is named for its role (`title`, `body_secondary`), never numbered.
 - A Malay or Chinese bundle has every key of the English bundle beside it, and each of its strings keeps the English string's `{{placeholders}}`.
 - A plural comes as a twin. English has `_one` and `_other`; Malay and Chinese repeat their `_other` string under `_one`. Hermes lacks `Intl.PluralRules`, so i18next reads `_one` for a count of one in every language, and a missing twin shows English.
 - A money state's phrase appears in each language exactly as the matrix's money table gives it.
-- Nothing the person can press offers to send again in a scenario whose **Never** forbids it, in any language. A message may still warn against sending again.
+- Where a scenario's **Never** reads "offer to send it again", nothing the person can press carries any of the nine retry words in the matrix header's table, in any language, since an English word left on a Malay button still offers a resend; and no message offers to send it again. A message may still warn against sending again.
 - When an English string changes, re-translate its Malay and Chinese in the same commit. No check notices a translation left behind by a change to its English.
 
-`src/shell/translations.test.ts` reads the bundles the app registers, and fails on a top-level key defined twice in one namespace, or on a Malay or Chinese plural whose `_one` twin is missing or differs from its `_other`.
+Three tests read the bundles, each a different way:
+
+- `src/shell/translations.test.ts` reads the bundles the app registers, and fails on a top-level key defined twice in one namespace, or on a Malay or Chinese plural whose `_one` twin is missing or differs from its `_other`.
+- `src/test/translation-parity.test.tsx` reads every namespace, the Demo menu's included, and fails when a Malay or Chinese bundle lacks a key English has, carries one English lacks, changes a string's placeholders, or holds a plural whose twins differ.
+- `src/test/translation-bundles.test.ts` reads every bundle file on disk, and fails on a key repeated inside one object, or on a matrix id with no strings under the transfer bundle's `common`.
+
+`src/test/scenarios/transfer-matrix.test.ts` holds the retry-word rule: under a scenario whose **Never** forbids a resend, it fails any string of `common.<name>` but its `body` that carries a retry word.
 
 ## Build variants
 
-`EXPO_PUBLIC_APP_VARIANT` picks the build: `development`, `demo` or `production`. Unset or empty means `production`, so a build with no variant fails closed. Development and demo carry the mock bank. Production does not, and calls an API address that never resolves.
+`EXPO_PUBLIC_APP_VARIANT` picks the build: `development`, `demo` or `production`. Unset or empty means `production`, so a build with no variant fails closed. Development and demo carry the mock bank and the Demo menu. Production carries neither and calls an API address that never resolves.
 
 | Variant       | Metro        | iOS                   | Android                   | An Android APK, with no device  |
 | ------------- | ------------ | --------------------- | ------------------------- | ------------------------------- |
