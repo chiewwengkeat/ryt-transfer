@@ -159,6 +159,26 @@ it(
   }),
 );
 
+it("keeps no record to recheck once the bank refuses the PIN, as wrong or as locked", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const {
+    body: { customerId },
+  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+  await confirmRm100ApprovedByPin();
+
+  await approveWithPin("111111");
+  await screen.findByText("That PIN is incorrect. You have 2 tries left.");
+  expect(await listPendingTransfers(customerId)).toEqual([]);
+  await approveWithPin("111111");
+  await screen.findByText("That PIN is incorrect. You have 1 try left.");
+  await approveWithPin("111111");
+  await screen.findByText(
+    "Your PIN is locked. Reset it in the app's security settings.",
+  );
+
+  expect(await listPendingTransfers(customerId)).toEqual([]);
+});
+
 async function lockThePinWithThreeWrongTries() {
   await approveWithPin("111111");
   await screen.findByText("That PIN is incorrect. You have 2 tries left.");
@@ -291,6 +311,39 @@ it("keeps a refused PIN nowhere once the sheet is closed on review", async () =>
   expect(await readWhatTheAppStillHolds()).not.toContain("111111");
 });
 
+it("closes the PIN sheet as not sent when the session ends while it waits for the PIN", async () => {
+  await openReviewOfRm100();
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  );
+  await screen.findByText("Enter your bank PIN to approve this transfer.");
+  mswServer.use(
+    http.get(
+      "*/accounts/primary",
+      () =>
+        HttpResponse.json(
+          { error: { code: "UNAUTHORIZED", message: "Test." } },
+          { status: 401 },
+        ),
+      { once: true },
+    ),
+  );
+
+  await act(() => {
+    for (const [eventName, listener] of jest.mocked(AppState).addEventListener
+      .mock.calls)
+      if (eventName === "change") listener("active");
+  });
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Sign in again" }),
+  );
+
+  expect(
+    await screen.findByText("The transfer was not sent — no money moved."),
+  ).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+});
+
 it("sends an approval whose answer was lost twice more, 2 and then 4 seconds on, as the same bytes under the same key", async () => {
   const approvalsSeen: { atMs: number; key: string | null; body: string }[] =
     [];
@@ -331,6 +384,33 @@ it("sends an approval whose answer was lost twice more, 2 and then 4 seconds on,
   expect(
     (secondResend?.atMs ?? 0) - (firstResend?.atMs ?? 0),
   ).toBeGreaterThanOrEqual(4_000);
+});
+
+it("sends an approval whose answer timed out again under the same key, and shows the bank's answer to that copy", async () => {
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      () => new Promise<never>(() => undefined),
+      { once: true },
+    ),
+  );
+  await confirmRm100Transfer();
+  await screen.findByText(
+    "Sending your transfer. The bank's answer comes next.",
+  );
+
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(32_000);
+  });
+
+  expect(
+    await screen.findByText("Transfer sent", {}, { timeout: 10_000 }),
+  ).toBeOnTheScreen();
+  const attemptKeys = approveRequests().map((request) =>
+    request.headers.get("Idempotency-Key"),
+  );
+  expect(attemptKeys).toHaveLength(2);
+  expect(new Set(attemptKeys).size).toBe(1);
 });
 
 it("never sends an approval again once the bank has answered it, a server error that names a code included", async () => {
@@ -392,7 +472,9 @@ it("answers a server error by the bank code it names, a known one sent once", as
 });
 
 // Later copies go to the bank untouched, so a resend gets back whatever the bank answered the first.
-function deliverFirstApprovalButLoseItsAnswer() {
+function deliverFirstApprovalButLoseItsAnswer(
+  lostAnswer: () => Response = () => HttpResponse.error(),
+) {
   let firstCopyLost = false;
   mswServer.use(
     http.post("*/transfers/:transferId/approve", async ({ request }) => {
@@ -402,7 +484,7 @@ function deliverFirstApprovalButLoseItsAnswer() {
         body: (await request.clone().json()) as unknown,
         idempotencyKey: request.headers.get("Idempotency-Key"),
       });
-      return HttpResponse.error();
+      return lostAnswer();
     }),
   );
 }
@@ -417,6 +499,23 @@ it("gets the bank's first answer back for a resend whose first copy already move
   ).toBeOnTheScreen();
   jest.useRealTimers();
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+});
+
+it("sends an approval answered with a body it cannot read again under the same key, and gets the bank's first answer back", async () => {
+  deliverFirstApprovalButLoseItsAnswer(() =>
+    HttpResponse.text("<html>Approved</html>", { status: 200 }),
+  );
+  await confirmRm100Transfer();
+
+  expect(
+    await screen.findByText("Transfer sent", {}, { timeout: 10_000 }),
+  ).toBeOnTheScreen();
+  // The test's own forward of the first copy carries no Accept header; the app's copies do.
+  const appCopyKeys = approveRequests()
+    .filter((request) => request.headers.get("Accept") === "application/json")
+    .map((request) => request.headers.get("Idempotency-Key"));
+  expect(appCopyKeys).toHaveLength(2);
+  expect(new Set(appCopyKeys).size).toBe(1);
 });
 
 it("keeps the tries left that a wrong PIN was told when its refusal answers a resend, which the bank does not count again", async () => {
@@ -1065,6 +1164,49 @@ it("sets approval up again with the PIN already entered when the bank no longer 
     expect(new Set(approvalKeyIds).size).toBe(2);
   })();
 });
+
+it.each([
+  ["face or fingerprint", "Transfer", () => Promise.resolve()],
+  ["the PIN", "Use PIN instead", () => approveWithPin(DEMO_PIN)],
+])(
+  "sets approval up again only once with %s when the bank still does not know the new keys, then says so on review",
+  async (_, approveButtonName, finishApproving) => {
+    let keyRegistrations = 0;
+    await openReviewOfRm100();
+    mswServer.use(
+      http.post("*/transfers/:transferId/approve", () =>
+        HttpResponse.json(
+          { error: { code: "KEY_NOT_REGISTERED", message: "Test." } },
+          { status: 409 },
+        ),
+      ),
+      // Refusing a second registration ends a loop of them, which would otherwise run Jest out of memory.
+      http.post("*/approval-keys", () => {
+        keyRegistrations += 1;
+        return keyRegistrations === 1
+          ? HttpResponse.json({
+              possessionKeyId: "possession-key-again",
+              biometricKeyId: "biometric-key-again",
+            })
+          : HttpResponse.json(
+              { error: { code: "SERVICE_UNAVAILABLE", message: "Test." } },
+              { status: 503 },
+            );
+      }),
+    );
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: approveButtonName }),
+    );
+    await finishApproving();
+
+    expect(
+      await screen.findByText("Approval needs setting up again on this phone."),
+    ).toBeOnTheScreen();
+    expect(approveRequests()).toHaveLength(2);
+    expect(keyRegistrations).toBe(1);
+  },
+);
 
 it.each([
   ["face or fingerprint", "Transfer", () => Promise.resolve()],

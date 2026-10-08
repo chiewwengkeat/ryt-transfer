@@ -19,7 +19,9 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
+import { TransportErrorKind } from "@/shared/http/transport-error";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
+import { reportRequestOutcome } from "@/shared/platform/offline";
 import {
   type BankErrorBody,
   lookUpTestRecipient,
@@ -893,6 +895,26 @@ it("ignores Android's Back while the transfer is being sent", async () => {
   expect(pathnameWhileSending).toBe("/transfer/review");
   expect(
     await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 }),
+  ).toBeOnTheScreen();
+});
+
+it("offers no PIN instead while the last request found no network, and offers it again once one is answered", async () => {
+  await openReviewOfRm100();
+  expect(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
+
+  await act(() => {
+    reportRequestOutcome(TransportErrorKind.Network);
+  });
+
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+  expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
+  await act(() => {
+    reportRequestOutcome();
+  });
+  expect(
+    screen.getByRole("button", { name: "Use PIN instead" }),
   ).toBeOnTheScreen();
 });
 

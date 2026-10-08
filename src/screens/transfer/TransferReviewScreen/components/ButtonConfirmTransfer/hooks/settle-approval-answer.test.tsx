@@ -2,6 +2,12 @@ import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import {
+  type GetTransferResponse,
+  TransferFailureReason,
+  TransferFunds,
+  TransferStatus,
+} from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { listPendingTransfers } from "@/domains/transfer/hooks/pending-transfers";
 import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
@@ -97,6 +103,39 @@ it(
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
   }),
 );
+
+it("says the same on review when it is today's limit the bank finds short as the approval arrives", async () => {
+  // The short-at-approval scenario ends on the balance, never the limit, so the limit's answer is built here.
+  mswServer.use(
+    http.post<{ transferId: string }>(
+      "*/transfers/:transferId/approve",
+      async ({ params: { transferId } }) => {
+        const {
+          body: { transfer },
+        } = await sendToBank<GetTransferResponse>(
+          "GET",
+          `/transfers/${transferId}`,
+        );
+        return HttpResponse.json({
+          transfer: {
+            ...transfer,
+            status: TransferStatus.Unsuccessful,
+            funds: TransferFunds.NotDebited,
+            failureReason: TransferFailureReason.DailyLimitExceeded,
+          },
+        });
+      },
+    ),
+  );
+  const view = await approveRm100Transfer();
+
+  expect(
+    await screen.findByText(
+      "It was not sent because your balance or limit changed — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  expect(view.getPathname()).toBe("/transfer/review");
+});
 
 it.each([
   ["the account was locked", { code: "ACCOUNT_LOCKED", message: "Test." }],
