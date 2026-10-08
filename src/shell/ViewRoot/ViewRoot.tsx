@@ -5,7 +5,7 @@ import { StyleSheet, View } from "react-native";
 
 import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
-import { integrityStandInStore } from "@/domains/approval/hooks/device-integrity-verdict";
+import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
 import { addUnauthorizedListener } from "@/shared/http/transport";
 import { screenTransitionOptions } from "@/shared/lib/motion/motion";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
@@ -51,8 +51,8 @@ export default function ViewRoot() {
   );
   useEffect(
     () =>
-      demoLayer?.subscribeToRootedPhone((phoneRooted) => {
-        integrityStandInStore.setState({ phoneTampered: phoneRooted });
+      demoLayer?.subscribeToRootedPhone((rootedPhonePicked) => {
+        rootedPhoneDemoPickStore.setState({ rootedPhonePicked });
       }),
     [],
   );

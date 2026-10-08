@@ -1,7 +1,7 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 
-import { integrityStandInStore } from "@/domains/approval/hooks/device-integrity-verdict";
+import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
@@ -95,9 +95,10 @@ it("checks the phone afresh at each press, so a phone that reports hooks after a
   expect(biometricPromptsShown()).toHaveLength(1);
 });
 
-it("ignores the demo's rooted-phone stand-in in a production build, and approves on a phone that reports clean", async () => {
+it("ignores the demo's rooted-phone pick in a production build, and approves on a phone that reports clean", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  integrityStandInStore.setState({ phoneTampered: true });
+  // Set directly: a production build loads no demo layer, so no pick can reach the store any other way.
+  rootedPhoneDemoPickStore.setState({ rootedPhonePicked: true });
   await openReviewOfRm100();
 
   await fireEvent.press(

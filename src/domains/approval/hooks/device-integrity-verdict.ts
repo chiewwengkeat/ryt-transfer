@@ -7,8 +7,8 @@ import {
   DeviceIntegrity,
 } from "@/shared/platform/device-integrity";
 
-export const integrityStandInStore = createStore(() => ({
-  phoneTampered: false,
+export const rootedPhoneDemoPickStore = createStore(() => ({
+  rootedPhonePicked: false,
 }));
 
 // Once at launch, so the check an approval waits on is never the library's first.
@@ -18,7 +18,8 @@ export function warmUpDeviceIntegrityCheck() {
 
 export async function isApprovalRefusedOnThisPhone() {
   // Emulators read as rooted, so development and demo builds never ask.
-  if (!isProductionBuild) return integrityStandInStore.getState().phoneTampered;
+  if (!isProductionBuild)
+    return rootedPhoneDemoPickStore.getState().rootedPhonePicked;
   const integrity = await checkDeviceIntegrity();
   // Allowed: an unclear check must not lock out a genuine customer.
   if (integrity === DeviceIntegrity.Unknown)

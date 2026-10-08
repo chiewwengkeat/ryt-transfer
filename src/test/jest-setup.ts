@@ -14,7 +14,7 @@ import type * as ContextStubs from "expo-router/build/testing-library/context-st
 import i18next, { changeLanguage } from "i18next";
 
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
-import { integrityStandInStore } from "@/domains/approval/hooks/device-integrity-verdict";
+import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
 import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
 import { setObservabilitySink } from "@/shared/observability/observability";
 import { forgetRequestOutcomes } from "@/shared/platform/offline";
@@ -171,7 +171,10 @@ afterEach(async () => {
   resetNativeDoubles();
   resetBiometricsDouble();
   approvalSettingsStore.setState(approvalSettingsStore.getInitialState(), true);
-  integrityStandInStore.setState(integrityStandInStore.getInitialState(), true);
+  rootedPhoneDemoPickStore.setState(
+    rootedPhoneDemoPickStore.getInitialState(),
+    true,
+  );
   resetContactsNativeDouble();
   resetObscuredTouchGuardDouble();
   // A test that switched language would start the next one in it: clearing the stored pick leaves i18next as it is.
