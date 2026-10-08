@@ -43,6 +43,7 @@ export function reduceReviewAndCreateEvent(
         step: TransferFlowStep.Reviewing,
         draft: flow.draft,
         notice: action.notice,
+        noticeDetail: action.noticeDetail,
       };
     case TransferFlowActionType.CreateUnanswered:
       return {

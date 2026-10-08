@@ -1292,7 +1292,7 @@ function countSent(method: string, pathEnd: string) {
 }
 
 it(
-  "says the balance or a limit no longer covers the amount, and reads both again for the amount step",
+  "says the balance no longer covers the amount, and reads it and the limits again for the amount step",
   scenarioTest("transfer.balance_or_limit_short_at_confirmation", async () => {
     await openReviewOfRm100();
     const transferButton = await screen.findByRole("button", {
@@ -1304,7 +1304,7 @@ it(
 
     expect(
       await screen.findByText(
-        "Your balance or a limit no longer covers this amount. Go back to change it.",
+        "Your balance no longer covers this amount. Go back to change it.",
       ),
     ).toBeOnTheScreen();
     await waitFor(() => {
@@ -1314,6 +1314,31 @@ it(
     });
     expect(countSent("POST", "/approve")).toBe(0);
   }),
+);
+
+it.each(["DAILY_LIMIT_EXCEEDED", "ABOVE_PER_TRANSFER_MAX"])(
+  "says the amount is over a limit when the bank answers Confirm with %s",
+  async (code) => {
+    mswServer.use(
+      http.post("*/transfers", () =>
+        HttpResponse.json(
+          { error: { code, message: "Test." } },
+          { status: 422 },
+        ),
+      ),
+    );
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "This amount is now over one of your transfer limits. Go back to change it.",
+      ),
+    ).toBeOnTheScreen();
+  },
 );
 
 it(
@@ -1338,7 +1363,7 @@ it(
 );
 
 it(
-  "says transfers are unavailable right now when maintenance begins mid-transfer",
+  "says transfers are unavailable until the time the bank gives when maintenance begins mid-transfer",
   scenarioTest("transfer.under_maintenance", async () => {
     // Today's limit loaded before the maintenance began, so the amount step lets the transfer on to review.
     mswServer.use(
@@ -1353,6 +1378,7 @@ it(
         } satisfies GetTransferLimitsResponse),
       ),
     );
+    const { body } = await askBankToCreateRm100();
     await openReviewOfRm100();
 
     await fireEvent.press(
@@ -1361,7 +1387,7 @@ it(
 
     expect(
       await screen.findByText(
-        "Transfers are unavailable right now. Try again later.",
+        `Transfers are unavailable right now, until ${formatMalaysianDateTime(body.error.until ?? "")}.`,
       ),
     ).toBeOnTheScreen();
     expect(countSent("POST", "/approve")).toBe(0);

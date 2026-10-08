@@ -1,10 +1,12 @@
 import { useTranslation } from "react-i18next";
 
+import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import {
-  type TransferFlowScenario,
+  TransferFlowScenario,
   TransferFlowStep,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
+import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 
 interface Props {
@@ -15,6 +17,11 @@ export default function BannerFlowNotice({ step }: Props) {
   const notice = useTransferFlow((flow) =>
     flow.step === step ? flow.notice : undefined,
   );
+  const noticeDetail = useTransferFlow((flow) =>
+    flow.step === step && flow.step === TransferFlowStep.Reviewing
+      ? flow.noticeDetail
+      : undefined,
+  );
   if (notice === undefined) return null;
   const noticeName = notice.replace(
     /^transfer\./,
@@ -23,6 +30,23 @@ export default function BannerFlowNotice({ step }: Props) {
     ? Name
     : never;
   return (
-    <BannerNotice tone="negative" message={t(`common.${noticeName}.body`)} />
+    <BannerNotice
+      tone="negative"
+      message={
+        notice === TransferFlowScenario.UnderMaintenance &&
+        noticeDetail?.until !== undefined
+          ? t("common.under_maintenance.until", {
+              time: formatMalaysianDateTime(noticeDetail.until),
+            })
+          : notice === TransferFlowScenario.BalanceOrLimitShortAtConfirmation &&
+              noticeDetail?.code !== undefined
+            ? t(
+                noticeDetail.code === CreateTransferErrorCode.InsufficientFunds
+                  ? "common.balance_or_limit_short_at_confirmation.over_balance"
+                  : "common.balance_or_limit_short_at_confirmation.over_limit",
+              )
+            : t(`common.${noticeName}.body`)
+      }
+    />
   );
 }

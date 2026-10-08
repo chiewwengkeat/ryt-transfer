@@ -94,7 +94,9 @@
     },
     "balance_or_limit_short_at_confirmation": {
       "title": "Balance or limit short at confirmation",
-      "body": "Your balance or a limit no longer covers this amount. Go back to change it."
+      "body": "Your balance or a limit no longer covers this amount. Go back to change it.",
+      "over_balance": "Your balance no longer covers this amount. Go back to change it.",
+      "over_limit": "This amount is now over one of your transfer limits. Go back to change it."
     },
     "cooling_off_new_phone": {
       "title": "Phone paired less than 12 hours ago",

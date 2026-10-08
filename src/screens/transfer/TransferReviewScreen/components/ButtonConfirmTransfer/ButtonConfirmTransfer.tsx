@@ -137,6 +137,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
           dispatchTransferFlow({
             type: TransferFlowActionType.CreateNotSent,
             notice: TransferFlowScenario.BalanceOrLimitShortAtConfirmation,
+            noticeDetail: { code: refusal.code },
           });
           return;
         case CreateTransferErrorCode.AmountInvalid:
@@ -164,6 +165,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
           dispatchTransferFlow({
             type: TransferFlowActionType.CreateNotSent,
             notice: TransferFlowScenario.UnderMaintenance,
+            noticeDetail: { until: refusal.until },
           });
           return;
         // The bank is still on the first request under this key, so a repeat of it later gets that one's answer.
