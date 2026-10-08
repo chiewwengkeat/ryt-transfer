@@ -4,7 +4,7 @@ import * as Haptics from "expo-haptics";
 import { http, HttpResponse } from "msw";
 
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { mswServer } from "@/test/msw-server";
+import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -33,6 +33,13 @@ async function walkToReviewFromHome() {
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   await screen.findByRole("button", { name: "Transfer" });
+}
+
+function transferReadsSent() {
+  return sentRequests.filter(
+    ({ method, url }) =>
+      method === "GET" && /^\/transfers\/[^/]+$/.test(new URL(url).pathname),
+  ).length;
 }
 
 it(
@@ -93,6 +100,52 @@ it(
     await act(() => {
       focusManager.setFocused(false);
       focusManager.setFocused(true);
+    });
+    await screen.findByRole("button", { name: "Load the result again" });
+
+    expect(notificationHaptics.mock.calls).toEqual([
+      [Haptics.NotificationFeedbackType.Warning],
+    ]);
+  }),
+);
+
+it(
+  "warns once for a result whose status cannot be reached, and not again when loading it again fails",
+  scenarioTest("transfer.status_unreachable", async () => {
+    await walkToReviewFromHome();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    const loadAgain = await screen.findByRole("button", {
+      name: "Load the result again",
+    });
+    const readsBeforeLoadingAgain = transferReadsSent();
+
+    await fireEvent.press(loadAgain);
+    // One read and its two retries: only then has loading it again failed.
+    await waitFor(() => {
+      expect(transferReadsSent()).toBe(readsBeforeLoadingAgain + 3);
+    });
+    await screen.findByRole("button", { name: "Load the result again" });
+
+    expect(notificationHaptics.mock.calls).toEqual([
+      [Haptics.NotificationFeedbackType.Warning],
+    ]);
+  }),
+);
+
+it(
+  "warns once for a result whose status cannot be reached, and not again when returning to the app fails to load it",
+  scenarioTest("transfer.status_unreachable", async () => {
+    await walkToReviewFromHome();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    await screen.findByRole("button", { name: "Load the result again" });
+    const readsBeforeReturning = transferReadsSent();
+
+    await act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    await waitFor(() => {
+      expect(transferReadsSent()).toBe(readsBeforeReturning + 3);
     });
     await screen.findByRole("button", { name: "Load the result again" });
 
