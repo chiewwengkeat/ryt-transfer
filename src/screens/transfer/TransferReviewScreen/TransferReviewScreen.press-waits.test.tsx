@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { http } from "msw";
 
 import { rememberApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-lock";
+import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import {
   biometricPromptsShown,
   biometricsLibraryDouble,
@@ -10,6 +11,7 @@ import {
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
+import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 
@@ -109,6 +111,74 @@ it("shows Use PIN instead's PIN-locked sheet and creates nothing when the bank's
     screen.queryByText("Enter your bank PIN to approve this transfer."),
   ).toBeNull();
   expect(transferWritesSent()).toEqual([]);
+});
+
+function holdFirstPinLockRead() {
+  const readSecureRecordForReal = secureStoreNativeDouble.getValueWithKeyAsync;
+  let releaseHeldRead = () => {};
+  let pinLockReadHeld = false;
+  const secureReads = jest
+    .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
+    .mockImplementation((key) => {
+      if (pinLockReadHeld || !key.includes("pin-locked"))
+        return readSecureRecordForReal(key);
+      pinLockReadHeld = true;
+      return new Promise((resolve) => {
+        releaseHeldRead = () => {
+          resolve(readSecureRecordForReal(key));
+        };
+      });
+    });
+  return () => {
+    releaseHeldRead();
+    secureReads.mockRestore();
+  };
+}
+
+it("offers Use PIN instead only once review's first read of the bank's PIN lock has answered", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const releasePinLockRead = holdFirstPinLockRead();
+  await openReviewOfRm100();
+  await screen.findByRole("button", { name: "Transfer" });
+  const offeredWhileTheLockIsUnknown =
+    screen.queryByRole("button", { name: "Use PIN instead" }) !== null;
+
+  await act(() => {
+    releasePinLockRead();
+  });
+
+  expect(offeredWhileTheLockIsUnknown).toBe(false);
+  expect(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
+});
+
+it("creates nothing and shows the PIN-locked sheet when Transfer asks for the PIN before review's first read of a remembered PIN lock answers", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await rememberApprovalPinLocked();
+  approvalSettingsStore.setState({ biometricApprovalOn: false });
+  const releasePinLockRead = holdFirstPinLockRead();
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(2_000);
+  });
+
+  expect(
+    await screen.findByText(
+      "Your PIN is locked. Reset it in the app's security settings.",
+    ),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByText("Enter your bank PIN to approve this transfer."),
+  ).toBeNull();
+  expect(transferWritesSent()).toEqual([]);
+  await act(() => {
+    releasePinLockRead();
+  });
 });
 
 it("frees Transfer and Use PIN instead when the phone check throws, and approves from the same review", async () => {

@@ -8,6 +8,7 @@ import {
   BiometricSignOutcome,
   readBiometricSensorRefusal,
 } from "@/domains/approval/hooks/approval-keys";
+import { isApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-lock";
 import { showApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
@@ -109,13 +110,14 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     const hasLeftReviewSincePress = startWatchingForReviewLeave();
     if (!(await checkPhoneAllowsThisApproval(hasLeftReviewSincePress))) return;
     // Read now, not from the render pressed in: the lock can land while the check runs.
-    const pinLockedAfterCheck = isPinLockedNow();
+    const pinLockedAfterCheck =
+      isPinLockedNow() ?? (await isApprovalPinLocked());
     const sensorRefusalOutcome = pinLockedAfterCheck
       ? (await readBiometricSensorRefusal())?.outcome
       : undefined;
     // ⛔ Read after every wait: once review is left the press is void, so nothing is created or prompted behind them.
     if (hasLeftReviewSincePress()) return;
-    // ⛔ The bank refuses every PIN while it holds the lock, so a transfer only a PIN could approve is never created.
+    // ⛔ The bank refuses every PIN while it holds the lock: never create a transfer only a PIN could approve.
     if (
       pinLockedAfterCheck &&
       (path === ApprovalPath.Pin ||
@@ -213,7 +215,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
           !lookup.isFetching &&
           !checkingPhone &&
           transferDisabledReason === undefined &&
-          !approvalPinLocked
+          approvalPinLocked === false
         }
         onPress={() => {
           void createAndApproveTransfer(ApprovalPath.Pin).catch(() => {
