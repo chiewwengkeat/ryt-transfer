@@ -42,6 +42,7 @@ export default function TransferDetailsScreen() {
             transferQuery.isPaused) && (
             <BannerOutOfDate
               message={t("details.out_of_date")}
+              tryAgainLabel={t("details.try_again")}
               onTryAgain={() => {
                 void transferQuery.refetch();
               }}

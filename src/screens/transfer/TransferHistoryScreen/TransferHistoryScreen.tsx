@@ -78,6 +78,7 @@ export default function TransferHistoryScreen() {
             <View style={styles.outOfDate}>
               <BannerOutOfDate
                 message={t("history.out_of_date")}
+                tryAgainLabel={t("history.try_again")}
                 onTryAgain={() => {
                   void resetTransferHistory(queryClient);
                 }}
