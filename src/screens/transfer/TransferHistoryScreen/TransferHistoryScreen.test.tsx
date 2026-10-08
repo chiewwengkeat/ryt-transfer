@@ -1021,7 +1021,6 @@ it("loads on past a later page holding a transfer whose time it cannot read", as
 });
 
 it("pages through the bank's own history, its split day whole from the first page", async () => {
-  // The bank's own history, not the one-row default.
   mswServer.resetHandlers();
   const releaseLaterPages = holdTransferHistoryPages("later");
   await renderRoute("/transfer-history");

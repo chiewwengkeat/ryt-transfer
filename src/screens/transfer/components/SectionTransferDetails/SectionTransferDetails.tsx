@@ -19,7 +19,7 @@ export default function SectionTransferDetails({ transfer }: Props) {
   const { t } = useTranslation("transfer");
   const statusWord = useTransferStatusWord(transfer);
   const isReceived = transfer.direction === TransferDirection.In;
-  // No phrase where the matrix has none (received, approval in flight), nor "money returned" before a refund lands.
+  // No phrase where the matrix has none, nor "money returned" before a refund lands.
   const moneyState = isReceived
     ? undefined
     : (
