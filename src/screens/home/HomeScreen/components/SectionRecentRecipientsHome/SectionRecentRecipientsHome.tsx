@@ -4,8 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
 import { useIsOffline } from "@/shared/platform/offline";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
+import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 
 import { useStartTransferDisabledReason } from "../../hooks/use-start-transfer-disabled-reason";
 
@@ -19,18 +18,16 @@ export default function SectionRecentRecipientsHome() {
   return (
     <>
       {recents.isError && !offline && (
-        <>
-          <BannerNotice
-            tone="negative"
-            message={t("common.start_unexpected.body")}
-          />
-          <ButtonSecondary
-            label={t("common.start_unexpected.retry")}
-            onPress={() => {
+        <BannerAction
+          tone="negative"
+          message={t("common.start_unexpected.body")}
+          action={{
+            label: t("common.start_unexpected.retry"),
+            onPress: () => {
               void recents.refetch();
-            }}
-          />
-        </>
+            },
+          }}
+        />
       )}
       <SectionRecentRecipients
         disabledReason={startTransferDisabledReason}

@@ -1,5 +1,4 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
@@ -11,8 +10,7 @@ import {
 import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
 import { formatMoney } from "@/shared/lib/money/money";
 import { reportError } from "@/shared/observability/observability";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
+import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 
 export default function SectionTransferNotices() {
   const { t } = useTranslation("home");
@@ -29,17 +27,16 @@ export default function SectionTransferNotices() {
           name: transfer.counterparty.registeredName,
         };
         return (
-          <Fragment key={transferId}>
-            <BannerNotice
-              message={t(`next_launch_notices.${notice}`, amountAndName)}
-            />
-            <ButtonSecondary
-              label={t("next_launch_notices.dismiss")}
-              accessibilityLabel={t(
+          <BannerAction
+            key={transferId}
+            message={t(`next_launch_notices.${notice}`, amountAndName)}
+            action={{
+              label: t("next_launch_notices.dismiss"),
+              accessibilityLabel: t(
                 "next_launch_notices.dismiss_notice_about",
                 amountAndName,
-              )}
-              onPress={() => {
+              ),
+              onPress: () => {
                 if (customerId === undefined) return;
                 void (async () => {
                   await clearPendingTransfer(customerId, transferId);
@@ -47,9 +44,9 @@ export default function SectionTransferNotices() {
                 })().catch((error: unknown) => {
                   reportError(error, { boundary: "pending_transfer" });
                 });
-              }}
-            />
-          </Fragment>
+              },
+            }}
+          />
         );
       })}
     </>

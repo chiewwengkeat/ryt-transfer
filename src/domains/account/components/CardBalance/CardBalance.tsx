@@ -14,8 +14,7 @@ import { formatMoney } from "@/shared/lib/money/money";
 import { useTrackScenarioShown } from "@/shared/observability/observability";
 import { useIsOffline } from "@/shared/platform/offline";
 import { colors, typography } from "@/shared/theme/theme";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
+import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
 import TextBody from "@/shared/ui/TextBody/TextBody";
@@ -57,15 +56,15 @@ export default function CardBalance({ unexpectedScenario }: Props) {
   if (failureScenario !== undefined) {
     return (
       <Card>
-        <BannerNotice
+        <BannerAction
           tone="negative"
           message={t(`common.${failureScenario}.body`)}
-        />
-        <ButtonSecondary
-          label={t(`common.${failureScenario}.retry`)}
-          onPress={() => {
-            void account.refetch();
-            void limits.refetch();
+          action={{
+            label: t(`common.${failureScenario}.retry`),
+            onPress: () => {
+              void account.refetch();
+              void limits.refetch();
+            },
           }}
         />
       </Card>

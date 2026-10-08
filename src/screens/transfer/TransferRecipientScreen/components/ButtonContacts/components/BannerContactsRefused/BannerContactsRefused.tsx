@@ -5,8 +5,7 @@ import { AppState, Linking } from "react-native";
 
 import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
 import { useTrackScenarioShown } from "@/shared/observability/observability";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
+import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 
 interface Props {
   onAccessGranted: () => void;
@@ -28,14 +27,14 @@ export default function BannerContactsRefused({ onAccessGranted }: Props) {
   }, []);
 
   return (
-    <>
-      <BannerNotice message={t("common.contacts_access_refused.body")} />
-      <ButtonSecondary
-        label={t("common.contacts_access_refused.open_settings")}
-        onPress={() => {
+    <BannerAction
+      message={t("common.contacts_access_refused.body")}
+      action={{
+        label: t("common.contacts_access_refused.open_settings"),
+        onPress: () => {
           void Linking.openSettings();
-        }}
-      />
-    </>
+        },
+      }}
+    />
   );
 }

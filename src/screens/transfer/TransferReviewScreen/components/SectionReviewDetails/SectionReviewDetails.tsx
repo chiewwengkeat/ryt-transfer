@@ -11,8 +11,8 @@ import {
 import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
 import { TransportError } from "@/shared/http/transport-error";
 import { useTrackScenarioShown } from "@/shared/observability/observability";
+import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
 import RowDetail from "@/shared/ui/RowDetail/RowDetail";
@@ -53,33 +53,29 @@ export default function SectionReviewDetails({ draft }: Props) {
   if (lookup.isPending) return <Loader />;
   if (nameCheckFailure === "recipient_not_found")
     return (
-      <>
-        <BannerNotice
-          tone="negative"
-          message={t("common.recipient_not_found.body")}
-        />
-        <ButtonSecondary
-          label={t("common.recipient_not_found.change_recipient")}
-          onPress={() => {
+      <BannerAction
+        tone="negative"
+        message={t("common.recipient_not_found.body")}
+        action={{
+          label: t("common.recipient_not_found.change_recipient"),
+          onPress: () => {
             router.dismissTo("/transfer");
-          }}
-        />
-      </>
+          },
+        }}
+      />
     );
   if (nameCheckFailure !== undefined)
     return (
-      <>
-        <BannerNotice
-          tone="negative"
-          message={t(`common.${nameCheckFailure}.body`)}
-        />
-        <ButtonSecondary
-          label={t(`common.${nameCheckFailure}.retry`)}
-          onPress={() => {
+      <BannerAction
+        tone="negative"
+        message={t(`common.${nameCheckFailure}.body`)}
+        action={{
+          label: t(`common.${nameCheckFailure}.retry`),
+          onPress: () => {
             void lookup.refetch();
-          }}
-        />
-      </>
+          },
+        }}
+      />
     );
   if (!lookup.data) return null;
 
