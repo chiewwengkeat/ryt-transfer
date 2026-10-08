@@ -1,0 +1,49 @@
+{
+  "date": {
+    "month_short": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mac",
+      "apr": "Apr",
+      "may": "Mei",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Ogo",
+      "sep": "Sep",
+      "oct": "Okt",
+      "nov": "Nov",
+      "dec": "Dis"
+    },
+    "am": "PG",
+    "pm": "PTG",
+    "today": "Hari ini",
+    "yesterday": "Semalam",
+    "day_month_year": "{{day}} {{month}} {{year}}",
+    "time": "{{hour}}:{{minute}} {{period}}",
+    "date_time": "{{date}}, {{time}}"
+  },
+  "loader": {
+    "label": "Memuatkan"
+  },
+  "view_screen_error": {
+    "title": "Sesuatu tidak kena",
+    "body": "Skrin ini berhenti berfungsi.",
+    "retry": "Cuba lagi",
+    "back": "Kembali"
+  },
+  "view_app_error": {
+    "title": "Sesuatu tidak kena",
+    "body": "Aplikasi ini berhenti berfungsi.",
+    "retry": "Cuba lagi"
+  },
+  "view_session_ended": {
+    "title": "Sesi anda telah tamat",
+    "body": "Demi keselamatan anda, log masuk semula untuk meneruskan.",
+    "sign_in": "Log masuk semula"
+  },
+  "view_not_found": {
+    "title": "Halaman tidak ditemui",
+    "body": "Halaman ini tidak wujud dalam aplikasi.",
+    "home": "Pergi ke Laman Utama"
+  }
+}

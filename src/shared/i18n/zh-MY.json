@@ -1,0 +1,49 @@
+{
+  "date": {
+    "month_short": {
+      "jan": "1月",
+      "feb": "2月",
+      "mar": "3月",
+      "apr": "4月",
+      "may": "5月",
+      "jun": "6月",
+      "jul": "7月",
+      "aug": "8月",
+      "sep": "9月",
+      "oct": "10月",
+      "nov": "11月",
+      "dec": "12月"
+    },
+    "am": "上午",
+    "pm": "下午",
+    "today": "今天",
+    "yesterday": "昨天",
+    "day_month_year": "{{year}}年{{month}}{{day}}日",
+    "time": "{{period}}{{hour}}:{{minute}}",
+    "date_time": "{{date}} {{time}}"
+  },
+  "loader": {
+    "label": "正在加载"
+  },
+  "view_screen_error": {
+    "title": "出错了",
+    "body": "此页面已停止运行。",
+    "retry": "重试",
+    "back": "返回"
+  },
+  "view_app_error": {
+    "title": "出错了",
+    "body": "应用已停止运行。",
+    "retry": "重试"
+  },
+  "view_session_ended": {
+    "title": "您的会话已结束",
+    "body": "为了您的安全，请重新登录以继续。",
+    "sign_in": "重新登录"
+  },
+  "view_not_found": {
+    "title": "找不到页面",
+    "body": "应用中不存在此页面。",
+    "home": "前往首页"
+  }
+}

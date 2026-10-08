@@ -1,0 +1,29 @@
+{
+  "pill_demo": {
+    "label": "演示",
+    "open_menu": "演示菜单"
+  },
+  "banner_demo": {
+    "message": "演示 · {{title}}",
+    "clear": "恢复正常"
+  },
+  "bottom_sheet_demo": {
+    "title": "演示",
+    "close": "关闭演示菜单",
+    "demo_only": "仅限演示",
+    "unlock_pin_note": "代替 Ryt 自身安全设置中的 PIN 重置。",
+    "unlock_pin": "解锁 PIN",
+    "normal": "正常，无情景",
+    "no_biometrics": "无生物识别",
+    "step": {
+      "start": "开始",
+      "recipient": "收款人",
+      "amount": "金额",
+      "review": "核对",
+      "approval": "批准",
+      "outcome": "结果",
+      "recovery": "恢复"
+    },
+    "reset": "重置演示"
+  }
+}

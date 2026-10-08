@@ -1,0 +1,21 @@
+{
+  "button_language": {
+    "label": "语言"
+  },
+  "bottom_sheet_language": {
+    "title": "语言",
+    "close": "关闭语言菜单",
+    "phone_language": "手机语言"
+  },
+
+  "home": {
+    "title": "首页",
+    "transfer": "转账"
+  },
+
+  "next_launch_notices": {},
+
+  "maintenance": {},
+
+  "recents": {}
+}

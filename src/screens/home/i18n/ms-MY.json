@@ -1,0 +1,21 @@
+{
+  "button_language": {
+    "label": "Bahasa"
+  },
+  "bottom_sheet_language": {
+    "title": "Bahasa",
+    "close": "Tutup menu bahasa",
+    "phone_language": "Bahasa telefon"
+  },
+
+  "home": {
+    "title": "Laman Utama",
+    "transfer": "Pindahan"
+  },
+
+  "next_launch_notices": {},
+
+  "maintenance": {},
+
+  "recents": {}
+}

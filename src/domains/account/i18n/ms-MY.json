@@ -1,0 +1,10 @@
+{
+  "card_balance": {
+    "label": "Baki"
+  },
+  "common": {
+    "balance_and_limit_shown": {
+      "remaining_today": "Anda masih boleh menghantar {{amount}} hari ini"
+    }
+  }
+}

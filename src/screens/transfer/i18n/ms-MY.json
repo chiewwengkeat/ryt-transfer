@@ -1,0 +1,251 @@
+{
+  "common": {
+    "balance_and_limit_shown": {
+      "title": "Baki dan had hari ini dipaparkan"
+    },
+    "new_customer_daily_limit": {
+      "title": "Had harian lebih rendah untuk pelanggan baharu"
+    },
+    "balance_unavailable": {
+      "title": "Baki atau had tidak dapat dimuatkan"
+    },
+    "under_maintenance": {
+      "title": "Pindahan dalam penyelenggaraan",
+      "body": "Pindahan tidak tersedia buat masa ini."
+    },
+    "offline": {
+      "title": "Luar talian",
+      "disabled_reason": "Anda di luar talian, jadi penghantaran dijeda."
+    },
+    "earlier_transfer_unconfirmed": {
+      "title": "Pindahan terdahulu masih disemak"
+    },
+    "screen_capture_blocked": {
+      "title": "Tangkapan skrin disekat"
+    },
+    "start_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa bermula",
+      "body": "Berlaku masalah yang tidak dijangka.",
+      "retry": "Cuba lagi"
+    },
+    "badly_formed_input": {
+      "title": "ID, jumlah atau nota tidak sah",
+      "body": "Bank tidak dapat menerima jumlah atau nota seperti yang dimasukkan. Semak kedua-duanya, kemudian semak pindahan sekali lagi.",
+      "mobile": "Masukkan nombor telefon bimbit Malaysia, seperti 012-345 6789.",
+      "amount": "Masukkan jumlah dalam ringgit, dengan tidak lebih daripada dua tempat perpuluhan."
+    },
+    "contacts_access_refused": {
+      "title": "Akses kenalan ditolak"
+    },
+    "contact_without_mobile": {
+      "title": "Kenalan yang dipilih tiada nombor telefon bimbit Malaysia"
+    },
+    "recent_recipient_chosen": {
+      "title": "Penerima terkini dipilih"
+    },
+    "recipient_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa memilih penerima"
+    },
+    "amount_too_high": {
+      "title": "Jumlah melebihi baki atau had",
+      "over_balance": "Jumlah itu melebihi baki anda, iaitu {{amount}}.",
+      "over_remaining_today": "Jumlah itu melebihi {{amount}} yang masih boleh anda hantar hari ini.",
+      "over_per_transfer_max": "Jumlah itu melebihi {{amount}}, jumlah maksimum bagi satu pindahan."
+    },
+    "amount_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa memasukkan jumlah"
+    },
+    "recipient_found": {
+      "title": "Penerima ditemui"
+    },
+    "first_transfer_to_recipient": {
+      "title": "Pindahan pertama kepada penerima ini",
+      "body": "Ini pindahan pertama anda kepada penerima ini. Pastikan nama itu ialah orang yang anda maksudkan."
+    },
+    "recipient_not_found": {
+      "title": "Penerima tidak ditemui"
+    },
+    "name_check_unavailable": {
+      "title": "Semakan nama tidak tersedia"
+    },
+    "too_many_name_checks": {
+      "title": "Terlalu banyak semakan nama"
+    },
+    "balance_or_limit_short_at_confirmation": {
+      "title": "Baki atau had tidak mencukupi semasa pengesahan",
+      "body": "Baki atau had anda kini terlalu rendah untuk jumlah ini."
+    },
+    "cooling_off_new_phone": {
+      "title": "Telefon dipasangkan kurang daripada 12 jam yang lalu"
+    },
+    "cooling_off_new_account": {
+      "title": "Akaun dibuka kurang daripada sejam yang lalu"
+    },
+    "account_locked": {
+      "title": "Akaun dikunci"
+    },
+    "name_check_expired": {
+      "title": "Semakan nama telah tamat tempoh",
+      "body": "Semakan penerima telah tamat tempoh. Sahkan penerima sekali lagi."
+    },
+    "confirmation_unanswered": {
+      "title": "Tiada jawapan semasa pengesahan",
+      "body": "Ryt tidak dapat dihubungi — tiada wang dipindahkan."
+    },
+    "details_changed_after_no_answer": {
+      "title": "Butiran berubah selepas tiada jawapan",
+      "body": "Butiran anda berubah selepas Ryt tidak menjawab. Semak butiran itu, kemudian sahkan ini sebagai pindahan baharu."
+    },
+    "double_tap_ignored": {
+      "title": "Ketik dua kali pada Pindahkan"
+    },
+    "review_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa menyemak",
+      "body": "Sesuatu yang tidak dijangka menghentikan pindahan — tiada wang dipindahkan.",
+      "retry": "Cuba lagi"
+    },
+    "biometrics_recognised": {
+      "title": "Wajah atau cap jari dikenal pasti",
+      "body": "Pindahan anda sedang dihantar. Jawapan bank akan menyusul."
+    },
+    "approval_cancelled": {
+      "title": "Kelulusan dibatalkan",
+      "body": "Pindahan tidak dihantar — tiada wang dipindahkan."
+    },
+    "biometrics_not_recognised": {
+      "title": "Wajah atau cap jari tidak dikenal pasti",
+      "body": "Wajah atau cap jari anda tidak dikenal pasti. Anda boleh cuba lagi atau gunakan PIN anda."
+    },
+    "biometrics_locked_out": {
+      "title": "Terlalu banyak cubaan wajah atau cap jari",
+      "body": "Terlalu banyak cubaan, jadi luluskan dengan PIN anda."
+    },
+    "biometrics_unavailable": {
+      "title": "Wajah atau cap jari tidak tersedia",
+      "body": "Kelulusan dengan wajah atau cap jari tidak tersedia, jadi luluskan dengan PIN anda."
+    },
+    "biometrics_changed": {
+      "title": "Cap jari atau wajah telah berubah",
+      "body": "Cap jari atau wajah anda telah berubah. PIN anda meluluskan pindahan ini dan menghidupkan semula kelulusan dengan wajah atau cap jari."
+    },
+    "pin_chosen": {
+      "title": "PIN dipilih sebagai ganti"
+    },
+    "pin_incorrect": {
+      "title": "PIN salah"
+    },
+    "pin_locked": {
+      "title": "PIN dikunci",
+      "body": "PIN anda dikunci. Tetapkan semula dalam tetapan keselamatan aplikasi."
+    },
+    "approval_key_unknown": {
+      "title": "Kunci kelulusan tidak dikenali oleh bank",
+      "body": "Kelulusan perlu disediakan semula pada telefon ini."
+    },
+    "approval_expired": {
+      "title": "Tempoh kelulusan telah tamat",
+      "body": "Kelulusan telah tamat masa — tiada wang dipindahkan."
+    },
+    "approval_not_verified": {
+      "title": "Kelulusan tidak dapat disahkan",
+      "body": "Kelulusan tidak dapat disahkan — tiada wang dipindahkan."
+    },
+    "balance_or_limit_short_at_approval": {
+      "title": "Baki atau had tidak mencukupi semasa kelulusan",
+      "body": "Pindahan tidak dihantar kerana baki atau had anda telah berubah — tiada wang dipindahkan."
+    },
+    "fraud_blocked": {
+      "title": "Dihentikan oleh semakan penipuan bank"
+    },
+    "held_for_review": {
+      "title": "Ditahan untuk semakan keselamatan"
+    },
+    "recipient_account_inactive": {
+      "title": "Akaun penerima tidak aktif"
+    },
+    "rooted_phone": {
+      "title": "Telefon di-root, di-jailbreak atau diubah suai",
+      "body": "Keselamatan telefon ini tidak dapat dipastikan, jadi pindahan dimatikan pada telefon ini."
+    },
+    "approval_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa meluluskan",
+      "body": "Sesuatu yang tidak dijangka menghentikan kelulusan sebelum ia dihantar — tiada wang dipindahkan."
+    },
+    "completed": {
+      "title": "Pindahan dihantar",
+      "body": "{{amount}} dihantar kepada {{name}} — wang telah dipindahkan."
+    },
+    "processing": {
+      "title": "Pindahan sedang diproses"
+    },
+    "refunded_after_processing": {
+      "title": "Dipulangkan selepas diproses"
+    },
+    "outcome_unexpected": {
+      "title": "Sesuatu yang tidak dijangka selepas menghantar",
+      "body": "Keputusan tidak dapat dipaparkan sekarang. Semak Sejarah sebelum menghantar pindahan ini sekali lagi — belum disahkan.",
+      "retry": "Muat semula keputusan"
+    },
+    "approval_unanswered": {
+      "title": "Tiada jawapan kepada kelulusan",
+      "body": "Jawapan bank tidak tiba. Semak Sejarah sebelum menghantar pindahan ini sekali lagi — belum disahkan."
+    },
+    "status_unreachable": {
+      "title": "Bank masih tidak dapat dihubungi"
+    },
+    "app_closed_during_approval": {
+      "title": "Aplikasi ditutup semasa kelulusan"
+    },
+    "last_transfer_not_found": {
+      "title": "Pindahan terakhir tidak ditemui"
+    },
+    "session_ended": {
+      "title": "Sesi tamat"
+    },
+    "approval_unknown_answer": {
+      "title": "Jawapan kelulusan tidak diketahui"
+    },
+    "recovery_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa memeriksa"
+    }
+  },
+  "recipient": {
+    "title": "Pindahan",
+    "id_label": {
+      "mobile": "Nombor telefon bimbit DuitNow"
+    },
+    "mobile_placeholder": "012-345 6789",
+    "continue": "Teruskan"
+  },
+  "amount": {
+    "title": "Jumlah",
+    "label": "Jumlah (RM)",
+    "amount_missing": "Masukkan jumlah untuk dihantar.",
+    "review": "Semak"
+  },
+  "review": {
+    "title": "Semak",
+    "recipient_name": "Kepada",
+    "amount": "Jumlah",
+    "transfer": "Pindahkan",
+    "prompt_title": "Luluskan pindahan",
+    "prompt_subtitle": "{{amount}} kepada {{name}}",
+    "prompt_cancel": "Batal"
+  },
+  "section_review_recipient": {
+    "bank": "Bank",
+    "mobile": "Nombor telefon bimbit"
+  },
+  "approval": {},
+  "result": {
+    "title": "Resit",
+    "amount": "Jumlah",
+    "recipient_name": "Kepada",
+    "mobile": "Nombor telefon bimbit",
+    "bank": "Bank",
+    "note": "Nota",
+    "reference": "Rujukan",
+    "completed_at": "Selesai pada",
+    "done": "Selesai"
+  }
+}

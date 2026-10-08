@@ -33,6 +33,34 @@ it.each([
   );
 });
 
+it.each([
+  ["ms-MY", "2026-10-06T07:42:00Z", "6 Okt 2026, 3:42 PTG"],
+  ["ms-MY", "2026-10-06T16:00:00Z", "7 Okt 2026, 12:00 PG"],
+  ["zh-MY", "2026-10-06T07:42:00Z", "2026年10月6日 下午3:42"],
+  ["zh-MY", "2026-10-06T16:00:00Z", "2026年10月7日 上午12:00"],
+])("in %s, shows %s as %s", (language, instant, text) => {
+  expect(
+    formatMalaysianDateTime(instant, getFixedT(language, "transfer")),
+  ).toBe(text);
+});
+
+it.each([
+  ["ms-MY", "Hari ini", "Semalam", "5 Okt 2026"],
+  ["zh-MY", "今天", "昨天", "2026年10月5日"],
+])(
+  "in %s, heads today, yesterday and an earlier day as %s, %s and %s",
+  (language, today, yesterday, earlier) => {
+    const languageT = getFixedT(language, "transfer");
+    const now = new Date("2026-10-06T16:00:00Z");
+
+    expect([
+      formatMalaysianDayHeader("2026-10-07", now, languageT),
+      formatMalaysianDayHeader("2026-10-06", now, languageT),
+      formatMalaysianDayHeader("2026-10-05", now, languageT),
+    ]).toEqual([today, yesterday, earlier]);
+  },
+);
+
 it("refuses an instant it cannot read", () => {
   expect(() => formatMalaysianDateTime("not a date", transferT)).toThrow(
     RangeError,

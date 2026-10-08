@@ -1,0 +1,29 @@
+{
+  "pill_demo": {
+    "label": "Demo",
+    "open_menu": "Menu demo"
+  },
+  "banner_demo": {
+    "message": "Demo · {{title}}",
+    "clear": "Kembali normal"
+  },
+  "bottom_sheet_demo": {
+    "title": "Demo",
+    "close": "Tutup menu demo",
+    "demo_only": "Demo sahaja",
+    "unlock_pin_note": "Menggantikan tetapan semula PIN dalam tetapan keselamatan Ryt sendiri.",
+    "unlock_pin": "Buka kunci PIN",
+    "normal": "Biasa, tiada senario",
+    "no_biometrics": "Tiada biometrik",
+    "step": {
+      "start": "Mula",
+      "recipient": "Penerima",
+      "amount": "Jumlah",
+      "review": "Semak",
+      "approval": "Kelulusan",
+      "outcome": "Keputusan",
+      "recovery": "Pemulihan"
+    },
+    "reset": "Set semula demo"
+  }
+}
