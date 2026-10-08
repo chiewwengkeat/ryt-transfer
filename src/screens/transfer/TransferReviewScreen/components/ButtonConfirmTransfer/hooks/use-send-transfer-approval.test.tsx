@@ -888,3 +888,36 @@ it("sets approval up again with the PIN already entered when the bank no longer 
     expect(new Set(approvalKeyIds).size).toBe(2);
   })();
 });
+
+it.each([
+  ["face or fingerprint", "Transfer", () => Promise.resolve()],
+  ["the PIN", "Use PIN instead", () => approveWithPin(DEMO_PIN)],
+])(
+  "still approves with %s once setting approval up again was left unfinished, the bank still holding the phone's keys",
+  async (_, approveButtonName, finishApproving) => {
+    mswServer.use(
+      http.post(
+        "*/transfers/:transferId/approve",
+        () =>
+          HttpResponse.json(
+            { error: { code: "KEY_NOT_REGISTERED", message: "Test." } },
+            { status: 409 },
+          ),
+        { once: true },
+      ),
+    );
+    await confirmRm100Transfer();
+    await screen.findByText(
+      "Enter your PIN to set it up and approve this transfer.",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+    await screen.findByText("The transfer was not sent — no money moved.");
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: approveButtonName }),
+    );
+    await finishApproving();
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  },
+);

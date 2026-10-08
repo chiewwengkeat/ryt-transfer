@@ -30,8 +30,19 @@ export enum BiometricSignOutcome {
   Failed = "failed",
 }
 
-const POSSESSION_KEY_ALIAS = "ryt-transfer.approval.possession";
-const BIOMETRIC_KEY_ALIAS = "ryt-transfer.approval.biometric";
+// New keys go in the set not in use, so keys the bank refuses never replace the ones it knows.
+const APPROVAL_KEY_SETS = {
+  // The aliases phones paired with before there were two sets.
+  first: {
+    possession: "ryt-transfer.approval.possession",
+    biometric: "ryt-transfer.approval.biometric",
+  },
+  second: {
+    possession: "ryt-transfer.approval.possession.second",
+    biometric: "ryt-transfer.approval.biometric.second",
+  },
+};
+const APPROVAL_KEY_SET_RECORD = { namespace: "approval", name: "key-set" };
 const POSSESSION_KEY_ID_RECORD = {
   namespace: "approval",
   name: "possession-key-id",
@@ -42,7 +53,6 @@ const BIOMETRIC_KEY_ID_RECORD = {
 };
 // ⛔ Never allow device credentials: the phone's passcode must never approve a transfer.
 const BIOMETRIC_KEY_OPTIONS = {
-  keyAlias: BIOMETRIC_KEY_ALIAS,
   keyType: "ec256",
   biometricStrength: BiometricStrength.Strong,
   allowDeviceCredentials: false,
@@ -56,13 +66,20 @@ export async function approvalKeysOnFile() {
   return keyIds.every((keyId) => keyId !== null);
 }
 
-export async function createApprovalKeys() {
+export async function createApprovalKeys(
+  keySet?: keyof typeof APPROVAL_KEY_SETS,
+) {
+  const keyAliases =
+    APPROVAL_KEY_SETS[keySet ?? (await readApprovalKeySetInUse())];
   const possessionKey = await createKeysWithOptions({
-    keyAlias: POSSESSION_KEY_ALIAS,
+    keyAlias: keyAliases.possession,
     keyType: "ec256",
     requireAuthentication: false,
   });
-  const biometricKey = await createKeysWithOptions(BIOMETRIC_KEY_OPTIONS);
+  const biometricKey = await createKeysWithOptions({
+    ...BIOMETRIC_KEY_OPTIONS,
+    keyAlias: keyAliases.biometric,
+  });
   return {
     possessionPublicKey: possessionKey.publicKey,
     biometricPublicKey: biometricKey.publicKey,
@@ -77,18 +94,27 @@ export async function saveApprovalKeyIds(
 }
 
 export async function registerNewApprovalKeys(pin?: string) {
+  const newKeySet =
+    (await readApprovalKeySetInUse()) === "first" ? "second" : "first";
   const { possessionKeyId, biometricKeyId } = await registerApprovalKeys(
-    { ...(await createApprovalKeys()), pin },
+    { ...(await createApprovalKeys(newKeySet)), pin },
     randomUUID(),
   );
   if (possessionKeyId === undefined || biometricKeyId === undefined)
     throw new Error("The bank registered only some of the approval keys.");
+  // Before the ids: stopped between the two, the phone sends ids the bank has dropped, which sets keys up again.
+  await writeSecureRecord(APPROVAL_KEY_SET_RECORD, newKeySet);
   await saveApprovalKeyIds({ possessionKeyId, biometricKeyId });
 }
 
 export async function replaceBiometricApprovalKey(pin: string) {
+  const biometricKeyAlias =
+    APPROVAL_KEY_SETS[await readApprovalKeySetInUse()].biometric;
   try {
-    const { publicKey } = await createKeysWithOptions(BIOMETRIC_KEY_OPTIONS);
+    const { publicKey } = await createKeysWithOptions({
+      ...BIOMETRIC_KEY_OPTIONS,
+      keyAlias: biometricKeyAlias,
+    });
     const { biometricKeyId } = await registerApprovalKeys(
       { biometricPublicKey: publicKey, pin },
       randomUUID(),
@@ -98,7 +124,7 @@ export async function replaceBiometricApprovalKey(pin: string) {
     await writeSecureRecord(BIOMETRIC_KEY_ID_RECORD, biometricKeyId);
   } catch (error) {
     // Kept, an unregistered key signs what the bank cannot verify; gone, the next transfer offers the PIN again.
-    await deleteKeys(BIOMETRIC_KEY_ALIAS).catch(() => undefined);
+    await deleteKeys(biometricKeyAlias).catch(() => undefined);
     throw error;
   }
 }
@@ -130,7 +156,7 @@ export async function signWithBiometricKey(
   }
 
   const result = await signWithOptions({
-    keyAlias: BIOMETRIC_KEY_ALIAS,
+    keyAlias: APPROVAL_KEY_SETS[await readApprovalKeySetInUse()].biometric,
     data: signedText,
     inputEncoding: InputEncoding.UTF8,
     promptTitle: prompt.title,
@@ -161,7 +187,7 @@ export async function signWithPossessionKey(signedText: string) {
   if (keyId === null) return null;
   try {
     const result = await sign({
-      keyAlias: POSSESSION_KEY_ALIAS,
+      keyAlias: APPROVAL_KEY_SETS[await readApprovalKeySetInUse()].possession,
       data: signedText,
       inputEncoding: InputEncoding.UTF8,
     });
@@ -174,8 +200,16 @@ export async function signWithPossessionKey(signedText: string) {
 }
 
 export async function deleteApprovalKeys() {
-  await deleteKeys(POSSESSION_KEY_ALIAS);
-  await deleteKeys(BIOMETRIC_KEY_ALIAS);
+  for (const keyAliases of Object.values(APPROVAL_KEY_SETS)) {
+    await deleteKeys(keyAliases.possession);
+    await deleteKeys(keyAliases.biometric);
+  }
+}
+
+async function readApprovalKeySetInUse() {
+  return (await readSecureRecord(APPROVAL_KEY_SET_RECORD)) === "second"
+    ? "second"
+    : "first";
 }
 
 // Both platforms' spellings: the library names one result differently on each.
