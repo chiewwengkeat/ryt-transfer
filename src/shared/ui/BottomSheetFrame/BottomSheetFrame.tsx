@@ -22,10 +22,12 @@ import {
 import Animated, {
   FadeIn,
   FadeOut,
+  ReduceMotion,
   SlideInDown,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion";
 import {
   colors,
   minTouchTarget,
@@ -68,6 +70,9 @@ export default function BottomSheetFrame({
   const [bodyHeight, setBodyHeight] = useState(0);
   const [bodyContentHeight, setBodyContentHeight] = useState(0);
   const { i18n } = useTranslation();
+  const sheetReduceMotion = usePhoneReducesMotion()
+    ? ReduceMotion.Always
+    : ReduceMotion.Never;
 
   const closeOnBack = useEffectEvent(() => {
     if (dismissable) onClose();
@@ -91,8 +96,8 @@ export default function BottomSheetFrame({
     sheetHost.showSheet(
       sheetId,
       <Animated.View
-        entering={FadeIn}
-        exiting={FadeOut}
+        entering={FadeIn.reduceMotion(sheetReduceMotion)}
+        exiting={FadeOut.reduceMotion(sheetReduceMotion)}
         // Handled even when it cannot close, as Back is: iOS hands an unhandled escape on up to what holds the sheet.
         onAccessibilityEscape={() => {
           if (dismissable) onClose();
@@ -112,7 +117,7 @@ export default function BottomSheetFrame({
           style={[styles.keyboardClear, { paddingTop: top + spacing.lg }]}
         >
           <Animated.View
-            entering={SlideInDown}
+            entering={SlideInDown.reduceMotion(sheetReduceMotion)}
             style={[styles.panel, { paddingBottom: bottom + spacing.md }]}
           >
             <View style={styles.header}>
