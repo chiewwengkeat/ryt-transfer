@@ -68,6 +68,7 @@ async function approveWithTheBankAnswering(answer: Transfer, held?: Transfer) {
   });
   await act(() =>
     result.current.mutateAsync({
+      customerId: "cus_1",
       transferId: answer.transferId,
       request: { keyId: "key_1", signature: "c2lnbmF0dXJl" },
       idempotencyKey: "approve-1",

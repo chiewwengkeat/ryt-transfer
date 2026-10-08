@@ -1,10 +1,17 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo, Pressable, Text } from "react-native";
 
+import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import {
+  listPendingTransfers,
+  PendingTransferStage,
+  writePendingTransfer,
+} from "@/domains/transfer/hooks/pending-transfers";
 import { requestJson } from "@/shared/http/transport";
+import { sendToBank } from "@/test/bank-client";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
@@ -116,4 +123,35 @@ it("ignores hardware Back while the session-ended view covers the app, and obeys
 
   expect(pathnameUnderTheView).toBe("/details");
   expect(view.getPathname()).toBe("/");
+});
+
+it("discards another customer's pending transfers at launch, and keeps the signed-in customer's", async () => {
+  const {
+    body: { customerId },
+  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+  const pendingSince = {
+    idempotencyKey: "key-earlier",
+    createdAt: "2026-10-07T01:00:00.000Z",
+    stage: PendingTransferStage.Approving,
+  };
+  await writePendingTransfer("cus_earlier", {
+    ...pendingSince,
+    transferId: "trf_earlier",
+  });
+  await writePendingTransfer(customerId, {
+    ...pendingSince,
+    transferId: "trf_own",
+  });
+
+  await renderRoute("/", {
+    appDir: "src/app",
+    overrides: { index: () => <Text>Home</Text> },
+  });
+
+  await waitFor(async () => {
+    expect(await listPendingTransfers("cus_earlier")).toEqual([]);
+  });
+  expect(await listPendingTransfers(customerId)).toEqual([
+    { ...pendingSince, transferId: "trf_own" },
+  ]);
 });

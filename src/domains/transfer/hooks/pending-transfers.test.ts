@@ -1,0 +1,113 @@
+import {
+  readSecureRecord,
+  writeSecureRecord,
+} from "@/shared/platform/secure-storage";
+import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
+
+import {
+  clearPendingTransfer,
+  discardOtherCustomersPendingTransfers,
+  listPendingTransfers,
+  PendingTransferStage,
+  updatePendingTransferStage,
+  writePendingTransfer,
+} from "./pending-transfers";
+
+const FIRST_CUSTOMER = "cus_first";
+const SECOND_CUSTOMER = "cus_second";
+
+function approvingRecord(transferId: string) {
+  return {
+    transferId,
+    idempotencyKey: `key-${transferId}`,
+    createdAt: "2026-10-08T01:00:00.000Z",
+    stage: PendingTransferStage.Approving,
+  };
+}
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
+it("lists the pending transfers written for a customer, and none of another customer's", async () => {
+  await writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_1"));
+  await writePendingTransfer(SECOND_CUSTOMER, approvingRecord("trf_2"));
+
+  expect(await listPendingTransfers(FIRST_CUSTOMER)).toEqual([
+    approvingRecord("trf_1"),
+  ]);
+});
+
+it("keeps one record per transfer, holding the key of its latest write", async () => {
+  await writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_1"));
+  await writePendingTransfer(FIRST_CUSTOMER, {
+    ...approvingRecord("trf_1"),
+    idempotencyKey: "key-second-attempt",
+  });
+
+  expect(await listPendingTransfers(FIRST_CUSTOMER)).toEqual([
+    { ...approvingRecord("trf_1"), idempotencyKey: "key-second-attempt" },
+  ]);
+});
+
+it("moves a transfer to the stage it reached, and never brings back a cleared one", async () => {
+  await writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_1"));
+
+  await updatePendingTransferStage(
+    FIRST_CUSTOMER,
+    "trf_1",
+    PendingTransferStage.Processing,
+  );
+  await updatePendingTransferStage(
+    FIRST_CUSTOMER,
+    "trf_cleared",
+    PendingTransferStage.Processing,
+  );
+
+  expect(await listPendingTransfers(FIRST_CUSTOMER)).toEqual([
+    { ...approvingRecord("trf_1"), stage: PendingTransferStage.Processing },
+  ]);
+});
+
+it("clears one transfer and keeps the customer's others", async () => {
+  await writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_1"));
+  await writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_2"));
+
+  await clearPendingTransfer(FIRST_CUSTOMER, "trf_1");
+
+  expect(await listPendingTransfers(FIRST_CUSTOMER)).toEqual([
+    approvingRecord("trf_2"),
+  ]);
+});
+
+it("discards every other customer's pending transfers, and keeps this customer's and the phone's other records", async () => {
+  const approvalKeys = { namespace: "approval", name: "key-ids" };
+  await writeSecureRecord(approvalKeys, "{}");
+  await writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_1"));
+  await writePendingTransfer(SECOND_CUSTOMER, approvingRecord("trf_2"));
+
+  await discardOtherCustomersPendingTransfers(FIRST_CUSTOMER);
+
+  expect(await listPendingTransfers(FIRST_CUSTOMER)).toEqual([
+    approvingRecord("trf_1"),
+  ]);
+  expect(await listPendingTransfers(SECOND_CUSTOMER)).toEqual([]);
+  expect(await readSecureRecord(approvalKeys)).toBe("{}");
+});
+
+it("still lists a customer's transfers when a write stopped between its index entry and its record", async () => {
+  await writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_1"));
+  const writeForReal = secureStoreNativeDouble.setValueWithKeyAsync;
+  jest
+    .spyOn(secureStoreNativeDouble, "setValueWithKeyAsync")
+    .mockImplementationOnce(writeForReal)
+    .mockRejectedValueOnce(new Error("the phone died"));
+
+  await expect(
+    writePendingTransfer(FIRST_CUSTOMER, approvingRecord("trf_2")),
+  ).rejects.toThrow("the phone died");
+
+  expect(await listPendingTransfers(FIRST_CUSTOMER)).toEqual([
+    approvingRecord("trf_1"),
+  ]);
+});

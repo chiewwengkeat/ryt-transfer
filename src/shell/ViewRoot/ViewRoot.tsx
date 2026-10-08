@@ -12,8 +12,10 @@ import { queryClient } from "@/shell/query-client";
 import "@/shell/translations";
 
 import ViewSessionEnded from "./components/ViewSessionEnded/ViewSessionEnded";
+import { usePendingTransfersAtLaunch } from "./hooks/use-pending-transfers-at-launch";
 
 export default function ViewRoot() {
+  usePendingTransfersAtLaunch();
   const [sessionEnded, setSessionEnded] = useState(false);
   const [demoSheetOpen, setDemoSheetOpen] = useState(false);
   useEffect(

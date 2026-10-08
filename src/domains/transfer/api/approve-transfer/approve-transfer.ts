@@ -3,6 +3,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { requestJson } from "@/shared/http/transport";
 import type { WireMoney } from "@/shared/lib/money/money.type";
 
+import {
+  PendingTransferStage,
+  writePendingTransfer,
+} from "../../hooks/pending-transfers";
 import { getTransferOptions } from "../get-transfer/get-transfer";
 import {
   ApproveTransferErrorCode,
@@ -22,19 +26,35 @@ export const APPROVAL_REFUSAL_CODES = new Set<string>([
   ApproveTransferErrorCode.InvalidRequest,
 ]);
 
+export class ApproveRequestNotSentError extends Error {}
+
 export function useApproveTransfer() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
+      customerId,
       transferId,
       request,
       idempotencyKey,
     }: {
+      customerId: string;
       transferId: string;
       request: ApproveTransferRequest;
       idempotencyKey: string;
-    }) =>
-      requestJson<ApproveTransferResponse>(
+    }) => {
+      // Awaited before the call: an approval the bank may act on must be one the next launch can find.
+      await writePendingTransfer(customerId, {
+        transferId,
+        idempotencyKey,
+        createdAt: new Date().toISOString(),
+        stage: PendingTransferStage.Approving,
+      }).catch((cause: unknown) => {
+        throw new ApproveRequestNotSentError(
+          "The approval's pending record could not be written.",
+          { cause },
+        );
+      });
+      return await requestJson<ApproveTransferResponse>(
         `/transfers/${encodeURIComponent(transferId)}/approve`,
         {
           method: "POST",
@@ -42,7 +62,8 @@ export function useApproveTransfer() {
           idempotencyKey,
           timeoutMs: 30_000,
         },
-      ),
+      );
+    },
     onSuccess: ({ transfer }) => {
       queryClient.setQueryData(
         getTransferOptions(transfer.transferId).queryKey,

@@ -97,7 +97,9 @@ it("keeps the app's write rule: a write goes once, at once, even offline", async
   await fireEvent.press(screen.getByRole("button", { name: "Send" }));
 
   expect(await screen.findByRole("button", { name: "Sent" })).toBeOnTheScreen();
-  expect(sentRequests).toHaveLength(1);
+  expect(sentRequests.filter(({ url }) => url.endsWith("/write"))).toHaveLength(
+    1,
+  );
 });
 
 // Probed through the shell's own behaviour, so the test outlives whatever the home route shows.

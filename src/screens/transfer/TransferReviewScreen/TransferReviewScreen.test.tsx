@@ -3,8 +3,17 @@ import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 import { Platform } from "react-native";
 
+import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
-import { lookUpTestRecipient, readBankBalanceMinor } from "@/test/bank-client";
+import {
+  listPendingTransfers,
+  PendingTransferStage,
+} from "@/domains/transfer/hooks/pending-transfers";
+import {
+  lookUpTestRecipient,
+  readBankBalanceMinor,
+  sendToBank,
+} from "@/test/bank-client";
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
@@ -20,6 +29,10 @@ import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 import { TransferFlowStep, transferFlowStore } from "../state/transfer-flow";
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 const MOBILE = "012-345 6789";
 
@@ -412,7 +425,9 @@ it.each<[TransferFlowStep, (stepHeld: Promise<void>) => void]>([
   "turns off the swipe that would close the whole transfer flow while the transfer is %s",
   async (step, holdStep) => {
     await pairPhoneAsTheDemoLaunchDoes();
+    await openReviewOfRm100("/");
     let releaseStep: () => void = () => undefined;
+    // Armed once review is open: the launch check for pending transfers reads the keychain too, and would take the hold.
     holdStep(
       new Promise<void>((release) => {
         releaseStep = () => {
@@ -420,7 +435,6 @@ it.each<[TransferFlowStep, (stepHeld: Promise<void>) => void]>([
         };
       }),
     );
-    await openReviewOfRm100("/");
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -619,6 +633,61 @@ it("takes a lost approval answer to the result page, which never offers to send 
   expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
   expect(screen.getByRole("button", { name: "Done" })).toBeOnTheScreen();
+});
+
+it("keeps the transfer on the phone before its approval leaves, under the key the approval carries", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const {
+    body: { customerId },
+  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+  let approvalKey: string | null = null;
+  let pendingWhenApprovalArrived: Awaited<
+    ReturnType<typeof listPendingTransfers>
+  > = [];
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", async ({ request }) => {
+      approvalKey = request.headers.get("Idempotency-Key");
+      pendingWhenApprovalArrived = await listPendingTransfers(customerId);
+      return HttpResponse.error();
+    }),
+  );
+  const view = await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByRole("button", { name: "Done" });
+
+  expect(pendingWhenApprovalArrived).toEqual([
+    expect.objectContaining({
+      transferId: view.getPathname()?.replace("/transfer/result/", ""),
+      idempotencyKey: approvalKey,
+      stage: PendingTransferStage.Approving,
+    }),
+  ]);
+});
+
+it("says the approval was not sent when the phone cannot keep a record of it", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+  jest
+    .spyOn(secureStoreNativeDouble, "setValueWithKeyAsync")
+    .mockRejectedValue(new Error("the keychain is unavailable"));
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      "Something unexpected stopped the approval before it was sent — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  const sentPaths = sentRequests.map(
+    ({ method, url }) => `${method} ${new URL(url).pathname}`,
+  );
+  expect(sentPaths).toContain("POST /transfers");
+  expect(sentPaths.filter((path) => path.endsWith("/approve"))).toEqual([]);
 });
 
 it("ignores Android's Back while the transfer is being sent", async () => {

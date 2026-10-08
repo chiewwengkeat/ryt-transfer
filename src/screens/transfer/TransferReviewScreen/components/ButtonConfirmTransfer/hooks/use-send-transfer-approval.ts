@@ -2,8 +2,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 
+import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
   APPROVAL_REFUSAL_CODES,
+  ApproveRequestNotSentError,
   useApproveTransfer,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import { refreshAccountAndHistoryAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
@@ -23,12 +25,20 @@ import { useSignTransferApproval } from "./use-sign-transfer-approval";
 
 export function useSendTransferApproval() {
   const queryClient = useQueryClient();
+  const customerId = useGetPrimaryAccount().data?.customerId;
   const signTransferApproval = useSignTransferApproval();
   const approveTransfer = useApproveTransfer();
 
   return async () => {
     const approving = transferFlowStore.getState();
     if (approving.step !== TransferFlowStep.Approving) return;
+    if (customerId === undefined) {
+      dispatchTransferFlow({
+        type: TransferFlowActionType.ApprovalNotSent,
+        notice: TransferFlowScenario.ApprovalUnexpected,
+      });
+      return;
+    }
     const { transferId, lookup } = approving;
     const signedApproval = await signTransferApproval({
       transferId,
@@ -58,11 +68,19 @@ export function useSendTransferApproval() {
     let answerLost = false;
     try {
       await approveTransfer.mutateAsync({
+        customerId,
         transferId,
         request: signedApproval,
         idempotencyKey: attemptKey,
       });
     } catch (error) {
+      if (error instanceof ApproveRequestNotSentError) {
+        dispatchTransferFlow({
+          type: TransferFlowActionType.ApprovalNotSent,
+          notice: TransferFlowScenario.ApprovalUnexpected,
+        });
+        return;
+      }
       if (
         error instanceof TransportError &&
         error.kind === TransportErrorKind.Http &&
