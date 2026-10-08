@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Pressable,
@@ -27,12 +28,15 @@ export default function ButtonPrimary({
   loading = false,
   disabledReason,
 }: Props) {
+  const { i18n } = useTranslation();
   const disabled = loading || disabledReason !== undefined;
   return (
     <View style={styles.container}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
+        // On the button, not its label: the screen reader reads the button as one element, in the button's language.
+        accessibilityLanguage={i18n.language}
         accessibilityHint={disabledReason}
         accessibilityState={{ disabled, busy: loading }}
         disabled={disabled}

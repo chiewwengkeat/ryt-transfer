@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text } from "react-native";
 
 import { colors, typography } from "@/shared/theme/theme";
@@ -13,8 +14,12 @@ export default function TextBody({
   tone = "primary",
   strong = false,
 }: Props) {
+  const { i18n } = useTranslation();
   return (
-    <Text style={[styles.body, styles[tone], strong && styles.strong]}>
+    <Text
+      accessibilityLanguage={i18n.language}
+      style={[styles.body, styles[tone], strong && styles.strong]}
+    >
       {children}
     </Text>
   );

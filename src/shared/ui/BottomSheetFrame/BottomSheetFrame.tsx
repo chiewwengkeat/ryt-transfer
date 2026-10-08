@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   BackHandler,
   Keyboard,
@@ -66,6 +67,7 @@ export default function BottomSheetFrame({
   const searchFieldFocusedRef = useRef(false);
   const [bodyHeight, setBodyHeight] = useState(0);
   const [bodyContentHeight, setBodyContentHeight] = useState(0);
+  const { i18n } = useTranslation();
 
   const closeOnBack = useEffectEvent(() => {
     if (dismissable) onClose();
@@ -121,6 +123,8 @@ export default function BottomSheetFrame({
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={closeLabel}
+                  // On the button, not its ✕: the screen reader reads the button as one element, in its language.
+                  accessibilityLanguage={i18n.language}
                   onPress={onClose}
                   style={styles.closeButton}
                 >

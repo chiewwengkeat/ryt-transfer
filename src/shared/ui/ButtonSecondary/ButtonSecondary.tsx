@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text } from "react-native";
 
 import {
@@ -18,10 +19,13 @@ export default function ButtonSecondary({
   accessibilityLabel,
   onPress,
 }: Props) {
+  const { i18n } = useTranslation();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
+      // On the button, not its label: the screen reader reads the button as one element, in the button's language.
+      accessibilityLanguage={i18n.language}
       onPress={onPress}
       style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
     >
