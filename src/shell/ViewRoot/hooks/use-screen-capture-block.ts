@@ -1,5 +1,5 @@
 import { usePathname, useSegments } from "expo-router";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { isProductionBuild } from "@/shared/config/config";
 import {
@@ -33,16 +33,23 @@ export function useScreenCaptureBlock() {
     };
   }, [onReceiptRoute, pathname]);
   const [captureBlockPicked, setCaptureBlockPicked] = useState(false);
+  const captureBlockPickedRef = useRef(false);
   // Before paint, so a pick saved before a restart blocks the first frame.
   useLayoutEffect(
-    () => demoLayer?.subscribeToScreenCaptureBlock(setCaptureBlockPicked),
+    () =>
+      demoLayer?.subscribeToScreenCaptureBlock((picked) => {
+        captureBlockPickedRef.current = picked;
+        setCaptureBlockPicked(picked);
+      }),
     [],
   );
 
-  // The crash screen that replaces this root is no receipt, so in production it is blocked even when a receipt crashed.
+  // The crash screen that replaces this root is no receipt, so it is blocked wherever other screens are, even when a
+  // receipt crashed. The pick is read through a ref: as a dependency, unpicking it on a receipt would block the receipt.
   useLayoutEffect(
     () => () => {
-      if (isProductionBuild) void blockScreenCapture();
+      if (isProductionBuild || captureBlockPickedRef.current)
+        void blockScreenCapture();
     },
     [],
   );
