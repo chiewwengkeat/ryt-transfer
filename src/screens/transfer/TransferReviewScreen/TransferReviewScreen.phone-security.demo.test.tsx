@@ -55,6 +55,28 @@ it(
   }),
 );
 
+it("refuses Use PIN instead before any PIN sheet in a demo build while the rooted phone is picked, asking the phone's own check nothing", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+  await pickDemoScenario("Rooted, jailbroken or tampered phone");
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+
+  expect(await screen.findByText(PHONE_REFUSAL)).toBeOnTheScreen();
+  expect(
+    screen.queryByText("Enter your bank PIN to approve this transfer."),
+  ).toBeNull();
+  expect(
+    sentRequests.filter(
+      ({ method, url }) =>
+        method === "POST" && new URL(url).pathname.startsWith("/transfers"),
+    ),
+  ).toEqual([]);
+  expect(deviceIntegrityChecksAsked()).toBe(0);
+});
+
 it("lets approval go ahead in a demo build with no scenario picked, without asking the phone's own check", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await openReviewOfRm100();

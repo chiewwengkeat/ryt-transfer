@@ -15,6 +15,7 @@ import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
+  deviceIntegrityChecksAsked,
   failDeviceIntegrityChecks,
   failNextBiometricPrompt,
   holdDeviceIntegrityChecks,
@@ -32,6 +33,7 @@ const PIN_OFFER =
   "Your face or fingerprint was not recognised. You can try again, or use your PIN.";
 const EARLIER_TRANSFER_UNCONFIRMED =
   /^Your last transfer is still being checked/;
+const PIN_SHEET = "Enter your bank PIN to approve this transfer.";
 
 async function openReviewOfRm100() {
   const view = await renderRoute("/transfer");
@@ -51,6 +53,14 @@ function transferWritesSent() {
     .filter(({ method }) => method === "POST")
     .map(({ url }) => new URL(url).pathname)
     .filter((path) => path.startsWith("/transfers"));
+}
+
+async function approveWithPinFromTheSheet() {
+  await screen.findByText(PIN_SHEET);
+  for (const digit of "246810")
+    await fireEvent.press(screen.getByRole("button", { name: digit }));
+  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
+  await screen.findByText("Transfer sent");
 }
 
 async function approveFromReviewOpenedAgain() {
@@ -323,4 +333,103 @@ it("creates and approves nothing when an iPhone's Back or swipe starts closing r
     "/transfers",
     expect.stringMatching(/^\/transfers\/[\w-]+\/approve$/),
   ]);
+});
+
+it("refuses Use PIN instead before any PIN sheet on a phone that reports root, sending nothing", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  reportDeviceIntegrity({
+    isRooted: true,
+    isCompromised: true,
+    riskLevel: "HIGH",
+  });
+  await openReviewOfRm100();
+  const checksBeforePress = deviceIntegrityChecksAsked();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+
+  expect(await screen.findByText(PHONE_REFUSAL)).toBeOnTheScreen();
+  expect(screen.queryByText(PIN_SHEET)).toBeNull();
+  expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
+  expect(transferWritesSent()).toEqual([]);
+  expect(deviceIntegrityChecksAsked() - checksBeforePress).toBe(1);
+});
+
+it("waits, showing Transfer busy and no PIN sheet, for a phone check still running when Use PIN instead is pressed, then approves with the PIN on that one check", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const answerHeldChecks = holdDeviceIntegrityChecks();
+  await openReviewOfRm100();
+  const checksBeforePress = deviceIntegrityChecksAsked();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+  const transferWhileChecking = screen.getByRole("button", {
+    name: "Transfer",
+  });
+  const pinOfferWhileChecking = screen.queryByRole("button", {
+    name: "Use PIN instead",
+  });
+  const sheetWhileChecking = screen.queryByText(PIN_SHEET);
+  await act(() => {
+    answerHeldChecks({});
+  });
+
+  expect(transferWhileChecking).toBeBusy();
+  expect(pinOfferWhileChecking).toBeNull();
+  expect(sheetWhileChecking).toBeNull();
+  await approveWithPinFromTheSheet();
+  expect(biometricPromptsShown()).toEqual([]);
+  expect(deviceIntegrityChecksAsked() - checksBeforePress).toBe(1);
+});
+
+it("lets Use PIN instead go ahead when the phone check has not answered within 5 seconds, and records that once", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  holdDeviceIntegrityChecks();
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(4_999);
+  });
+  const sheetJustBeforeFiveSeconds = screen.queryByText(PIN_SHEET);
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(1);
+  });
+
+  expect(sheetJustBeforeFiveSeconds).toBeNull();
+  await approveWithPinFromTheSheet();
+  expect(
+    observedRecords.filter(({ name }) => name === "device_integrity_unknown"),
+  ).toEqual([
+    { type: "event", name: "device_integrity_unknown", properties: {} },
+  ]);
+});
+
+it("checks the phone afresh at each press of Use PIN instead, so a phone that reports hooks after a closed PIN sheet is refused", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+  const checksBeforePresses = deviceIntegrityChecksAsked();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+  await screen.findByText(PIN_SHEET);
+  await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+  await screen.findByText("The transfer was not sent — no money moved.");
+  reportDeviceIntegrity({
+    hasRuntimeHooks: true,
+    isCompromised: true,
+    riskLevel: "HIGH",
+  });
+
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  );
+
+  expect(await screen.findByText(PHONE_REFUSAL)).toBeOnTheScreen();
+  expect(deviceIntegrityChecksAsked() - checksBeforePresses).toBe(2);
+  expect(transferWritesSent()).toEqual(["/transfers"]);
 });
