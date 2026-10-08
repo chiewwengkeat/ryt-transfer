@@ -44,7 +44,8 @@
       "body": "That contact has no Malaysian mobile number. Pick another contact, or type a number."
     },
     "recent_recipient_chosen": {
-      "title": "Recent recipient chosen"
+      "title": "Recent recipient chosen",
+      "body": "Review shows the name the bank holds for them today."
     },
     "recipient_unexpected": {
       "title": "Something unexpected while choosing the recipient",
@@ -271,6 +272,7 @@
     "mobile_placeholder": "012-345 6789",
     "contacts": "Choose from contacts",
     "contact_mobiles_title": "Choose a number",
+    "change_recent": "Change",
     "bank_label": "Bank",
     "bank_placeholder": "Choose a bank",
     "bank_missing": "Choose the bank the account is with.",

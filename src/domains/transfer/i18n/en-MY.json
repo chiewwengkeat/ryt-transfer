@@ -4,5 +4,7 @@
   "offline_notice": {},
   "maintenance_notice": {},
 
-  "recents": {}
+  "recents": {
+    "title": "Recent recipients"
+  }
 }

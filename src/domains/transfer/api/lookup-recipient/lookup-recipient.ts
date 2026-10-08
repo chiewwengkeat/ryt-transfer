@@ -28,19 +28,28 @@ export function parseRecipientId(idType: RecipientIdType, typedId: string) {
 }
 
 export const getLookupRecipientOptions = (
-  recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }>,
+  recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }> & {
+    recentId?: string;
+  },
 ) =>
   queryOptions({
     // One account number at two banks is two recipients.
-    queryKey: [...transferKeys.lookup(recipient), recipient.bankCode ?? null],
+    queryKey: [
+      ...transferKeys.lookup(recipient),
+      recipient.bankCode ?? null,
+      recipient.recentId ?? null,
+    ],
     queryFn: ({ signal }) =>
       requestJson<LookupRecipientResponse>("/recipients/lookup", {
         method: "POST",
-        body: {
-          idType: recipient.idType,
-          idValue: recipient.idValue,
-          bankCode: recipient.bankCode,
-        } satisfies LookupRecipientRequest,
+        // A recent recipient's draft holds only the masked ID, so the bank finds it by its recent id.
+        body: (recipient.recentId === undefined
+          ? {
+              idType: recipient.idType,
+              idValue: recipient.idValue,
+              bankCode: recipient.bankCode,
+            }
+          : { recentId: recipient.recentId }) satisfies LookupRecipientRequest,
         signal,
       }),
     // Each answer mints a new recipient reference: review keeps the one it showed, and reopening asks afresh.
@@ -49,7 +58,9 @@ export const getLookupRecipientOptions = (
   });
 
 export function useLookupRecipient(
-  recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }>,
+  recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }> & {
+    recentId?: string;
+  },
 ) {
   return useQuery(getLookupRecipientOptions(recipient));
 }
