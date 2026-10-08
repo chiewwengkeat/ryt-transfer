@@ -7,9 +7,17 @@ import {
 } from "@/shared/http/transport-error";
 
 import type {
+  CreateTransferErrorResponse,
   CreateTransferRequest,
   CreateTransferResponse,
 } from "./create-transfer.type";
+
+export function readCreateTransferRefusal(failure: unknown) {
+  return failure instanceof TransportError &&
+    failure.kind === TransportErrorKind.Http
+    ? (failure.body as CreateTransferErrorResponse | undefined)?.error
+    : undefined;
+}
 
 export function isCreateTransferUnanswered(error: unknown) {
   return (

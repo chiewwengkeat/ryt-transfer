@@ -2,18 +2,17 @@ import type { QueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
-import { isCreateTransferUnanswered } from "@/domains/transfer/api/create-transfer/create-transfer";
 import {
-  CreateTransferErrorCode,
-  type CreateTransferErrorResponse,
-} from "@/domains/transfer/api/create-transfer/create-transfer.type";
+  isCreateTransferUnanswered,
+  readCreateTransferRefusal,
+} from "@/domains/transfer/api/create-transfer/create-transfer";
+import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
   TransferFlowScenario,
   TransferHoldKind,
 } from "@/screens/transfer/state/transfer-flow";
-import { TransportError } from "@/shared/http/transport-error";
 
 export function settleCreateFailure({
   failure,
@@ -31,10 +30,7 @@ export function settleCreateFailure({
     });
     return;
   }
-  const refusal =
-    failure instanceof TransportError
-      ? (failure.body as CreateTransferErrorResponse | undefined)?.error
-      : undefined;
+  const refusal = readCreateTransferRefusal(failure);
   switch (refusal?.code) {
     case CreateTransferErrorCode.CoolingOff:
       dispatchTransferFlow({

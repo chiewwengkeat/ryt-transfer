@@ -1,6 +1,11 @@
 import { requestJson } from "@/shared/http/transport";
+import {
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport-error";
 
 import type {
+  RegisterApprovalKeysErrorResponse,
   RegisterApprovalKeysRequest,
   RegisterApprovalKeysResponse,
 } from "./register-approval-keys.type";
@@ -15,4 +20,11 @@ export function registerApprovalKeys(
     idempotencyKey,
     timeoutMs: 15_000,
   });
+}
+
+export function readRegisterApprovalKeysRefusal(failure: unknown) {
+  return failure instanceof TransportError &&
+    failure.kind === TransportErrorKind.Http
+    ? (failure.body as RegisterApprovalKeysErrorResponse | undefined)?.error
+    : undefined;
 }

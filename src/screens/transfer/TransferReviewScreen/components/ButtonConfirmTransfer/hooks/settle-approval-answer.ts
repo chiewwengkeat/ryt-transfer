@@ -2,11 +2,11 @@ import type { QueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 
 import { closeApprovalPinSheet } from "@/domains/approval/hooks/approval-pin-sheet";
-import { ApproveRequestNotSentError } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import {
-  ApproveTransferErrorCode,
-  type ApproveTransferErrorResponse,
-} from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
+  ApproveRequestNotSentError,
+  readApproveTransferRefusal,
+} from "@/domains/transfer/api/approve-transfer/approve-transfer";
+import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
 import {
   type Transfer,
@@ -24,10 +24,6 @@ import {
   transferFlowStore,
 } from "@/screens/transfer/state/transfer-flow";
 import type { ApprovalEvent } from "@/screens/transfer/state/transfer-flow.type";
-import {
-  TransportError,
-  TransportErrorKind,
-} from "@/shared/http/transport-error";
 
 export async function settleApprovalAnswer({
   answer: { transfer, failure },
@@ -68,11 +64,7 @@ export async function settleApprovalAnswer({
     });
     return;
   }
-  const refusal =
-    failure instanceof TransportError &&
-    failure.kind === TransportErrorKind.Http
-      ? (failure.body as ApproveTransferErrorResponse | undefined)?.error
-      : undefined;
+  const refusal = readApproveTransferRefusal(failure);
   switch (refusal?.code) {
     case ApproveTransferErrorCode.ApprovalExpired:
       await returnRefusedApprovalToReview({

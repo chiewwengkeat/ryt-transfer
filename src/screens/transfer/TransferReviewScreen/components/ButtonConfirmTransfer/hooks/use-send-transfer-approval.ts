@@ -19,11 +19,13 @@ import {
   showApprovalPinLocked,
 } from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
-import { buildSignedApprovalText } from "@/domains/transfer/api/approve-transfer/approve-transfer";
+import {
+  buildSignedApprovalText,
+  readApproveTransferRefusal,
+} from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
 import {
   ApproveTransferErrorCode,
-  type ApproveTransferErrorResponse,
   type ApproveTransferRequest,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
@@ -38,10 +40,6 @@ import {
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferFlowNotice } from "@/screens/transfer/state/transfer-flow.type";
 import { formatMoney } from "@/shared/lib/money/money";
-import {
-  TransportError,
-  TransportErrorKind,
-} from "@/shared/http/transport-error";
 import { reportError } from "@/shared/observability/observability";
 
 import { settleApprovalAnswer } from "./settle-approval-answer";
@@ -146,12 +144,7 @@ export function useSendTransferApproval() {
         }
         const attempt = await sendApproval({ ...possessionSignature, pin });
         if (attempt === null) return null;
-        const pinRefusal =
-          attempt.failure instanceof TransportError &&
-          attempt.failure.kind === TransportErrorKind.Http
-            ? (attempt.failure.body as ApproveTransferErrorResponse | undefined)
-                ?.error
-            : undefined;
+        const pinRefusal = readApproveTransferRefusal(attempt.failure);
         if (pinRefusal?.code === ApproveTransferErrorCode.PinIncorrect) {
           await forgetPendingTransfer();
           if (noLongerOnThisTransfer()) return null;
@@ -217,8 +210,7 @@ export function useSendTransferApproval() {
           });
           if (attempt === null) return;
           if (
-            attempt.failure instanceof TransportError &&
-            attempt.failure.code ===
+            readApproveTransferRefusal(attempt.failure)?.code ===
               ApproveTransferErrorCode.KeyNotRegistered &&
             !keysSetUpAgain
           ) {

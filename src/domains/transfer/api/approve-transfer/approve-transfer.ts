@@ -13,11 +13,19 @@ import {
 } from "../../hooks/pending-transfers";
 import { getTransferOptions } from "../get-transfer/get-transfer";
 import type {
+  ApproveTransferErrorResponse,
   ApproveTransferRequest,
   ApproveTransferResponse,
 } from "./approve-transfer.type";
 
 export class ApproveRequestNotSentError extends Error {}
+
+export function readApproveTransferRefusal(failure: unknown) {
+  return failure instanceof TransportError &&
+    failure.kind === TransportErrorKind.Http
+    ? (failure.body as ApproveTransferErrorResponse | undefined)?.error
+    : undefined;
+}
 
 export function useApproveTransfer() {
   const queryClient = useQueryClient();

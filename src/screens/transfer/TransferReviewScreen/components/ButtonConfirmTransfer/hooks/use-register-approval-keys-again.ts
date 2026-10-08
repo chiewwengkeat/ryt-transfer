@@ -1,9 +1,7 @@
 import { useTranslation } from "react-i18next";
 
-import {
-  RegisterApprovalKeysErrorCode,
-  type RegisterApprovalKeysErrorResponse,
-} from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
+import { readRegisterApprovalKeysRefusal } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
+import { RegisterApprovalKeysErrorCode } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
 import { registerNewApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import {
   isApprovalPinLocked,
@@ -15,10 +13,6 @@ import {
 } from "@/domains/approval/hooks/approval-pin-sheet";
 import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
-import {
-  TransportError,
-  TransportErrorKind,
-} from "@/shared/http/transport-error";
 import { reportError } from "@/shared/observability/observability";
 
 export function useRegisterApprovalKeysAgain() {
@@ -36,12 +30,7 @@ export function useRegisterApprovalKeysAgain() {
         () => undefined,
         (registrationFailure: unknown) => registrationFailure,
       );
-      const refusal =
-        failure instanceof TransportError &&
-        failure.kind === TransportErrorKind.Http
-          ? (failure.body as RegisterApprovalKeysErrorResponse | undefined)
-              ?.error
-          : undefined;
+      const refusal = readRegisterApprovalKeysRefusal(failure);
       if (refusal?.code === RegisterApprovalKeysErrorCode.PinLocked)
         await rememberApprovalPinLocked();
       const failedUnexpectedly =
