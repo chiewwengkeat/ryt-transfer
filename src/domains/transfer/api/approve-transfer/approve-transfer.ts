@@ -10,8 +10,7 @@ import {
   type ApproveTransferResponse,
 } from "./approve-transfer.type";
 
-// The answers that prove the bank refused and moved no money. Any other failure, an unknown code included,
-// may hide a completed transfer, so it is never shown as "not sent".
+// Only answers proving the bank refused and moved no money: any other failure may hide a debit, so never "not sent".
 export const APPROVAL_REFUSAL_CODES = new Set<string>([
   ApproveTransferErrorCode.ApprovalExpired,
   ApproveTransferErrorCode.ApprovalInvalid,

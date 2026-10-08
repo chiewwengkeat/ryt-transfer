@@ -20,8 +20,7 @@ export const getLookupRecipientOptions = (
         body: recipient,
         signal,
       }),
-    // Each answer carries a new reference to create the transfer against, so review keeps the one it showed
-    // until it closes, and opening it again asks afresh.
+    // Each answer mints a new recipient reference: review keeps the one it showed, and reopening asks afresh.
     staleTime: Infinity,
     gcTime: 0,
   });
