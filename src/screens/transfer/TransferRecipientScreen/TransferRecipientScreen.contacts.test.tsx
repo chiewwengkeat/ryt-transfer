@@ -4,7 +4,7 @@ import {
   waitForElementToBeRemoved,
 } from "@testing-library/react-native";
 import { PermissionStatus } from "expo";
-import { AppState, Linking } from "react-native";
+import { Linking } from "react-native";
 
 import {
   setContactsPermission,
@@ -13,6 +13,7 @@ import {
   setPickedContactUnreadable,
 } from "@/test/harness/contacts-native-double";
 import { reportedScenarios } from "@/test/harness/recording-sink";
+import { moveAppTo } from "@/test/move-app-to";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -58,9 +59,7 @@ it(
     expect(openSettings).toHaveBeenCalledTimes(1);
 
     setContactsPermission(GRANTED);
-    for (const [eventName, listener] of jest.mocked(AppState).addEventListener
-      .mock.calls)
-      if (eventName === "change") listener("active");
+    moveAppTo("active");
 
     await waitForElementToBeRemoved(() => screen.queryByText(REFUSED_MESSAGE));
   }),

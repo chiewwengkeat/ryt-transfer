@@ -1,7 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { t } from "i18next";
 import { http, HttpResponse } from "msw";
-import { AppState } from "react-native";
 
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import {
@@ -16,6 +15,7 @@ import {
   observedRecords,
   reportedScenarios,
 } from "@/test/harness/recording-sink";
+import { moveAppTo } from "@/test/move-app-to";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -243,12 +243,8 @@ it("keeps the recent recipients already listed under that message when reloading
   );
 
   // Back in the foreground, every query reads afresh.
-  for (const [eventName, listener] of jest.mocked(AppState).addEventListener
-    .mock.calls)
-    if (eventName === "change") {
-      listener("background");
-      listener("active");
-    }
+  moveAppTo("background");
+  moveAppTo("active");
 
   expect(
     await screen.findByText("Something unexpected went wrong."),

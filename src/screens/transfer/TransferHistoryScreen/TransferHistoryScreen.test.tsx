@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { AccessibilityInfo, AppState } from "react-native";
+import { AccessibilityInfo } from "react-native";
 
 import {
   TransferDirection,
@@ -12,6 +12,7 @@ import { lookUpTestRecipient } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { observedRecords } from "@/test/harness/recording-sink";
+import { moveAppTo } from "@/test/move-app-to";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -44,15 +45,6 @@ const LIM_AT_AN_UNREADABLE_TIME = buildHistoryTransfer({
 const OFFLINE = { isConnected: false, isInternetReachable: false };
 const ONLINE = { isConnected: true, isInternetReachable: true };
 const OUT_OF_DATE = "Couldn't refresh — this list may be out of date";
-
-function bringAppToTheFront() {
-  for (const [eventName, listener] of jest.mocked(AppState).addEventListener
-    .mock.calls)
-    if (eventName === "change") {
-      listener("background");
-      listener("active");
-    }
-}
 
 it("lists the first page's transfers under their day, asking the bank once", async () => {
   await renderRoute("/transfer-history");
@@ -690,7 +682,8 @@ it("asks the bank nothing when the app comes to the front or the connection retu
   expect(await screen.findByText("That's everything")).toBeOnTheScreen();
 
   await act(() => {
-    bringAppToTheFront();
+    moveAppTo("background");
+    moveAppTo("active");
   });
   await act(() => {
     setPhoneNetwork(OFFLINE);
@@ -953,7 +946,8 @@ it("moves a day from Today to Yesterday when the app returns after Malaysian mid
   jest.setSystemTime(Date.parse(`${tomorrow}T00:00:01+08:00`));
 
   await act(() => {
-    bringAppToTheFront();
+    moveAppTo("background");
+    moveAppTo("active");
   });
 
   expect(
