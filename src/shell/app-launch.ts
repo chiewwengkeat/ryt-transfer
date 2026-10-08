@@ -1,8 +1,11 @@
 import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
+import { isProductionBuild } from "@/shared/config/config";
 import type { DemoLayer } from "@/shared/demo-layer/demo-layer.type";
 import { configureTransport } from "@/shared/http/transport";
 import { reportError } from "@/shared/observability/observability";
+import { enableAppSwitcherBlur } from "@/shared/platform/app-switcher-blur";
 import { kvStorage } from "@/shared/platform/kv-storage";
+import { blockScreenCapture } from "@/shared/platform/screen-capture";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
 
 const INSTALL_MARKER_KEY = "install-marker";
@@ -17,6 +20,11 @@ const installChecked = (async () => {
 })().catch((error: unknown) => {
   reportError(error, { boundary: "install_marker" });
 });
+
+// At load, ahead of the shell's guard, so the block is in place before anything renders.
+if (isProductionBuild) void blockScreenCapture();
+// Every build, and never paused for the Face ID prompt.
+void enableAppSwitcherBlur();
 
 // Compared literally, never through the config predicate: Metro strips the demo layer from production only for this form.
 export const demoLayer =

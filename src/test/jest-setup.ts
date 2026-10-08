@@ -73,6 +73,12 @@ jest.mock("expo-network/build/ExpoNetwork", () => ({
   default: jest.requireActual<typeof NativeDoubles>("./harness/native-doubles")
     .networkNativeDouble,
 }));
+// Doubled beneath the library, so its own count of keys decides when the phone is told.
+jest.mock("expo-screen-capture/build/ExpoScreenCapture", () => ({
+  __esModule: true,
+  default: jest.requireActual<typeof NativeDoubles>("./harness/native-doubles")
+    .screenCaptureNativeDouble,
+}));
 jest.mock("expo-crypto", () => ({
   ...jest.requireActual<object>("expo-crypto"),
   randomUUID: jest.requireActual<typeof NativeDoubles>(

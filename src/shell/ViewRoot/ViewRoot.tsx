@@ -18,9 +18,11 @@ import BannerOffline from "./components/BannerOffline/BannerOffline";
 import ViewPinSheetHost from "./components/ViewPinSheetHost/ViewPinSheetHost";
 import ViewSessionEnded from "./components/ViewSessionEnded/ViewSessionEnded";
 import { usePendingTransfersAtLaunch } from "./hooks/use-pending-transfers-at-launch";
+import { useScreenCaptureBlock } from "./hooks/use-screen-capture-block";
 
 export default function ViewRoot() {
   usePendingTransfersAtLaunch();
+  useScreenCaptureBlock();
   const [sessionEnded, setSessionEnded] = useState(false);
   const [demoSheetOpen, setDemoSheetOpen] = useState(false);
   const [navigatorMounts, setNavigatorMounts] = useState(0);

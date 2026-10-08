@@ -33,6 +33,11 @@ const storageAnywhere = {
   message:
     "Use src/shared/platform/: secrets in secure storage, everything else in the kv-store.",
 };
+const screenCaptureOutsidePlatform = {
+  group: ["expo-screen-capture", "expo-screen-capture/**"],
+  message:
+    "Block and allow screen capture through src/shared/platform/, whose one key they must share: under a second key, allowing capture leaves it blocked.",
+};
 const CONSOLE_OUTSIDE_OBSERVABILITY =
   "Report through src/shared/observability/, which redacts personal data before anything is logged.";
 const TEST_ID_INSTEAD_OF_ACCESSIBLE_NAME =
@@ -122,6 +127,7 @@ export default [
             staticMocksImport,
             storageOutsidePlatform,
             storageAnywhere,
+            screenCaptureOutsidePlatform,
           ],
         },
       ],
@@ -150,7 +156,10 @@ export default [
   {
     files: ["src/mocks/**"],
     rules: {
-      "no-restricted-imports": ["error", { patterns: [storageAnywhere] }],
+      "no-restricted-imports": [
+        "error",
+        { patterns: [storageAnywhere, screenCaptureOutsidePlatform] },
+      ],
     },
   },
   {
@@ -158,7 +167,13 @@ export default [
     rules: {
       "no-restricted-imports": [
         "error",
-        { patterns: [storageOutsidePlatform, storageAnywhere] },
+        {
+          patterns: [
+            storageOutsidePlatform,
+            storageAnywhere,
+            screenCaptureOutsidePlatform,
+          ],
+        },
       ],
       "@typescript-eslint/no-restricted-imports": [
         "error",

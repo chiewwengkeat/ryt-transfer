@@ -101,10 +101,39 @@ export function setPhoneNetworkWithoutAnEvent(state: NetworkState) {
   phoneNetwork = state;
 }
 
+let screenCaptureBlocked = false;
+let blurIntensityInAppSwitcher: number | null = null;
+
+export const screenCaptureNativeDouble = {
+  preventScreenCapture: () => {
+    screenCaptureBlocked = true;
+    return Promise.resolve();
+  },
+  allowScreenCapture: () => {
+    screenCaptureBlocked = false;
+    return Promise.resolve();
+  },
+  enableAppSwitcherProtection: (blurIntensity: number) => {
+    blurIntensityInAppSwitcher = blurIntensity;
+    return Promise.resolve();
+  },
+};
+
+export function isScreenCaptureBlocked() {
+  return screenCaptureBlocked;
+}
+
+export function appSwitcherBlurIntensity() {
+  return blurIntensityInAppSwitcher;
+}
+
 // Listeners stay: their owners remove them, and dropping one here would leave its owner deaf.
 export function resetNativeDoubles() {
   kvEntries.clear();
   secureStoreEntries.clear();
   uuidsIssued = 0;
   phoneNetwork = CONNECTED_NETWORK;
+  // As a production launch leaves it, since the shell's block at load runs once per file rather than per test.
+  // Never the reverse: the library would see its key still held and skip blocking again.
+  screenCaptureBlocked = true;
 }
