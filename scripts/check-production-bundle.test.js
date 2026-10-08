@@ -19,7 +19,7 @@ const MARKERS = [
   },
   { source: "msw", text: "msw-marker", carriedBy: ["demo", "development"] },
   {
-    source: "the render trace",
+    source: "src/shared/observability/render-trace.ts",
     text: "trace-marker",
     carriedBy: ["development"],
   },
@@ -163,7 +163,7 @@ test("ships one marker with text for each mock group and msw's core, carried by 
       "src/mocks/switcher: demo and development",
       "src/mocks/transport: demo and development",
       "src/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/hooks/use-transfer-history-render-measurement.ts: development",
-      "the render trace: development",
+      "src/shared/observability/render-trace.ts: development",
     ],
   );
   for (const { source, text } of BUNDLE_MARKERS)
@@ -257,7 +257,7 @@ test("fails a development export missing the render trace, asking for a string n
   assert.match(failures[0], /^development android export lacks "trace-marker"/);
   assert.match(
     failures[0],
-    /and that no code outside the render trace contains\.$/,
+    /and that no code outside src\/shared\/observability\/render-trace\.ts contains\.$/,
   );
 });
 
@@ -322,7 +322,7 @@ test("refuses a marker that has no text, before running any export", () => {
   assert.equal(fake.exportCalls.length, 0);
 });
 
-test("refuses the render trace's marker too when it has no text", () => {
+test("refuses the marker for src/shared/observability/render-trace.ts when it has no text", () => {
   const fake = fakeExpoExport();
 
   assert.throws(
@@ -330,7 +330,7 @@ test("refuses the render trace's marker too when it has no text", () => {
       checkWith(fake, {
         markers: [...MARKERS.slice(0, 2), { ...MARKERS[2], text: "" }],
       }),
-    /The marker for the render trace has no text/,
+    /The marker for src\/shared\/observability\/render-trace\.ts has no text/,
   );
   assert.equal(fake.exportCalls.length, 0);
 });

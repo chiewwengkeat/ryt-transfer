@@ -42,7 +42,7 @@ const BUNDLE_MARKERS = [
     carriedBy: DEMO_LAYER_VARIANTS,
   },
   {
-    source: "the render trace",
+    source: "src/shared/observability/render-trace.ts",
     text: "ryt-render-trace",
     carriedBy: ["development"],
   },
