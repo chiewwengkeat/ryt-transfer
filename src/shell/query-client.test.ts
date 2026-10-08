@@ -96,6 +96,7 @@ it("fetches nothing again when a face or fingerprint prompt closes and the app i
   client.unmount();
 });
 
+// ⛔ Unmount in finally: a client a red reopen test leaves mounted keeps the focus listener, and the next one passes.
 it("keeps polling a read after Android reopens the app from Back", async () => {
   const client = createQueryClient();
   client.mount();
@@ -111,11 +112,14 @@ it("keeps polling a read after Android reopens the app from Back", async () => {
     refetchInterval: 1,
     gcTime: 0,
   }).subscribe(() => undefined);
-  await letPendingFetchesRun();
+  try {
+    await letPendingFetchesRun();
 
-  expect(queryFn.mock.calls.length).toBeGreaterThan(1);
-  stopObserving();
-  client.unmount();
+    expect(queryFn.mock.calls.length).toBeGreaterThan(1);
+  } finally {
+    stopObserving();
+    client.unmount();
+  }
 });
 
 it("keeps polling a read after Android reopens the app from Back, active again before the app mounts", async () => {
@@ -136,11 +140,14 @@ it("keeps polling a read after Android reopens the app from Back, active again b
     refetchInterval: 1,
     gcTime: 0,
   }).subscribe(() => undefined);
-  await letPendingFetchesRun();
+  try {
+    await letPendingFetchesRun();
 
-  expect(queryFn.mock.calls.length).toBeGreaterThan(1);
-  stopObserving();
-  client.unmount();
+    expect(queryFn.mock.calls.length).toBeGreaterThan(1);
+  } finally {
+    stopObserving();
+    client.unmount();
+  }
 });
 
 // ⛔ Keep these after the offline write, which ends offline: they prove each test starts online.
