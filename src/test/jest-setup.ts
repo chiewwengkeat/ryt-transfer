@@ -46,6 +46,9 @@ import {
 globalThis.expo.modules.ExpoContactsNext = contactsNativeDouble;
 globalThis.expo.modules.ObscuredTouchGuard = obscuredTouchGuardNativeDouble;
 
+// The preset's performance.now is a jest.fn, which records every one of React's calls: millions a suite, never cleared.
+performance.now = () => Date.now();
+
 // jest-expo leaves these native modules inert: the kv-store throws, the rest answer undefined.
 jest.mock("expo-sqlite/kv-store", () => {
   const { kvStoreDouble } = jest.requireActual<typeof NativeDoubles>(
