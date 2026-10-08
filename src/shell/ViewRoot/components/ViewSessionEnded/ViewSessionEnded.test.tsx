@@ -53,6 +53,22 @@ async function endTheSession() {
 }
 
 it(
+  "covers the app with its own screen, offering only to sign in again, when the bank says the session has ended",
+  scenarioTest("transfer.session_ended", async () => {
+    await renderRoute("/");
+
+    expect(
+      await screen.findByRole("header", { name: "Your session has ended" }),
+    ).toBeOnTheScreen();
+    expect(
+      screen
+        .getAllByRole("button")
+        .map((button) => button.props.accessibilityLabel as unknown),
+    ).toEqual(["Sign in again"]);
+  }),
+);
+
+it(
   "quotes the bank's reference for a transfer still processing when the session ends",
   scenarioTest("transfer.processing", async () => {
     const view = await sendRm100FromHomeToTheResultPage();
