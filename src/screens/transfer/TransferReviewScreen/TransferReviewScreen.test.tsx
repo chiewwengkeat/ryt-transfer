@@ -872,6 +872,60 @@ it("never says the transfer was not sent when the session ends as the bank answe
 });
 
 it(
+  "never says no money moved after a lost answer, even after signing in again while the name check is down",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    await openReviewOfRm100("/");
+    const transferButton = await screen.findByRole("button", {
+      name: "Transfer",
+    });
+    // Ends the session at the lost answer's balance re-read, the next account request.
+    mswServer.use(
+      http.get(
+        "*/accounts/primary",
+        () =>
+          HttpResponse.json(
+            { error: { code: "SESSION_ENDED", message: "Test." } },
+            { status: 401 },
+          ),
+        { once: true },
+      ),
+    );
+    await fireEvent.press(transferButton);
+    const signInButton = await screen.findByRole("button", {
+      name: "Sign in again",
+    });
+    mswServer.use(
+      http.post("*/recipients/lookup", () =>
+        HttpResponse.json(
+          { error: { code: "NAME_ENQUIRY_UNAVAILABLE", message: "Test." } },
+          { status: 503 },
+        ),
+      ),
+    );
+
+    await fireEvent.press(signInButton);
+    // A name check asked at sign-in fails only once its retries are spent; asserting sooner passes either way.
+    await act(() => jest.advanceTimersByTimeAsync(15_000));
+
+    expect(
+      screen.getByText(
+        "The bank's answer did not arrive. Check History before sending this again — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/no money moved/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Back to Home" }),
+    ).toBeOnTheScreen();
+    expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+      balanceBeforeMinor - 10_000,
+    );
+  }),
+);
+
+it(
   "never says money moved when the bank answers that the transfer is still processing",
   scenarioTest("transfer.processing", async () => {
     await pairPhoneAsTheDemoLaunchDoes();

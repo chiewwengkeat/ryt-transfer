@@ -223,7 +223,8 @@ export default function TransferReviewScreen() {
         }
       >
         {lookup.isPending && <Loader />}
-        {lookup.isError && (
+        {/* Never while sending: it says no money moved, which a sent approval can make false. */}
+        {lookup.isError && !sending && (
           <>
             <BannerNotice
               tone="negative"
