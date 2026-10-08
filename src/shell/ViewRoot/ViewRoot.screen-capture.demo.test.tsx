@@ -2,7 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 
 import "@/test/demo-build";
-import { ButtonCrashScreen } from "@/test/harness/crash-on-press";
+import { crashTheScreenOfASettledReceipt } from "@/test/harness/crash-on-press";
 import { isScreenCaptureBlocked } from "@/test/harness/native-doubles";
 import { waitPastReceiptSettle } from "@/test/harness/receipt-settle";
 import { renderRoute } from "@/test/render-route";
@@ -11,21 +11,6 @@ import { scenarioTest } from "@/test/scenario-test";
 async function pickDemoScenario(title: string) {
   await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
   await fireEvent.press(screen.getByRole("radio", { name: title }));
-}
-
-async function crashTheAppOnASettledReceipt() {
-  await renderRoute("/transfer-history/transfer-on-screen", {
-    appDir: "src/app",
-    overrides: { "transfer-history/[transferId]": ButtonCrashScreen },
-  });
-  await waitFor(() => {
-    expect(isScreenCaptureBlocked()).toBe(false);
-  });
-  await fireEvent.press(
-    screen.getByRole("button", { name: "Crash the screen" }),
-  );
-  await screen.findByText("The app stopped working.");
-  await waitPastReceiptSettle();
 }
 
 it(
@@ -65,16 +50,22 @@ it("allows capture on Home in a demo build until Screenshots blocked is picked f
 });
 
 it(
-  "blocks capture again in a demo build while Screenshots blocked is picked when a crash replaces the app on a receipt",
+  "blocks capture again in a demo build while Screenshots blocked is picked when the screen of a sent transfer's result crashes and its error view replaces it",
   scenarioTest("transfer.screen_capture_blocked", async () => {
-    await crashTheAppOnASettledReceipt();
+    await crashTheScreenOfASettledReceipt(
+      "/transfer/result/transfer-on-screen",
+      "transfer/result/[transferId]",
+    );
 
     expect(isScreenCaptureBlocked()).toBe(true);
   }),
 );
 
-it("leaves capture allowed in a demo build with no scenario picked when a crash replaces the app on a receipt", async () => {
-  await crashTheAppOnASettledReceipt();
+it("leaves capture allowed in a demo build with no scenario picked when the screen of a transfer's details crashes and its error view replaces it", async () => {
+  await crashTheScreenOfASettledReceipt(
+    "/transfer-history/transfer-on-screen",
+    "transfer-history/[transferId]",
+  );
 
   expect(isScreenCaptureBlocked()).toBe(false);
 });

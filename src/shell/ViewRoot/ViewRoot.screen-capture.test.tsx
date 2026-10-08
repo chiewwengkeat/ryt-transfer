@@ -2,7 +2,10 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { ButtonCrashScreen } from "@/test/harness/crash-on-press";
+import {
+  ButtonCrashScreen,
+  crashTheScreenOfASettledReceipt,
+} from "@/test/harness/crash-on-press";
 import { isScreenCaptureBlocked } from "@/test/harness/native-doubles";
 import { waitPastReceiptSettle } from "@/test/harness/receipt-settle";
 import { renderRoute } from "@/test/render-route";
@@ -127,20 +130,22 @@ it("keeps capture blocked when a crash replaces the app on a screen that is no r
   expect(isScreenCaptureBlocked()).toBe(true);
 });
 
-it("blocks capture again when a crash replaces the app on a receipt", async () => {
-  await renderRoute("/transfer-history/transfer-on-screen", {
-    appDir: "src/app",
-    overrides: { "transfer-history/[transferId]": ButtonCrashScreen },
-  });
-  await waitFor(() => {
-    expect(isScreenCaptureBlocked()).toBe(false);
-  });
+it.each([
+  {
+    receipt: "a transfer's details",
+    pathname: "/transfer-history/transfer-on-screen",
+    routeFile: "transfer-history/[transferId]",
+  },
+  {
+    receipt: "the result of a sent transfer",
+    pathname: "/transfer/result/transfer-on-screen",
+    routeFile: "transfer/result/[transferId]",
+  },
+])(
+  "blocks capture again when the screen of $receipt crashes and its error view replaces it",
+  async ({ pathname, routeFile }) => {
+    await crashTheScreenOfASettledReceipt(pathname, routeFile);
 
-  await fireEvent.press(
-    screen.getByRole("button", { name: "Crash the screen" }),
-  );
-  await screen.findByText("The app stopped working.");
-  await waitPastReceiptSettle();
-
-  expect(isScreenCaptureBlocked()).toBe(true);
-});
+    expect(isScreenCaptureBlocked()).toBe(true);
+  },
+);

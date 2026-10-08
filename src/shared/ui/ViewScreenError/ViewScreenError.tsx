@@ -1,8 +1,9 @@
 import { router, type ErrorBoundaryProps } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { reportError } from "@/shared/observability/observability";
+import { markScreenErrorShowing } from "@/shared/platform/screen-capture";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
@@ -12,6 +13,8 @@ export default function ViewScreenError({ error, retry }: ErrorBoundaryProps) {
   useEffect(() => {
     reportError(error, { boundary: "route" });
   }, [error]);
+  // Before paint: the screen this replaces may have allowed capture.
+  useLayoutEffect(() => markScreenErrorShowing(), []);
 
   return (
     <ViewMessage

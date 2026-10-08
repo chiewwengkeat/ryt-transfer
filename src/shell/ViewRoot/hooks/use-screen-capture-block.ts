@@ -5,6 +5,7 @@ import { isProductionBuild } from "@/shared/config/config";
 import {
   allowScreenCapture,
   blockScreenCapture,
+  useScreenErrorShowing,
 } from "@/shared/platform/screen-capture";
 import { demoLayer } from "@/shell/app-launch";
 
@@ -54,7 +55,12 @@ export function useScreenCaptureBlock() {
     [],
   );
 
-  const receiptOnScreen = onReceiptRoute && settledReceiptPathname === pathname;
+  // A route's own error view keeps its route mounted, so it would otherwise pass for the receipt it replaced.
+  const screenErrorShowing = useScreenErrorShowing();
+  const receiptOnScreen =
+    onReceiptRoute &&
+    settledReceiptPathname === pathname &&
+    !screenErrorShowing;
   const blocked = (isProductionBuild || captureBlockPicked) && !receiptOnScreen;
   // Before paint, so a receipt being left hands over to a screen that is drawn blocked.
   useLayoutEffect(() => {
