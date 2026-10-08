@@ -1,7 +1,26 @@
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
 
+import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import {
+  TransferFailureReason,
+  TransferFunds,
+  TransferStatus,
+} from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import {
+  listPendingTransfers,
+  PendingTransferStage,
+  writePendingTransfer,
+} from "@/domains/transfer/hooks/pending-transfers";
+import {
+  pairTestPhone,
+  sendToBank,
+  signTestApproval,
+  startTestTransfer,
+} from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { renderRoute } from "@/test/render-route";
+import { mswServer } from "@/test/msw-server";
+import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 it(
@@ -37,3 +56,68 @@ it(
     ).toEqual(["Done", "Load the result again"]);
   }),
 );
+
+it("keeps an earlier transfer the launch check finds with an outcome the app cannot name as still being checked, so the next launch warns on Home instead of reopening it", async () => {
+  const {
+    body: { customerId },
+  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+  const keys = await pairTestPhone();
+  const earlier = await startTestTransfer(10_000);
+  const later = await startTestTransfer(5_000);
+  await sendToBank("POST", later.approvalPath, {
+    body: signTestApproval(later, {
+      kind: "biometric",
+      keyId: keys.biometricKeyId,
+    }),
+  });
+  const earlierId = earlier.created.transfer.transferId;
+  mswServer.use(
+    http.get("*/transfers/:transferId", ({ params }) =>
+      params.transferId === earlierId
+        ? HttpResponse.json({
+            transfer: {
+              ...earlier.created.transfer,
+              // Debited and unsuccessful with no refund under way: whether the money comes back is unsaid.
+              status: TransferStatus.Unsuccessful,
+              funds: TransferFunds.Debited,
+              failureReason: TransferFailureReason.RecipientBankRejected,
+            },
+          })
+        : undefined,
+    ),
+  );
+  await writePendingTransfer(customerId, {
+    transferId: earlierId,
+    idempotencyKey: "earlier-approval-key",
+    createdAt: "2026-10-07T01:30:00.000Z",
+    stage: PendingTransferStage.Approving,
+  });
+  await writePendingTransfer(customerId, {
+    transferId: later.created.transfer.transferId,
+    idempotencyKey: "later-approval-key",
+    createdAt: "2026-10-07T01:40:00.000Z",
+    stage: PendingTransferStage.Approving,
+  });
+
+  const view = await renderRoute("/");
+
+  expect(
+    await screen.findByRole("header", { name: "Transfer sent" }),
+  ).toBeOnTheScreen();
+  await waitFor(async () => {
+    expect(await listPendingTransfers(customerId)).toEqual([
+      expect.objectContaining({
+        transferId: earlierId,
+        stage: PendingTransferStage.Processing,
+      }),
+    ]);
+  });
+
+  const relaunched = await relaunchApp(view);
+
+  expect(
+    await screen.findByText(/^Your last transfer is still being checked/),
+  ).toBeOnTheScreen();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  expect(relaunched.getPathname()).toBe("/");
+});

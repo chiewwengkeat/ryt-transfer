@@ -92,8 +92,7 @@ export function useTransferStatusCheck(
       readFailure === TransferReadFailure.NotFound ||
       !transferStillSettling(outcome)
         ? clearPendingTransfer(customerId, transferId)
-        : outcome === TransferOutcomeScenario.Processing ||
-            outcome === TransferOutcomeScenario.HeldForReview
+        : outcomeLeavesMoneyUnconfirmed(outcome)
           ? updatePendingTransferStage(
               customerId,
               transferId,
@@ -132,10 +131,7 @@ export async function checkPendingTransferOnce(
         retry: 0,
       }),
     );
-    if (
-      outcome === TransferOutcomeScenario.Processing ||
-      outcome === TransferOutcomeScenario.HeldForReview
-    )
+    if (outcomeLeavesMoneyUnconfirmed(outcome))
       await updatePendingTransferStage(
         customerId,
         transferId,
@@ -148,13 +144,21 @@ export async function checkPendingTransferOnce(
 }
 
 // Undefined while there is no data: a read that has not answered yet has not settled anything.
-// An outcome the app cannot name leaves the money unconfirmed, so its record stays and it is read again.
 function transferStillSettling(
   outcome: TransferOutcomeScenario | null | undefined,
 ) {
   return (
     outcome === undefined ||
     outcome === null ||
+    outcomeLeavesMoneyUnconfirmed(outcome)
+  );
+}
+
+// An outcome the app cannot name counts too: its record waits as processing, so the next launch warns on Home.
+function outcomeLeavesMoneyUnconfirmed(
+  outcome: TransferOutcomeScenario | null | undefined,
+) {
+  return (
     outcome === TransferOutcomeScenario.Processing ||
     outcome === TransferOutcomeScenario.HeldForReview ||
     outcome === TransferOutcomeScenario.OutcomeUnexpected

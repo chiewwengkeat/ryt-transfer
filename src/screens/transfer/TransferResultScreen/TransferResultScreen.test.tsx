@@ -503,21 +503,29 @@ it(
 );
 
 it(
-  "keeps warning on Home not to send again a transfer whose outcome the app cannot name",
+  "keeps warning on Home not to send again a transfer whose outcome the app cannot name, at the next launch too",
   scenarioTest("transfer.outcome_unexpected", async () => {
+    const customerId = await readCustomerId();
     const { recipient } = await lookUpTestRecipient("012-345 6789");
     answerApprovalAndReadsWithAnUnnamedOutcome(recipient);
-    await sendRm100FromHome();
+    const view = await sendRm100FromHome();
     await screen.findByRole("header", { name: "Result not available" });
     await act(() => jest.advanceTimersByTimeAsync(3_000));
 
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 
-    expect(
-      await screen.findByText(
-        "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00",
-      ),
-    ).toBeOnTheScreen();
+    const stillBeingChecked =
+      "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
+    expect(await screen.findByText(stillBeingChecked)).toBeOnTheScreen();
+    expect(await listPendingTransfers(customerId)).toEqual([
+      expect.objectContaining({ stage: PendingTransferStage.Processing }),
+    ]);
+
+    const relaunched = await relaunchApp(view);
+
+    expect(await screen.findByText(stillBeingChecked)).toBeOnTheScreen();
+    await act(() => jest.advanceTimersByTimeAsync(1_000));
+    expect(relaunched.getPathname()).toBe("/");
   }),
 );
 
