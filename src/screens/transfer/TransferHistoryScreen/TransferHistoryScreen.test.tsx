@@ -82,6 +82,35 @@ it("shows a loader while the first page is on its way", async () => {
   ).toBeOnTheScreen();
 });
 
+it("goes back to Home from History's header", async () => {
+  const view = await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer history" }),
+  );
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Back to Home" }),
+  );
+
+  await waitFor(() => {
+    expect(view.getPathname()).toBe("/");
+  });
+  expect(router.canGoBack()).toBe(false);
+});
+
+it("goes to Home from History opened by a link, with nothing beneath it", async () => {
+  const view = await renderRoute("/transfer-history");
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Back to Home" }),
+  );
+
+  await waitFor(() => {
+    expect(view.getPathname()).toBe("/");
+  });
+  expect(router.canGoBack()).toBe(false);
+});
+
 it("shows the transfers it has at once on a later open, then the newest page in their place", async () => {
   await renderRoute("/");
   await act(() => {
