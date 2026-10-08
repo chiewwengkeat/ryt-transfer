@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
-import { Platform } from "react-native";
+import { AccessibilityInfo, Platform } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
@@ -1420,48 +1420,47 @@ async function askBankToCreateRm100() {
 }
 
 it(
-  "says from when money can be sent while a newly paired phone waits, and holds the transfer",
+  "says from when money can be sent while a newly paired phone waits, announces it, and holds the transfer",
   scenarioTest("transfer.cooling_off_new_phone", async () => {
     const { body } = await askBankToCreateRm100();
+    const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "")} — a security wait after pairing this phone.`;
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
     await openReviewOfRm100();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
 
-    expect(
-      await screen.findByText(
-        `You can send money from ${formatMalaysianDateTime(body.error.until ?? "")} — a security wait after pairing this phone.`,
-      ),
-    ).toBeOnTheScreen();
+    expect(await screen.findByText(holdReason)).toBeOnTheScreen();
+    expect(announce).toHaveBeenCalledWith(holdReason);
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
     expect(countSent("POST", "/approve")).toBe(0);
   }),
 );
 
 it(
-  "says from when money can be sent in a new account's first hour, and holds the transfer",
+  "says from when money can be sent in a new account's first hour, announces it, and holds the transfer",
   scenarioTest("transfer.cooling_off_new_account", async () => {
     const { body } = await askBankToCreateRm100();
+    const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "")} — a security wait after opening your account.`;
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
     await openReviewOfRm100();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
 
-    expect(
-      await screen.findByText(
-        `You can send money from ${formatMalaysianDateTime(body.error.until ?? "")} — a security wait after opening your account.`,
-      ),
-    ).toBeOnTheScreen();
+    expect(await screen.findByText(holdReason)).toBeOnTheScreen();
+    expect(announce).toHaveBeenCalledWith(holdReason);
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
     expect(countSent("POST", "/approve")).toBe(0);
   }),
 );
 
 it(
-  "says the account is locked and to contact Ryt, and offers no way around it",
+  "says the account is locked and to contact Ryt, announces it, and offers no way around it",
   scenarioTest("transfer.account_locked", async () => {
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
     await openReviewOfRm100();
 
     await fireEvent.press(
@@ -1473,6 +1472,9 @@ it(
         "Your account is locked. Contact Ryt to unlock it.",
       ),
     ).toBeOnTheScreen();
+    expect(announce).toHaveBeenCalledWith(
+      "Your account is locked. Contact Ryt to unlock it.",
+    );
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
     expect(countSent("POST", "/approve")).toBe(0);
   }),

@@ -1,7 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { AccessibilityInfo } from "react-native";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
 import {
@@ -52,8 +54,6 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     flow.step === TransferFlowStep.Reviewing ? flow.hold : undefined,
   );
   const offline = useIsOffline();
-  const confirmedLookup = lookup.data;
-  if (confirmedLookup === undefined) return null;
 
   const holdReason =
     hold?.kind === TransferHoldKind.AccountLocked
@@ -66,6 +66,13 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
             { time: formatMalaysianDateTime(hold.until) },
           )
         : undefined;
+  // A disabled button's reason is never read out unless focus lands on it, so a hold that appears says so.
+  useEffect(() => {
+    if (holdReason !== undefined)
+      AccessibilityInfo.announceForAccessibility(holdReason);
+  }, [holdReason]);
+  const confirmedLookup = lookup.data;
+  if (confirmedLookup === undefined) return null;
 
   const createAndApproveTransfer = async () => {
     const reviewing = transferFlowStore.getState();
