@@ -13,15 +13,18 @@ const LINKABLE_PATHS = [
 ];
 
 export function redirectSystemPath({ path }: { path: string }) {
-  // Only the router's own paths start with a slash: the operating system hands over whole URLs.
-  if (path.startsWith("/")) return path;
-  const [, scheme = "", linkedPath = ""] =
-    /^([a-z][a-z\d+.-]*):\/*(.*)$/i.exec(path) ?? [];
+  const [, scheme = "", linkedPath = path] =
+    /^([a-z][a-z\d+.-]*):(.*)$/i.exec(path) ?? [];
+  // Android hands any app's intent data over as given, so a slash-led path is a link too: it skips only this check.
   // iOS also registers the bundle id as a scheme, and no link of ours uses it.
-  if (!collectManifestSchemes().includes(scheme.toLowerCase())) return null;
+  if (
+    !path.startsWith("/") &&
+    !collectManifestSchemes().includes(scheme.toLowerCase())
+  )
+    return null;
   // A link never replaces a transfer in progress.
   if (isTransferDraftOpen(transferFlowStore.getState())) return null;
-  const pathname = `/${linkedPath.split(/[?#]/)[0]?.replace(/\/+$/, "") ?? ""}`;
+  const pathname = `/${linkedPath.split(/[?#]/)[0]?.replace(/^\/+|\/+$/g, "") ?? ""}`;
   return LINKABLE_PATHS.some((linkable) => linkable.test(pathname))
     ? pathname
     : "/";

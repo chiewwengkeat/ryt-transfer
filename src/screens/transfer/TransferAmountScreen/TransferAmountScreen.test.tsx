@@ -137,7 +137,11 @@ it("asks for an amount before moving on, and for one with at most two decimals",
 });
 
 it("opens the recipient step instead when no recipient is chosen yet", async () => {
-  const view = await renderRoute("/transfer/amount");
+  // Mounted past the link guard, which sends this path Home: only the app's own navigation can try it.
+  const view = await renderRoute("/transfer/amount", {
+    appDir: "src/app",
+    overrides: {},
+  });
 
   expect(
     await screen.findByLabelText("DuitNow mobile number"),

@@ -33,8 +33,15 @@ it.each([
   ["ryt-demo:///transfer-history/", "/transfer-history"],
   ["RYT-DEMO://transfer", "/transfer"],
   ["ryt-demo://", "/"],
+  ["ryt-demo:///", "/"],
   ["ryt-demo://transfer/review", "/"],
   ["ryt-demo://settings#pin", "/"],
+  ["/", "/"],
+  ["/transfer", "/transfer"],
+  ["/transfer-history/trf_1a2b?amount=99999", "/transfer-history/trf_1a2b"],
+  ["/transfer/review", "/"],
+  ["/transfer/result/trf_1", "/"],
+  ["/_sitemap", "/"],
 ])("opens the link %s at %s", (link, expectedPath) => {
   expect(redirectSystemPath({ path: link })).toBe(expectedPath);
 });
@@ -50,16 +57,12 @@ it.each([
   expect(redirectSystemPath({ path: link })).toBeNull();
 });
 
-it("leaves the router's own paths alone", () => {
-  expect(redirectSystemPath({ path: "/transfer/review" })).toBe(
-    "/transfer/review",
-  );
-});
-
 it.each([
   "ryt-demo://transfer-history",
   "RYT-DEMO://transfer/review?amount=1",
   "io.github.chiewwengkeat.ryttransfer.demo://transfer/amount",
+  "/",
+  "/transfer/review",
 ])("drops %s while a transfer draft is open", (link) => {
   dispatchTransferFlow({
     type: TransferFlowActionType.RecipientChosen,

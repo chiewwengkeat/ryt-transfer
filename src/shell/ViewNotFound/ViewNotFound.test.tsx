@@ -3,7 +3,11 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { renderRoute } from "@/test/render-route";
 
 it("says a page that does not exist is not found, and goes Home from there", async () => {
-  const view = await renderRoute("/no-such-page");
+  // Mounted past the link guard, which sends an unknown path Home: only the app's own navigation can reach this.
+  const view = await renderRoute("/no-such-page", {
+    appDir: "src/app",
+    overrides: {},
+  });
 
   expect(
     await screen.findByText("This page does not exist in the app."),
