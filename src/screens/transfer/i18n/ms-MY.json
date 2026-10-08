@@ -99,7 +99,8 @@
       "title": "Baki atau had tidak mencukupi semasa pengesahan",
       "body": "Baki atau had anda tidak lagi mencukupi untuk jumlah ini. Kembali untuk mengubahnya.",
       "over_balance": "Baki anda tidak lagi mencukupi untuk jumlah ini. Kembali untuk mengubahnya.",
-      "over_limit": "Jumlah ini kini melebihi salah satu had pindahan anda. Kembali untuk mengubahnya."
+      "over_limit": "Jumlah ini kini melebihi salah satu had pindahan anda. Kembali untuk mengubahnya.",
+      "change_amount": "Ubah jumlah"
     },
     "cooling_off_new_phone": {
       "title": "Telefon dipasangkan kurang daripada 12 jam yang lalu",
