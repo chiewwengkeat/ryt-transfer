@@ -3,8 +3,6 @@ import { notificationAsync, NotificationFeedbackType } from "expo-haptics";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet } from "react-native";
-import Animated, { Keyframe, ReduceMotion } from "react-native-reanimated";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
@@ -13,10 +11,7 @@ import {
   useTransferStatusCheck,
 } from "@/domains/transfer/hooks/transfer-status-checks";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
-import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
 import { trackEvent } from "@/shared/observability/observability";
-import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion";
-import { spacing } from "@/shared/theme/theme";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
@@ -24,6 +19,7 @@ import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 import SectionTransferDetails from "../components/SectionTransferDetails/SectionTransferDetails";
 import IconTransferCompleted from "./components/IconTransferCompleted/IconTransferCompleted";
 import TextOutcome from "./components/TextOutcome/TextOutcome";
+import ViewOutcomeEntrance from "./components/ViewOutcomeEntrance/ViewOutcomeEntrance";
 import {
   MONEY_STATE_BY_OUTCOME,
   MoneyState,
@@ -41,7 +37,6 @@ export default function TransferResultScreen() {
     transferId,
     customerId,
   );
-  const phoneReducesMotion = usePhoneReducesMotion();
   // Opened without the approve call's answer in hand, nothing has confirmed what the approval did.
   const [checkingUnansweredApproval] = useState(
     () => checking !== undefined || transfer.dataUpdatedAt === 0,
@@ -119,22 +114,7 @@ export default function TransferResultScreen() {
           />
         }
       >
-        {/* Unkeyed: a remount would reset TextOutcome's focus and its announcement of a settled outcome. */}
-        <Animated.View
-          entering={new Keyframe({
-            0: { opacity: 0, transform: [{ scale: 0.96 }] },
-            100: {
-              opacity: 1,
-              transform: [{ scale: 1 }],
-              easing: standardEasing,
-            },
-          })
-            .duration(motionDurations.screenContentEntrance)
-            .reduceMotion(
-              phoneReducesMotion ? ReduceMotion.Always : ReduceMotion.Never,
-            )}
-          style={styles.outcome}
-        >
+        <ViewOutcomeEntrance outcome={scenario}>
           {scenario === TransferOutcomeScenario.Completed && (
             <IconTransferCompleted />
           )}
@@ -166,12 +146,8 @@ export default function TransferResultScreen() {
               }}
             />
           )}
-        </Animated.View>
+        </ViewOutcomeEntrance>
       </ViewScreenFrame>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  outcome: { gap: spacing.md },
-});
