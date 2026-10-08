@@ -1494,6 +1494,33 @@ it.each([
   },
 );
 
+it("reads today's limit again when the bank answers Confirm with maintenance, since Home reads maintenance off it", async () => {
+  mswServer.use(
+    http.post("*/transfers", () =>
+      HttpResponse.json(
+        { error: { code: "SERVICE_UNAVAILABLE", message: "Test." } },
+        { status: 503 },
+      ),
+    ),
+  );
+  await openReviewOfRm100();
+  const transferButton = await screen.findByRole("button", {
+    name: "Transfer",
+  });
+  const limitReadsBefore = countSent("GET", "/transfer-limits");
+
+  await fireEvent.press(transferButton);
+
+  await screen.findByText(
+    "Transfers are unavailable right now. Try again later.",
+  );
+  await waitFor(() => {
+    expect(countSent("GET", "/transfer-limits")).toBeGreaterThan(
+      limitReadsBefore,
+    );
+  });
+});
+
 it(
   "says something unexpected stopped the transfer when the bank answers Confirm in a way the app does not know",
   scenarioTest("transfer.review_unexpected", async () => {
@@ -1617,6 +1644,37 @@ it(
     expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
   }),
 );
+
+it("words a cooling-off whose reason the app does not know as a newly paired phone's", async () => {
+  const until = new Date(Date.now() + 60 * 60_000).toISOString();
+  mswServer.use(
+    http.post("*/transfers", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "COOLING_OFF",
+            message: "Test.",
+            until,
+            reason: "NEW_REASON",
+          },
+        },
+        { status: 403 },
+      ),
+    ),
+  );
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      `You can send money from ${formatMalaysianDateTime(until)} — a security wait after pairing this phone.`,
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+});
 
 it(
   "says the account is locked and to contact Ryt, announces it, and offers no way around it",
@@ -1777,6 +1835,70 @@ it("treats a server error naming no bank code as no answer, repeating the create
 
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   expect(idempotencyKeysOfCreatesSent()).toEqual(Array(4).fill(unansweredKey));
+  jest.useRealTimers();
+  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+});
+
+it("says Ryt could not be reached while the bank is still on the create, and repeats it under its key when tried", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  mswServer.use(
+    http.post(
+      "*/transfers",
+      () =>
+        HttpResponse.json(
+          { error: { code: "REQUEST_IN_PROGRESS", message: "Test." } },
+          { status: 409 },
+        ),
+      { once: true },
+    ),
+  );
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  expect(
+    await screen.findByText("Ryt could not be reached — no money moved."),
+  ).toBeOnTheScreen();
+  const [inProgressKey] = idempotencyKeysOfCreatesSent();
+
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(idempotencyKeysOfCreatesSent()).toEqual([
+    inProgressKey,
+    inProgressKey,
+  ]);
+  jest.useRealTimers();
+  expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+});
+
+it("repeats a create whose answer could not be read under its key, and debits once", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  mswServer.use(
+    http.post(
+      "*/transfers",
+      async ({ request }) => {
+        await sendToBank("POST", "/transfers", {
+          body: await request.json(),
+          idempotencyKey: request.headers.get("Idempotency-Key"),
+        });
+        return new HttpResponse("<html>Created</html>", { status: 201 });
+      },
+      { once: true },
+    ),
+  );
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText("Transfer sent", {}, { timeout: 10_000 }),
+  ).toBeOnTheScreen();
+  expect(new Set(idempotencyKeysOfCreatesSent()).size).toBe(1);
   jest.useRealTimers();
   expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
 });

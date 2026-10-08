@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, userEvent } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
@@ -176,6 +176,24 @@ it(
 );
 
 it(
+  "says the balance couldn't be loaded on the amount step too, and holds Review until it does",
+  scenarioTest("transfer.balance_unavailable", async () => {
+    await openAmountStep();
+
+    expect(
+      await screen.findByText("Your balance couldn't be loaded."),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Review" })).toBeDisabled();
+    expect(
+      screen.getByText(
+        "You can send once your balance and today's limit have loaded.",
+      ),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it(
   "holds Review until today's limit loads when maintenance began before it ever did",
   scenarioTest("transfer.under_maintenance", async () => {
     await openAmountStep();
@@ -249,6 +267,22 @@ it(
     expect(view.getPathname()).toBe("/transfer/review");
   }),
 );
+
+it("takes no more than 30 characters in the note", async () => {
+  await openAmountStep();
+  await screen.findByText("RM 12,845.50");
+
+  await userEvent
+    .setup()
+    .type(
+      screen.getByLabelText("Note (optional)"),
+      "Lunch with Ali and Siti at noon",
+    );
+
+  expect(screen.getByLabelText("Note (optional)")).toHaveDisplayValue(
+    "Lunch with Ali and Siti at noo",
+  );
+});
 
 it("opens the recipient step instead when no recipient is chosen yet", async () => {
   // Mounted past the link guard, which sends this path Home: only the app's own navigation can try it.
