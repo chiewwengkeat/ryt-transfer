@@ -6,41 +6,43 @@ mid-range phone and React's profiler does not run in release builds.
 
 ## The numbers
 
-Three runs on a fresh app, identical line for line. "Mounted" is what FlashList had rendered when the operation began:
-the screen plus the margin it draws beyond it, 18 rows and 3 day headers here.
+Measured at commit `f054c18`: app data cleared once, then three cold launches, identical line for line. "Mounted" is
+what FlashList had rendered when the operation began: the screen plus the margin it draws beyond it, 18 rows and 3 day
+headers here.
 
 | Operation                                  | Rows redrawn (of mounted) | Day headers redrawn (of mounted) | Cells newly shown  | Format calls | Earlier spike |
 | ------------------------------------------ | ------------------------- | -------------------------------- | ------------------ | ------------ | ------------- |
 | Page append, at rest at the top            | 0 of 18                   | 0 of 3                           | none               | 0            | 0             |
-| Pull to refresh with nothing new           | 0 of 18                   | 0 of 3                           | none               | 0            | 0             |
+| Pull to refresh with nothing new           | 0 of 18                   | 0 of 3                           | none               | 0            | not compared  |
 | Status change of one transfer              | 1 of 18                   | 0 of 3                           | none               | 2            | 1             |
 | Collapse a day                             | 0 of 18                   | 1 of 3                           | 5 rows, 1 header   | 14           | —             |
 | Expand it again                            | 0 of 17                   | 1 of 4                           | 6 rows             | 14           | —             |
-| A new transfer at the top                  | 17 of 18                  | 1 of 3                           | 1 row              | 38           | —             |
+| A new transfer at the top                  | 17 of 18                  | 1 of 3                           | 1 row              | 21           | —             |
 | Jump to the end, and the pages that follow | 0 of 18                   | 0 of 3                           | 42 rows, 5 headers | 94           | —             |
 
 The earlier spike measured a flat list of 24 mounted rows with the React Compiler on: a page append redrew 0, a
-status change 1, an identical refetch 0. Without the compiler it was 24, 24 and 0. The accordion list keeps those
-three numbers.
+status change 1, an identical refetch 0. Without the compiler it was 24, 24 and 0. Its refetch fetched again the one
+page it had loaded, so the pull, which trims two pages to one, is not set against it.
 
 ## What they show
 
-- **A page append redraws nothing already shown.** Each row is the transfer object itself, which TanStack Query's
-  structural sharing keeps from one page to the next, and the list's render function never closes over anything that
-  changes, so FlashList's cell memo holds.
+- **A page append redraws nothing already shown.** Each row is the history query's `select` copy of its transfer, which
+  TanStack Query's structural sharing of `select`'s result keeps from one page to the next, and the list's render
+  function never closes over anything that changes, so FlashList's cell memo holds.
 - **A pull that brings nothing new redraws nothing.** The pull trims the list to its first page and fetches that page
   again; the identical answer keeps every object. The trim is why this is not the spike's whole-cache refetch: the list
   never replays its loaded pages.
 - **A status change redraws its one row**, which formats its time and amount again. Its day's header stays: the money
   did not move, so neither did the day's net.
-- **Collapsing or expanding redraws only the tapped header.** The rows that leave or enter the screen are first
-  renders; no row that stays on screen redraws as the rows below it move.
+- **Collapsing or expanding redraws only the tapped header.** The rows that enter the screen are first renders; no row
+  that stays on screen redraws as the rows below it move.
 - **A new transfer at the top redraws every mounted row once**, 17 of 18 (the 18th cell shows the new transfer), and
   the header of the day that gained it. Structural sharing matches a list's items by position, so a new first item
-  gives every later one a new object.
-- **Formatting follows the cells on screen, never the rows loaded.** Every format call belongs to a cell that drew: two
-  per row (time and amount) and two per header (day and net). An append at rest formats nothing, because the new page
-  draws nothing until it scrolls into view; the jump to the end formats 94 strings for the 47 cells it draws.
+  gives every later one a new object. Each redrawn row formats its amount again, which arrives as a new object, but not
+  its time, none of whose inputs changed.
+- **Formatting follows the cells on screen, never the rows loaded.** Every format call belongs to a cell that drew, at
+  most two per cell: a row's time and amount, a header's day and net. An append at rest formats nothing, because the
+  new page draws nothing until it scrolls into view; the jump to the end formats 94 strings for the 47 cells it draws.
 
 ### The new transfer at the top: the cost, and the fix kept in reserve
 
@@ -70,8 +72,9 @@ fix in reserve, since one pass over 18 rows per refresh is cheap under the compi
 
   The refresh runs before the cache writes, which a refresh would undo.
 
-- **The build**: a release-mode development build, React's production renderer with the React Compiler on Hermes. The
-  trace exists only in development builds: demo and production exports carry none of its code.
+- **The build**: a release-mode development build, React's production renderer with the React Compiler on Hermes. Only
+  development builds run the trace and the operations that drive it: demo and production exports keep the trace as
+  no-op stand-ins and carry none of the operations.
 - **The device**: the Android emulator, Pixel 9 profile (1080 × 2424, 420 dpi), Android 17 (API 37), arm64, holding the
   demo's 5,000 seeded transfers.
 
@@ -107,5 +110,5 @@ The first line of a run reads:
 ryt-render-trace {"operation":"pageAppend","before":{"pagesLoaded":1},"after":{"pagesLoaded":2},"cells":{"header":{"mounted":3,"rerenderedCells":0,"rerenders":0,"firstRenders":0},"row":{"mounted":18,"rerenderedCells":0,"rerenders":0,"firstRenders":0}},"formatCalls":0}
 ```
 
-The trace is `src/shared/observability/render-trace.ts`; the row and the day header each call it once, and the list in
-`SectionTransferAccordion.tsx` drives the operations.
+The trace is `src/shared/observability/render-trace.ts`; the row and the day header each call it once, and the list's
+development-only hook `SectionTransferAccordion/hooks/use-transfer-history-render-measurement.ts` drives the operations.
