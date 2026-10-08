@@ -60,13 +60,14 @@ export function createQueryClient() {
         query.state.error.kind === TransportErrorKind.Network &&
         answersWhenLastReadAgain.get(query) !== query.state.dataUpdateCount,
     });
-    for (const query of readsThatFoundNoNetwork)
+    for (const query of readsThatFoundNoNetwork) {
       answersWhenLastReadAgain.set(query, query.state.dataUpdateCount);
-    void client.refetchQueries(
-      { predicate: (query) => readsThatFoundNoNetwork.includes(query) },
-      // The read in flight may be the one that got through: let it land rather than send it again.
-      { cancelRefetch: false },
-    );
+      // Through a reading observer: the query holds the options of whichever rendered last, a disabled one's retries too.
+      void query.observers
+        .find((observer) => observer.options.enabled !== false)
+        // The read in flight may be the one that got through: let it land rather than send it again.
+        ?.refetch({ cancelRefetch: false });
+    }
   });
   return client;
 }

@@ -217,6 +217,37 @@ it("reads a query that found no network again after an answer, though it was rea
   client.unmount();
 });
 
+it("reads a query again with the retries of the screen reading it, not of one that only shows it", async () => {
+  const client = createQueryClient();
+  client.mount();
+  const queryFn = jest.fn(() =>
+    Promise.reject(new TransportError(TransportErrorKind.Network)),
+  );
+  const stopReading = new QueryObserver(client, {
+    queryKey: ["transfer"],
+    queryFn,
+    retry: 0,
+    gcTime: 0,
+  }).subscribe(() => undefined);
+  await letPendingFetchesRun();
+  const stopShowing = new QueryObserver(client, {
+    queryKey: ["transfer"],
+    queryFn,
+    enabled: false,
+    retryDelay: 0,
+    gcTime: 0,
+  }).subscribe(() => undefined);
+  reportRequestOutcome(TransportErrorKind.Network);
+
+  reportRequestOutcome();
+  await letPendingFetchesRun();
+
+  expect(queryFn).toHaveBeenCalledTimes(2);
+  stopShowing();
+  stopReading();
+  client.unmount();
+});
+
 it("lets a read already on its way land, rather than send it again, once a request reaches the bank", async () => {
   const client = createQueryClient();
   client.mount();

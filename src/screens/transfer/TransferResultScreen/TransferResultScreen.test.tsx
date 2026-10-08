@@ -666,7 +666,7 @@ it(
         ({ method, url }) =>
           method === "GET" && url.endsWith(`/transfers/${transferId}`),
       ).length,
-    ).toBeGreaterThan(1);
+    ).toBe(2);
     await act(() => jest.advanceTimersByTimeAsync(14_000));
     expect(
       screen.queryByRole("header", { name: "Still checking your transfer" }),
