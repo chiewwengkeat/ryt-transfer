@@ -84,7 +84,8 @@ export type TransferHold =
   | { kind: TransferHoldKind.AccountLocked }
   | {
       kind: TransferHoldKind.CoolingOff;
-      until: string;
+      // Absent when the bank's time is unreadable or already past: it still refused, so the hold stays, untimed.
+      until?: string;
       reason: CoolingOffReason;
     };
 

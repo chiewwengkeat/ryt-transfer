@@ -191,6 +191,23 @@ it.each([
   },
 );
 
+it("holds Transfer on review with the security wait's words but no time when the wait the bank names has already ended", async () => {
+  answerEveryApprovalWith(403, {
+    code: "COOLING_OFF",
+    message: "Test.",
+    until: new Date(Date.now() - 60_000).toISOString(),
+    reason: "DEVICE_PAIRED",
+  });
+  await approveRm100Transfer();
+
+  expect(
+    await screen.findByText(
+      "You can send money later — a security wait after pairing this phone.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+});
+
 it(
   "says something unexpected stopped the approval when the bank refuses it as badly formed",
   scenarioTest("transfer.approval_unexpected", async () => {

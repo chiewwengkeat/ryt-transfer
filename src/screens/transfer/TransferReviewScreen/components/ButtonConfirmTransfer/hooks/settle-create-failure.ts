@@ -41,7 +41,9 @@ export function settleCreateFailure({
         type: TransferFlowActionType.CreateRefusedByHold,
         hold: {
           kind: TransferHoldKind.CoolingOff,
-          until: refusal.until,
+          ...(Date.parse(refusal.until) > Date.now() && {
+            until: refusal.until,
+          }),
           reason: refusal.reason,
         },
       });

@@ -58,19 +58,22 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const hold = useTransferFlow((flow) =>
     flow.step === TransferFlowStep.Reviewing ? flow.hold : undefined,
   );
-  const coolingOffEndsAtMs =
-    hold?.kind === TransferHoldKind.CoolingOff ? Date.parse(hold.until) : NaN;
+  const coolingOffUntil =
+    hold?.kind === TransferHoldKind.CoolingOff ? hold.until : undefined;
   // The hold itself, not its time: the bank refusing again with the same time holds Transfer again.
   const [liftedHold, setLiftedHold] = useState<TransferHold>();
   useEffect(() => {
-    if (Number.isNaN(coolingOffEndsAtMs)) return;
-    const timer = setTimeout(() => {
-      setLiftedHold(hold);
-    }, coolingOffEndsAtMs - Date.now());
+    if (coolingOffUntil === undefined) return;
+    const timer = setTimeout(
+      () => {
+        setLiftedHold(hold);
+      },
+      Date.parse(coolingOffUntil) - Date.now(),
+    );
     return () => {
       clearTimeout(timer);
     };
-  }, [hold, coolingOffEndsAtMs]);
+  }, [hold, coolingOffUntil]);
   const offline = useIsOffline();
   const approvalPinLocked = useApprovalPinLocked();
 
@@ -79,7 +82,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       ? undefined
       : hold.kind === TransferHoldKind.AccountLocked
         ? t("common.account_locked.disabled_reason")
-        : Number.isNaN(coolingOffEndsAtMs)
+        : hold.until === undefined
           ? t(
               hold.reason === CoolingOffReason.NewAccount
                 ? "common.cooling_off_new_account.disabled_reason_without_time"

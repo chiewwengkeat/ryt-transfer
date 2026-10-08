@@ -1958,15 +1958,25 @@ it(
 it.each([
   [
     "DEVICE_PAIRED",
+    "a time the app cannot read",
+    () => "soon",
     "You can send money later — a security wait after pairing this phone.",
   ],
   [
     "NEW_ACCOUNT",
+    "a time the app cannot read",
+    () => "soon",
     "You can send money later — a security wait after opening your account.",
   ],
+  [
+    "DEVICE_PAIRED",
+    "a time already passed",
+    () => new Date(Date.now() - 60_000).toISOString(),
+    "You can send money later — a security wait after pairing this phone.",
+  ],
 ])(
-  "holds the transfer without a time, and keeps holding it, when the bank's cooling-off for %s comes with a time the app cannot read",
-  async (reason, holdReason) => {
+  "holds the transfer without a time, and keeps holding it, when the bank's cooling-off for %s comes with %s",
+  async (reason, _, untilTheBankSends, holdReason) => {
     mswServer.use(
       http.post("*/transfers", () =>
         HttpResponse.json(
@@ -1974,7 +1984,7 @@ it.each([
             error: {
               code: "COOLING_OFF",
               message: "Test.",
-              until: "soon",
+              until: untilTheBankSends(),
               reason,
             },
           },
