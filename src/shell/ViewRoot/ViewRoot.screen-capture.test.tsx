@@ -1,8 +1,9 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { AppState, type NativeEventSubscription, Platform } from "react-native";
+import { Platform } from "react-native";
 
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { moveAppTo } from "@/test/harness/app-state";
 import {
   ButtonCrashScreen,
   crashTheScreenOfASettledReceipt,
@@ -48,21 +49,6 @@ it("blocks capture on Home, lifts it on a receipt only once the screen before it
   expect(isScreenCaptureBlocked()).toBe(true);
 });
 
-// ⛔ Skip removed listeners: the double's remove() does nothing, and an earlier test's Android listener would block.
-function moveAppToBackgroundAndBack() {
-  const { calls, results } = jest.mocked(AppState).addEventListener.mock;
-  calls.forEach(([eventName, listener], index) => {
-    const subscription = results[index]?.value as NativeEventSubscription;
-    if (
-      eventName === "change" &&
-      jest.mocked(subscription).remove.mock.calls.length === 0
-    ) {
-      listener("background");
-      listener("active");
-    }
-  });
-}
-
 it("blocks capture on the new window Android gives Home after a font-size change, once the app is active again", async () => {
   const platformOs = jest.replaceProperty(Platform, "OS", "android");
   try {
@@ -73,7 +59,10 @@ it("blocks capture on the new window Android gives Home after a font-size change
     void screenCaptureNativeDouble.allowScreenCapture();
     const blockedOnTheNewWindow = isScreenCaptureBlocked();
 
-    await act(moveAppToBackgroundAndBack);
+    await act(() => {
+      moveAppTo("background");
+      moveAppTo("active");
+    });
 
     expect(blockedOnTheNewWindow).toBe(false);
     expect(isScreenCaptureBlocked()).toBe(true);
@@ -91,7 +80,10 @@ it("tells iOS nothing more when the app becomes active, since iOS keeps its wind
     "preventScreenCapture",
   );
 
-  await act(moveAppToBackgroundAndBack);
+  await act(() => {
+    moveAppTo("background");
+    moveAppTo("active");
+  });
 
   expect(isScreenCaptureBlocked()).toBe(true);
   expect(blocksSent).not.toHaveBeenCalled();

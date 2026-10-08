@@ -1,15 +1,12 @@
 import { MutationObserver, QueryObserver } from "@tanstack/react-query";
-import {
-  AppState,
-  type AppStateStatus,
-  type NativeEventSubscription,
-} from "react-native";
+import { AppState } from "react-native";
 
 import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
 import { reportRequestOutcome } from "@/shared/platform/offline";
+import { moveAppTo } from "@/test/harness/app-state";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 
 import { createQueryClient } from "./query-client";
@@ -21,19 +18,6 @@ const BALANCE_READ = "GET /accounts/primary";
 
 function letPendingFetchesRun() {
   return new Promise((resolve) => setTimeout(resolve, 10));
-}
-
-// ⛔ Skip removed listeners: the double's remove() does nothing, and a removed one turns the reopen tests green.
-function moveAppTo(state: AppStateStatus) {
-  const { calls, results } = jest.mocked(AppState).addEventListener.mock;
-  calls.forEach(([eventName, listener], index) => {
-    const subscription = results[index]?.value as NativeEventSubscription;
-    if (
-      eventName === "change" &&
-      jest.mocked(subscription).remove.mock.calls.length === 0
-    )
-      listener(state);
-  });
 }
 
 it("holds a read while the phone is offline and sends it once the phone reconnects", async () => {
