@@ -35,8 +35,8 @@ import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 
 import ButtonUsePinInstead from "./components/ButtonUsePinInstead/ButtonUsePinInstead";
-import { settleApprovalAnswer } from "./hooks/settle-approval-answer";
 import { settleCreateFailure } from "./hooks/settle-create-failure";
+import { settleUnexpectedConfirmFailure } from "./hooks/settle-unexpected-confirm-failure";
 import { useApprovalPinLocked } from "./hooks/use-approval-pin-locked";
 import { useSendTransferApproval } from "./hooks/use-send-transfer-approval";
 
@@ -193,32 +193,6 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   };
   const transferDisabledReason =
     holdReason ?? (offline ? t("common.offline.disabled_reason") : undefined);
-  const settleUnexpectedConfirmFailure = () => {
-    // Before the approval leaves the phone nothing can have moved, so review offers it again.
-    // After, nothing proves where it ended, so it settles as an answer that never came.
-    const flow = transferFlowStore.getState();
-    if (flow.step !== TransferFlowStep.Submitting) {
-      dispatchTransferFlow(
-        flow.step === TransferFlowStep.Approving
-          ? {
-              type: TransferFlowActionType.ApprovalNotSent,
-              notice: TransferFlowScenario.ApprovalUnexpected,
-            }
-          : {
-              type: TransferFlowActionType.CreateNotSent,
-              notice: TransferFlowScenario.ReviewUnexpected,
-            },
-      );
-      return;
-    }
-    void settleApprovalAnswer({
-      answer: {},
-      transferId: flow.transferId,
-      // Only a refusal forgets the record, and an answer with nothing in it is none.
-      forgetPendingTransfer: () => Promise.resolve(),
-      queryClient,
-    });
-  };
 
   return (
     <>
@@ -227,9 +201,9 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
         loading={sending || lookup.isFetching}
         disabledReason={transferDisabledReason}
         onPress={() => {
-          void createAndApproveTransfer(ApprovalPath.Biometric).catch(
-            settleUnexpectedConfirmFailure,
-          );
+          void createAndApproveTransfer(ApprovalPath.Biometric).catch(() => {
+            settleUnexpectedConfirmFailure(queryClient);
+          });
         }}
       />
       <ButtonUsePinInstead
@@ -240,9 +214,9 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
           !approvalPinLocked
         }
         onPress={() => {
-          void createAndApproveTransfer(ApprovalPath.Pin).catch(
-            settleUnexpectedConfirmFailure,
-          );
+          void createAndApproveTransfer(ApprovalPath.Pin).catch(() => {
+            settleUnexpectedConfirmFailure(queryClient);
+          });
         }}
       />
     </>
