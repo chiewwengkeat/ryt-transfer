@@ -4,14 +4,14 @@ import { requestJson } from "@/shared/http/transport";
 
 import { transferKeys } from "../transfer.keys";
 import type {
+  LookupRecipientRequest,
   LookupRecipientResponse,
   RecipientIdType,
 } from "./lookup-recipient.type";
 
-export const getLookupRecipientOptions = (recipient: {
-  idType: RecipientIdType;
-  idValue: string;
-}) =>
+export const getLookupRecipientOptions = (
+  recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }>,
+) =>
   queryOptions({
     queryKey: transferKeys.lookup(recipient),
     queryFn: ({ signal }) =>
@@ -26,9 +26,8 @@ export const getLookupRecipientOptions = (recipient: {
     gcTime: 0,
   });
 
-export function useLookupRecipient(recipient: {
-  idType: RecipientIdType;
-  idValue: string;
-}) {
+export function useLookupRecipient(
+  recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }>,
+) {
   return useQuery(getLookupRecipientOptions(recipient));
 }

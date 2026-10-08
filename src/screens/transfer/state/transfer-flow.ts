@@ -2,6 +2,7 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 
 import type {
+  LookupRecipientRequest,
   LookupRecipientResponse,
   RecipientIdType,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
@@ -135,7 +136,10 @@ function reduceTransferFlow(
   }
 }
 
-type TransferRecipient = { idType: RecipientIdType.Mobile; idValue: string };
+type TransferRecipient = Extract<
+  LookupRecipientRequest,
+  { idType: RecipientIdType }
+> & { idType: RecipientIdType.Mobile };
 
 type TransferDraft = { recipient: TransferRecipient; amount: Money };
 

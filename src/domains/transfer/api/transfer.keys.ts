@@ -1,4 +1,7 @@
-import type { RecipientIdType } from "./lookup-recipient/lookup-recipient.type";
+import type {
+  LookupRecipientRequest,
+  RecipientIdType,
+} from "./lookup-recipient/lookup-recipient.type";
 
 export const transferKeys = {
   all: ["transfers"] as const,
@@ -8,6 +11,7 @@ export const transferKeys = {
     ["transfer-history", filters] as const,
   recentRecipients: ["transfers", "recent-recipients"] as const,
   banks: ["transfers", "banks"] as const,
-  lookup: (recipient: { idType: RecipientIdType; idValue: string }) =>
-    ["transfers", "lookup", recipient.idType, recipient.idValue] as const,
+  lookup: (
+    recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }>,
+  ) => ["transfers", "lookup", recipient.idType, recipient.idValue] as const,
 };
