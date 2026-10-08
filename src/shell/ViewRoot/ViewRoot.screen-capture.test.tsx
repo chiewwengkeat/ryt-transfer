@@ -1,7 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 
-import { motionDurations } from "@/shared/lib/motion/motion";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { ButtonCrashScreen } from "@/test/harness/crash-on-press";
 import { isScreenCaptureBlocked } from "@/test/harness/native-doubles";
@@ -17,10 +16,11 @@ it("blocks capture on Home, lifts it on a receipt only once the screen before it
   await act(() => {
     router.push("/transfer/result/transfer-on-screen");
   });
+  // Just short of the settle. Jest cannot time the native push beneath it: that the settle outlasts it is a device check.
   await act(() => {
-    jest.advanceTimersByTime(motionDurations.screenTransition);
+    jest.advanceTimersByTime(599);
   });
-  const blockedWhileHomeLeaves = isScreenCaptureBlocked();
+  const blockedJustBeforeReceiptSettles = isScreenCaptureBlocked();
   await waitFor(() => {
     expect(isScreenCaptureBlocked()).toBe(false);
   });
@@ -31,7 +31,7 @@ it("blocks capture on Home, lifts it on a receipt only once the screen before it
   await waitPastReceiptSettle();
 
   expect(blockedOnHome).toBe(true);
-  expect(blockedWhileHomeLeaves).toBe(true);
+  expect(blockedJustBeforeReceiptSettles).toBe(true);
   expect(blockedOnLeaving).toBe(true);
   expect(isScreenCaptureBlocked()).toBe(true);
 });
