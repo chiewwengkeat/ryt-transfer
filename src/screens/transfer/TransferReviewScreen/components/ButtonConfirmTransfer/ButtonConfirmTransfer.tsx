@@ -3,9 +3,15 @@ import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, AppState } from "react-native";
+import { useStore } from "zustand";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
+import {
+  BiometricSignOutcome,
+  readBiometricSensorRefusal,
+} from "@/domains/approval/hooks/approval-keys";
+import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import {
   isCreateTransferUnanswered,
   useCreateTransfer,
@@ -95,6 +101,33 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     if (holdReason !== undefined)
       AccessibilityInfo.announceForAccessibility(holdReason);
   }, [holdReason]);
+  const biometricApprovalOn = useStore(
+    approvalSettingsStore,
+    (settings) => settings.biometricApprovalOn,
+  );
+  const [biometricSensorUnavailable, setBiometricSensorUnavailable] =
+    useState(false);
+  useEffect(() => {
+    let mounted = true;
+    const checkBiometricSensor = () => {
+      void readBiometricSensorRefusal().then((refusal) => {
+        if (mounted)
+          setBiometricSensorUnavailable(
+            refusal?.outcome === BiometricSignOutcome.NotSetUp ||
+              refusal?.outcome === BiometricSignOutcome.NoSensor,
+          );
+      });
+    };
+    checkBiometricSensor();
+    // Enrolment changes in the phone's own settings, so it is asked again whenever the app comes back.
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") checkBiometricSensor();
+    });
+    return () => {
+      mounted = false;
+      subscription.remove();
+    };
+  }, []);
   // Not the data: a name check that fails on a later run keeps the earlier answer's data.
   if (!lookup.isSuccess) return null;
   const confirmedLookup = lookup.data;
@@ -277,16 +310,20 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
           );
         }}
       />
-      {!sending && transferDisabledReason === undefined && (
-        <ButtonSecondary
-          label={t("common.pin_chosen.choose")}
-          onPress={() => {
-            void createAndApproveTransfer(ApprovalPath.Pin).catch(
-              settleUnexpectedConfirmFailure,
-            );
-          }}
-        />
-      )}
+      {/* Transfer asks for the PIN itself while face or fingerprint approval is off or unavailable. */}
+      {!sending &&
+        transferDisabledReason === undefined &&
+        biometricApprovalOn &&
+        !biometricSensorUnavailable && (
+          <ButtonSecondary
+            label={t("common.pin_chosen.choose")}
+            onPress={() => {
+              void createAndApproveTransfer(ApprovalPath.Pin).catch(
+                settleUnexpectedConfirmFailure,
+              );
+            }}
+          />
+        )}
     </>
   );
 }

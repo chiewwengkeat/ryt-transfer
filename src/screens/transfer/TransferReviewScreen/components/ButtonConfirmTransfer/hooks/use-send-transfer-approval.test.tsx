@@ -1,7 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
+import { AppState } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { approvalPinSheetStore } from "@/domains/approval/hooks/approval-pin-sheet";
@@ -28,7 +29,7 @@ async function confirmRm100ApprovedByPin() {
   await confirmRm100Transfer();
 }
 
-async function confirmRm100Transfer() {
+async function openReviewOfRm100() {
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/transfer");
   await fireEvent.changeText(
@@ -39,9 +40,12 @@ async function confirmRm100Transfer() {
   await screen.findByText("RM 12,845.50");
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
+  await screen.findByRole("button", { name: "Transfer" });
+}
+
+async function confirmRm100Transfer() {
+  await openReviewOfRm100();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
 }
 
 async function approveWithPin(pin: string) {
@@ -385,6 +389,50 @@ it("offers no PIN instead while the transfer is being sent", async () => {
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
 });
 
+it("offers no PIN instead while face or fingerprint approval is turned off, Transfer asking for the PIN itself", async () => {
+  approvalSettingsStore.setState({ biometricApprovalOn: false });
+  await openReviewOfRm100();
+
+  expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  expect(
+    await screen.findByText("It's turned off in this app's settings."),
+  ).toBeOnTheScreen();
+});
+
+it("takes the PIN choice away once face or fingerprint approval is turned off with review open", async () => {
+  await openReviewOfRm100();
+  expect(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
+
+  await act(() => {
+    approvalSettingsStore.setState({ biometricApprovalOn: false });
+  });
+
+  expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
+});
+
+it("asks the phone again on coming back to the app, taking the PIN choice away once nothing is enrolled", async () => {
+  await openReviewOfRm100();
+  expect(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
+
+  reportBiometricSensorUnavailable("BIOMETRY_NOT_ENROLLED");
+  await act(() => {
+    for (const [eventName, listener] of jest.mocked(AppState).addEventListener
+      .mock.calls)
+      if (eventName === "change") listener("active");
+  });
+
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("button", { name: "Use PIN instead" }),
+    ).toBeNull();
+  });
+});
+
 it(
   "turns a prompt the phone locked after too many attempts into the PIN sheet, which approves",
   scenarioTest("transfer.biometrics_locked_out", async () => {
@@ -424,18 +472,28 @@ it.each([
     "BIOMETRY_NOT_AVAILABLE",
     "This phone has no face or fingerprint sensor the app can use.",
   ],
-])("asks for the PIN, saying why, when %s", async (_, sensorCode, reason) => {
-  reportBiometricSensorUnavailable(sensorCode);
-  await confirmRm100Transfer();
+])(
+  "offers no PIN instead and asks for the PIN itself, saying why, when %s",
+  async (_, sensorCode, reason) => {
+    reportBiometricSensorUnavailable(sensorCode);
+    await openReviewOfRm100();
 
-  expect(await screen.findByText(reason)).toBeOnTheScreen();
-  expect(
-    screen.getByText(
-      "Face or fingerprint approval isn't available, so approve with your PIN.",
-    ),
-  ).toBeOnTheScreen();
-  expect(biometricPromptsShown()).toEqual([]);
-});
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: "Use PIN instead" }),
+      ).toBeNull();
+    });
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+    expect(await screen.findByText(reason)).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "Face or fingerprint approval isn't available, so approve with your PIN.",
+      ),
+    ).toBeOnTheScreen();
+    expect(biometricPromptsShown()).toEqual([]);
+  },
+);
 
 it(
   "approves with the PIN when a new face or fingerprint has killed the phone's key",

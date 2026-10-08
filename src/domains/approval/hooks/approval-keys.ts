@@ -103,6 +103,19 @@ export async function replaceBiometricApprovalKey(pin: string) {
   }
 }
 
+export async function readBiometricSensorRefusal() {
+  const sensor = await isSensorAvailable({
+    biometricStrength: BiometricStrength.Strong,
+  }).catch(() => undefined);
+  const outcome =
+    sensor?.available === false
+      ? SIGN_OUTCOME_BY_LIBRARY_CODE.get(sensor.errorCode ?? "")
+      : undefined;
+  return outcome === undefined
+    ? null
+    : { outcome, errorCode: sensor?.errorCode };
+}
+
 export async function signWithBiometricKey(
   signedText: string,
   prompt: { title: string; subtitle: string; cancel: string },
@@ -110,19 +123,10 @@ export async function signWithBiometricKey(
   const keyId = await readSecureRecord(BIOMETRIC_KEY_ID_RECORD);
   if (keyId === null) return { outcome: BiometricSignOutcome.Failed } as const;
   // Asked first: on a phone, iOS signing reports neither a lockout nor an empty enrolment.
-  const sensor = await isSensorAvailable({
-    biometricStrength: BiometricStrength.Strong,
-  }).catch(() => undefined);
-  const sensorRefusal =
-    sensor?.available === false
-      ? SIGN_OUTCOME_BY_LIBRARY_CODE.get(sensor.errorCode ?? "")
-      : undefined;
-  if (sensorRefusal !== undefined) {
-    trackEvent("biometric_signing", {
-      outcome: sensorRefusal,
-      errorCode: sensor?.errorCode,
-    });
-    return { outcome: sensorRefusal };
+  const sensorRefusal = await readBiometricSensorRefusal();
+  if (sensorRefusal !== null) {
+    trackEvent("biometric_signing", sensorRefusal);
+    return { outcome: sensorRefusal.outcome };
   }
 
   const result = await signWithOptions({
