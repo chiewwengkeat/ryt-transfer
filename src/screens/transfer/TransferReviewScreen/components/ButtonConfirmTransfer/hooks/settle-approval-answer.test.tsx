@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { t } from "i18next";
 import { http, HttpResponse } from "msw";
 
@@ -15,7 +16,7 @@ import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 const SENDING_MESSAGE = "Sending your transfer. The bank's answer comes next.";
@@ -45,6 +46,62 @@ async function readPendingTransfersAfterTheRoute() {
   } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
   return listPendingTransfers(customerId);
 }
+
+// ⛔ Stands in for Back skipping the result page: review holds Back until the flow is done, and Jest mounts
+// the page in that same render, so a pressed Back always arrives too late here.
+function dropTheResultPageAsItOpens() {
+  const pushRoute = router.push;
+  return jest
+    .spyOn(router, "push")
+    .mockImplementation((...pushed: Parameters<typeof router.push>) => {
+      const [href] = pushed;
+      if (
+        typeof href === "object" &&
+        href.pathname === "/transfer/result/[transferId]"
+      )
+        return;
+      pushRoute(...pushed);
+    });
+}
+
+it("tells Home the transfer was sent when the result page never opens, and reopens no result at the next launch", async () => {
+  const resultPageDropped = dropTheResultPageAsItOpens();
+  try {
+    const view = await approveRm100Transfer();
+    const sentNotice =
+      /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/;
+
+    expect(await screen.findByText(sentNotice)).toBeOnTheScreen();
+    expect(view.getPathname()).toBe("/");
+    resultPageDropped.mockRestore();
+    const relaunched = await relaunchApp(view);
+    expect(await screen.findByText(sentNotice)).toBeOnTheScreen();
+    expect(relaunched.getPathname()).toBe("/");
+  } finally {
+    resultPageDropped.mockRestore();
+  }
+});
+
+it(
+  "warns Home with the bank's reference when the result page never opens on a transfer still processing, and reopens no result at the next launch",
+  scenarioTest("transfer.processing", async () => {
+    const resultPageDropped = dropTheResultPageAsItOpens();
+    try {
+      const view = await approveRm100Transfer();
+      const stillBeingChecked =
+        /^Your last transfer is still being checked, so don't send it again — not confirmed yet\. If you contact us, quote this reference: (?!trf_)\w+$/;
+
+      expect(await screen.findByText(stillBeingChecked)).toBeOnTheScreen();
+      expect(view.getPathname()).toBe("/");
+      resultPageDropped.mockRestore();
+      const relaunched = await relaunchApp(view);
+      expect(await screen.findByText(stillBeingChecked)).toBeOnTheScreen();
+      expect(relaunched.getPathname()).toBe("/");
+    } finally {
+      resultPageDropped.mockRestore();
+    }
+  }),
+);
 
 function answerEveryApprovalWith(
   status: number,

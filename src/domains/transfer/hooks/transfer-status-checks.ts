@@ -131,7 +131,7 @@ export async function checkPendingTransferOnce(
     });
     const outcome = outcomeOfTransfer(transfer);
     if (!isSettledTransferOutcome(outcome))
-      await recordUnsettledPendingTransfer(
+      await recordPendingTransferAnswer(
         customerId,
         transferId,
         outcome,
@@ -143,24 +143,26 @@ export async function checkPendingTransferOnce(
   }
 }
 
-// Unlike checkPendingTransferOnce, a settled outcome clears the record rather than keeping it for Home to announce.
+// Unlike checkPendingTransferOnce, a settled outcome clears the record, unless kept for Home to announce.
 export async function settlePendingTransfer({
   queryClient,
   customerId,
   transferId,
   outcome,
   reference,
+  keepSettled = false,
 }: {
   queryClient: QueryClient;
   customerId: string;
   transferId: string;
   outcome?: TransferOutcomeScenario | null;
   reference?: string;
+  keepSettled?: boolean;
 }) {
-  if (isSettledTransferOutcome(outcome))
+  if (isSettledTransferOutcome(outcome) && !keepSettled)
     await clearPendingTransfer(customerId, transferId);
   else
-    await recordUnsettledPendingTransfer(
+    await recordPendingTransferAnswer(
       customerId,
       transferId,
       outcome,
@@ -169,7 +171,7 @@ export async function settlePendingTransfer({
   await refreshPendingTransferNotices(queryClient, customerId);
 }
 
-function recordUnsettledPendingTransfer(
+function recordPendingTransferAnswer(
   customerId: string,
   transferId: string,
   outcome: TransferOutcomeScenario | null | undefined,

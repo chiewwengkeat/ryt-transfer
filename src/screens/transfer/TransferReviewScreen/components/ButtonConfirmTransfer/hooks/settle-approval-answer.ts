@@ -7,7 +7,10 @@ import {
   readApproveTransferRefusal,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
-import { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
+import {
+  outcomeOfTransfer,
+  TransferOutcomeScenario,
+} from "@/domains/transfer/api/get-transfer/get-transfer";
 import {
   type Transfer,
   TransferFailureReason,
@@ -15,6 +18,7 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
+import { settlePendingTransfer } from "@/domains/transfer/hooks/transfer-status-checks";
 import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import {
@@ -124,6 +128,19 @@ export async function settleApprovalAnswer({
       break;
   }
 
+  // Here, not only on the result page: Back can skip that page as it opens. A settled record is kept for Home to
+  // announce, and awaited so the page's own settle, which clears it, always comes after.
+  if (transfer !== undefined)
+    await settlePendingTransfer({
+      queryClient,
+      customerId,
+      transferId,
+      outcome: outcomeOfTransfer(transfer),
+      reference: transfer.reference,
+      keepSettled: true,
+    }).catch((error: unknown) => {
+      reportError(error, { boundary: "pending_transfer" });
+    });
   openResultPageOfSentApproval({
     queryClient,
     transferId,
