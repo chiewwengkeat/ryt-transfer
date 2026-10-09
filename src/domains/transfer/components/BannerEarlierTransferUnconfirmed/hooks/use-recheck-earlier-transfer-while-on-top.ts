@@ -16,12 +16,12 @@ export function useRecheckEarlierTransferWhileOnTop({
 }: {
   customerId: string | undefined;
   transferId: string | undefined;
-  onSettled?: () => void;
+  onSettled: () => void;
 }) {
   const queryClient = useQueryClient();
   const screenOnTop = useIsScreenOnTop();
   const tellEarlierTransferSettled = useEffectEvent(() => {
-    onSettled?.();
+    onSettled();
   });
   useEffect(() => {
     if (!screenOnTop || customerId === undefined || transferId === undefined)

@@ -7,7 +7,7 @@ import { useTrackScenarioShown } from "../../hooks/use-track-scenario-shown";
 import { useRecheckEarlierTransferWhileOnTop } from "./hooks/use-recheck-earlier-transfer-while-on-top";
 
 interface Props {
-  onEarlierTransferSettled?: () => void;
+  onEarlierTransferSettled: () => void;
 }
 export default function BannerEarlierTransferUnconfirmed({
   onEarlierTransferSettled,

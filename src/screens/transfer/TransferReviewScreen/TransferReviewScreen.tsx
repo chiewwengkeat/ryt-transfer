@@ -1,9 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import BannerEarlierTransferUnconfirmed from "@/domains/transfer/components/BannerEarlierTransferUnconfirmed/BannerEarlierTransferUnconfirmed";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
+import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "../state/refresh-after-approval";
 import {
   TransferFlowScenario,
   TransferFlowStep,
@@ -16,6 +18,7 @@ import SectionReviewDetails from "./components/SectionReviewDetails/SectionRevie
 import TextSendingTransfer from "./components/TextSendingTransfer/TextSendingTransfer";
 
 export default function TransferReviewScreen() {
+  const queryClient = useQueryClient();
   // Review shows, and the phone signs, the draft it opened with; the steps behind it cannot change it meanwhile.
   const [draft] = useState(() => {
     const flow = transferFlowStore.getState();
@@ -42,7 +45,15 @@ export default function TransferReviewScreen() {
           )
         }
       >
-        {!phoneRefused && <BannerEarlierTransferUnconfirmed />}
+        {!phoneRefused && (
+          <BannerEarlierTransferUnconfirmed
+            onEarlierTransferSettled={() => {
+              void refreshAccountHistoryAndRecentRecipientsAfterApproval(
+                queryClient,
+              );
+            }}
+          />
+        )}
         <SectionReviewDetails draft={draft} />
         <TextSendingTransfer />
         {!phoneRefused && (
