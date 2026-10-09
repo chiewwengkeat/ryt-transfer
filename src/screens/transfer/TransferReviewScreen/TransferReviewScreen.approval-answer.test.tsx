@@ -18,6 +18,7 @@ import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
+import { watchRoutesDrawnOnTop } from "@/test/harness/screen-stack-double";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -25,7 +26,7 @@ import { scenarioTest } from "@/test/scenario-test";
 const SENDING_MESSAGE = "Sending your transfer. The bank's answer comes next.";
 const RESULT_PATH = /^\/transfer\/result\/[\w-]+$/;
 
-async function approveRm100Transfer() {
+async function reviewRm100Transfer() {
   await pairPhoneAsTheDemoLaunchDoes();
   const view = await renderRoute("/transfer");
   await fireEvent.changeText(
@@ -36,6 +37,11 @@ async function approveRm100Transfer() {
   await screen.findByText("RM 12,845.50");
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  return view;
+}
+
+async function approveRm100Transfer() {
+  const view = await reviewRm100Transfer();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -53,6 +59,21 @@ async function expectNothingToRecheckAtTheNextLaunch(
   expect(relaunched.getPathname()).toBe("/");
   expect(screen.queryByText(/still being checked/)).toBeNull();
 }
+
+it("opens the result page straight from review, showing no other screen of the transfer between them", async () => {
+  await reviewRm100Transfer();
+  const transferButton = await screen.findByRole("button", {
+    name: "Transfer",
+  });
+  const routesDrawnOnTop = watchRoutesDrawnOnTop();
+
+  await fireEvent.press(transferButton);
+  await screen.findByRole("header", { name: "Transfer sent" });
+
+  expect(new Set(routesDrawnOnTop())).toEqual(
+    new Set(["review", "transfer", "result/[transferId]"]),
+  );
+});
 
 // ⛔ Stands in for Back skipping the result page: review holds Back until the flow is done, and Jest mounts
 // the page in that same render, so a pressed Back always arrives too late here.

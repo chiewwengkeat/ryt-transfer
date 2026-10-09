@@ -5,13 +5,17 @@ import {
   dispatchTransferFlow,
   isTransferDraftOpen,
   TransferFlowActionType,
+  TransferFlowStep,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
 import { screenTransitionOptions } from "@/shared/lib/motion/motion";
 import { demoLayer } from "@/shell/app-launch";
 
 export default function TransferLayout() {
-  const draftOpen = useTransferFlow(isTransferDraftOpen);
+  // Open through Done: the result page replaces this stack a commit later, and closing first shows the recipient step.
+  const draftStepsOpen = useTransferFlow(
+    (flow) => isTransferDraftOpen(flow) || flow.step === TransferFlowStep.Done,
+  );
   // Leaving the flow abandons its draft, so a draft nobody returns to never blocks a link.
   useEffect(
     () => () => {
@@ -34,7 +38,7 @@ export default function TransferLayout() {
             })
       }
     >
-      <Stack.Protected guard={draftOpen}>
+      <Stack.Protected guard={draftStepsOpen}>
         <Stack.Screen name="amount" />
         <Stack.Screen name="review" />
       </Stack.Protected>

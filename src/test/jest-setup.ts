@@ -34,6 +34,8 @@ import {
   resetObscuredTouchGuardDouble,
 } from "./harness/obscured-touch-guard-double";
 import { observedRecords, recordObservation } from "./harness/recording-sink";
+import type * as ScreenStackDouble from "./harness/screen-stack-double";
+import { resetScreenStackDouble } from "./harness/screen-stack-double";
 import {
   mswServer,
   recordUnhandledRequest,
@@ -116,6 +118,11 @@ jest.mock(
     jest.requireActual<typeof BiometricsDouble>("./biometrics-double")
       .biometricsLibraryDouble,
 );
+jest.mock("react-native-screens", () =>
+  jest
+    .requireActual<typeof ScreenStackDouble>("./harness/screen-stack-double")
+    .reactNativeScreensRecordingTopRoutes(),
+);
 
 // Each test gets its own client, so no test reads another's cache, with no retry backoff: RNTL's waitFor
 // gives up after 1 s, before TanStack's first two retries have run.
@@ -177,6 +184,7 @@ afterEach(async () => {
   );
   resetContactsNativeDouble();
   resetObscuredTouchGuardDouble();
+  resetScreenStackDouble();
   // A test that switched language would start the next one in it: clearing the stored pick leaves i18next as it is.
   await changeLanguage(appLanguageAtLaunch);
   // A test that a request left offline would start the next one offline.
