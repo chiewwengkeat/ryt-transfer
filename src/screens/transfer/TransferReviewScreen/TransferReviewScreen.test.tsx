@@ -1202,7 +1202,11 @@ it("never offers to send again when the bank answers none of three tries at the 
   expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
   expect(countSent("POST", "/approve")).toBe(3);
-  releaseApprovals();
+  // Waited out here: the released reads fail as no network and redraw Home, which teardown would warn of.
+  await act(async () => {
+    releaseApprovals();
+    await jest.advanceTimersByTimeAsync(1_000);
+  });
 });
 
 it("never says the transfer was not sent when the session ends as the bank answers the approval", async () => {
