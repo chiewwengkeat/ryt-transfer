@@ -85,7 +85,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **Money:** no money moved
 - **Shown as:** on the home screen and each transfer step, with sending paused
 - **Tell them:** they're offline and sending is paused
-- **They can:** wait; it clears once a request reaches the bank
+- **They can:** wait, or try again where the bank list waits for them; it clears once a request reaches the bank
 - **Why:** a phone can report a connection that doesn't reach the bank, so only a request that gets through ends the offline state
 
 ### Earlier transfer still being checked

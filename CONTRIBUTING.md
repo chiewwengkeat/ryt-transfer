@@ -72,7 +72,7 @@ Lint fails a breach of each of these (`eslint.config.mjs`). On an edge case, the
 - A component's name leads with its Type, from a closed list: `{Type}{Purpose}{Feature}{Variant}`, such as `CardBalance` or `ButtonPrimary`. Screens are the exception, each named `<Name>Screen`.
 - A component sits in a folder of its own, named for it: `<Component>/<Component>.tsx`. A file beside it takes the same name with a singular role suffix, such as `<Component>.type.ts`, never `.types.ts`.
 - A component file reads in one order: imports, `Props`, the component, `StyleSheet.create`, then the rest. A JSDoc on the component stays within four lines.
-- A hook file is kebab-case and named for the hook it exports: `use-sign-transfer-approval.ts` exports `useSignTransferApproval`.
+- A hook file is kebab-case and named for the hook it exports: `use-send-transfer-approval.ts` exports `useSendTransferApproval`.
 - Only files inside a component's folder import its internal files; code elsewhere imports the component itself.
 
 ## Adding a scenario
