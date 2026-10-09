@@ -44,6 +44,22 @@ export default defineConfig(
     files: ["**/*.mjs"],
     languageOptions: { globals: globals.node },
   },
+  // Babel compiles const, let and enum to var here, so a value read before its definition is a
+  // silent undefined, never a TDZ error. A read inside a function body runs later, and is allowed.
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    rules: {
+      "no-use-before-define": [
+        "error",
+        {
+          functions: false,
+          classes: true,
+          variables: false,
+          allowNamedExports: false,
+        },
+      ],
+    },
+  },
   {
     files: ["**/*.{ts,tsx}"],
     extends: [tseslint.configs.recommendedTypeChecked],
@@ -58,6 +74,18 @@ export default defineConfig(
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/switch-exhaustiveness-check": "error",
+      "@typescript-eslint/no-use-before-define": [
+        "error",
+        {
+          functions: false,
+          classes: true,
+          variables: false,
+          enums: false,
+          typedefs: false,
+          ignoreTypeReferences: true,
+          allowNamedExports: false,
+        },
+      ],
     },
   },
   {
