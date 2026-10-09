@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { t } from "i18next";
+import { getFixedT } from "i18next";
 import { http, HttpResponse } from "msw";
 
 import {
@@ -24,6 +24,7 @@ import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
+const t = getFixedT(null, ["shared"]);
 const SENDING_MESSAGE = "Sending your transfer. The bank's answer comes next.";
 const RESULT_PATH = /^\/transfer\/result\/[\w-]+$/;
 

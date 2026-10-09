@@ -21,7 +21,7 @@ interface Props {
   onSignIn: () => void;
 }
 export default function ViewSessionEnded({ onSignIn }: Props) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["shared"]);
   useTrackScenarioShown(TransferScenarioId.SessionEnded);
   // The app behind is hidden, so Back would move it where nobody can see.
   useEffect(() => {
@@ -38,13 +38,13 @@ export default function ViewSessionEnded({ onSignIn }: Props) {
     <View style={StyleSheet.absoluteFill}>
       <ViewMessage
         fullScreen
-        title={t("view_session_ended.title")}
-        message={t("view_session_ended.body")}
+        title={t("shared:view_session_ended.title")}
+        message={t("shared:view_session_ended.body")}
         actions={
           <>
             <TextLastTransferReference />
             <ButtonPrimary
-              label={t("view_session_ended.sign_in")}
+              label={t("shared:view_session_ended.sign_in")}
               onPress={onSignIn}
             />
           </>

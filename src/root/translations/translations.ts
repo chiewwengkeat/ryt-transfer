@@ -13,28 +13,28 @@ import homeZhMY from "@/screens/home/i18n/zh-MY.json";
 import transferScreensEnMY from "@/screens/transfer/i18n/en-MY.json";
 import transferScreensMsMY from "@/screens/transfer/i18n/ms-MY.json";
 import transferScreensZhMY from "@/screens/transfer/i18n/zh-MY.json";
-import commonEnMY from "@/shared/i18n/en-MY.json";
-import commonMsMY from "@/shared/i18n/ms-MY.json";
-import commonZhMY from "@/shared/i18n/zh-MY.json";
+import sharedEnMY from "@/shared/i18n/en-MY.json";
+import sharedMsMY from "@/shared/i18n/ms-MY.json";
+import sharedZhMY from "@/shared/i18n/zh-MY.json";
 import { initTranslations } from "@/shared/i18n/i18n";
 
 export const TRANSLATION_BUNDLES = {
   "en-MY": {
-    common: [commonEnMY],
+    shared: [sharedEnMY],
     account: [accountEnMY],
     approval: [approvalEnMY],
     home: [homeEnMY],
     transfer: [transferScreensEnMY, transferDomainEnMY],
   },
   "ms-MY": {
-    common: [commonMsMY],
+    shared: [sharedMsMY],
     account: [accountMsMY],
     approval: [approvalMsMY],
     home: [homeMsMY],
     transfer: [transferScreensMsMY, transferDomainMsMY],
   },
   "zh-MY": {
-    common: [commonZhMY],
+    shared: [sharedZhMY],
     account: [accountZhMY],
     approval: [approvalZhMY],
     home: [homeZhMY],
@@ -46,9 +46,9 @@ initTranslations(TRANSLATION_BUNDLES);
 
 declare module "i18next" {
   interface CustomTypeOptions {
-    defaultNS: "common";
+    defaultNS: false;
     resources: {
-      common: typeof commonEnMY;
+      shared: typeof sharedEnMY;
       account: typeof accountEnMY;
       approval: typeof approvalEnMY;
       home: typeof homeEnMY;

@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { t } from "i18next";
+import { getFixedT } from "i18next";
 import { delay, http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
@@ -43,6 +43,7 @@ import {
 import { scenarioTest } from "@/test/scenario-test";
 import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
+const t = getFixedT(null, ["shared"]);
 const BANK_REFERENCE =
   /^If you contact us, quote this reference: \d{8}[\dA-F]{8}$/;
 

@@ -165,7 +165,7 @@ function SectionRecentRecipientsHome() {
 }
 
 function useStartTransferDisabledReason() {
-  const { t } = useTranslation("transfer");
+  const { t } = useTranslation(["transfer", "shared"]);
   const offline = useIsOffline();
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();

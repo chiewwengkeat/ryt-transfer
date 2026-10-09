@@ -1,5 +1,5 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { t } from "i18next";
+import { getFixedT } from "i18next";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo, BackHandler } from "react-native";
 
@@ -22,6 +22,7 @@ import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
+const t = getFixedT(null, ["shared"]);
 const UNKNOWN_BANK_CODE = {
   error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
 };

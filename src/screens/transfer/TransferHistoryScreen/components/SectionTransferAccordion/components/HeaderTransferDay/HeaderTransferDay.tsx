@@ -36,7 +36,7 @@ export default function HeaderTransferDay({
   onToggle,
 }: Props) {
   useRenderTrace("header", summary.date);
-  const { t, i18n } = useTranslation("transfer");
+  const { t, i18n } = useTranslation(["transfer", "shared"]);
   const { fontScale } = useWindowDimensions();
   const dayLabel = traceFormatCalls(formatMalaysianDayHeader)(
     summary.date,

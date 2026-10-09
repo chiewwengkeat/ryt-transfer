@@ -23,7 +23,7 @@ interface Props {
 }
 export default function ItemTransfer({ transfer }: Props) {
   useRenderTrace("row", transfer.transferId);
-  const { t } = useTranslation("transfer");
+  const { t } = useTranslation(["transfer", "shared"]);
   const { fontScale } = useWindowDimensions();
   const statusWord = useTransferStatusWord(transfer);
   const parsedAmount = parseWireAmount(transfer.amount);

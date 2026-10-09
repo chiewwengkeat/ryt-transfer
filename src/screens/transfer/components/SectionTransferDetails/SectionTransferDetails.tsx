@@ -17,7 +17,7 @@ interface Props {
   transfer: NonNullable<ReturnType<typeof useGetTransfer>["data"]>;
 }
 export default function SectionTransferDetails({ transfer }: Props) {
-  const { t } = useTranslation("transfer");
+  const { t } = useTranslation(["transfer", "shared"]);
   const statusWord = useTransferStatusWord(transfer);
   const isReceived = transfer.direction === TransferDirection.In;
   // No phrase where the matrix has none, nor "money returned" before a refund lands.

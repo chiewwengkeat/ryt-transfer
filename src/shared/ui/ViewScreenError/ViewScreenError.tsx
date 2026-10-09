@@ -9,7 +9,7 @@ import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 
 export default function ViewScreenError({ error, retry }: ErrorBoundaryProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["shared"]);
   useEffect(() => {
     reportError(error, { boundary: "route" });
   }, [error]);
@@ -18,19 +18,19 @@ export default function ViewScreenError({ error, retry }: ErrorBoundaryProps) {
 
   return (
     <ViewMessage
-      title={t("view_screen_error.title")}
-      message={t("view_screen_error.body")}
+      title={t("shared:view_screen_error.title")}
+      message={t("shared:view_screen_error.body")}
       actions={
         <>
           <ButtonPrimary
-            label={t("view_screen_error.retry")}
+            label={t("shared:view_screen_error.retry")}
             onPress={() => {
               void retry();
             }}
           />
           {router.canGoBack() && (
             <ButtonSecondary
-              label={t("view_screen_error.back")}
+              label={t("shared:view_screen_error.back")}
               onPress={() => {
                 router.back();
               }}

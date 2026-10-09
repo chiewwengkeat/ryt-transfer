@@ -19,12 +19,12 @@ const MONTH_KEYS = [
 ] as const;
 
 // The caller's t: the React Compiler caches a call by its arguments, so only a t that changes with the language
-// reformats. Every key names common because a caller's t looks only in the caller's own namespace.
+// reformats. Every key names shared because a caller's t looks only in the caller's own namespace.
 export function formatMalaysianDateTime(
   instant: string,
   t: TFunction<Namespace>,
 ) {
-  return t("common:date.date_time", {
+  return t("shared:date.date_time", {
     date: formatDayMonthYear(
       new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS),
       t,
@@ -40,12 +40,12 @@ export function formatMalaysianDayHeader(
 ) {
   const nowInMalaysia = new Date(now.getTime() + MALAYSIA_OFFSET_MS);
   if (malaysianIsoDate === nowInMalaysia.toISOString().slice(0, 10))
-    return t("common:date.today");
+    return t("shared:date.today");
   if (
     malaysianIsoDate ===
     new Date(nowInMalaysia.getTime() - DAY_MS).toISOString().slice(0, 10)
   )
-    return t("common:date.yesterday");
+    return t("shared:date.yesterday");
   return formatDayMonthYear(new Date(`${malaysianIsoDate}T00:00:00Z`), t);
 }
 
@@ -54,10 +54,10 @@ export function formatMalaysianTime(instant: string, t: TFunction<Namespace>) {
   const wallClock = new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS);
   if (Number.isNaN(wallClock.getTime())) return null;
   const hour = wallClock.getUTCHours();
-  return t("common:date.time", {
+  return t("shared:date.time", {
     hour: hour % 12 || 12,
     minute: String(wallClock.getUTCMinutes()).padStart(2, "0"),
-    period: hour < 12 ? t("common:date.am") : t("common:date.pm"),
+    period: hour < 12 ? t("shared:date.am") : t("shared:date.pm"),
   });
 }
 
@@ -71,9 +71,9 @@ export function toMalaysianDateKey(instant: string) {
 function formatDayMonthYear(wallClock: Date, t: TFunction<Namespace>) {
   const monthKey = MONTH_KEYS[wallClock.getUTCMonth()];
   if (monthKey === undefined) throw new RangeError("Invalid time value");
-  return t("common:date.day_month_year", {
+  return t("shared:date.day_month_year", {
     day: wallClock.getUTCDate(),
-    month: t(`common:date.month_short.${monthKey}`),
+    month: t(`shared:date.month_short.${monthKey}`),
     year: wallClock.getUTCFullYear(),
   });
 }

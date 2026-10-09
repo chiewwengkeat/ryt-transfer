@@ -51,7 +51,7 @@ export function initTranslations(
     // Only a pick is stored: until there is one, every launch follows the phone's current language.
     lng: readPickedAppLanguage() ?? findAppLanguageForPhone(),
     fallbackLng: AppLanguage.English,
-    defaultNS: "common",
+    defaultNS: false,
     // Synchronous, so the first render has its strings; under fake timers an async init never finishes.
     initAsync: false,
     interpolation: { escapeValue: false },

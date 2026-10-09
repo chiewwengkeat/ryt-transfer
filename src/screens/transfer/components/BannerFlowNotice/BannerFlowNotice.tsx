@@ -18,7 +18,7 @@ interface Props {
   step: TransferFlowStep.Editing | TransferFlowStep.Reviewing;
 }
 export default function BannerFlowNotice({ step }: Props) {
-  const { t } = useTranslation("transfer");
+  const { t } = useTranslation(["transfer", "shared"]);
   const notice = useTransferFlow((flow) =>
     flow.step === step ? flow.notice : undefined,
   );

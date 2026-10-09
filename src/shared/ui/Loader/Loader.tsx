@@ -4,11 +4,11 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { colors, spacing } from "@/shared/theme/theme";
 
 export default function Loader() {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation(["shared"]);
   return (
     <View style={styles.container}>
       <ActivityIndicator
-        accessibilityLabel={t("loader.label")}
+        accessibilityLabel={t("shared:loader.label")}
         accessibilityLanguage={i18n.language}
         color={colors.accent}
         size="large"

@@ -159,7 +159,7 @@ it("registers every English key in Malay and Chinese, with English's placeholder
 
   expect(Object.keys(i18next.store.data[AppLanguage.English] ?? {})).toEqual(
     expect.arrayContaining([
-      "common",
+      "shared",
       "account",
       "approval",
       "home",

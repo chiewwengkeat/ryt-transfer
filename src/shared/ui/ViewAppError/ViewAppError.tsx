@@ -7,7 +7,7 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 
 export default function ViewAppError({ error, retry }: ErrorBoundaryProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["shared"]);
   useEffect(() => {
     reportError(error, { boundary: "root" });
   }, [error]);
@@ -15,11 +15,11 @@ export default function ViewAppError({ error, retry }: ErrorBoundaryProps) {
   return (
     <ViewMessage
       fullScreen
-      title={t("view_app_error.title")}
-      message={t("view_app_error.body")}
+      title={t("shared:view_app_error.title")}
+      message={t("shared:view_app_error.body")}
       actions={
         <ButtonPrimary
-          label={t("view_app_error.retry")}
+          label={t("shared:view_app_error.retry")}
           onPress={() => {
             void retry();
           }}

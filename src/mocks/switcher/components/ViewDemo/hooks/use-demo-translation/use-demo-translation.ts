@@ -10,21 +10,21 @@ import demoZhMY from "@/mocks/switcher/i18n/zh-MY.json";
 import { AppLanguage } from "@/shared/i18n/i18n";
 
 export function useDemoTranslation() {
-  const { t, i18n } = useTranslation();
+  // Not one of the app's typed namespaces, so this t takes any key and the wrappers below type them.
+  const { t, i18n } = useTranslation("demo" as never);
   // Added on first use: initialising the app's translations drops every bundle added before it.
   if (!i18n.hasResourceBundle(AppLanguage.English, "demo")) {
     i18n.addResourceBundle(AppLanguage.English, "demo", demoEnMY);
     i18n.addResourceBundle(AppLanguage.Malay, "demo", demoMsMY);
     i18n.addResourceBundle(AppLanguage.Chinese, "demo", demoZhMY);
   }
-  // The shell types only its own namespaces' keys, so t refuses every demo: and transfer: key.
   const translate = t as unknown as (
     key: string,
     values?: Record<string, string>,
   ) => string;
   return {
     t: (key: KeyPaths<typeof demoEnMY>, values?: Record<string, string>) =>
-      translate(`demo:${key}`, values),
+      translate(key, values),
     scenarioTitle: (scenarioId: `${TransferScenarioId}`) =>
       translate(`transfer:common.${scenarioWordsKey(scenarioId)}.title`),
   };

@@ -13,7 +13,7 @@ import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-scr
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 
 export function useTransferHoldReason() {
-  const { t } = useTranslation("transfer");
+  const { t } = useTranslation(["transfer", "shared"]);
   const hold = useTransferFlow((flow) =>
     flow.step === TransferFlowStep.Reviewing ? flow.hold : undefined,
   );

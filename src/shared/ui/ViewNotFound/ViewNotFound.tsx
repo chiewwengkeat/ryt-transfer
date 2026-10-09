@@ -5,16 +5,16 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 
 export default function ViewNotFound() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["shared"]);
   return (
     <>
-      <Stack.Screen options={{ title: t("view_not_found.title") }} />
+      <Stack.Screen options={{ title: t("shared:view_not_found.title") }} />
       <ViewMessage
-        title={t("view_not_found.title")}
-        message={t("view_not_found.body")}
+        title={t("shared:view_not_found.title")}
+        message={t("shared:view_not_found.body")}
         actions={
           <ButtonPrimary
-            label={t("view_not_found.home")}
+            label={t("shared:view_not_found.home")}
             onPress={() => {
               router.replace("/");
             }}

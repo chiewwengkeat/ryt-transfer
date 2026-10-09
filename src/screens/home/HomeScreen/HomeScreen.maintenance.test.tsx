@@ -1,5 +1,5 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { t } from "i18next";
+import { getFixedT } from "i18next";
 import { http, HttpResponse } from "msw";
 
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
@@ -11,6 +11,7 @@ import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
+const t = getFixedT(null, ["shared"]);
 const LIMITS_OUTSIDE_MAINTENANCE = {
   daily: {
     limit: { minor: 500_000, currency: "MYR" },

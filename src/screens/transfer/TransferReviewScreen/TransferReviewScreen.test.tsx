@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { t } from "i18next";
+import { getFixedT } from "i18next";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo, Platform } from "react-native";
 
@@ -59,6 +59,8 @@ import { scenarioTest } from "@/test/scenario-test";
 import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 import { TransferFlowStep } from "@/screens/transfer/flow-store/flow-store";
+
+const t = getFixedT(null, ["shared"]);
 
 afterEach(() => {
   jest.restoreAllMocks();
