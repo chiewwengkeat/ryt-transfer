@@ -2,17 +2,34 @@ import path from "node:path";
 
 import boundaries from "eslint-plugin-boundaries";
 
-import { TEST_FILES, TEST_HELPER_FILES } from "../test-files.js";
+import {
+  CHECK_TEST_FILES,
+  TEST_FILES,
+  TEST_HELPER_FILES,
+} from "../test-files.js";
 
 export const SOURCE_FILES = ["src/**/*.{ts,tsx}"];
 
 const REPO_ROOT = path.join(import.meta.dirname, "..", "..");
 const TSCONFIG_PATH = path.join(REPO_ROOT, "tsconfig.json");
-const DOMAIN_TYPES = ["domain", "endpoint", "domain-component"];
+const DOMAIN_TYPES = [
+  "domain",
+  "endpoint",
+  "domain-component",
+  "domain-hook",
+  "domain-lib",
+];
 
 const sliceElements = [
   { type: "app", pattern: "src/app", partialMatch: false },
   { type: "shell", pattern: "src/shell", partialMatch: false },
+  {
+    type: "root",
+    pattern: "src/root/*",
+    partialMatch: false,
+    capture: ["module"],
+  },
+  { type: "root", pattern: "src/root", partialMatch: false },
   { type: "mocks", pattern: "src/mocks", partialMatch: false },
   { type: "test", pattern: "src/test", partialMatch: false },
   {
@@ -46,6 +63,18 @@ const sliceElements = [
     capture: ["area", "component"],
   },
   {
+    type: "domain-hook",
+    pattern: "src/domains/*/hooks/*",
+    partialMatch: false,
+    capture: ["area", "module"],
+  },
+  {
+    type: "domain-lib",
+    pattern: "src/domains/*/lib/*",
+    partialMatch: false,
+    capture: ["area", "module"],
+  },
+  {
     type: "domain",
     pattern: "src/domains/*",
     partialMatch: false,
@@ -71,6 +100,15 @@ const domainPublicFiles = [
   },
   {
     element: {
+      types: { anyOf: ["domain-hook", "domain-lib"] },
+      fileInternalPath: [
+        "{{ to.element.captured.module }}.ts",
+        "{{ to.element.captured.module }}.type.ts",
+      ],
+    },
+  },
+  {
+    element: {
       type: "domain",
       fileInternalPath: [
         "api/{{ to.element.captured.area }}.keys.ts",
@@ -86,7 +124,14 @@ const screenEntry = {
   },
 };
 const flowStateFiles = {
-  element: { type: "screens-folder", fileInternalPath: "state/**" },
+  element: {
+    type: "screens-folder",
+    fileInternalPath: [
+      "state/**",
+      "flow-store/flow-store.ts",
+      "flow-store/flow-store.type.ts",
+    ],
+  },
 };
 const translationFiles = {
   element: {
@@ -106,11 +151,20 @@ const sliceBoundaries = [
         ...domainPublicFiles,
         sharedCode,
         { element: { type: "shell" } },
+        {
+          element: {
+            type: "root",
+            fileInternalPath: [
+              "{{ to.element.captured.module }}.ts",
+              "{{ to.element.captured.module }}.tsx",
+            ],
+          },
+        },
       ],
     },
   },
   {
-    from: { element: { type: "shell" } },
+    from: { element: { types: { anyOf: ["shell", "root"] } } },
     allow: {
       to: [
         screenEntry,
@@ -119,6 +173,7 @@ const sliceBoundaries = [
         ...domainPublicFiles,
         sharedCode,
         { element: { type: "mocks" } },
+        { element: { type: "root" } },
       ],
     },
   },
@@ -168,6 +223,12 @@ const sliceBoundaries = [
     from: { file: { categories: "test" } },
     allow: { to: { element: { type: "test" } } },
   },
+  {
+    from: { file: { categories: "check" } },
+    allow: {
+      to: [{ element: { type: "mocks" } }, { element: { type: "root" } }],
+    },
+  },
 ];
 
 export default [
@@ -178,6 +239,7 @@ export default [
       "boundaries/elements": sliceElements,
       "boundaries/files": [
         { category: "test", pattern: [...TEST_FILES, ...TEST_HELPER_FILES] },
+        { category: "check", pattern: CHECK_TEST_FILES },
       ],
       // require() must count: it is the shell's one way into src/mocks.
       "boundaries/dependency-nodes": [

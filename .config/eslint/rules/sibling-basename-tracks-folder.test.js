@@ -45,6 +45,7 @@ const noName = [{ messageId: "orphanSiblingNoName" }];
 
 const KEYPAD = "domains/approval/keypad";
 const GET_TRANSFER = "domains/transfer/api/get-transfer";
+const FLOW_STORE = "screens/transfer/flow-store";
 
 test("sibling: a sibling named for its own folder passes", () => {
   const at = tree([
@@ -297,6 +298,26 @@ test("sibling: a stray contract inside an endpoint folder reports", () => {
   reports({
     code: ok,
     filename: at(GET_TRANSFER + "/approve-transfer.type.ts"),
+    errors: orphan,
+  });
+});
+
+test("sibling: a reduce sibling named for its flow-store folder passes", () => {
+  const at = tree([
+    FLOW_STORE + "/flow-store.ts",
+    FLOW_STORE + "/flow-store.reduce.ts",
+  ]);
+  passes({ code: ok, filename: at(FLOW_STORE + "/flow-store.reduce.ts") });
+});
+
+test("sibling: a reduce sibling naming neither the folder nor a module reports", () => {
+  const at = tree([
+    FLOW_STORE + "/flow-store.ts",
+    FLOW_STORE + "/approval.reduce.ts",
+  ]);
+  reports({
+    code: ok,
+    filename: at(FLOW_STORE + "/approval.reduce.ts"),
     errors: orphan,
   });
 });

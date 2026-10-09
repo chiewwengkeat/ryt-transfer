@@ -13,7 +13,8 @@ import {
 } from "typescript";
 
 // Not an import: the import rules refuse any repo file outside src/.
-const { isTestFile } = jest.requireActual<{
+const { isCheckTest, isTestFile } = jest.requireActual<{
+  isCheckTest: (file: string) => boolean;
   isTestFile: (file: string) => boolean;
 }>("../../../.config/test-files");
 
@@ -30,7 +31,7 @@ const JEST_GLOBAL_MODIFIERS = new Map<string, string[]>([
 
 // ⛔ Strict on purpose: a self-test with no route, a skipped test or one that asserts nothing would pass as coverage.
 export function findRouteTestedScenarioIds(file: string, sourceText: string) {
-  if (!isTestFile(file)) return [];
+  if (!isTestFile(file) || isCheckTest(file)) return [];
   const runningCallsIn = (node: Node): CallExpression[] => {
     if (
       isCallExpression(node) &&

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import { CHECK_TEST_FILES } from "../test-files.js";
 import { SOURCE_FILES } from "./boundaries.mjs";
 
 const MSW_DEVICE_EXPORTS = [
@@ -38,6 +39,23 @@ const screenCaptureOutsidePlatform = {
   message:
     "Block and allow screen capture through src/shared/platform/, whose one key they must share: under a second key, allowing capture leaves it blocked.",
 };
+const IMPORT_BANS = [
+  staticMocksImport,
+  storageOutsidePlatform,
+  storageAnywhere,
+  screenCaptureOutsidePlatform,
+];
+// Not a group with a `!` entry: gitignore never re-includes a path under an ignored parent.
+const mocksBesideDemoContract = {
+  regex: "^(?!@/mocks/demo-layer/demo-layer$)(?:.*/)?mocks(?:/.*)?$",
+  message: staticMocksImport.message,
+};
+const demoContractValueImport = {
+  name: "@/mocks/demo-layer/demo-layer",
+  allowTypeImports: true,
+  message:
+    "src/root may import only the demo contract's types from here: its code reaches the app only through the conditional require(), and a value import ships it in production builds.",
+};
 const CONSOLE_OUTSIDE_OBSERVABILITY =
   "Report through src/shared/observability/, which redacts personal data before anything is logged.";
 const TEST_ID_INSTEAD_OF_ACCESSIBLE_NAME =
@@ -53,6 +71,10 @@ const mswSubpathImport = {
   allowTypeImports: true,
   message: `On a device, msw is metro.msw-entry.mjs, which exposes only ${MSW_DEVICE_EXPORTS.join(", ")}: a subpath goes around it, and msw's own servers send an unmatched request to the real network.`,
 };
+
+function importBansLifting(...lifted) {
+  return IMPORT_BANS.filter((ban) => !lifted.includes(ban));
+}
 
 export default [
   {
@@ -120,17 +142,7 @@ export default [
           message: CONSOLE_OUTSIDE_OBSERVABILITY,
         })),
       ],
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            staticMocksImport,
-            storageOutsidePlatform,
-            storageAnywhere,
-            screenCaptureOutsidePlatform,
-          ],
-        },
-      ],
+      "no-restricted-imports": ["error", { patterns: IMPORT_BANS }],
       "@typescript-eslint/no-restricted-imports": [
         "error",
         { paths: [mswRootImport], patterns: [mswSubpathImport] },
@@ -149,7 +161,12 @@ export default [
     rules: {
       "no-restricted-imports": [
         "error",
-        { patterns: [staticMocksImport, storageAnywhere] },
+        {
+          patterns: importBansLifting(
+            storageOutsidePlatform,
+            screenCaptureOutsidePlatform,
+          ),
+        },
       ],
     },
   },
@@ -158,7 +175,12 @@ export default [
     rules: {
       "no-restricted-imports": [
         "error",
-        { patterns: [storageAnywhere, screenCaptureOutsidePlatform] },
+        {
+          patterns: importBansLifting(
+            staticMocksImport,
+            storageOutsidePlatform,
+          ),
+        },
       ],
     },
   },
@@ -167,13 +189,7 @@ export default [
     rules: {
       "no-restricted-imports": [
         "error",
-        {
-          patterns: [
-            storageOutsidePlatform,
-            storageAnywhere,
-            screenCaptureOutsidePlatform,
-          ],
-        },
+        { patterns: importBansLifting(staticMocksImport) },
       ],
       "@typescript-eslint/no-restricted-imports": [
         "error",
@@ -187,6 +203,34 @@ export default [
       "@typescript-eslint/no-require-imports": [
         "error",
         { allow: ["^@/mocks(/|$)"] },
+      ],
+    },
+  },
+  {
+    files: ["src/root/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [demoContractValueImport],
+          patterns: [
+            mocksBesideDemoContract,
+            ...importBansLifting(staticMocksImport),
+          ],
+        },
+      ],
+      "@typescript-eslint/no-require-imports": [
+        "error",
+        { allow: ["^@/mocks(/|$)"] },
+      ],
+    },
+  },
+  {
+    files: CHECK_TEST_FILES,
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        { patterns: importBansLifting(staticMocksImport) },
       ],
     },
   },

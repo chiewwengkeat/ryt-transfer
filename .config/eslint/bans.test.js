@@ -27,7 +27,18 @@ const SCREEN_CAPTURE_BAN = {
   ruleId: "no-restricted-imports",
   message: /whose one key they must share/,
 };
+const MOCKS_BAN = { ruleId: "no-restricted-imports", message: /^'@\/mocks\// };
+const DEMO_CONTRACT_BAN = {
+  ruleId: "no-restricted-imports",
+  message: /only the demo contract's types/,
+};
+const STORAGE_BAN = {
+  ruleId: "no-restricted-imports",
+  message: /wrappers in src\/shared\/platform/,
+};
 const SCREEN_DIR = "src/screens/probe/ProbeScreen";
+const ROOT_DIR = "src/root/probe";
+const DEMO_CONTRACT = "@/mocks/demo-layer/demo-layer";
 const VIEW_IMPORT = 'import { View } from "react-native";\n';
 const componentReturning = (imports, element) =>
   `${imports}\nexport default function Probe() {\n  return ${element};\n}\n`;
@@ -166,6 +177,70 @@ const CASES = [
       'import { preventScreenCaptureAsync } from "expo-screen-capture";\n',
     refused,
     ban: SCREEN_CAPTURE_BAN,
+  })),
+  ...[
+    [
+      "refuses a value import of the demo contract in src/root/",
+      `${ROOT_DIR}/demo-value.ts`,
+      `import demoLayer from "${DEMO_CONTRACT}";`,
+      true,
+      DEMO_CONTRACT_BAN,
+    ],
+    [
+      "passes a type import of the demo contract in src/root/",
+      `${ROOT_DIR}/demo-type.ts`,
+      `import type { DemoLayer } from "${DEMO_CONTRACT}";`,
+      false,
+      MOCKS_BAN,
+    ],
+    [
+      "passes an inline type import of the demo contract in src/root/",
+      `${ROOT_DIR}/demo-inline-type.ts`,
+      `import { type DemoLayer } from "${DEMO_CONTRACT}";`,
+      false,
+      MOCKS_BAN,
+    ],
+    [
+      "refuses a type import from elsewhere in src/mocks/ in src/root/",
+      `${ROOT_DIR}/mocks-type.ts`,
+      'import type { BankState } from "@/mocks/bank/state";',
+      true,
+      MOCKS_BAN,
+    ],
+    [
+      "refuses a static src/mocks/ import in a test beside app code",
+      `${SCREEN_DIR}/mocks.test.ts`,
+      'import { readBank } from "@/mocks/bank/state";',
+      true,
+      MOCKS_BAN,
+    ],
+    [
+      "passes a static src/mocks/ import in a .check.test file",
+      `${SCREEN_DIR}/mocks.check.test.ts`,
+      'import { readBank } from "@/mocks/bank/state";',
+      false,
+      MOCKS_BAN,
+    ],
+    [
+      "passes a static src/mocks/ import in a .check.test file in src/root/",
+      `${ROOT_DIR}/mocks.check.test.ts`,
+      `import demoLayer from "${DEMO_CONTRACT}";`,
+      false,
+      MOCKS_BAN,
+    ],
+    [
+      "refuses expo-secure-store in a .check.test file",
+      `${SCREEN_DIR}/storage.check.test.ts`,
+      'import * as SecureStore from "expo-secure-store";',
+      true,
+      STORAGE_BAN,
+    ],
+  ].map(([title, file, source, refused, ban]) => ({
+    title,
+    file,
+    source: `${source}\n`,
+    refused,
+    ban,
   })),
 ];
 

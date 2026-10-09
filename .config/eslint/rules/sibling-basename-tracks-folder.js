@@ -1,7 +1,15 @@
 const { dirEntries, filenameOf, parsePath } = require("./_paths");
 
 // Not "any dot segment": platform segments (`.ios`, `.android`) name no owner.
-const ROLE_SUFFIXES = ["constant", "helper", "mock", "style", "type", "util"];
+const ROLE_SUFFIXES = [
+  "constant",
+  "helper",
+  "mock",
+  "reduce",
+  "style",
+  "type",
+  "util",
+];
 
 // The caller drops the file under lint first: `Grid.type.tsx` would otherwise own itself.
 function componentStemsIn(entries) {
