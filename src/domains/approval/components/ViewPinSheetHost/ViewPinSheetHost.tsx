@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useStore } from "zustand";
 
-import BottomSheetPin from "@/domains/approval/components/BottomSheetPin/BottomSheetPin";
+import BottomSheetPin from "./components/BottomSheetPin/BottomSheetPin";
 import {
   ApprovalPinSheetStep,
   approvalPinSheetStore,

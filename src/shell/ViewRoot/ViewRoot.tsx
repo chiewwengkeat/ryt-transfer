@@ -28,8 +28,8 @@ import { endSession } from "@/shell/session/end-session";
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
 import "@/shell/translations";
 
-import BannerOffline from "./components/BannerOffline/BannerOffline";
-import ViewPinSheetHost from "./components/ViewPinSheetHost/ViewPinSheetHost";
+import BannerOffline from "@/domains/transfer/components/BannerOffline/BannerOffline";
+import ViewPinSheetHost from "@/domains/approval/components/ViewPinSheetHost/ViewPinSheetHost";
 import ViewSessionEnded from "./components/ViewSessionEnded/ViewSessionEnded";
 import { usePendingTransfersAtLaunch } from "./hooks/use-pending-transfers-at-launch";
 import { useScreenCaptureBlock } from "./hooks/use-screen-capture-block";
