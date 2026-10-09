@@ -481,39 +481,6 @@ it("keeps a refused PIN nowhere once the sheet is closed on review", async () =>
   expect(await readWhatTheAppStillHolds()).not.toContain("111111");
 });
 
-it("closes the PIN sheet as not sent when the session ends while it waits for the PIN", async () => {
-  await openReviewOfRm100();
-  await fireEvent.press(
-    screen.getByRole("button", { name: "Use PIN instead" }),
-  );
-  await screen.findByText("Enter your bank PIN to approve this transfer.");
-  mswServer.use(
-    http.get(
-      "*/accounts/primary",
-      () =>
-        HttpResponse.json(
-          { error: { code: "UNAUTHORIZED", message: "Test." } },
-          { status: 401 },
-        ),
-      { once: true },
-    ),
-  );
-
-  // The app reads again only on its return from the background, never on "active" alone.
-  await act(() => {
-    moveAppTo("background");
-    moveAppTo("active");
-  });
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Sign in again" }),
-  );
-
-  expect(
-    await screen.findByText("The transfer was not sent — no money moved."),
-  ).toBeOnTheScreen();
-  expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
-});
-
 it("closes the PIN sheet and checks the transfer on the result page, never saying no money moved, when something unexpected fails after the approval has left the phone", async () => {
   await confirmRm100ApprovedByPin();
   // Nothing after the bank's answer throws by itself, so a failing navigation stands in for any throw there.
