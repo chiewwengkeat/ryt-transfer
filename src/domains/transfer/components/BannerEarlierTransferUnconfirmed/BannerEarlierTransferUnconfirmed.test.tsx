@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 
 import {
   TransferFunds,
@@ -10,6 +10,7 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
+import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer, sentRequests } from "@/test/msw-server";
@@ -220,4 +221,55 @@ it("checks the earlier transfer again once they sign back in on review, and stop
     expect(screen.queryByText(STILL_BEING_CHECKED)).toBeNull();
   });
   expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+});
+
+it("reads the balance again once on review, not at every later check, when the bank says the earlier transfer ended at the version the app holds", async () => {
+  const bankAnswer = await reviewANewTransferWhileAnEarlierOneIsProcessing();
+  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+  const readsOfTheBalance = () =>
+    sentRequests.filter(
+      ({ method, url }) =>
+        method === "GET" && url.endsWith("/accounts/primary"),
+    ).length;
+  const readsBeforeTheTransferEnded = readsOfTheBalance();
+  bankAnswer.transfer = {
+    ...bankAnswer.transfer,
+    status: TransferStatus.Completed,
+  };
+
+  for (let check = 0; check < 4; check++)
+    await act(() => jest.advanceTimersByTimeAsync(15_000));
+
+  expect(readsOfTheBalance() - readsBeforeTheTransferEnded).toBe(1);
+});
+
+it("sends nothing more under the session-ended view when review's check that was out finds the earlier transfer has ended", async () => {
+  const bankAnswer = await reviewANewTransferWhileAnEarlierOneIsProcessing();
+  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+  bankAnswer.transfer = {
+    ...bankAnswer.transfer,
+    status: TransferStatus.Completed,
+    version: bankAnswer.transfer.version + 1,
+  };
+  mswServer.use(
+    http.get("*/transfers/:transferId", async () => {
+      await delay(5_000);
+      return HttpResponse.json(bankAnswer);
+    }),
+    http.get("*/any-request", () => new HttpResponse(null, { status: 401 })),
+  );
+  await act(() => jest.advanceTimersByTimeAsync(15_000));
+  await act(async () => {
+    await requestJson("/any-request").catch(() => undefined);
+  });
+  expect(
+    screen.getByRole("header", { name: "Your session has ended" }),
+  ).toBeOnTheScreen();
+  const requestsWhenTheSessionEnded = sentRequests.length;
+
+  await act(() => jest.advanceTimersByTimeAsync(6_000));
+
+  expect(
+    sentRequests.slice(requestsWhenTheSessionEnded).map(({ url }) => url),
+  ).toEqual([]);
 });
