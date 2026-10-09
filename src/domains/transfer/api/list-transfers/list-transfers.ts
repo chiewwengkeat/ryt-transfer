@@ -143,9 +143,7 @@ export function countLoadedTransfersOnDay(
     : 0;
 }
 
-// After a transfer: a page fetch already under way would land on pages the new transfer has shifted.
-export async function resetTransferHistory(queryClient: QueryClient) {
-  await queryClient.cancelQueries({ queryKey: transferKeys.historyAll });
+export function trimTransferHistoryToFirstPage(queryClient: QueryClient) {
   queryClient.setQueriesData<InfiniteData<ListTransfersResponse>>(
     { queryKey: transferKeys.historyAll },
     (history) =>
@@ -154,6 +152,12 @@ export async function resetTransferHistory(queryClient: QueryClient) {
         pageParams: history.pageParams.slice(0, 1),
       },
   );
+}
+
+// After a transfer: a page fetch already under way would land on pages the new transfer has shifted.
+export async function resetTransferHistory(queryClient: QueryClient) {
+  await queryClient.cancelQueries({ queryKey: transferKeys.historyAll });
+  trimTransferHistoryToFirstPage(queryClient);
   await queryClient.invalidateQueries({ queryKey: transferKeys.historyAll });
 }
 

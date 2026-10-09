@@ -9,6 +9,7 @@ import {
   getListTransfersOptions,
   isTransferHistoryCached,
   resetTransferHistory,
+  trimTransferHistoryToFirstPage,
   useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { colors, spacing } from "@/shared/theme/theme";
@@ -48,6 +49,10 @@ export default function TransferHistoryScreen() {
   useEffect(() => {
     if (isTransferHistoryCached(queryClient))
       void resetTransferHistory(queryClient);
+    // The reset above runs after a first render that still draws every cached page, so closing trims too.
+    return () => {
+      trimTransferHistoryToFirstPage(queryClient);
+    };
   }, [queryClient]);
 
   return (
