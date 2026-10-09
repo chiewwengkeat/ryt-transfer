@@ -2,7 +2,7 @@ import { TRANSFER_SCENARIOS } from "@/mocks/scenarios/transfer-scenarios/transfe
 import { AppLanguage } from "@/shared/i18n/i18n";
 import { TRANSLATION_BUNDLES } from "@/root/translations/translations";
 
-import { findRouteTestedScenarioIds } from "./find-route-tested-scenario-ids";
+import { findRouteTestedScenarioIds } from "@/test/scenarios/find-route-tested-scenario-ids";
 
 // Jest defines it; the app's types deliberately leave out Node's globals.
 declare const __dirname: string;
@@ -12,7 +12,7 @@ const { readFileSync, readdirSync } = jest.requireActual<{
   readdirSync: (path: string, options: { recursive: true }) => string[];
 }>("node:fs");
 
-const SOURCE_ROOT = `${__dirname}/../..`;
+const SOURCE_ROOT = `${__dirname}/../../..`;
 const MATRIX = readFileSync(
   `${SOURCE_ROOT}/screens/transfer/scenarios/transfer.md`,
   "utf8",
