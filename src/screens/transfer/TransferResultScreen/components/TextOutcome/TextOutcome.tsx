@@ -7,6 +7,7 @@ import {
   type TransferOutcomeScenario,
   type useGetTransfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import { formatMoney } from "@/shared/lib/money/money";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import TextHeading from "@/shared/ui/TextHeading/TextHeading";
@@ -57,10 +58,12 @@ export default function TextOutcome({ scenario, transfer, transferId }: Props) {
     amount: transfer && formatMoney(transfer.amount),
     name: transfer?.counterparty.registeredName,
   });
+  const screenOnTop = useIsScreenOnTop();
   // Never the outcome the page opens with: the heading's focus reads that, and announcing it too says it twice.
+  // One that changes while the screen is covered waits until it is back on top.
   const spokenScenarioRef = useRef(scenario);
   useEffect(() => {
-    if (spokenScenarioRef.current === scenario) return;
+    if (!screenOnTop || spokenScenarioRef.current === scenario) return;
     spokenScenarioRef.current = scenario;
     AccessibilityInfo.announceForAccessibility(
       t("result.outcome_announcement", {
@@ -68,7 +71,7 @@ export default function TextOutcome({ scenario, transfer, transferId }: Props) {
         body: outcomeBody,
       }),
     );
-  }, [scenario, outcomeHeading, outcomeBody, t]);
+  }, [scenario, outcomeHeading, outcomeBody, t, screenOnTop]);
 
   return (
     <>

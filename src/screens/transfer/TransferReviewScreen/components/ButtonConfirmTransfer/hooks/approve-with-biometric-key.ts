@@ -7,7 +7,6 @@ import {
 } from "@/domains/approval/hooks/approval-keys";
 import { readApproveTransferRefusal } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
-import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
 import { reportError } from "@/shared/observability/observability";
 
@@ -29,7 +28,9 @@ export async function approveWithBiometricKey(
   });
   switch (signing.outcome) {
     case BiometricSignOutcome.Signed: {
-      trackScenarioShown(TransferFlowScenario.BiometricsRecognised);
+      approval.trackScenarioShownWhileOnTop(
+        TransferFlowScenario.BiometricsRecognised,
+      );
       const attempt = await approval.sendApproval({
         keyId: signing.keyId,
         signature: signing.signature,

@@ -1,7 +1,8 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { http } from "msw";
+import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
+import { accountKeys } from "@/domains/account/api/account.keys";
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
   listPendingTransfers,
@@ -17,46 +18,56 @@ import {
 } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+
+// A resolver that answers nothing hands the read on to the bank, once released.
+function holdTheNextStatusRead() {
+  let releaseStatusRead = () => undefined as void;
+  const statusReadHeld = new Promise<void>((release) => {
+    releaseStatusRead = release;
+  });
+  mswServer.use(
+    http.get(
+      "*/transfers/:transferId",
+      async () => {
+        await statusReadHeld;
+      },
+      { once: true },
+    ),
+  );
+  return releaseStatusRead;
+}
+
+async function sendRm100FromHome() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(
+    await screen.findByLabelText("Amount (RM)"),
+    "100",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+}
 
 it(
   "announces an outcome that changes in place, not the one the page opens with, and nothing from Home's banners beneath it",
   scenarioTest("transfer.approval_unanswered", async () => {
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
     announce.mockClear();
-    let releaseStatusRead: () => void = () => undefined;
-    const statusReadHeld = new Promise<void>((release) => {
-      releaseStatusRead = release;
-    });
-    mswServer.use(
-      http.get(
-        "*/transfers/:transferId",
-        async () => {
-          await statusReadHeld;
-        },
-        { once: true },
-      ),
-    );
+    const releaseStatusRead = holdTheNextStatusRead();
     const { recipient } = await lookUpTestRecipient("012-345 6789");
-    await pairPhoneAsTheDemoLaunchDoes();
-    await renderRoute("/");
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Transfer", disabled: false }),
-    );
-    await fireEvent.changeText(
-      await screen.findByLabelText("DuitNow mobile number"),
-      "012-345 6789",
-    );
-    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-    await fireEvent.changeText(
-      await screen.findByLabelText("Amount (RM)"),
-      "100",
-    );
-    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Transfer" }),
-    );
+    await sendRm100FromHome();
     expect(
       await screen.findByRole(
         "header",
@@ -79,6 +90,51 @@ it(
         `Transfer sent. RM 100.00 sent to ${recipient.registeredName} — money moved.`,
       ],
     ]);
+  }),
+);
+
+it(
+  "speaks an outcome that changes under the session-ended view only once signed in again",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+    const releaseStatusRead = holdTheNextStatusRead();
+    const { recipient } = await lookUpTestRecipient("012-345 6789");
+    await sendRm100FromHome();
+    await screen.findByRole(
+      "header",
+      { name: "Checking your transfer" },
+      { timeout: 10_000 },
+    );
+    mswServer.use(
+      http.get(
+        "*/accounts/primary",
+        () =>
+          HttpResponse.json(
+            { error: { code: "UNAUTHORIZED", message: "Test." } },
+            { status: 401 },
+          ),
+        { once: true },
+      ),
+    );
+    askOpenAppToReadAgain(accountKeys.primaryAccount);
+    const signInButton = await screen.findByRole("button", {
+      name: "Sign in again",
+    });
+    announce.mockClear();
+
+    releaseStatusRead();
+    await screen.findByRole("header", {
+      name: "Transfer sent",
+      includeHiddenElements: true,
+    });
+    const spokenUnderTheView = [...announce.mock.calls];
+    await fireEvent.press(signInButton);
+
+    const outcomeAnnouncement = `Transfer sent. RM 100.00 sent to ${recipient.registeredName} — money moved.`;
+    expect(spokenUnderTheView).not.toContainEqual([outcomeAnnouncement]);
+    await waitFor(() => {
+      expect(announce).toHaveBeenCalledWith(outcomeAnnouncement);
+    });
   }),
 );
 

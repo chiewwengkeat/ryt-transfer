@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AccessibilityInfo } from "react-native";
 
@@ -32,6 +32,7 @@ import type {
   TransferDraft,
   TransferHold,
 } from "@/screens/transfer/state/transfer-flow.type";
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
@@ -102,11 +103,16 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
                 : "common.cooling_off_new_phone.disabled_reason",
               { time: formatMalaysianDateTime(hold.until, t) },
             );
-  // A disabled button's reason is never read out unless focus lands on it, so a hold that appears says so.
+  const screenOnTop = useIsScreenOnTop();
+  const spokenHoldReasonRef = useRef<string>(undefined);
+  // A disabled button's reason is never read out unless focus lands on it, so a hold says so as it appears, or
+  // once the screen is back on top.
   useEffect(() => {
+    if (!screenOnTop || spokenHoldReasonRef.current === holdReason) return;
+    spokenHoldReasonRef.current = holdReason;
     if (holdReason !== undefined)
       AccessibilityInfo.announceForAccessibility(holdReason);
-  }, [holdReason]);
+  }, [holdReason, screenOnTop]);
   // Not the data: a name check that fails on a later run keeps the earlier answer's data.
   if (!lookup.isSuccess) return null;
   // The notice's Change amount is the way on: the bank has just refused this amount.

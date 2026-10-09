@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
@@ -14,6 +15,7 @@ import {
 } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import type { ApproveTransferRequest } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
+import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
 import {
   ApprovalPath,
@@ -24,6 +26,7 @@ import {
   transferFlowStore,
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferFlowNotice } from "@/screens/transfer/state/transfer-flow.type";
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import { formatMoney } from "@/shared/lib/money/money";
 import { reportError } from "@/shared/observability/observability";
 
@@ -38,6 +41,12 @@ export function useSendTransferApproval() {
   const customerId = useGetPrimaryAccount().data?.customerId;
   const approveTransfer = useApproveTransfer();
   const registerApprovalKeysAgain = useRegisterApprovalKeysAgain();
+  const screenOnTop = useIsScreenOnTop();
+  // A ref, not the render's value: the approval reaches each scenario long after the press, maybe under another view.
+  const screenOnTopRef = useRef(screenOnTop);
+  useEffect(() => {
+    screenOnTopRef.current = screenOnTop;
+  }, [screenOnTop]);
 
   return async (path = ApprovalPath.Biometric) => {
     const approving = transferFlowStore.getState();
@@ -46,6 +55,9 @@ export function useSendTransferApproval() {
     // ⛔ Any wait here can end with the flow off this transfer, and whatever it is on now this call leaves alone.
     const noLongerOnThisTransfer = () =>
       isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId);
+    const trackScenarioShownWhileOnTop = (scenario: TransferFlowScenario) => {
+      if (screenOnTopRef.current) trackScenarioShown(scenario);
+    };
     const leaveApprovalNotSent = async (notice: TransferFlowNotice) => {
       if (noLongerOnThisTransfer()) return;
       closeApprovalPinSheet();
@@ -79,6 +91,7 @@ export function useSendTransferApproval() {
         note: draft.note,
       }),
       noLongerOnThisTransfer,
+      trackScenarioShownWhileOnTop,
       leaveApprovalNotSent,
       forgetPendingTransfer,
       sendApproval: async (request: ApproveTransferRequest) => {
@@ -127,7 +140,11 @@ export function useSendTransferApproval() {
             type: TransferFlowActionType.ApprovalAttemptRefused,
           });
         await forgetPendingTransfer();
-        return registerApprovalKeysAgain(noLongerOnThisTransfer, pinInHand);
+        return registerApprovalKeysAgain(
+          noLongerOnThisTransfer,
+          trackScenarioShownWhileOnTop,
+          pinInHand,
+        );
       },
     };
 

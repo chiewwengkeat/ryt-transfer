@@ -8,15 +8,18 @@ import {
   rememberApprovalPinLocked,
 } from "@/domains/approval/hooks/approval-pin-lock";
 import { askForApprovalPin } from "@/domains/approval/hooks/approval-pin-sheet";
-import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
 import { reportError } from "@/shared/observability/observability";
 
 export function useRegisterApprovalKeysAgain() {
   const { t } = useTranslation("transfer");
 
-  return async (noLongerOnThisTransfer: () => boolean, pinInHand?: string) => {
-    trackScenarioShown(TransferFlowScenario.ApprovalKeyUnknown);
+  return async (
+    noLongerOnThisTransfer: () => boolean,
+    trackScenarioShownWhileOnTop: (scenario: TransferFlowScenario) => void,
+    pinInHand?: string,
+  ) => {
+    trackScenarioShownWhileOnTop(TransferFlowScenario.ApprovalKeyUnknown);
     const words = {
       message: t("common.approval_key_unknown.body"),
       detail: t("common.approval_key_unknown.pin"),
@@ -52,7 +55,7 @@ export function useRegisterApprovalKeysAgain() {
       if (failedUnexpectedly)
         return { notice: TransferFlowScenario.ApprovalKeyUnknown } as const;
       if (refusal?.code === RegisterApprovalKeysErrorCode.PinIncorrect)
-        trackScenarioShown(TransferFlowScenario.PinIncorrect);
+        trackScenarioShownWhileOnTop(TransferFlowScenario.PinIncorrect);
       const askedPin = await askForApprovalPin({
         ...words,
         refusal:

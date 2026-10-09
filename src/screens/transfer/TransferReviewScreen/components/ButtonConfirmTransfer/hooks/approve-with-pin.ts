@@ -11,7 +11,6 @@ import {
   ApproveTransferErrorCode,
   type ApproveTransferRequest,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
-import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import {
   ApprovalPath,
   dispatchTransferFlow,
@@ -29,6 +28,7 @@ export async function approveWithPin(
     t: TFunction<"transfer">;
     signedText: string;
     noLongerOnThisTransfer: () => boolean;
+    trackScenarioShownWhileOnTop: (scenario: TransferFlowScenario) => void;
     leaveApprovalNotSent: (notice: TransferFlowNotice) => Promise<void>;
     forgetPendingTransfer: () => Promise<void>;
     sendApproval: (
@@ -45,7 +45,12 @@ export async function approveWithPin(
   words: { message: string; detail?: string },
   afterSetUp: { pinInHand?: string; keysSetUpAgain?: boolean } = {},
 ) {
-  const { t, noLongerOnThisTransfer, leaveApprovalNotSent } = approval;
+  const {
+    t,
+    noLongerOnThisTransfer,
+    trackScenarioShownWhileOnTop,
+    leaveApprovalNotSent,
+  } = approval;
   if (noLongerOnThisTransfer()) return null;
   dispatchTransferFlow({
     type: TransferFlowActionType.ApprovalPathChosen,
@@ -58,7 +63,7 @@ export async function approveWithPin(
     await leaveApprovalNotSent(TransferFlowScenario.PinLocked);
     return null;
   }
-  if (pinInHand === undefined) trackScenarioShown(scenario);
+  if (pinInHand === undefined) trackScenarioShownWhileOnTop(scenario);
   for (;;) {
     const pin = pinInHand ?? (await askForApprovalPin({ ...words, refusal }));
     pinInHand = undefined;
@@ -89,7 +94,7 @@ export async function approveWithPin(
       refusal = t("common.pin_incorrect.body", {
         count: pinRefusal.attemptsRemaining,
       });
-      trackScenarioShown(TransferFlowScenario.PinIncorrect);
+      trackScenarioShownWhileOnTop(TransferFlowScenario.PinIncorrect);
       continue;
     }
     if (pinRefusal?.code === ApproveTransferErrorCode.PinLocked) {
