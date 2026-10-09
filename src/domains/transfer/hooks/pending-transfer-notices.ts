@@ -42,7 +42,7 @@ const getPendingTransferNoticesOptions = () =>
     customerId: string;
     records: Awaited<ReturnType<typeof listPendingTransfers>>;
   }>({
-    queryKey: [...transferKeys.all, "pending"],
+    queryKey: transferKeys.pendingNotices,
     queryFn: skipToken,
   });
 

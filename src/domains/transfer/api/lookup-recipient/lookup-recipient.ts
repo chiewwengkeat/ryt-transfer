@@ -70,12 +70,7 @@ export const getLookupRecipientOptions = (
   },
 ) =>
   queryOptions({
-    // One account number at two banks is two recipients.
-    queryKey: [
-      ...transferKeys.lookup(recipient),
-      recipient.bankCode ?? null,
-      recipient.recentId ?? null,
-    ],
+    queryKey: transferKeys.lookup(recipient),
     queryFn: ({ signal }) =>
       requestJson<LookupRecipientResponse>("/recipients/lookup", {
         method: "POST",
