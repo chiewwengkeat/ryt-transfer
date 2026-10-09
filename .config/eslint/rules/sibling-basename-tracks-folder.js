@@ -1,59 +1,5 @@
 const { dirEntries, filenameOf, parsePath } = require("./_paths");
 
-// Not "any dot segment": platform segments (`.ios`, `.android`) name no owner.
-const ROLE_SUFFIXES = [
-  "constant",
-  "helper",
-  "mock",
-  "reduce",
-  "style",
-  "type",
-  "util",
-];
-
-// The caller drops the file under lint first: `Grid.type.tsx` would otherwise own itself.
-function componentStemsIn(entries) {
-  return entries
-    .filter(
-      (n) =>
-        n.endsWith(".tsx") && !n.includes(".test.") && !n.includes(".spec."),
-    )
-    .map((n) => parsePath(n).stem);
-}
-
-function moduleStems(entries) {
-  return entries
-    .filter((n) => /\.tsx?$/.test(n) && !n.endsWith(".d.ts"))
-    .map(parsePath)
-    .filter((p) => p.suffixes.length === 0)
-    .map((p) => p.stem);
-}
-
-function uniqueValues(list) {
-  return [...new Set(list)];
-}
-
-function quoteList(names) {
-  return names.map((n) => `'${n}'`).join(" or ");
-}
-
-// Bounded to two (the folder, then the nearest module) so a crowded folder cannot
-// flood one lint message with filenames.
-function suggestionList(names) {
-  const shown = names.slice(0, 2);
-  const rest = names.length - shown.length;
-  return (
-    quoteList(shown) +
-    (rest > 0 ? `, or one of ${rest} other modules here` : "")
-  );
-}
-
-function takenList(names) {
-  const shown = names.slice(0, 2);
-  const rest = names.length - shown.length;
-  return quoteList(shown) + (rest > 0 ? ` and ${rest} more` : "");
-}
-
 /** @type {import("eslint").Rule.RuleModule} */
 module.exports = {
   meta: {
@@ -130,3 +76,57 @@ module.exports = {
     };
   },
 };
+
+// Not "any dot segment": platform segments (`.ios`, `.android`) name no owner.
+const ROLE_SUFFIXES = [
+  "constant",
+  "helper",
+  "mock",
+  "reduce",
+  "style",
+  "type",
+  "util",
+];
+
+// The caller drops the file under lint first: `Grid.type.tsx` would otherwise own itself.
+function componentStemsIn(entries) {
+  return entries
+    .filter(
+      (n) =>
+        n.endsWith(".tsx") && !n.includes(".test.") && !n.includes(".spec."),
+    )
+    .map((n) => parsePath(n).stem);
+}
+
+function moduleStems(entries) {
+  return entries
+    .filter((n) => /\.tsx?$/.test(n) && !n.endsWith(".d.ts"))
+    .map(parsePath)
+    .filter((p) => p.suffixes.length === 0)
+    .map((p) => p.stem);
+}
+
+function uniqueValues(list) {
+  return [...new Set(list)];
+}
+
+function quoteList(names) {
+  return names.map((n) => `'${n}'`).join(" or ");
+}
+
+// Bounded to two (the folder, then the nearest module) so a crowded folder cannot
+// flood one lint message with filenames.
+function suggestionList(names) {
+  const shown = names.slice(0, 2);
+  const rest = names.length - shown.length;
+  return (
+    quoteList(shown) +
+    (rest > 0 ? `, or one of ${rest} other modules here` : "")
+  );
+}
+
+function takenList(names) {
+  const shown = names.slice(0, 2);
+  const rest = names.length - shown.length;
+  return quoteList(shown) + (rest > 0 ? ` and ${rest} more` : "");
+}

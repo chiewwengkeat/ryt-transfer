@@ -1,24 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const SCREENS_FOLDER_ENTRIES = ["components", "hooks", "lib", "i18n"];
-const TRANSFER_FOLDER_ENTRIES = ["flow-store", "scenarios"];
-const DOMAIN_ENTRIES = ["api", "components", "hooks", "lib", "i18n"];
-const SCREEN_FOLDER = /^[A-Z][A-Za-z0-9]*Screen$/;
-const ROOT_MODULE_FOLDER = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
-
-function listFiles(rootDir, relativeDir, found) {
-  const absoluteDir = path.join(rootDir, relativeDir);
-  if (!fs.existsSync(absoluteDir)) return found;
-  for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
-    if (entry.name.startsWith(".")) continue;
-    const relativePath = `${relativeDir}/${entry.name}`;
-    if (entry.isDirectory()) listFiles(rootDir, relativePath, found);
-    else found.push(relativePath);
-  }
-  return found;
-}
-
 function findEntriesOutsideTheSliceFolders(rootDir) {
   const failures = new Set();
   for (const file of listFiles(rootDir, "src", [])) {
@@ -60,9 +42,27 @@ function findEntriesOutsideTheSliceFolders(rootDir) {
   return [...failures];
 }
 
+module.exports = { findEntriesOutsideTheSliceFolders };
+
+const SCREENS_FOLDER_ENTRIES = ["components", "hooks", "lib", "i18n"];
+const TRANSFER_FOLDER_ENTRIES = ["flow-store", "scenarios"];
+const DOMAIN_ENTRIES = ["api", "components", "hooks", "lib", "i18n"];
+const SCREEN_FOLDER = /^[A-Z][A-Za-z0-9]*Screen$/;
+const ROOT_MODULE_FOLDER = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
+
+function listFiles(rootDir, relativeDir, found) {
+  const absoluteDir = path.join(rootDir, relativeDir);
+  if (!fs.existsSync(absoluteDir)) return found;
+  for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
+    if (entry.name.startsWith(".")) continue;
+    const relativePath = `${relativeDir}/${entry.name}`;
+    if (entry.isDirectory()) listFiles(rootDir, relativePath, found);
+    else found.push(relativePath);
+  }
+  return found;
+}
+
 function listFolders(names) {
   const folders = names.map((name) => `${name}/`);
   return `${folders.slice(0, -1).join(", ")} and ${folders.at(-1)}`;
 }
-
-module.exports = { findEntriesOutsideTheSliceFolders };

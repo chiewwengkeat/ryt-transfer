@@ -11,6 +11,68 @@ const {
 } = require("./_paths");
 const { moduleSources } = require("./_imports");
 
+/** @type {import("eslint").Rule.RuleModule} */
+module.exports = {
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "A component folder's internal files may be imported only from within that " +
+        "folder. A component folder is a directory holding a same-named `.tsx`; its " +
+        "public entry is that file, plus `index.{ts,tsx,js,jsx}` where one exists, and " +
+        "everything else colocated in it is internal. A nested component folder has its " +
+        "own public entry, so reaching it is allowed — reaching past it is not, including " +
+        'from the parent folder. Re-exports count: `export { X } from "../Bar/internal"` ' +
+        "reaches in exactly as an import does. Relative sources are resolved, and so is " +
+        'an alias the `aliases` option maps to a directory (`{ "@/": "/abs/src" }`), ' +
+        "mirroring the tsconfig paths, since an alias import reaches the same files.",
+    },
+    messages: {
+      crossInternals:
+        "'{{target}}' is internal to the component folder '{{owner}}/' — only files inside {{owner}}/ may import it. Import {{owner}} itself if its rendered output is what you need; if you genuinely need '{{target}}', then it is not {{owner}}'s alone, so lift it to a shared location both can import. A colocated sibling is part of its component's implementation and gets renamed with it.",
+    },
+    schema: [
+      {
+        type: "object",
+        properties: {
+          aliases: { type: "object", additionalProperties: { type: "string" } },
+        },
+        additionalProperties: false,
+      },
+    ],
+  },
+  create(context) {
+    const file = filenameOf(context);
+    const dir = parsePath(file).dir;
+    if (!dir) return {};
+    const aliases = Object.entries((context.options[0] || {}).aliases || {});
+    const asRelativeSource = (source) => {
+      if (isRelativeSource(source)) return source;
+      const alias = aliases.find(([prefix]) => source.startsWith(prefix));
+      if (!alias) return null;
+      const target = joinPath(alias[1], source.slice(alias[0].length));
+      const relative = path.posix.relative(dir, target);
+      return relative.startsWith(".") ? relative : "./" + relative;
+    };
+
+    return {
+      Program(node) {
+        for (const mod of moduleSources(node)) {
+          const source = asRelativeSource(mod.source);
+          if (source === null) continue;
+          const hit = findCrossedInternal(file, source);
+          if (!hit) continue;
+          context.report({
+            node: mod.node,
+            messageId: "crossInternals",
+            data: hit,
+          });
+        }
+      },
+    };
+  },
+};
+
 function commonAncestor(a, b) {
   const x = a.split("/");
   const y = b.split("/");
@@ -74,65 +136,3 @@ function findCrossedInternal(file, source) {
   if (dirEntries(parsePath(joinPath(dir, source)).dir).length > 0) return null;
   return crossesTextually(dir, source);
 }
-
-/** @type {import("eslint").Rule.RuleModule} */
-module.exports = {
-  meta: {
-    type: "problem",
-    docs: {
-      description:
-        "A component folder's internal files may be imported only from within that " +
-        "folder. A component folder is a directory holding a same-named `.tsx`; its " +
-        "public entry is that file, plus `index.{ts,tsx,js,jsx}` where one exists, and " +
-        "everything else colocated in it is internal. A nested component folder has its " +
-        "own public entry, so reaching it is allowed — reaching past it is not, including " +
-        'from the parent folder. Re-exports count: `export { X } from "../Bar/internal"` ' +
-        "reaches in exactly as an import does. Relative sources are resolved, and so is " +
-        'an alias the `aliases` option maps to a directory (`{ "@/": "/abs/src" }`), ' +
-        "mirroring the tsconfig paths, since an alias import reaches the same files.",
-    },
-    messages: {
-      crossInternals:
-        "'{{target}}' is internal to the component folder '{{owner}}/' — only files inside {{owner}}/ may import it. Import {{owner}} itself if its rendered output is what you need; if you genuinely need '{{target}}', then it is not {{owner}}'s alone, so lift it to a shared location both can import. A colocated sibling is part of its component's implementation and gets renamed with it.",
-    },
-    schema: [
-      {
-        type: "object",
-        properties: {
-          aliases: { type: "object", additionalProperties: { type: "string" } },
-        },
-        additionalProperties: false,
-      },
-    ],
-  },
-  create(context) {
-    const file = filenameOf(context);
-    const dir = parsePath(file).dir;
-    if (!dir) return {};
-    const aliases = Object.entries((context.options[0] || {}).aliases || {});
-    const asRelativeSource = (source) => {
-      if (isRelativeSource(source)) return source;
-      const alias = aliases.find(([prefix]) => source.startsWith(prefix));
-      if (!alias) return null;
-      const target = joinPath(alias[1], source.slice(alias[0].length));
-      const relative = path.posix.relative(dir, target);
-      return relative.startsWith(".") ? relative : "./" + relative;
-    };
-
-    return {
-      Program(node) {
-        for (const mod of moduleSources(node)) {
-          const source = asRelativeSource(mod.source);
-          if (source === null) continue;
-          const hit = findCrossedInternal(file, source);
-          if (!hit) continue;
-          context.report({
-            node: mod.node,
-            messageId: "crossInternals",
-            data: hit,
-          });
-        }
-      },
-    };
-  },
-};

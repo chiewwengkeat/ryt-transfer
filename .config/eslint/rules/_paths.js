@@ -2,10 +2,6 @@ const { readdirSync } = require("fs");
 
 const MODULE_EXTS = [".ts", ".tsx", ".js", ".jsx"];
 
-function toForwardSlashes(filename) {
-  return String(filename).replace(/\\/g, "/");
-}
-
 function filenameOf(context) {
   return toForwardSlashes(context.filename);
 }
@@ -127,3 +123,7 @@ module.exports = {
   resolveModule,
   stripAffixes,
 };
+
+function toForwardSlashes(filename) {
+  return String(filename).replace(/\\/g, "/");
+}

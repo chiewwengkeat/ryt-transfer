@@ -1,103 +1,8 @@
 const { filenameOf } = require("./_paths");
 
-/** PascalCase or anonymous: a default-exported `useThing` is a hook module, which these rules leave alone. */
-function isComponentName(name) {
-  return !name || /^[A-Z]/.test(name);
-}
-
 const isFnExpr = (n) =>
   Boolean(n) &&
   (n.type === "FunctionExpression" || n.type === "ArrowFunctionExpression");
-
-const WRAPPERS = new Set(["memo", "forwardRef"]);
-
-function memoOrForwardRefName(callee) {
-  if (callee.type === "Identifier")
-    return WRAPPERS.has(callee.name) ? callee.name : "";
-  if (
-    callee.type === "MemberExpression" &&
-    callee.property.type === "Identifier"
-  )
-    return WRAPPERS.has(callee.property.name) ? callee.property.name : "";
-  return "";
-}
-
-/** Taken by POSITION from `arguments[0]`: scanning for the first function picks the
- * comparator out of `memo(Chip, areEqual)`, and the empty name then misplaces `ChipProps`. */
-function componentNameInsideWrapper(d) {
-  const first = d.arguments[0];
-  if (!first) return "";
-  if (isFnExpr(first)) return first.id ? first.id.name : "";
-  if (first.type === "Identifier") return first.name;
-  if (first.type === "CallExpression" && memoOrForwardRefName(first.callee))
-    return componentNameInsideWrapper(first);
-  return "";
-}
-
-/** The superclass check is load-bearing: a default-exported model class in a .tsx file is not a component. */
-function isReactClass(d) {
-  const s = d.superClass;
-  if (!s) return false;
-  const base =
-    s.type === "Identifier"
-      ? s.name
-      : s.type === "MemberExpression" && s.property.type === "Identifier"
-        ? s.property.name
-        : "";
-  return base === "Component" || base === "PureComponent";
-}
-
-/** Layout order is measured from whatever this returns, so it must be the
- * declaration: keying on the `export default Foo` line instead would put every
- * statement above it, styles included, "before the component". */
-function localComponentDecl(body, name) {
-  for (const stmt of body) {
-    const inner =
-      stmt.type === "ExportNamedDeclaration" && stmt.declaration
-        ? stmt.declaration
-        : stmt;
-    if (
-      inner.type === "FunctionDeclaration" &&
-      inner.id &&
-      inner.id.name === name
-    )
-      return stmt;
-    if (
-      inner.type === "ClassDeclaration" &&
-      inner.id &&
-      inner.id.name === name &&
-      isReactClass(inner)
-    )
-      return stmt;
-    if (
-      inner.type === "VariableDeclaration" &&
-      inner.declarations.some(
-        (v) =>
-          v.id.type === "Identifier" && v.id.name === name && isFnExpr(v.init),
-      )
-    )
-      return stmt;
-  }
-  return null;
-}
-
-function defaultSpecifier(stmt) {
-  if (
-    stmt.type !== "ExportNamedDeclaration" ||
-    stmt.declaration ||
-    !stmt.specifiers
-  )
-    return null;
-  return (
-    stmt.specifiers.find(
-      (s) =>
-        s.exported &&
-        s.exported.name === "default" &&
-        s.local.type === "Identifier" &&
-        isComponentName(s.local.name),
-    ) || null
-  );
-}
 
 function componentExport(body) {
   for (const stmt of body) {
@@ -192,3 +97,98 @@ module.exports = {
   isComponentTsxFile,
   isFnExpr,
 };
+
+/** PascalCase or anonymous: a default-exported `useThing` is a hook module, which these rules leave alone. */
+function isComponentName(name) {
+  return !name || /^[A-Z]/.test(name);
+}
+
+const WRAPPERS = new Set(["memo", "forwardRef"]);
+
+function memoOrForwardRefName(callee) {
+  if (callee.type === "Identifier")
+    return WRAPPERS.has(callee.name) ? callee.name : "";
+  if (
+    callee.type === "MemberExpression" &&
+    callee.property.type === "Identifier"
+  )
+    return WRAPPERS.has(callee.property.name) ? callee.property.name : "";
+  return "";
+}
+
+/** Taken by POSITION from `arguments[0]`: scanning for the first function picks the
+ * comparator out of `memo(Chip, areEqual)`, and the empty name then misplaces `ChipProps`. */
+function componentNameInsideWrapper(d) {
+  const first = d.arguments[0];
+  if (!first) return "";
+  if (isFnExpr(first)) return first.id ? first.id.name : "";
+  if (first.type === "Identifier") return first.name;
+  if (first.type === "CallExpression" && memoOrForwardRefName(first.callee))
+    return componentNameInsideWrapper(first);
+  return "";
+}
+
+/** The superclass check is load-bearing: a default-exported model class in a .tsx file is not a component. */
+function isReactClass(d) {
+  const s = d.superClass;
+  if (!s) return false;
+  const base =
+    s.type === "Identifier"
+      ? s.name
+      : s.type === "MemberExpression" && s.property.type === "Identifier"
+        ? s.property.name
+        : "";
+  return base === "Component" || base === "PureComponent";
+}
+
+/** Layout order is measured from whatever this returns, so it must be the
+ * declaration: keying on the `export default Foo` line instead would put every
+ * statement above it, styles included, "before the component". */
+function localComponentDecl(body, name) {
+  for (const stmt of body) {
+    const inner =
+      stmt.type === "ExportNamedDeclaration" && stmt.declaration
+        ? stmt.declaration
+        : stmt;
+    if (
+      inner.type === "FunctionDeclaration" &&
+      inner.id &&
+      inner.id.name === name
+    )
+      return stmt;
+    if (
+      inner.type === "ClassDeclaration" &&
+      inner.id &&
+      inner.id.name === name &&
+      isReactClass(inner)
+    )
+      return stmt;
+    if (
+      inner.type === "VariableDeclaration" &&
+      inner.declarations.some(
+        (v) =>
+          v.id.type === "Identifier" && v.id.name === name && isFnExpr(v.init),
+      )
+    )
+      return stmt;
+  }
+  return null;
+}
+
+function defaultSpecifier(stmt) {
+  if (
+    stmt.type !== "ExportNamedDeclaration" ||
+    stmt.declaration ||
+    !stmt.specifiers
+  )
+    return null;
+  return (
+    stmt.specifiers.find(
+      (s) =>
+        s.exported &&
+        s.exported.name === "default" &&
+        s.local.type === "Identifier" &&
+        isComponentName(s.local.name),
+    ) || null
+  );
+}

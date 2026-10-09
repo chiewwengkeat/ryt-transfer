@@ -14,18 +14,6 @@ const typePrefix = require("./component-type-prefix");
 RuleTester.describe = (_name, fn) => fn();
 RuleTester.it = (_name, fn) => fn();
 
-const ruleTester = new RuleTester();
-const S = "/repo/src";
-const P = S + "/screens/transfer/TransferReviewScreen/components";
-const ok = "const x = 1;";
-
-function passes(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
-}
-function reports(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
-}
-
 test("component-own-folder: a component in its own folder passes", () => {
   passes(ownFolder, {
     code: ok,
@@ -321,3 +309,15 @@ test("every rule file is registered in index.js and resolves", () => {
     );
   }
 });
+
+const ruleTester = new RuleTester();
+const S = "/repo/src";
+const P = S + "/screens/transfer/TransferReviewScreen/components";
+const ok = "const x = 1;";
+
+function passes(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
+}
+function reports(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
+}

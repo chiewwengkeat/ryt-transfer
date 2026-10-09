@@ -14,34 +14,6 @@ const rule = require("./no-component-fetch-hooks");
 RuleTester.describe = (_name, fn) => fn();
 RuleTester.it = (_name, fn) => fn();
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser,
-    ecmaVersion: 2022,
-    sourceType: "module",
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-});
-
-const S = "/repo/src";
-const C = S + "/domains/transfer/components/SectionRecents/SectionRecents.tsx";
-const recentsFetch = (hook) => [
-  { messageId: "componentFetch", data: { file: "SectionRecents.tsx", hook } },
-];
-
-function passes(testCase) {
-  ruleTester.run("no-component-fetch-hooks", rule, {
-    valid: [testCase],
-    invalid: [],
-  });
-}
-function reports(testCase) {
-  ruleTester.run("no-component-fetch-hooks", rule, {
-    valid: [],
-    invalid: [testCase],
-  });
-}
-
 test("valid: a component calling its domain's own query hook", () => {
   passes({
     filename: C,
@@ -352,3 +324,31 @@ test("invalid: 'user-profile' starts with use but is not a hook file", () => {
     errors: [{ messageId: "componentFetch" }],
   });
 });
+
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser,
+    ecmaVersion: 2022,
+    sourceType: "module",
+    parserOptions: { ecmaFeatures: { jsx: true } },
+  },
+});
+
+const S = "/repo/src";
+const C = S + "/domains/transfer/components/SectionRecents/SectionRecents.tsx";
+const recentsFetch = (hook) => [
+  { messageId: "componentFetch", data: { file: "SectionRecents.tsx", hook } },
+];
+
+function passes(testCase) {
+  ruleTester.run("no-component-fetch-hooks", rule, {
+    valid: [testCase],
+    invalid: [],
+  });
+}
+function reports(testCase) {
+  ruleTester.run("no-component-fetch-hooks", rule, {
+    valid: [],
+    invalid: [testCase],
+  });
+}

@@ -16,29 +16,6 @@ const kebabCase = require("./hook-file-kebab-case");
 RuleTester.describe = (_name, fn) => fn();
 RuleTester.it = (_name, fn) => fn();
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser,
-    ecmaVersion: 2022,
-    sourceType: "module",
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-});
-
-const S = "/repo/src";
-const H = S + "/shared/hooks";
-const FLOW_STORE = S + "/screens/transfer/flow-store";
-
-function passes(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
-}
-function reports(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
-}
-function rename(data) {
-  return [{ messageId: "rename", data }];
-}
-
 test("hook-filename-matches-export: a named hook export matching its kebab filename passes", () => {
   passes(hookFilename, {
     filename: H + "/use-content-height.ts",
@@ -388,3 +365,26 @@ test("hook-filename-matches-export: hook-file-kebab-case reports the SAME rename
     ],
   });
 });
+
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser,
+    ecmaVersion: 2022,
+    sourceType: "module",
+    parserOptions: { ecmaFeatures: { jsx: true } },
+  },
+});
+
+const S = "/repo/src";
+const H = S + "/shared/hooks";
+const FLOW_STORE = S + "/screens/transfer/flow-store";
+
+function passes(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
+}
+function reports(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
+}
+function rename(data) {
+  return [{ messageId: "rename", data }];
+}

@@ -14,6 +14,27 @@ const TEST_HELPER_FILES = [
 ];
 const CHECK_TEST_FILES = ["src/**/*.check.test.{ts,tsx}"];
 
+function isTestFile(file) {
+  return TEST_FILE_PATTERNS.some((pattern) => pattern.test(file));
+}
+
+function isTestCode(file) {
+  return TEST_CODE_PATTERNS.some((pattern) => pattern.test(file));
+}
+
+function isCheckTest(file) {
+  return CHECK_TEST_PATTERNS.some((pattern) => pattern.test(file));
+}
+
+module.exports = {
+  TEST_FILES,
+  TEST_HELPER_FILES,
+  CHECK_TEST_FILES,
+  isTestFile,
+  isTestCode,
+  isCheckTest,
+};
+
 // Handles the glob features the lists above use: **/, * and {a,b}.
 function globToRegExp(glob) {
   const escapeLiteral = (text) => text.replace(/[.+^$()|[\]\\]/g, "\\$&");
@@ -38,24 +59,3 @@ const TEST_CODE_PATTERNS = [
   ...TEST_HELPER_FILES.map(globToRegExp),
 ];
 const CHECK_TEST_PATTERNS = CHECK_TEST_FILES.map(globToRegExp);
-
-function isTestFile(file) {
-  return TEST_FILE_PATTERNS.some((pattern) => pattern.test(file));
-}
-
-function isTestCode(file) {
-  return TEST_CODE_PATTERNS.some((pattern) => pattern.test(file));
-}
-
-function isCheckTest(file) {
-  return CHECK_TEST_PATTERNS.some((pattern) => pattern.test(file));
-}
-
-module.exports = {
-  TEST_FILES,
-  TEST_HELPER_FILES,
-  CHECK_TEST_FILES,
-  isTestFile,
-  isTestCode,
-  isCheckTest,
-};

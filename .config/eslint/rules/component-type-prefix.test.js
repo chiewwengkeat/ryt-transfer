@@ -15,34 +15,6 @@ const typePrefix = require("./component-type-prefix");
 RuleTester.describe = (_name, fn) => fn();
 RuleTester.it = (_name, fn) => fn();
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser,
-    ecmaVersion: 2022,
-    sourceType: "module",
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-});
-
-const S = "/repo/src";
-
-function passes(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
-}
-function reports(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
-}
-
-const M = S + "/domains/approval/components";
-
-const NAMED_ARROW = [
-  'import { FC } from "react";',
-  "",
-  "export const ApprovalErrorModal: FC = () => {",
-  "  return <div />;",
-  "};",
-].join("\n");
-
 test("filename check: reports a lone `export const Foo = () => …`", () => {
   reports(typePrefix, {
     filename: M + "/approval-error-modal.tsx",
@@ -212,3 +184,31 @@ test("filename check: once the filename matches, the Type check still applies", 
     errors: [{ messageId: "typePrefix" }],
   });
 });
+
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser,
+    ecmaVersion: 2022,
+    sourceType: "module",
+    parserOptions: { ecmaFeatures: { jsx: true } },
+  },
+});
+
+const S = "/repo/src";
+
+function passes(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
+}
+function reports(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
+}
+
+const M = S + "/domains/approval/components";
+
+const NAMED_ARROW = [
+  'import { FC } from "react";',
+  "",
+  "export const ApprovalErrorModal: FC = () => {",
+  "  return <div />;",
+  "};",
+].join("\n");

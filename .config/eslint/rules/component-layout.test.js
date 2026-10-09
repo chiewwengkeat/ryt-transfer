@@ -13,27 +13,6 @@ const layout = require("./component-layout");
 RuleTester.describe = (_name, fn) => fn();
 RuleTester.it = (_name, fn) => fn();
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser,
-    ecmaVersion: 2022,
-    sourceType: "module",
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-});
-
-const S = "/repo/src";
-const F =
-  S +
-  "/screens/transfer/TransferReviewScreen/components/ModalConfirm/ModalConfirm.tsx";
-
-function passes(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
-}
-function reports(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
-}
-
 test("component-layout: the reference shape imports -> Props -> component -> styles -> detail", () => {
   passes(layout, {
     filename: F,
@@ -112,13 +91,6 @@ test("component-layout: a module with no default-exported component stays inert"
     ].join("\n"),
   });
 });
-
-const DETAIL_ABOVE = [
-  "const ABOVE = 1;",
-  "export default function Fixture() {",
-  "  return null;",
-  "}",
-].join("\n");
 
 test("component-layout: a .ts file is not a component file", () => {
   passes(layout, { filename: F.replace(/\.tsx$/, ".ts"), code: DETAIL_ABOVE });
@@ -365,11 +337,6 @@ test("component-layout: a forwardRef wrapper is policed like a bare declaration"
   });
 });
 
-// The comparator overload: scanning for the first function argument returned the
-// comparator, so the name came back empty and `{Component}Props` lost its slot.
-const CHIP_COMPARATOR =
-  "export default memo(Chip, (a: ChipProps, b: ChipProps) => a.label === b.label);";
-
 test("component-layout: memo(Chip, comparator) resolves Chip, so ChipProps keeps its slot", () => {
   passes(layout, {
     filename: F,
@@ -449,3 +416,36 @@ test("component-layout: a bare `interface Props` is unaffected by the comparator
     ].join("\n"),
   });
 });
+
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser,
+    ecmaVersion: 2022,
+    sourceType: "module",
+    parserOptions: { ecmaFeatures: { jsx: true } },
+  },
+});
+
+const S = "/repo/src";
+const F =
+  S +
+  "/screens/transfer/TransferReviewScreen/components/ModalConfirm/ModalConfirm.tsx";
+
+function passes(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
+}
+function reports(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
+}
+
+const DETAIL_ABOVE = [
+  "const ABOVE = 1;",
+  "export default function Fixture() {",
+  "  return null;",
+  "}",
+].join("\n");
+
+// The comparator overload: scanning for the first function argument returned the
+// comparator, so the name came back empty and `{Component}Props` lost its slot.
+const CHIP_COMPARATOR =
+  "export default memo(Chip, (a: ChipProps, b: ChipProps) => a.label === b.label);";

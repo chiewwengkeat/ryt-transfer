@@ -1,9 +1,6 @@
 const { filenameOf, parsePath } = require("./_paths");
 const { fetchHookCall, importedBindings } = require("./_imports");
 
-// A `use-*` file is the data layer, not a component, even with a .tsx extension.
-const HOOK_FILE = /^use[-A-Z]/;
-
 /** @type {import("eslint").Rule.RuleModule} */
 module.exports = {
   meta: {
@@ -45,3 +42,6 @@ module.exports = {
     };
   },
 };
+
+// A `use-*` file is the data layer, not a component, even with a .tsx extension.
+const HOOK_FILE = /^use[-A-Z]/;

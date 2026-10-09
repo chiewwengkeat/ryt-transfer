@@ -12,41 +12,6 @@ const rule = require("./component-folder-identity");
 RuleTester.describe = (_name, fn) => fn();
 RuleTester.it = (_name, fn) => fn();
 
-const ruleTester = new RuleTester();
-const ok = "const x = 1;";
-
-/** Synthetic paths suffice wherever only the filename decides: dirEntries reads [] for
- * them, so the message is always folderIdentity, as for an unsaved buffer or `--stdin`. */
-const at = (rel) => "/tmp/repo/" + rel;
-
-/** A real tree, for the cases that decide WHICH message. */
-function tree(files) {
-  const root = mkdtempSync(tmpdir() + "/fe-folder-identity-");
-  for (const rel of files) {
-    const full = root + "/src/" + rel;
-    mkdirSync(full.slice(0, full.lastIndexOf("/")), { recursive: true });
-    writeFileSync(full, "");
-  }
-  return (rel) => root + "/src/" + rel;
-}
-
-function passes(testCase) {
-  ruleTester.run("component-folder-identity", rule, {
-    valid: [testCase],
-    invalid: [],
-  });
-}
-function reports(testCase) {
-  ruleTester.run("component-folder-identity", rule, {
-    valid: [],
-    invalid: [testCase],
-  });
-}
-const identity = [{ messageId: "folderIdentity" }];
-const child = [{ messageId: "childOwnFolder" }];
-
-const ACCOUNT = "src/domains/account/components";
-
 test("folder-identity: a component in a folder of its own name passes", () => {
   passes({ code: ok, filename: at(ACCOUNT + "/CardBalance/CardBalance.tsx") });
 });
@@ -287,3 +252,38 @@ test("folder-identity: a component directly under components/ passes with siblin
   const to = tree(["components/CardBalance.tsx", "components/Badge.tsx"]);
   passes({ code: ok, filename: to("components/CardBalance.tsx") });
 });
+
+const ruleTester = new RuleTester();
+const ok = "const x = 1;";
+
+/** Synthetic paths suffice wherever only the filename decides: dirEntries reads [] for
+ * them, so the message is always folderIdentity, as for an unsaved buffer or `--stdin`. */
+const at = (rel) => "/tmp/repo/" + rel;
+
+/** A real tree, for the cases that decide WHICH message. */
+function tree(files) {
+  const root = mkdtempSync(tmpdir() + "/fe-folder-identity-");
+  for (const rel of files) {
+    const full = root + "/src/" + rel;
+    mkdirSync(full.slice(0, full.lastIndexOf("/")), { recursive: true });
+    writeFileSync(full, "");
+  }
+  return (rel) => root + "/src/" + rel;
+}
+
+function passes(testCase) {
+  ruleTester.run("component-folder-identity", rule, {
+    valid: [testCase],
+    invalid: [],
+  });
+}
+function reports(testCase) {
+  ruleTester.run("component-folder-identity", rule, {
+    valid: [],
+    invalid: [testCase],
+  });
+}
+const identity = [{ messageId: "folderIdentity" }];
+const child = [{ messageId: "childOwnFolder" }];
+
+const ACCOUNT = "src/domains/account/components";

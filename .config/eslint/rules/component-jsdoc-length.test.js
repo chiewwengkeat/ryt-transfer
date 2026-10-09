@@ -13,27 +13,6 @@ const jsdocLength = require("./component-jsdoc-length");
 RuleTester.describe = (_name, fn) => fn();
 RuleTester.it = (_name, fn) => fn();
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser,
-    ecmaVersion: 2022,
-    sourceType: "module",
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-});
-
-const S = "/repo/src";
-const F =
-  S +
-  "/screens/transfer/TransferReviewScreen/components/ModalConfirm/ModalConfirm.tsx";
-
-function passes(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
-}
-function reports(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
-}
-
 test("component-jsdoc-length: a 4-line JSDoc sits at the default cap", () => {
   passes(jsdocLength, {
     filename: F,
@@ -157,3 +136,24 @@ test("component-jsdoc-length: maxLines 2 tightens the cap", () => {
     errors: [{ messageId: "tooLong" }],
   });
 });
+
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser,
+    ecmaVersion: 2022,
+    sourceType: "module",
+    parserOptions: { ecmaFeatures: { jsx: true } },
+  },
+});
+
+const S = "/repo/src";
+const F =
+  S +
+  "/screens/transfer/TransferReviewScreen/components/ModalConfirm/ModalConfirm.tsx";
+
+function passes(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
+}
+function reports(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
+}

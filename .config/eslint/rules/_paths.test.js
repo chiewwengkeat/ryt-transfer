@@ -17,19 +17,6 @@ const {
   stripAffixes,
 } = require("./_paths");
 
-/** A real directory tree. The disk-reading helpers return [] for a path that
- * does not exist, so a synthetic `/repo/src/...` filename makes them silently
- * inert — the same trap that would make a rule's `invalid` cases unreachable. */
-function tree(files) {
-  const root = mkdtempSync(tmpdir() + "/fe-paths-");
-  for (const rel of files) {
-    const full = root + "/" + rel;
-    mkdirSync(full.slice(0, full.lastIndexOf("/")), { recursive: true });
-    writeFileSync(full, "");
-  }
-  return root;
-}
-
 test("filenameOf: reads context.filename", () => {
   assert.equal(
     filenameOf({ filename: "/repo/src/Foo.tsx" }),
@@ -330,3 +317,16 @@ test("resolveModule: a folder with no index resolves to null", () => {
   const root = tree(["account/Foo/Foo.tsx", "account/Bar/Bar.tsx"]);
   assert.equal(resolveModule(root + "/account/Foo/Foo.tsx", "../Bar"), null);
 });
+
+/** A real directory tree. The disk-reading helpers return [] for a path that
+ * does not exist, so a synthetic `/repo/src/...` filename makes them silently
+ * inert — the same trap that would make a rule's `invalid` cases unreachable. */
+function tree(files) {
+  const root = mkdtempSync(tmpdir() + "/fe-paths-");
+  for (const rel of files) {
+    const full = root + "/" + rel;
+    mkdirSync(full.slice(0, full.lastIndexOf("/")), { recursive: true });
+    writeFileSync(full, "");
+  }
+  return root;
+}

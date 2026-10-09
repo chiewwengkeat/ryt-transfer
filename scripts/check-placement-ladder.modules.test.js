@@ -5,34 +5,10 @@ const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
 
-const PLACEHOLDER_COMPONENT_SOURCE =
-  "export default function Placeholder() {\n  return null;\n}\n";
 const moduleImporting = (...specifiers) =>
   specifiers
     .map((specifier, i) => `import * as Imported${i} from "${specifier}";\n`)
     .join("");
-
-const CHECK_SCRIPT = path.join(__dirname, "check-placement-ladder.js");
-
-function writeTree(root, tree) {
-  for (const [file, content] of Object.entries(tree)) {
-    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
-    fs.writeFileSync(path.join(root, file), content);
-  }
-}
-
-function runPlacementCheckOn(tree) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "placement-ladder-"));
-  try {
-    writeTree(root, tree);
-    const result = spawnSync(process.execPath, [CHECK_SCRIPT, root], {
-      encoding: "utf8",
-    });
-    return { exitCode: result.status, errors: result.stderr };
-  } finally {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-}
 
 const AMOUNT_SCREEN_FILE =
   "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.tsx";
@@ -53,13 +29,6 @@ test("fails a screens-folder hook that one screen uses, naming that screen's hoo
     /belongs in src\/screens\/transfer\/TransferAmountScreen\/hooks\/$/m,
   );
 });
-
-const BUTTON_PRIMARY_FILE = "src/shared/ui/ButtonPrimary/ButtonPrimary.tsx";
-const SHARED_UI_HOOK_FILE =
-  "src/shared/ui/hooks/use-press-scale/use-press-scale.ts";
-const SHARED_UI_HOOK_PATH = "@/shared/ui/hooks/use-press-scale/use-press-scale";
-const PRESS_SCALE_HOOK_SOURCE =
-  "export function usePressScale() {\n  return 1;\n}\n";
 
 test("passes a base component in shared/ui that no screen uses yet", () => {
   const { exitCode, errors } = runPlacementCheckOn({
@@ -108,11 +77,6 @@ test("passes a shared/ui hook that two base components use", () => {
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
 });
-
-const KEYBOARD_HOOK_FILE =
-  "src/shared/hooks/use-keyboard-height/use-keyboard-height.ts";
-const KEYBOARD_HOOK_SOURCE =
-  "export function useKeyboardHeight() {\n  return 0;\n}\n";
 
 test("fails a shared hook that nothing uses", () => {
   const { exitCode, errors } = runPlacementCheckOn({
@@ -223,10 +187,6 @@ test("fails a domain hook that only one domain component uses, naming that compo
   );
 });
 
-const TRANSFER_LIMITS_FILE =
-  "src/screens/transfer/lib/transfer-limits/transfer-limits.ts";
-const TRANSFER_LIMITS_SOURCE = "export const transferLimits = {};\n";
-
 test("fails a screens-folder lib module that one screen uses, naming that screen's lib folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     [TRANSFER_LIMITS_FILE]: TRANSFER_LIMITS_SOURCE,
@@ -254,3 +214,44 @@ test("passes a domain lib module that two screens folders use", () => {
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
 });
+
+const PLACEHOLDER_COMPONENT_SOURCE =
+  "export default function Placeholder() {\n  return null;\n}\n";
+
+const CHECK_SCRIPT = path.join(__dirname, "check-placement-ladder.js");
+
+function writeTree(root, tree) {
+  for (const [file, content] of Object.entries(tree)) {
+    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+    fs.writeFileSync(path.join(root, file), content);
+  }
+}
+
+function runPlacementCheckOn(tree) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "placement-ladder-"));
+  try {
+    writeTree(root, tree);
+    const result = spawnSync(process.execPath, [CHECK_SCRIPT, root], {
+      encoding: "utf8",
+    });
+    return { exitCode: result.status, errors: result.stderr };
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+const BUTTON_PRIMARY_FILE = "src/shared/ui/ButtonPrimary/ButtonPrimary.tsx";
+const SHARED_UI_HOOK_FILE =
+  "src/shared/ui/hooks/use-press-scale/use-press-scale.ts";
+const SHARED_UI_HOOK_PATH = "@/shared/ui/hooks/use-press-scale/use-press-scale";
+const PRESS_SCALE_HOOK_SOURCE =
+  "export function usePressScale() {\n  return 1;\n}\n";
+
+const KEYBOARD_HOOK_FILE =
+  "src/shared/hooks/use-keyboard-height/use-keyboard-height.ts";
+const KEYBOARD_HOOK_SOURCE =
+  "export function useKeyboardHeight() {\n  return 0;\n}\n";
+
+const TRANSFER_LIMITS_FILE =
+  "src/screens/transfer/lib/transfer-limits/transfer-limits.ts";
+const TRANSFER_LIMITS_SOURCE = "export const transferLimits = {};\n";

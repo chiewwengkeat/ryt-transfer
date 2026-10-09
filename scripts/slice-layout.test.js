@@ -5,31 +5,6 @@ const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
 
-const PLACEHOLDER_COMPONENT_SOURCE =
-  "export default function Placeholder() {\n  return null;\n}\n";
-
-const CHECK_SCRIPT = path.join(__dirname, "check-placement-ladder.js");
-
-function writeTree(root, tree) {
-  for (const [file, content] of Object.entries(tree)) {
-    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
-    fs.writeFileSync(path.join(root, file), content);
-  }
-}
-
-function runPlacementCheckOn(tree) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "placement-ladder-"));
-  try {
-    writeTree(root, tree);
-    const result = spawnSync(process.execPath, [CHECK_SCRIPT, root], {
-      encoding: "utf8",
-    });
-    return { exitCode: result.status, errors: result.stderr };
-  } finally {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-}
-
 for (const [entry, file] of [
   [
     "a folder in a screens folder that the design does not name",
@@ -116,3 +91,28 @@ test("passes lib/ in a screens folder and a domain, the transfer folder's flow-s
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
 });
+
+const PLACEHOLDER_COMPONENT_SOURCE =
+  "export default function Placeholder() {\n  return null;\n}\n";
+
+const CHECK_SCRIPT = path.join(__dirname, "check-placement-ladder.js");
+
+function writeTree(root, tree) {
+  for (const [file, content] of Object.entries(tree)) {
+    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+    fs.writeFileSync(path.join(root, file), content);
+  }
+}
+
+function runPlacementCheckOn(tree) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "placement-ladder-"));
+  try {
+    writeTree(root, tree);
+    const result = spawnSync(process.execPath, [CHECK_SCRIPT, root], {
+      encoding: "utf8",
+    });
+    return { exitCode: result.status, errors: result.stderr };
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}

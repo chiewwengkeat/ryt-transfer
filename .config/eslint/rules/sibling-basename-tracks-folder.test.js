@@ -12,41 +12,6 @@ const sibling = require("./sibling-basename-tracks-folder");
 RuleTester.describe = (_name, fn) => fn();
 RuleTester.it = (_name, fn) => fn();
 
-const ruleTester = new RuleTester();
-const ok = "const x = 1;";
-
-/** A real directory tree. The rule reads the disk, so a synthetic filename makes
- * every case pass as `valid` and no `invalid` case can ever report — a green,
- * inert suite. */
-function tree(files) {
-  const root = mkdtempSync(tmpdir() + "/fe-sibling-");
-  for (const rel of files) {
-    const full = root + "/src/" + rel;
-    mkdirSync(full.slice(0, full.lastIndexOf("/")), { recursive: true });
-    writeFileSync(full, "");
-  }
-  return (rel) => root + "/src/" + rel;
-}
-
-function passes(testCase) {
-  ruleTester.run("sibling-basename-tracks-folder", sibling, {
-    valid: [testCase],
-    invalid: [],
-  });
-}
-function reports(testCase) {
-  ruleTester.run("sibling-basename-tracks-folder", sibling, {
-    valid: [],
-    invalid: [testCase],
-  });
-}
-const orphan = [{ messageId: "orphanSibling" }];
-const noName = [{ messageId: "orphanSiblingNoName" }];
-
-const KEYPAD = "domains/approval/keypad";
-const GET_TRANSFER = "domains/transfer/api/get-transfer";
-const FLOW_STORE = "screens/transfer/flow-store";
-
 test("sibling: a sibling named for its own folder passes", () => {
   const at = tree([
     "domains/account/components/CardBalance/CardBalance.tsx",
@@ -427,3 +392,38 @@ test("sibling: a probe with only its own file on disk is inert", () => {
 test("sibling: a bare filename with no directory is inert", () => {
   passes({ code: ok, filename: "<input>" });
 });
+
+const ruleTester = new RuleTester();
+const ok = "const x = 1;";
+
+/** A real directory tree. The rule reads the disk, so a synthetic filename makes
+ * every case pass as `valid` and no `invalid` case can ever report — a green,
+ * inert suite. */
+function tree(files) {
+  const root = mkdtempSync(tmpdir() + "/fe-sibling-");
+  for (const rel of files) {
+    const full = root + "/src/" + rel;
+    mkdirSync(full.slice(0, full.lastIndexOf("/")), { recursive: true });
+    writeFileSync(full, "");
+  }
+  return (rel) => root + "/src/" + rel;
+}
+
+function passes(testCase) {
+  ruleTester.run("sibling-basename-tracks-folder", sibling, {
+    valid: [testCase],
+    invalid: [],
+  });
+}
+function reports(testCase) {
+  ruleTester.run("sibling-basename-tracks-folder", sibling, {
+    valid: [],
+    invalid: [testCase],
+  });
+}
+const orphan = [{ messageId: "orphanSibling" }];
+const noName = [{ messageId: "orphanSiblingNoName" }];
+
+const KEYPAD = "domains/approval/keypad";
+const GET_TRANSFER = "domains/transfer/api/get-transfer";
+const FLOW_STORE = "screens/transfer/flow-store";

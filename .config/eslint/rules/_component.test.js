@@ -13,27 +13,6 @@ const layout = require("./component-layout");
 RuleTester.describe = (_name, fn) => fn();
 RuleTester.it = (_name, fn) => fn();
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser,
-    ecmaVersion: 2022,
-    sourceType: "module",
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-});
-
-const S = "/repo/src";
-const F =
-  S +
-  "/screens/transfer/TransferReviewScreen/components/ModalConfirm/ModalConfirm.tsx";
-
-function passes(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
-}
-function reports(rule, testCase) {
-  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
-}
-
 // Each shape below puts DETAIL above the component and asserts beforeComponent: a
 // clean pass could not tell "recognised" from "inert".
 test("export shapes: `export const Foo = () => …` is recognised", () => {
@@ -250,3 +229,24 @@ test("export shapes: two named components are ambiguous and stay inert", () => {
     ].join("\n"),
   });
 });
+
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser,
+    ecmaVersion: 2022,
+    sourceType: "module",
+    parserOptions: { ecmaFeatures: { jsx: true } },
+  },
+});
+
+const S = "/repo/src";
+const F =
+  S +
+  "/screens/transfer/TransferReviewScreen/components/ModalConfirm/ModalConfirm.tsx";
+
+function passes(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
+}
+function reports(rule, testCase) {
+  ruleTester.run("rule", rule, { valid: [], invalid: [testCase] });
+}

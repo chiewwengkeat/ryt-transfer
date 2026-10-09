@@ -1,19 +1,5 @@
 const { dirEntries, filenameOf, parsePath } = require("./_paths");
 
-const PASCAL_STEM = /^[A-Z][A-Za-z0-9]*$/;
-const PASCAL_COMPONENT_FILE = /^[A-Z][A-Za-z0-9]*\.tsx$/;
-
-// A route file is named for its URL, not a component, so it has no folder to match.
-const ROUTE_DIR = "/src/app/";
-
-function isComponentFile(name) {
-  return (
-    PASCAL_COMPONENT_FILE.test(name) &&
-    !name.includes(".test.") &&
-    !name.includes(".spec.")
-  );
-}
-
 /** @type {import("eslint").Rule.RuleModule} */
 module.exports = {
   meta: {
@@ -73,3 +59,17 @@ module.exports = {
     };
   },
 };
+
+const PASCAL_STEM = /^[A-Z][A-Za-z0-9]*$/;
+const PASCAL_COMPONENT_FILE = /^[A-Z][A-Za-z0-9]*\.tsx$/;
+
+// A route file is named for its URL, not a component, so it has no folder to match.
+const ROUTE_DIR = "/src/app/";
+
+function isComponentFile(name) {
+  return (
+    PASCAL_COMPONENT_FILE.test(name) &&
+    !name.includes(".test.") &&
+    !name.includes(".spec.")
+  );
+}

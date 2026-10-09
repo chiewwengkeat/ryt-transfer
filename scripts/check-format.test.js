@@ -5,6 +5,31 @@ const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
 
+test("fails a misformatted file git would keep, though it is not added yet", () => {
+  const exitCode = runFormatCheckIn({
+    gitRepo: true,
+    files: { "amount.ts": MISFORMATTED },
+  });
+  assert.equal(exitCode, 1);
+});
+
+test("passes a misformatted file the checkout excludes locally", () => {
+  const exitCode = runFormatCheckIn({
+    gitRepo: true,
+    files: { "amount.ts": FORMATTED, "notes.local.ts": MISFORMATTED },
+    locallyExcluded: ["notes.local.ts"],
+  });
+  assert.equal(exitCode, 0);
+});
+
+test("checks every file outside a work tree, so an exported tree is never skipped", () => {
+  const exitCode = runFormatCheckIn({
+    gitRepo: false,
+    files: { "amount.ts": MISFORMATTED },
+  });
+  assert.equal(exitCode, 1);
+});
+
 const CHECK_SCRIPT = path.join(__dirname, "check-format.js");
 const MISFORMATTED = "export const  amount=1\n";
 const FORMATTED = "export const amount = 1;\n";
@@ -31,28 +56,3 @@ function runFormatCheckIn({ gitRepo, files, locallyExcluded = [] }) {
     fs.rmSync(root, { recursive: true, force: true });
   }
 }
-
-test("fails a misformatted file git would keep, though it is not added yet", () => {
-  const exitCode = runFormatCheckIn({
-    gitRepo: true,
-    files: { "amount.ts": MISFORMATTED },
-  });
-  assert.equal(exitCode, 1);
-});
-
-test("passes a misformatted file the checkout excludes locally", () => {
-  const exitCode = runFormatCheckIn({
-    gitRepo: true,
-    files: { "amount.ts": FORMATTED, "notes.local.ts": MISFORMATTED },
-    locallyExcluded: ["notes.local.ts"],
-  });
-  assert.equal(exitCode, 0);
-});
-
-test("checks every file outside a work tree, so an exported tree is never skipped", () => {
-  const exitCode = runFormatCheckIn({
-    gitRepo: false,
-    files: { "amount.ts": MISFORMATTED },
-  });
-  assert.equal(exitCode, 1);
-});

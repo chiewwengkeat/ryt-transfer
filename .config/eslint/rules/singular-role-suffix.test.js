@@ -12,27 +12,6 @@ const singularRoleSuffix = require("./singular-role-suffix");
 RuleTester.describe = (_name, fn) => fn();
 RuleTester.it = (_name, fn) => fn();
 
-const ruleTester = new RuleTester();
-const S = "/repo/src";
-const RECEIPT = S + "/screens/transfer/components/SectionTransferDetails";
-const ok = "const x = 1;";
-
-function passes(testCase) {
-  ruleTester.run("rule", singularRoleSuffix, {
-    valid: [testCase],
-    invalid: [],
-  });
-}
-function reports(testCase) {
-  ruleTester.run("rule", singularRoleSuffix, {
-    valid: [],
-    invalid: [testCase],
-  });
-}
-function singular(data) {
-  return [{ messageId: "singular", data }];
-}
-
 test("singular-role-suffix: a singular .type. suffix passes", () => {
   passes({ code: ok, filename: RECEIPT + "/SectionTransferDetails.type.ts" });
 });
@@ -296,3 +275,24 @@ test("singular-role-suffix: the message states the filename-only scope", () => {
     ],
   });
 });
+
+const ruleTester = new RuleTester();
+const S = "/repo/src";
+const RECEIPT = S + "/screens/transfer/components/SectionTransferDetails";
+const ok = "const x = 1;";
+
+function passes(testCase) {
+  ruleTester.run("rule", singularRoleSuffix, {
+    valid: [testCase],
+    invalid: [],
+  });
+}
+function reports(testCase) {
+  ruleTester.run("rule", singularRoleSuffix, {
+    valid: [],
+    invalid: [testCase],
+  });
+}
+function singular(data) {
+  return [{ messageId: "singular", data }];
+}

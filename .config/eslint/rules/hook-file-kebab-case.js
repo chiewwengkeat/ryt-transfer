@@ -1,7 +1,5 @@
 const { filenameOf } = require("./_paths");
 
-const CAMEL_HOOK = /^use[A-Z]/;
-
 /** @type {import("eslint").Rule.RuleModule} */
 module.exports = {
   meta: {
@@ -40,3 +38,5 @@ module.exports = {
     };
   },
 };
+
+const CAMEL_HOOK = /^use[A-Z]/;

@@ -12,39 +12,6 @@ const {
   moduleSources,
 } = require("./_imports");
 
-function program(code) {
-  return parser.parseForESLint(code, {
-    sourceType: "module",
-    ecmaFeatures: { jsx: true },
-  }).ast;
-}
-
-function bindingsFor(code) {
-  return importedBindings(program(code));
-}
-
-/** The first CallExpression in source order. */
-function firstCall(node) {
-  if (!node || typeof node.type !== "string") return null;
-  if (node.type === "CallExpression") return node;
-  for (const key of Object.keys(node)) {
-    if (key === "parent") continue;
-    const child = node[key];
-    for (const c of Array.isArray(child) ? child : [child]) {
-      const found = c && typeof c === "object" ? firstCall(c) : null;
-      if (found) return found;
-    }
-  }
-  return null;
-}
-
-function callIn(code) {
-  return firstCall(program(code));
-}
-
-const RQ =
-  'import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";';
-
 test("importedBindings: a named import binds under its local name", () => {
   const b = bindingsFor(RQ).get("useQuery");
   assert.equal(b.imported, "useQuery");
@@ -261,3 +228,36 @@ test("moduleSources: order follows the source", () => {
     ["./a", "./b", "./c"],
   );
 });
+
+function program(code) {
+  return parser.parseForESLint(code, {
+    sourceType: "module",
+    ecmaFeatures: { jsx: true },
+  }).ast;
+}
+
+function bindingsFor(code) {
+  return importedBindings(program(code));
+}
+
+/** The first CallExpression in source order. */
+function firstCall(node) {
+  if (!node || typeof node.type !== "string") return null;
+  if (node.type === "CallExpression") return node;
+  for (const key of Object.keys(node)) {
+    if (key === "parent") continue;
+    const child = node[key];
+    for (const c of Array.isArray(child) ? child : [child]) {
+      const found = c && typeof c === "object" ? firstCall(c) : null;
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function callIn(code) {
+  return firstCall(program(code));
+}
+
+const RQ =
+  'import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";';

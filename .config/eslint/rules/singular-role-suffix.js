@@ -1,20 +1,5 @@
 const { filenameOf, parsePath } = require("./_paths");
 
-const ROLE_WORDS = [
-  "config",
-  "constant",
-  "helper",
-  "mock",
-  "route",
-  "spec",
-  "style",
-  "test",
-  "type",
-  "util",
-];
-
-const SINGULAR_OF = new Map(ROLE_WORDS.map((word) => [word + "s", word]));
-
 /** @type {import("eslint").Rule.RuleModule} */
 module.exports = {
   meta: {
@@ -62,3 +47,18 @@ module.exports = {
     };
   },
 };
+
+const ROLE_WORDS = [
+  "config",
+  "constant",
+  "helper",
+  "mock",
+  "route",
+  "spec",
+  "style",
+  "test",
+  "type",
+  "util",
+];
+
+const SINGULAR_OF = new Map(ROLE_WORDS.map((word) => [word + "s", word]));

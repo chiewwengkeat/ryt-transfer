@@ -16,66 +16,6 @@ const rule = require("./no-cross-component-internals");
 RuleTester.describe = (_name, fn) => fn();
 RuleTester.it = (_name, fn) => fn();
 
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser,
-    ecmaVersion: 2022,
-    sourceType: "module",
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-});
-
-/** ⚠ A real directory tree: resolveModule and dirEntries return empty for a path
- * that does not exist, so a synthetic filename makes every case pass as valid with
- * no `invalid` case able to report. */
-function tree(files) {
-  const root = mkdtempSync(tmpdir() + "/fe-cross-internals-");
-  for (const rel of files) {
-    const full = root + "/" + rel;
-    mkdirSync(full.slice(0, full.lastIndexOf("/")), { recursive: true });
-    writeFileSync(full, "");
-  }
-  return root;
-}
-
-const ACCOUNT = "src/domains/account";
-const ROOT = tree([
-  `${ACCOUNT}/components/CardBalance/CardBalance.tsx`,
-  `${ACCOUNT}/components/CardBalance/CardBalance.style.ts`,
-  `${ACCOUNT}/components/CardBalance/CardBalance.type.ts`,
-  `${ACCOUNT}/components/CardBalance/card-balance.helper.ts`,
-  `${ACCOUNT}/components/CardBalance/sub/deep.ts`,
-  `${ACCOUNT}/components/CardBalance/Badge/Badge.tsx`,
-  `${ACCOUNT}/components/CardBalance/Badge/badge.helper.ts`,
-  `${ACCOUNT}/components/CardLimit/CardLimit.tsx`,
-  `${ACCOUNT}/components/SectionBarrel/SectionBarrel.tsx`,
-  `${ACCOUNT}/components/SectionBarrel/index.ts`,
-  `${ACCOUNT}/components/SectionBarrel/barrel.helper.ts`,
-  `${ACCOUNT}/state/limits/limits.store.tsx`,
-  `${ACCOUNT}/state/limits/use-limits.tsx`,
-  `${ACCOUNT}/utils/format.ts`,
-]);
-
-const COMPONENTS = ROOT + "/" + ACCOUNT + "/components";
-const LIMIT = COMPONENTS + "/CardLimit/CardLimit.tsx";
-const BALANCE = COMPONENTS + "/CardBalance/CardBalance.tsx";
-const crossInto = (target, owner) => [
-  { messageId: "crossInternals", data: { target, owner } },
-];
-
-function passes(testCase) {
-  ruleTester.run("no-cross-component-internals", rule, {
-    valid: [testCase],
-    invalid: [],
-  });
-}
-function reports(testCase) {
-  ruleTester.run("no-cross-component-internals", rule, {
-    valid: [],
-    invalid: [testCase],
-  });
-}
-
 test("valid: importing a sibling component's own entry file", () => {
   passes({
     filename: LIMIT,
@@ -153,8 +93,6 @@ test("valid: a package import is never relative", () => {
   });
 });
 
-const SRC_ALIAS = [{ aliases: { "@/": ROOT + "/src" } }];
-
 test("valid: an @/ alias to a sibling component's own entry file", () => {
   passes({
     filename: LIMIT,
@@ -201,10 +139,6 @@ test("valid: a bare filename has no directory to compare against", () => {
   });
 });
 
-// A path never written to disk, as for an unsaved buffer or `--stdin`: the rule
-// judges from the import path alone.
-const PROBE = "/repo/src/__selftest__/Grid.tsx";
-
 test("probe: a sibling folder's entry file, judged from the path alone", () => {
   passes({
     filename: PROBE,
@@ -233,10 +167,6 @@ test("probe: reaching past the public face still reports with nothing on disk", 
     errors: crossInto("card-balance.helper", "CardBalance"),
   });
 });
-
-// Only the linted file exists on disk, so its own directory reads back while the
-// import target stays absent.
-const ON_DISK_PROBE = tree(["src/__selftest__/Grid.tsx"]);
 
 test("probe: with only the linted file on disk, a reach past the public face still reports", () => {
   reports({
@@ -338,3 +268,73 @@ test("invalid: two reaches in one file report twice", () => {
     ],
   });
 });
+
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser,
+    ecmaVersion: 2022,
+    sourceType: "module",
+    parserOptions: { ecmaFeatures: { jsx: true } },
+  },
+});
+
+/** ⚠ A real directory tree: resolveModule and dirEntries return empty for a path
+ * that does not exist, so a synthetic filename makes every case pass as valid with
+ * no `invalid` case able to report. */
+function tree(files) {
+  const root = mkdtempSync(tmpdir() + "/fe-cross-internals-");
+  for (const rel of files) {
+    const full = root + "/" + rel;
+    mkdirSync(full.slice(0, full.lastIndexOf("/")), { recursive: true });
+    writeFileSync(full, "");
+  }
+  return root;
+}
+
+const ACCOUNT = "src/domains/account";
+const ROOT = tree([
+  `${ACCOUNT}/components/CardBalance/CardBalance.tsx`,
+  `${ACCOUNT}/components/CardBalance/CardBalance.style.ts`,
+  `${ACCOUNT}/components/CardBalance/CardBalance.type.ts`,
+  `${ACCOUNT}/components/CardBalance/card-balance.helper.ts`,
+  `${ACCOUNT}/components/CardBalance/sub/deep.ts`,
+  `${ACCOUNT}/components/CardBalance/Badge/Badge.tsx`,
+  `${ACCOUNT}/components/CardBalance/Badge/badge.helper.ts`,
+  `${ACCOUNT}/components/CardLimit/CardLimit.tsx`,
+  `${ACCOUNT}/components/SectionBarrel/SectionBarrel.tsx`,
+  `${ACCOUNT}/components/SectionBarrel/index.ts`,
+  `${ACCOUNT}/components/SectionBarrel/barrel.helper.ts`,
+  `${ACCOUNT}/state/limits/limits.store.tsx`,
+  `${ACCOUNT}/state/limits/use-limits.tsx`,
+  `${ACCOUNT}/utils/format.ts`,
+]);
+
+const COMPONENTS = ROOT + "/" + ACCOUNT + "/components";
+const LIMIT = COMPONENTS + "/CardLimit/CardLimit.tsx";
+const BALANCE = COMPONENTS + "/CardBalance/CardBalance.tsx";
+const crossInto = (target, owner) => [
+  { messageId: "crossInternals", data: { target, owner } },
+];
+
+function passes(testCase) {
+  ruleTester.run("no-cross-component-internals", rule, {
+    valid: [testCase],
+    invalid: [],
+  });
+}
+function reports(testCase) {
+  ruleTester.run("no-cross-component-internals", rule, {
+    valid: [],
+    invalid: [testCase],
+  });
+}
+
+const SRC_ALIAS = [{ aliases: { "@/": ROOT + "/src" } }];
+
+// A path never written to disk, as for an unsaved buffer or `--stdin`: the rule
+// judges from the import path alone.
+const PROBE = "/repo/src/__selftest__/Grid.tsx";
+
+// Only the linted file exists on disk, so its own directory reads back while the
+// import target stays absent.
+const ON_DISK_PROBE = tree(["src/__selftest__/Grid.tsx"]);

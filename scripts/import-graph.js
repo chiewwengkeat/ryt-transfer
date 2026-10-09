@@ -2,6 +2,28 @@ const fs = require("node:fs");
 const path = require("node:path");
 const ts = require("typescript");
 
+function readImportGraph(rootDir) {
+  const modules = ["src", "modules"].flatMap((dir) =>
+    listSourceModules(rootDir, dir, []),
+  );
+  const knownModules = new Set(modules);
+  const edgesByModule = new Map();
+  for (const file of modules) {
+    const { uses, reexports } = readImportSpecifiers(rootDir, file);
+    edgesByModule.set(file, {
+      uses: uses.flatMap((specifier) =>
+        resolveLocalSpecifier(file, specifier, knownModules),
+      ),
+      reexports: reexports.flatMap((specifier) =>
+        resolveLocalSpecifier(file, specifier, knownModules),
+      ),
+    });
+  }
+  return edgesByModule;
+}
+
+module.exports = { readImportGraph };
+
 const MODULE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 const PLATFORM_INFIXES = ["", ".ios", ".android", ".native"];
 
@@ -127,25 +149,3 @@ function resolveLocalSpecifier(fromFile, specifier, knownModules) {
     knownModules.has(candidate),
   );
 }
-
-function readImportGraph(rootDir) {
-  const modules = ["src", "modules"].flatMap((dir) =>
-    listSourceModules(rootDir, dir, []),
-  );
-  const knownModules = new Set(modules);
-  const edgesByModule = new Map();
-  for (const file of modules) {
-    const { uses, reexports } = readImportSpecifiers(rootDir, file);
-    edgesByModule.set(file, {
-      uses: uses.flatMap((specifier) =>
-        resolveLocalSpecifier(file, specifier, knownModules),
-      ),
-      reexports: reexports.flatMap((specifier) =>
-        resolveLocalSpecifier(file, specifier, knownModules),
-      ),
-    });
-  }
-  return edgesByModule;
-}
-
-module.exports = { readImportGraph };

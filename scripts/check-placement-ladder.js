@@ -7,6 +7,21 @@ const { isTestCode } = require("../.config/test-files");
 const { readImportGraph } = require("./import-graph");
 const { findEntriesOutsideTheSliceFolders } = require("./slice-layout");
 
+const staged = process.argv[2] === "--staged";
+const rootDir = staged
+  ? checkoutStagedSnapshot()
+  : path.resolve(process.argv[2] ?? process.cwd());
+try {
+  const { placedCount, failures } = checkPlacementLadder(rootDir);
+  for (const failure of failures) console.error(failure);
+  console.log(
+    `placement ladder: ${placedCount} components, hooks and lib modules checked, ${failures.length} misplaced`,
+  );
+  process.exitCode = failures.length > 0 ? 1 : 0;
+} finally {
+  if (staged) fs.rmSync(rootDir, { recursive: true, force: true });
+}
+
 function findPlacedPiece(file) {
   const parts = file.split("/");
   if (!["screens", "domains", "shared", "root"].includes(parts[1])) return null;
@@ -229,19 +244,4 @@ function checkoutStagedSnapshot() {
     stagedPaths,
   );
   return snapshotDir;
-}
-
-const staged = process.argv[2] === "--staged";
-const rootDir = staged
-  ? checkoutStagedSnapshot()
-  : path.resolve(process.argv[2] ?? process.cwd());
-try {
-  const { placedCount, failures } = checkPlacementLadder(rootDir);
-  for (const failure of failures) console.error(failure);
-  console.log(
-    `placement ladder: ${placedCount} components, hooks and lib modules checked, ${failures.length} misplaced`,
-  );
-  process.exitCode = failures.length > 0 ? 1 : 0;
-} finally {
-  if (staged) fs.rmSync(rootDir, { recursive: true, force: true });
 }

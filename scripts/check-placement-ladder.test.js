@@ -5,64 +5,6 @@ const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
 
-const PLACEHOLDER_COMPONENT_SOURCE =
-  "export default function Placeholder() {\n  return null;\n}\n";
-const moduleImporting = (...specifiers) =>
-  specifiers
-    .map((specifier, i) => `import * as Imported${i} from "${specifier}";\n`)
-    .join("");
-
-const CHECK_SCRIPT = path.join(__dirname, "check-placement-ladder.js");
-
-function writeTree(root, tree) {
-  for (const [file, content] of Object.entries(tree)) {
-    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
-    fs.writeFileSync(path.join(root, file), content);
-  }
-}
-
-function runPlacementCheckOn(tree) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "placement-ladder-"));
-  try {
-    writeTree(root, tree);
-    const result = spawnSync(process.execPath, [CHECK_SCRIPT, root], {
-      encoding: "utf8",
-    });
-    return { exitCode: result.status, errors: result.stderr };
-  } finally {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-}
-
-function runStagedPlacementCheckOn({
-  staged,
-  workingTreeOnly = {},
-  deletionsStaged = [],
-}) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "placement-staged-"));
-  // Inside a hook or a rebase, git exports variables that would aim these commands at this repo.
-  const env = Object.fromEntries(
-    Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_")),
-  );
-  const run = (command, args) =>
-    spawnSync(command, args, { cwd: root, env, encoding: "utf8" });
-  try {
-    run("git", ["init", "-q"]);
-    writeTree(root, staged);
-    run("git", ["add", "--all"]);
-    for (const file of deletionsStaged)
-      run("git", ["rm", "-q", "--cached", file]);
-    writeTree(root, workingTreeOnly);
-    const result = run(process.execPath, [CHECK_SCRIPT, "--staged"]);
-    return { exitCode: result.status, errors: result.stderr };
-  } finally {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-}
-
-const RECEIPT_SECTION =
-  "src/screens/transfer/components/SectionTransferDetails/SectionTransferDetails.tsx";
-
 test("fails a screens-folder component that only one screen uses, naming that screen's folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     [RECEIPT_SECTION]: PLACEHOLDER_COMPONENT_SOURCE,
@@ -96,8 +38,6 @@ test("passes a screens-folder component that two screens of that folder use", ()
   assert.equal(exitCode, 0);
 });
 
-const HISTORY_SCREEN_DIR = "src/screens/transfer/TransferHistoryScreen";
-
 test("fails a screen's component that only a sibling component uses, naming the sibling's folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     [`${HISTORY_SCREEN_DIR}/TransferHistoryScreen.tsx`]: moduleImporting(
@@ -128,9 +68,6 @@ test("passes that component once it nests inside the sibling that uses it", () =
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
 });
-
-const RECENTS_COMPONENT_FILE =
-  "src/domains/transfer/components/SectionRecents/SectionRecents.tsx";
 
 test("fails a domain component that one screens folder uses, naming the screen that uses it", () => {
   const { exitCode, errors } = runPlacementCheckOn({
@@ -240,13 +177,6 @@ test("counts the users that reach a component through a re-export outside its fo
   assert.equal(exitCode, 0);
 });
 
-const AMOUNT_SCREEN_FILE =
-  "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.tsx";
-const FIELD_AMOUNT_FILE =
-  "src/screens/transfer/TransferAmountScreen/components/FieldAmount/FieldAmount.tsx";
-const screenRendering = (importLine) =>
-  `${importLine}\n\nexport default function TransferAmountScreen() {\n  return FieldAmount;\n}\n`;
-
 for (const [form, importLine, extraFiles] of [
   [
     "an import-equals require",
@@ -311,13 +241,6 @@ test("counts the final importers behind a file that imports a component and expo
     /BannerOffline: every user sits in src\/screens\/transfer\/TransferAmountScreen\//,
   );
 });
-
-const CARD_TRANSFER_FILE =
-  "src/screens/transfer/components/CardTransfer/CardTransfer.tsx";
-const CARDS_STATE_FILE = "src/screens/transfer/flow-store/cards.ts";
-const CARDS_STATE_SOURCE =
-  'import CardTransfer from "../components/CardTransfer/CardTransfer";\n\nexport const Card = CardTransfer;\n';
-const cardsStateUser = moduleImporting("@/screens/transfer/flow-store/cards");
 
 test("counts the final importers behind a file that exports an imported component as a const", () => {
   const { exitCode, errors } = runPlacementCheckOn({
@@ -384,11 +307,6 @@ for (const testCode of ["src/app/index.test.tsx", "src/app/test-utils.tsx"])
     assert.match(errors, /^src\/app\/[^:]+: Expo Router bundles every file/m);
   });
 
-const PILL_SCENARIO_FILE =
-  "src/domains/transfer/components/PillScenario/PillScenario.tsx";
-const PILL_SCENARIO_SPECIFIER =
-  "@/domains/transfer/components/PillScenario/PillScenario";
-
 test("fails a domain component that only the demo layer uses, naming src/mocks/", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     [PILL_SCENARIO_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
@@ -426,13 +344,6 @@ test("counts a type-only import as a user", () => {
   assert.equal(exitCode, 0);
 });
 
-const amountScreenWithField = {
-  [AMOUNT_SCREEN_FILE]: screenRendering(
-    'import FieldAmount from "./components/FieldAmount/FieldAmount";',
-  ),
-  [FIELD_AMOUNT_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
-};
-
 test("fails a commit that stages a component while its user stays unstaged", () => {
   const { exitCode, errors } = runStagedPlacementCheckOn({
     staged: { [FIELD_AMOUNT_FILE]: PLACEHOLDER_COMPONENT_SOURCE },
@@ -461,3 +372,92 @@ test("fails a commit that only deletes a component's last user", () => {
   assert.equal(exitCode, 1);
   assert.match(errors, /FieldAmount: no app code uses it/);
 });
+
+const PLACEHOLDER_COMPONENT_SOURCE =
+  "export default function Placeholder() {\n  return null;\n}\n";
+const moduleImporting = (...specifiers) =>
+  specifiers
+    .map((specifier, i) => `import * as Imported${i} from "${specifier}";\n`)
+    .join("");
+
+const CHECK_SCRIPT = path.join(__dirname, "check-placement-ladder.js");
+
+function writeTree(root, tree) {
+  for (const [file, content] of Object.entries(tree)) {
+    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+    fs.writeFileSync(path.join(root, file), content);
+  }
+}
+
+function runPlacementCheckOn(tree) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "placement-ladder-"));
+  try {
+    writeTree(root, tree);
+    const result = spawnSync(process.execPath, [CHECK_SCRIPT, root], {
+      encoding: "utf8",
+    });
+    return { exitCode: result.status, errors: result.stderr };
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+function runStagedPlacementCheckOn({
+  staged,
+  workingTreeOnly = {},
+  deletionsStaged = [],
+}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "placement-staged-"));
+  // Inside a hook or a rebase, git exports variables that would aim these commands at this repo.
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_")),
+  );
+  const run = (command, args) =>
+    spawnSync(command, args, { cwd: root, env, encoding: "utf8" });
+  try {
+    run("git", ["init", "-q"]);
+    writeTree(root, staged);
+    run("git", ["add", "--all"]);
+    for (const file of deletionsStaged)
+      run("git", ["rm", "-q", "--cached", file]);
+    writeTree(root, workingTreeOnly);
+    const result = run(process.execPath, [CHECK_SCRIPT, "--staged"]);
+    return { exitCode: result.status, errors: result.stderr };
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+const RECEIPT_SECTION =
+  "src/screens/transfer/components/SectionTransferDetails/SectionTransferDetails.tsx";
+
+const HISTORY_SCREEN_DIR = "src/screens/transfer/TransferHistoryScreen";
+
+const RECENTS_COMPONENT_FILE =
+  "src/domains/transfer/components/SectionRecents/SectionRecents.tsx";
+
+const AMOUNT_SCREEN_FILE =
+  "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.tsx";
+const FIELD_AMOUNT_FILE =
+  "src/screens/transfer/TransferAmountScreen/components/FieldAmount/FieldAmount.tsx";
+const screenRendering = (importLine) =>
+  `${importLine}\n\nexport default function TransferAmountScreen() {\n  return FieldAmount;\n}\n`;
+
+const CARD_TRANSFER_FILE =
+  "src/screens/transfer/components/CardTransfer/CardTransfer.tsx";
+const CARDS_STATE_FILE = "src/screens/transfer/flow-store/cards.ts";
+const CARDS_STATE_SOURCE =
+  'import CardTransfer from "../components/CardTransfer/CardTransfer";\n\nexport const Card = CardTransfer;\n';
+const cardsStateUser = moduleImporting("@/screens/transfer/flow-store/cards");
+
+const PILL_SCENARIO_FILE =
+  "src/domains/transfer/components/PillScenario/PillScenario.tsx";
+const PILL_SCENARIO_SPECIFIER =
+  "@/domains/transfer/components/PillScenario/PillScenario";
+
+const amountScreenWithField = {
+  [AMOUNT_SCREEN_FILE]: screenRendering(
+    'import FieldAmount from "./components/FieldAmount/FieldAmount";',
+  ),
+  [FIELD_AMOUNT_FILE]: PLACEHOLDER_COMPONENT_SOURCE,
+};
