@@ -129,7 +129,7 @@ Three tests read the bundles, each a different way:
 
 ## Build variants
 
-`EXPO_PUBLIC_APP_VARIANT` picks the build: `development`, `demo` or `production`. Unset or empty means `production`, so a build with no variant fails closed. Development and demo carry the mock bank and the Demo menu. Production carries neither and calls an API address that never resolves. Development and demo carry their own name, app id and URL scheme, so they install beside production.
+`EXPO_PUBLIC_APP_VARIANT` picks the build: `development`, `demo` or `production`. Unset or empty means `production`, so a build with no variant fails closed. Development and demo carry the mock bank and the Demo menu. Production carries neither and calls an API address that never resolves. Each variant has its own name, app id and URL scheme, so development and demo install beside production.
 
 | Variant       | Metro        | iOS                   | Android                   | An Android APK, with no device  |
 | ------------- | ------------ | --------------------- | ------------------------- | ------------------------------- |
@@ -138,6 +138,15 @@ Three tests read the bundles, each a different way:
 | `production`  |              | `pnpm ios:production` | `pnpm android:production` | `pnpm build:android:production` |
 
 Every script sets its variant itself. Those that build also regenerate the native project for it, and the APK scripts write to `dist/`. The variant is baked into the native app and inlined into the JavaScript bundle, and a fresh project leaves Gradle no stale bundle to reuse; a bare `npx expo run:*` reuses whatever native project the last variant left behind.
+
+`pnpm ios` and `pnpm android` build the app, install it on a simulator or emulator and open it, then keep running as the Metro bundler the app loads its code from: leave that terminal open while you use the app. The first build takes several minutes.
+
+With several simulators or emulators running, they pick the first one. Name yours with `--device`: a simulator's UDID (`xcrun simctl list devices booted` lists them) or an emulator's AVD name (`$ANDROID_HOME/emulator/emulator -list-avds`).
+
+```sh
+pnpm ios --device <simulator UDID>
+pnpm android --device <AVD name>
+```
 
 - Code that a production build must not contain is loaded by a `require` gated on a literal comparison of `process.env.EXPO_PUBLIC_APP_VARIANT`, written at the `require` itself. Metro strips only that form: code behind an imported predicate, or reached by a static `import`, ships in every build.
 - Decisions made at runtime read `isProductionBuild` from `src/shared/config/config.ts`.
