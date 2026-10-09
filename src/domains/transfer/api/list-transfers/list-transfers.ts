@@ -71,28 +71,6 @@ export function useListTransfers() {
   });
 }
 
-// Module-level so its identity holds: TanStack re-runs a new select over every loaded transfer.
-function selectTransferHistory(history: InfiniteData<ListTransfersResponse>) {
-  const daySummaries: Record<string, ListTransfersResponse["days"][number]> =
-    {};
-  // A day split across two pages comes with its whole-day summary in both: keep one, never add them.
-  for (const page of history.pages)
-    for (const day of page.days) daySummaries[day.date] = day;
-  const transfers = history.pages.flatMap(({ items }) => items);
-  const readableDates = transfers.map(({ createdAt }) =>
-    toMalaysianDateKey(createdAt),
-  );
-  // A row whose time cannot be read keeps its place in the bank's newest-first order, on its neighbour's day.
-  let malaysianDate = readableDates.find((date) => date !== null) ?? "";
-  return {
-    transfers: transfers.map((transfer, index) => {
-      malaysianDate = readableDates[index] ?? malaysianDate;
-      return { ...transfer, malaysianDate };
-    }),
-    daySummaries,
-  };
-}
-
 // Never cancels a fetch under way, a refresh held offline included. A list resting at its end asks only when its rows
 // change: after a fetch leaving them unchanged, asks again while they are still shown. After a failed page, Retry asks.
 export function askForNextTransferHistoryPage(
@@ -205,4 +183,26 @@ export async function patchTransferInHistory(
       };
     },
   );
+}
+
+// Module-level so its identity holds: TanStack re-runs a new select over every loaded transfer.
+function selectTransferHistory(history: InfiniteData<ListTransfersResponse>) {
+  const daySummaries: Record<string, ListTransfersResponse["days"][number]> =
+    {};
+  // A day split across two pages comes with its whole-day summary in both: keep one, never add them.
+  for (const page of history.pages)
+    for (const day of page.days) daySummaries[day.date] = day;
+  const transfers = history.pages.flatMap(({ items }) => items);
+  const readableDates = transfers.map(({ createdAt }) =>
+    toMalaysianDateKey(createdAt),
+  );
+  // A row whose time cannot be read keeps its place in the bank's newest-first order, on its neighbour's day.
+  let malaysianDate = readableDates.find((date) => date !== null) ?? "";
+  return {
+    transfers: transfers.map((transfer, index) => {
+      malaysianDate = readableDates[index] ?? malaysianDate;
+      return { ...transfer, malaysianDate };
+    }),
+    daySummaries,
+  };
 }

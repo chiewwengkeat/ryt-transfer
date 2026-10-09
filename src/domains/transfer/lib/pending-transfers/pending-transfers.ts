@@ -7,8 +7,6 @@ import {
   writeSecureRecord,
 } from "@/shared/platform/secure-storage/secure-storage";
 
-const NAMESPACE_PREFIX = "pending-transfers-";
-
 export enum PendingTransferStage {
   Approving = "approving",
   Processing = "processing",
@@ -79,6 +77,8 @@ export async function discardOtherCustomersPendingTransfers(
   for (const namespace of otherNamespaces)
     await deleteSecureNamespace(namespace);
 }
+
+const NAMESPACE_PREFIX = "pending-transfers-";
 
 function pendingTransfersNamespace(customerId: string) {
   return `${NAMESPACE_PREFIX}${customerId}`;

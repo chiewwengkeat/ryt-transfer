@@ -30,37 +30,6 @@ export enum BiometricSignOutcome {
   Failed = "failed",
 }
 
-// Each new key goes in the set its kind is not using, so keys the bank refuses never replace the ones it knows.
-const APPROVAL_KEY_SETS = {
-  // The aliases phones paired with before there were two sets.
-  first: {
-    possession: "ryt-transfer.approval.possession",
-    biometric: "ryt-transfer.approval.biometric",
-  },
-  second: {
-    possession: "ryt-transfer.approval.possession.second",
-    biometric: "ryt-transfer.approval.biometric.second",
-  },
-};
-const APPROVAL_KEY_SET_RECORDS = {
-  possession: { namespace: "approval", name: "key-set" },
-  biometric: { namespace: "approval", name: "biometric-key-set" },
-};
-const POSSESSION_KEY_ID_RECORD = {
-  namespace: "approval",
-  name: "possession-key-id",
-};
-const BIOMETRIC_KEY_ID_RECORD = {
-  namespace: "approval",
-  name: "biometric-key-id",
-};
-// ⛔ Never allow device credentials: the phone's passcode must never approve a transfer.
-const BIOMETRIC_KEY_OPTIONS = {
-  keyType: "ec256",
-  biometricStrength: BiometricStrength.Strong,
-  allowDeviceCredentials: false,
-} as const;
-
 export async function hasApprovalKeysOnFile() {
   const keyIds = await Promise.all([
     readSecureRecord(POSSESSION_KEY_ID_RECORD),
@@ -220,6 +189,37 @@ export async function deleteApprovalKeys() {
     await deleteKeys(keyAliases.biometric);
   }
 }
+
+// Each new key goes in the set its kind is not using, so keys the bank refuses never replace the ones it knows.
+const APPROVAL_KEY_SETS = {
+  // The aliases phones paired with before there were two sets.
+  first: {
+    possession: "ryt-transfer.approval.possession",
+    biometric: "ryt-transfer.approval.biometric",
+  },
+  second: {
+    possession: "ryt-transfer.approval.possession.second",
+    biometric: "ryt-transfer.approval.biometric.second",
+  },
+};
+const APPROVAL_KEY_SET_RECORDS = {
+  possession: { namespace: "approval", name: "key-set" },
+  biometric: { namespace: "approval", name: "biometric-key-set" },
+};
+const POSSESSION_KEY_ID_RECORD = {
+  namespace: "approval",
+  name: "possession-key-id",
+};
+const BIOMETRIC_KEY_ID_RECORD = {
+  namespace: "approval",
+  name: "biometric-key-id",
+};
+// ⛔ Never allow device credentials: the phone's passcode must never approve a transfer.
+const BIOMETRIC_KEY_OPTIONS = {
+  keyType: "ec256",
+  biometricStrength: BiometricStrength.Strong,
+  allowDeviceCredentials: false,
+} as const;
 
 async function readApprovalKeySetInUse(
   keyKind: keyof typeof APPROVAL_KEY_SET_RECORDS,

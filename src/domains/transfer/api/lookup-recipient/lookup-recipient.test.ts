@@ -66,12 +66,6 @@ it.each<[RecipientIdType, string]>([
   },
 );
 
-const CHARACTERS_ON_KEYBOARD = {
-  [RecipientIdCharacters.Digits]: /^\d+$/,
-  [RecipientIdCharacters.PlusAndDigits]: /^\+?\d+$/,
-  [RecipientIdCharacters.LettersAndDigits]: /^[A-Z\d]+$/,
-};
-
 it.each<[RecipientIdType, string, string]>([
   [RecipientIdType.Mobile, "+60123456789", "+6012345678A"],
   [RecipientIdType.Nric, "900101145678", "90010114567A"],
@@ -91,3 +85,9 @@ it.each<[RecipientIdType, string, string]>([
     expect(parseRecipientId(idType, idWithOtherCharacter)).toBeNull();
   },
 );
+
+const CHARACTERS_ON_KEYBOARD = {
+  [RecipientIdCharacters.Digits]: /^\d+$/,
+  [RecipientIdCharacters.PlusAndDigits]: /^\+?\d+$/,
+  [RecipientIdCharacters.LettersAndDigits]: /^[A-Z\d]+$/,
+};

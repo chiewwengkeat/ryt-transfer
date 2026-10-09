@@ -6,9 +6,6 @@ import { spacing } from "@/shared/theme/theme";
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
-const OFFLINE_NOTICE =
-  "You're offline. Sending is paused until Ryt can be reached.";
-
 it("lets Home's content scroll clear of the offline notice by the notice's measured height, and gives the room back once online", async () => {
   mswServer.use(http.all("*", () => HttpResponse.error()));
   await renderRoute("/");
@@ -39,3 +36,6 @@ it("lets Home's content scroll clear of the offline notice by the notice's measu
 
   expect(contentEndPadding()).toBe(endPaddingWithoutNotice);
 });
+
+const OFFLINE_NOTICE =
+  "You're offline. Sending is paused until Ryt can be reached.";

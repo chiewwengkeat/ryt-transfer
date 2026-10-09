@@ -14,18 +14,6 @@ import {
   writePendingTransfer,
 } from "./pending-transfers";
 
-const FIRST_CUSTOMER = "cus_first";
-const SECOND_CUSTOMER = "cus_second";
-
-function approvingRecord(transferId: string) {
-  return {
-    transferId,
-    idempotencyKey: `key-${transferId}`,
-    createdAt: "2026-10-08T01:00:00.000Z",
-    stage: PendingTransferStage.Approving,
-  };
-}
-
 afterEach(() => {
   jest.restoreAllMocks();
 });
@@ -140,3 +128,15 @@ it("still lists a customer's transfers when a write stopped between its index en
     approvingRecord("trf_1"),
   ]);
 });
+
+const FIRST_CUSTOMER = "cus_first";
+const SECOND_CUSTOMER = "cus_second";
+
+function approvingRecord(transferId: string) {
+  return {
+    transferId,
+    idempotencyKey: `key-${transferId}`,
+    createdAt: "2026-10-08T01:00:00.000Z",
+    stage: PendingTransferStage.Approving,
+  };
+}

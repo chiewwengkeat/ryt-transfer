@@ -24,28 +24,6 @@ export enum NextLaunchNotice {
   FraudBlocked = "fraud_blocked",
 }
 
-const NEXT_LAUNCH_NOTICE_OF_OUTCOME: Record<
-  (typeof SETTLED_TRANSFER_OUTCOMES)[number],
-  NextLaunchNotice
-> = {
-  [TransferScenarioId.Completed]: NextLaunchNotice.Completed,
-  [TransferScenarioId.RefundedAfterProcessing]: NextLaunchNotice.Refunded,
-  [TransferScenarioId.FraudBlocked]: NextLaunchNotice.FraudBlocked,
-  [TransferScenarioId.RecipientAccountInactive]: NextLaunchNotice.Declined,
-  [TransferScenarioId.BalanceOrLimitShortAtApproval]: NextLaunchNotice.Declined,
-  [TransferScenarioId.ApprovalExpired]: NextLaunchNotice.Declined,
-};
-
-// No query function: whose records these are is known only to the code that changes them, so each refill says.
-const getPendingTransferNoticesOptions = () =>
-  queryOptions<{
-    customerId: string;
-    records: Awaited<ReturnType<typeof listPendingTransfers>>;
-  }>({
-    queryKey: transferKeys.pendingNotices,
-    queryFn: skipToken,
-  });
-
 export async function refreshPendingTransferNotices(
   queryClient: QueryClient,
   customerId: string,
@@ -92,3 +70,25 @@ export function usePendingTransferNotices() {
     ),
   };
 }
+
+const NEXT_LAUNCH_NOTICE_OF_OUTCOME: Record<
+  (typeof SETTLED_TRANSFER_OUTCOMES)[number],
+  NextLaunchNotice
+> = {
+  [TransferScenarioId.Completed]: NextLaunchNotice.Completed,
+  [TransferScenarioId.RefundedAfterProcessing]: NextLaunchNotice.Refunded,
+  [TransferScenarioId.FraudBlocked]: NextLaunchNotice.FraudBlocked,
+  [TransferScenarioId.RecipientAccountInactive]: NextLaunchNotice.Declined,
+  [TransferScenarioId.BalanceOrLimitShortAtApproval]: NextLaunchNotice.Declined,
+  [TransferScenarioId.ApprovalExpired]: NextLaunchNotice.Declined,
+};
+
+// No query function: whose records these are is known only to the code that changes them, so each refill says.
+const getPendingTransferNoticesOptions = () =>
+  queryOptions<{
+    customerId: string;
+    records: Awaited<ReturnType<typeof listPendingTransfers>>;
+  }>({
+    queryKey: transferKeys.pendingNotices,
+    queryFn: skipToken,
+  });

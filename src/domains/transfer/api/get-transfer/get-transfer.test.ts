@@ -20,36 +20,6 @@ import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 
-const transferAt = (
-  transferId: string,
-  version: number,
-  status: TransferStatus,
-): Transfer => ({
-  transferId,
-  version,
-  direction: TransferDirection.Out,
-  status,
-  funds:
-    status === TransferStatus.Completed
-      ? TransferFunds.Debited
-      : TransferFunds.NotDebited,
-  counterparty: {
-    registeredName: "TAN WEI MING",
-    idType: RecipientIdType.Mobile,
-    idValueMasked: "•••• 6789",
-    bankName: "Maybank",
-  },
-  amount: { minor: 10_000, currency: "MYR" },
-  createdAt: "2026-10-07T09:30:00+08:00",
-  updatedAt: "2026-10-07T09:30:05+08:00",
-});
-
-const EMPTY_HISTORY_PAGE: ListTransfersResponse = {
-  items: [],
-  nextCursor: null,
-  days: [],
-};
-
 it.each([
   { relation: "the same version as", versionOfNext: 3 },
   { relation: "an older version than", versionOfNext: 2 },
@@ -145,3 +115,33 @@ it("leaves a history load running when history holds no copy of the transfer rea
     pageParams: [null],
   });
 });
+
+const transferAt = (
+  transferId: string,
+  version: number,
+  status: TransferStatus,
+): Transfer => ({
+  transferId,
+  version,
+  direction: TransferDirection.Out,
+  status,
+  funds:
+    status === TransferStatus.Completed
+      ? TransferFunds.Debited
+      : TransferFunds.NotDebited,
+  counterparty: {
+    registeredName: "TAN WEI MING",
+    idType: RecipientIdType.Mobile,
+    idValueMasked: "•••• 6789",
+    bankName: "Maybank",
+  },
+  amount: { minor: 10_000, currency: "MYR" },
+  createdAt: "2026-10-07T09:30:00+08:00",
+  updatedAt: "2026-10-07T09:30:05+08:00",
+});
+
+const EMPTY_HISTORY_PAGE: ListTransfersResponse = {
+  items: [],
+  nextCursor: null,
+  days: [],
+};

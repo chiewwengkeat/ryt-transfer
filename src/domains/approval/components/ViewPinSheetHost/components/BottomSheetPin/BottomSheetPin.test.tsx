@@ -13,35 +13,6 @@ import {
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
-async function openPinSheetWithBiometricsOff() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  approvalSettingsStore.setState({ biometricApprovalOn: false });
-  await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  await screen.findByText("Approve with your PIN");
-}
-
-async function typeDigits(digits: string) {
-  for (const digit of digits)
-    await fireEvent.press(screen.getByRole("button", { name: digit }));
-}
-
-function approvalsSent() {
-  return sentRequests.filter((request) =>
-    new URL(request.url).pathname.endsWith("/approve"),
-  );
-}
-
 it(
   "asks for the PIN, saying why face or fingerprint approval isn't available, with no prompt",
   scenarioTest("transfer.biometrics_unavailable", async () => {
@@ -156,3 +127,32 @@ it(
     expect(approvalsSent()).toEqual([]);
   }),
 );
+
+async function openPinSheetWithBiometricsOff() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  approvalSettingsStore.setState({ biometricApprovalOn: false });
+  await renderRoute("/transfer");
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText("Approve with your PIN");
+}
+
+async function typeDigits(digits: string) {
+  for (const digit of digits)
+    await fireEvent.press(screen.getByRole("button", { name: digit }));
+}
+
+function approvalsSent() {
+  return sentRequests.filter((request) =>
+    new URL(request.url).pathname.endsWith("/approve"),
+  );
+}

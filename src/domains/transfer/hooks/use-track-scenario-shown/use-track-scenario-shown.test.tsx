@@ -11,28 +11,6 @@ import { renderRoute } from "@/test/render/render-route";
 
 import { useTrackScenarioShown } from "./use-track-scenario-shown";
 
-const homeScenarioStore = createStore<{ scenario?: TransferScenarioId }>(
-  () => ({}),
-);
-
-function HomeOpeningDetails() {
-  const scenario = useStore(homeScenarioStore, (home) => home.scenario);
-  useTrackScenarioShown(scenario);
-  return (
-    <>
-      <Text>{scenario ?? "No scenario"}</Text>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => {
-          router.push("./details");
-        }}
-      >
-        <Text>Open details</Text>
-      </Pressable>
-    </>
-  );
-}
-
 it("reports what a covered screen came to show once it is back on top, and not again on later returns", async () => {
   await renderRoute("/", {
     appDir: "src/app",
@@ -64,3 +42,25 @@ it("reports what a covered screen came to show once it is back on top, and not a
     ),
   ).toHaveLength(1);
 });
+
+const homeScenarioStore = createStore<{ scenario?: TransferScenarioId }>(
+  () => ({}),
+);
+
+function HomeOpeningDetails() {
+  const scenario = useStore(homeScenarioStore, (home) => home.scenario);
+  useTrackScenarioShown(scenario);
+  return (
+    <>
+      <Text>{scenario ?? "No scenario"}</Text>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          router.push("./details");
+        }}
+      >
+        <Text>Open details</Text>
+      </Pressable>
+    </>
+  );
+}

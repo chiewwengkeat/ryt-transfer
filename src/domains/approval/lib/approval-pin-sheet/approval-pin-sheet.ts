@@ -8,7 +8,6 @@ export enum ApprovalPinSheetStep {
 }
 
 const CLOSED_SHEET: ApprovalPinSheet = { step: ApprovalPinSheetStep.Closed };
-const IGNORE_ANSWER = () => undefined;
 
 // ⛔ Never the PIN: it passes through `answer` to the caller and lives only in that call.
 export const approvalPinSheetStore = createStore<ApprovalPinSheet>()(
@@ -61,6 +60,8 @@ export function showApprovalPinLocked(message: string) {
 export function closeApprovalPinSheet() {
   approvalPinSheetStore.setState(CLOSED_SHEET, true);
 }
+
+const IGNORE_ANSWER = () => undefined;
 
 type ApprovalPinSheetWords = {
   message: string;

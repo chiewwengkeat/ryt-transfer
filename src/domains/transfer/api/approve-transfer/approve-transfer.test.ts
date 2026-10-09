@@ -18,6 +18,53 @@ import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
 
+it("signs the reviewed details as JSON in the fixed key order", () => {
+  expect(buildSignedApprovalText({ ...REVIEWED_TRANSFER, note: "Lunch" })).toBe(
+    '{"format":"transfer-approval/1","transferId":"trf_8c1f3a","challenge":"q7Rk2nVb0sXe","recipientRef":"ref_51d0","registeredName":"NUR AISYAH BINTI AHMAD","idValueMasked":"•••• 4567","bankCode":"MBB","amountMinor":12550,"currency":"MYR","note":"Lunch"}',
+  );
+});
+
+it("keeps the note's key as null when there is no note", () => {
+  const expected = buildSignedApprovalText({
+    ...REVIEWED_TRANSFER,
+    note: null,
+  });
+
+  expect(expected).toMatch(/,"note":null}$/);
+  expect(buildSignedApprovalText(REVIEWED_TRANSFER)).toBe(expected);
+  expect(buildSignedApprovalText({ ...REVIEWED_TRANSFER, note: "" })).toBe(
+    expected,
+  );
+});
+
+it("keeps the copy of a transfer it holds when the approval answers the same version", async () => {
+  const queryClient = await approveWithTheBankAnswering(
+    transferAt(2, TransferStatus.Completed),
+    transferAt(2, TransferStatus.Processing),
+  );
+
+  expect(
+    queryClient.getQueryData(getTransferOptions("trf_1").queryKey)?.status,
+  ).toBe(TransferStatus.Processing);
+});
+
+it("keeps the approval's copy of a transfer when a later read answers the same version", async () => {
+  const queryClient = await approveWithTheBankAnswering(
+    transferAt(2, TransferStatus.Completed),
+  );
+  mswServer.use(
+    http.get("*/transfers/:transferId", () =>
+      HttpResponse.json({ transfer: transferAt(2, TransferStatus.Processing) }),
+    ),
+  );
+
+  await queryClient.fetchQuery(getTransferOptions("trf_1"));
+
+  expect(
+    queryClient.getQueryData(getTransferOptions("trf_1").queryKey)?.status,
+  ).toBe(TransferStatus.Completed);
+});
+
 const REVIEWED_TRANSFER = {
   transferId: "trf_8c1f3a",
   challenge: "q7Rk2nVb0sXe",
@@ -71,50 +118,3 @@ async function approveWithTheBankAnswering(answer: Transfer, held?: Transfer) {
   );
   return queryClient;
 }
-
-it("signs the reviewed details as JSON in the fixed key order", () => {
-  expect(buildSignedApprovalText({ ...REVIEWED_TRANSFER, note: "Lunch" })).toBe(
-    '{"format":"transfer-approval/1","transferId":"trf_8c1f3a","challenge":"q7Rk2nVb0sXe","recipientRef":"ref_51d0","registeredName":"NUR AISYAH BINTI AHMAD","idValueMasked":"•••• 4567","bankCode":"MBB","amountMinor":12550,"currency":"MYR","note":"Lunch"}',
-  );
-});
-
-it("keeps the note's key as null when there is no note", () => {
-  const expected = buildSignedApprovalText({
-    ...REVIEWED_TRANSFER,
-    note: null,
-  });
-
-  expect(expected).toMatch(/,"note":null}$/);
-  expect(buildSignedApprovalText(REVIEWED_TRANSFER)).toBe(expected);
-  expect(buildSignedApprovalText({ ...REVIEWED_TRANSFER, note: "" })).toBe(
-    expected,
-  );
-});
-
-it("keeps the copy of a transfer it holds when the approval answers the same version", async () => {
-  const queryClient = await approveWithTheBankAnswering(
-    transferAt(2, TransferStatus.Completed),
-    transferAt(2, TransferStatus.Processing),
-  );
-
-  expect(
-    queryClient.getQueryData(getTransferOptions("trf_1").queryKey)?.status,
-  ).toBe(TransferStatus.Processing);
-});
-
-it("keeps the approval's copy of a transfer when a later read answers the same version", async () => {
-  const queryClient = await approveWithTheBankAnswering(
-    transferAt(2, TransferStatus.Completed),
-  );
-  mswServer.use(
-    http.get("*/transfers/:transferId", () =>
-      HttpResponse.json({ transfer: transferAt(2, TransferStatus.Processing) }),
-    ),
-  );
-
-  await queryClient.fetchQuery(getTransferOptions("trf_1"));
-
-  expect(
-    queryClient.getQueryData(getTransferOptions("trf_1").queryKey)?.status,
-  ).toBe(TransferStatus.Completed);
-});

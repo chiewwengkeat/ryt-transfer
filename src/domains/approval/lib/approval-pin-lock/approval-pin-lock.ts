@@ -5,12 +5,6 @@ import {
   writeSecureRecord,
 } from "@/shared/platform/secure-storage/secure-storage";
 
-// Beside the phone's key ids, so whatever wipes the module's records takes the lock with them.
-const PIN_LOCKED_RECORD = { namespace: "approval", name: "pin-locked" };
-
-// Told only once the record has changed, so a mounted reader agrees with what the approve path reads.
-const pinLockListeners = new Set<(pinLocked: boolean) => void>();
-
 export async function rememberApprovalPinLocked() {
   await writeSecureRecord(PIN_LOCKED_RECORD, "locked").then(
     () => {
@@ -49,3 +43,9 @@ export function subscribeToApprovalPinLock(
     pinLockListeners.delete(hearPinLock);
   };
 }
+
+// Beside the phone's key ids, so whatever wipes the module's records takes the lock with them.
+const PIN_LOCKED_RECORD = { namespace: "approval", name: "pin-locked" };
+
+// Told only once the record has changed, so a mounted reader agrees with what the approve path reads.
+const pinLockListeners = new Set<(pinLocked: boolean) => void>();

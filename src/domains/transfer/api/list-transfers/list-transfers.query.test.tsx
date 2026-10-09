@@ -27,50 +27,6 @@ import type { ListTransfersResponse } from "./list-transfers.type";
 
 // Not merged into list-transfers.test.tsx: its fixtures replace the Jest bank's history before every test.
 
-function renderTransferHistory(queryClient: QueryClient) {
-  return renderHook(() => useListTransfers(), {
-    wrapper: ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    ),
-  });
-}
-
-// Paged as the screen pages: a fetch given `pages` keeps it, and every later refetch would replay that many.
-async function loadBothPages(queryClient: QueryClient) {
-  const { result } = await renderTransferHistory(queryClient);
-  await waitFor(() => {
-    expect(result.current.data?.transfers).toHaveLength(30);
-  });
-  const firstPage = result.current.data;
-  await act(() => result.current.fetchNextPage());
-  await waitFor(() => {
-    expect(result.current.data?.transfers).toHaveLength(45);
-  });
-  sentRequests.splice(0);
-  const cachedPages = queryClient.getQueryData(
-    getListTransfersOptions().queryKey,
-  );
-  if (!cachedPages) throw new Error("History did not load.");
-  return { firstPage, bothPages: result.current.data, cachedPages };
-}
-
-async function askForNextPageWhileARefreshWaitsOffline(
-  queryClient: QueryClient,
-) {
-  const { result, unmount } = await renderTransferHistory(queryClient);
-  await waitFor(() => {
-    expect(result.current.data?.transfers).toHaveLength(30);
-  });
-  sentRequests.splice(0);
-  onlineManager.setOnline(false);
-  void resetTransferHistory(queryClient);
-  await waitFor(() => {
-    expect(result.current.isPaused).toBe(true);
-  });
-  askForNextTransferHistoryPage(queryClient, result.current);
-  return { result, unmount };
-}
-
 it("asks for 30 transfers at a time, and for each later page by the cursor the bank last returned", async () => {
   const history = await createQueryClientWithoutGcTimers().fetchInfiniteQuery({
     ...getListTransfersOptions(),
@@ -283,3 +239,47 @@ it("ignores a copy of the same version as the one listed", async () => {
     before,
   );
 });
+
+function renderTransferHistory(queryClient: QueryClient) {
+  return renderHook(() => useListTransfers(), {
+    wrapper: ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    ),
+  });
+}
+
+// Paged as the screen pages: a fetch given `pages` keeps it, and every later refetch would replay that many.
+async function loadBothPages(queryClient: QueryClient) {
+  const { result } = await renderTransferHistory(queryClient);
+  await waitFor(() => {
+    expect(result.current.data?.transfers).toHaveLength(30);
+  });
+  const firstPage = result.current.data;
+  await act(() => result.current.fetchNextPage());
+  await waitFor(() => {
+    expect(result.current.data?.transfers).toHaveLength(45);
+  });
+  sentRequests.splice(0);
+  const cachedPages = queryClient.getQueryData(
+    getListTransfersOptions().queryKey,
+  );
+  if (!cachedPages) throw new Error("History did not load.");
+  return { firstPage, bothPages: result.current.data, cachedPages };
+}
+
+async function askForNextPageWhileARefreshWaitsOffline(
+  queryClient: QueryClient,
+) {
+  const { result, unmount } = await renderTransferHistory(queryClient);
+  await waitFor(() => {
+    expect(result.current.data?.transfers).toHaveLength(30);
+  });
+  sentRequests.splice(0);
+  onlineManager.setOnline(false);
+  void resetTransferHistory(queryClient);
+  await waitFor(() => {
+    expect(result.current.isPaused).toBe(true);
+  });
+  askForNextTransferHistoryPage(queryClient, result.current);
+  return { result, unmount };
+}

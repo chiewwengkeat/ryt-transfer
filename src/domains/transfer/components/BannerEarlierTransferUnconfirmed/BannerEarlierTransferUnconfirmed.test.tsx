@@ -24,46 +24,6 @@ import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 import { scenarioTest } from "@/test/render/drive-app";
 
-const STILL_BEING_CHECKED =
-  "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
-
-async function reviewANewTransferWhileAnEarlierOneIsProcessing() {
-  const {
-    body: { customerId },
-  } = await sendToBank<{ customerId: string }>("GET", "/accounts/primary");
-  const { created } = await startTestTransfer(10_000);
-  await writePendingTransfer(customerId, {
-    transferId: created.transfer.transferId,
-    idempotencyKey: "approval-key",
-    createdAt: "2026-10-07T01:30:00.000Z",
-    stage: PendingTransferStage.Processing,
-  });
-  const bankAnswer = {
-    transfer: {
-      ...created.transfer,
-      reference: "20261007C0FFEE00",
-      status: TransferStatus.Processing,
-      funds: TransferFunds.Debited,
-    },
-  };
-  mswServer.use(
-    http.get("*/transfers/:transferId", () => HttpResponse.json(bankAnswer)),
-  );
-  await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  return bankAnswer;
-}
-
 it(
   "warns on review that the last transfer is still being checked, and still lets them send this one",
   scenarioTest("transfer.earlier_transfer_unconfirmed", async () => {
@@ -75,25 +35,6 @@ it(
     ).toBeOnTheScreen();
   }),
 );
-
-async function launchHomeKeepingAnEarlierTransfer(
-  answerItsRead: (transfer: Transfer) => Promise<Response> | Response,
-) {
-  const {
-    body: { customerId },
-  } = await sendToBank<{ customerId: string }>("GET", "/accounts/primary");
-  const { created } = await startTestTransfer(10_000);
-  await writePendingTransfer(customerId, {
-    transferId: created.transfer.transferId,
-    idempotencyKey: "approval-key",
-    createdAt: "2026-10-07T01:30:00.000Z",
-    stage: PendingTransferStage.Processing,
-  });
-  mswServer.use(
-    http.get("*/transfers/:transferId", () => answerItsRead(created.transfer)),
-  );
-  await renderRoute("/");
-}
 
 it("reports no earlier transfer still being checked that it warns about only while the launch's read is out, and that read finds ended", async () => {
   let answerTheLaunchRead = () => undefined as void;
@@ -336,3 +277,62 @@ it("sends nothing more under the session-ended view when review's check that was
     sentRequests.slice(requestsWhenTheSessionEnded).map(({ url }) => url),
   ).toEqual([]);
 });
+
+const STILL_BEING_CHECKED =
+  "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
+
+async function reviewANewTransferWhileAnEarlierOneIsProcessing() {
+  const {
+    body: { customerId },
+  } = await sendToBank<{ customerId: string }>("GET", "/accounts/primary");
+  const { created } = await startTestTransfer(10_000);
+  await writePendingTransfer(customerId, {
+    transferId: created.transfer.transferId,
+    idempotencyKey: "approval-key",
+    createdAt: "2026-10-07T01:30:00.000Z",
+    stage: PendingTransferStage.Processing,
+  });
+  const bankAnswer = {
+    transfer: {
+      ...created.transfer,
+      reference: "20261007C0FFEE00",
+      status: TransferStatus.Processing,
+      funds: TransferFunds.Debited,
+    },
+  };
+  mswServer.use(
+    http.get("*/transfers/:transferId", () => HttpResponse.json(bankAnswer)),
+  );
+  await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  return bankAnswer;
+}
+
+async function launchHomeKeepingAnEarlierTransfer(
+  answerItsRead: (transfer: Transfer) => Promise<Response> | Response,
+) {
+  const {
+    body: { customerId },
+  } = await sendToBank<{ customerId: string }>("GET", "/accounts/primary");
+  const { created } = await startTestTransfer(10_000);
+  await writePendingTransfer(customerId, {
+    transferId: created.transfer.transferId,
+    idempotencyKey: "approval-key",
+    createdAt: "2026-10-07T01:30:00.000Z",
+    stage: PendingTransferStage.Processing,
+  });
+  mswServer.use(
+    http.get("*/transfers/:transferId", () => answerItsRead(created.transfer)),
+  );
+  await renderRoute("/");
+}

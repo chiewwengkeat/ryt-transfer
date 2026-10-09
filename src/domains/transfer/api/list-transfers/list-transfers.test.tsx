@@ -28,41 +28,6 @@ import {
 } from "./list-transfers";
 import type { ListTransfersResponse } from "./list-transfers.type";
 
-const transferAt = (version: number, status: TransferStatus): Transfer => ({
-  transferId: "trf_1",
-  version,
-  direction: TransferDirection.Out,
-  status,
-  funds: TransferFunds.Debited,
-  counterparty: {
-    registeredName: "TAN WEI MING",
-    idType: RecipientIdType.Mobile,
-    idValueMasked: "•••• 6789",
-    bankName: "Maybank",
-  },
-  amount: { minor: 10_000, currency: "MYR" },
-  createdAt: "2026-10-07T09:30:00+08:00",
-  updatedAt: "2026-10-07T09:30:05+08:00",
-});
-
-function historyHolding(...pages: Transfer[][]) {
-  const queryClient = createQueryClientWithoutGcTimers();
-  queryClient.setQueryData<InfiniteData<ListTransfersResponse>>(
-    transferKeys.history(),
-    {
-      pages: pages.map((items) => ({ items, nextCursor: null, days: [] })),
-      pageParams: pages.map((_, index) => index),
-    },
-  );
-  return {
-    queryClient,
-    read: () =>
-      queryClient.getQueryData<InfiniteData<ListTransfersResponse>>(
-        transferKeys.history(),
-      ),
-  };
-}
-
 it("patches a transfer in history only with a newer copy of it", async () => {
   const history = historyHolding([transferAt(2, TransferStatus.Processing)]);
 
@@ -186,3 +151,38 @@ it("asks for the next page alone when the list asks once at rest", async () => {
     sentRequests.map(({ url }) => new URL(url).searchParams.get("cursor")),
   ).toEqual(["page-2"]);
 });
+
+const transferAt = (version: number, status: TransferStatus): Transfer => ({
+  transferId: "trf_1",
+  version,
+  direction: TransferDirection.Out,
+  status,
+  funds: TransferFunds.Debited,
+  counterparty: {
+    registeredName: "TAN WEI MING",
+    idType: RecipientIdType.Mobile,
+    idValueMasked: "•••• 6789",
+    bankName: "Maybank",
+  },
+  amount: { minor: 10_000, currency: "MYR" },
+  createdAt: "2026-10-07T09:30:00+08:00",
+  updatedAt: "2026-10-07T09:30:05+08:00",
+});
+
+function historyHolding(...pages: Transfer[][]) {
+  const queryClient = createQueryClientWithoutGcTimers();
+  queryClient.setQueryData<InfiniteData<ListTransfersResponse>>(
+    transferKeys.history(),
+    {
+      pages: pages.map((items) => ({ items, nextCursor: null, days: [] })),
+      pageParams: pages.map((_, index) => index),
+    },
+  );
+  return {
+    queryClient,
+    read: () =>
+      queryClient.getQueryData<InfiniteData<ListTransfersResponse>>(
+        transferKeys.history(),
+      ),
+  };
+}
