@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
@@ -54,6 +54,11 @@ async function launchWithATransferLastSeenProcessing(
     recipientName: lookup.recipient.registeredName,
   };
 }
+
+const readsOfTheBalance = () =>
+  sentRequests.filter(
+    ({ method, url }) => method === "GET" && url.endsWith("/accounts/primary"),
+  ).length;
 
 it.each([
   ["sent", { status: TransferStatus.Completed }, "was sent — money moved."],
@@ -218,11 +223,6 @@ it.each([
       funds: TransferFunds.Debited,
     });
     expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
-    const readsOfTheBalance = () =>
-      sentRequests.filter(
-        ({ method, url }) =>
-          method === "GET" && url.endsWith("/accounts/primary"),
-      ).length;
     const readsBeforeTheTransferEnded = readsOfTheBalance();
     bankAnswer.transfer = {
       ...bankAnswer.transfer,
@@ -262,6 +262,66 @@ it("stops checking the transfer Home warns about while the session-ended view co
   await act(() => jest.advanceTimersByTimeAsync(31_000));
 
   expect(readsOfTheTransfer()).toBe(readsWhenTheSessionEnded);
+});
+
+async function sendHomesCheckWithItsAnswerThatTheTransferEndedStillOut(
+  bankAnswer: Awaited<
+    ReturnType<typeof launchWithATransferLastSeenProcessing>
+  >["bankAnswer"],
+) {
+  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+  bankAnswer.transfer = {
+    ...bankAnswer.transfer,
+    status: TransferStatus.Completed,
+    version: bankAnswer.transfer.version + 1,
+  };
+  mswServer.use(
+    http.get("*/transfers/:transferId", async () => {
+      await delay(5_000);
+      return HttpResponse.json(bankAnswer);
+    }),
+  );
+  await act(() => jest.advanceTimersByTimeAsync(15_000));
+}
+
+it("sends nothing more under the session-ended view when Home's check that was out finds the transfer has ended", async () => {
+  const { bankAnswer } = await launchWithATransferLastSeenProcessing({
+    status: TransferStatus.Processing,
+    funds: TransferFunds.Debited,
+  });
+  await sendHomesCheckWithItsAnswerThatTheTransferEndedStillOut(bankAnswer);
+  mswServer.use(
+    http.get("*/any-request", () => new HttpResponse(null, { status: 401 })),
+  );
+  await act(async () => {
+    await requestJson("/any-request").catch(() => undefined);
+  });
+  expect(
+    screen.getByRole("header", { name: "Your session has ended" }),
+  ).toBeOnTheScreen();
+  const requestsWhenTheSessionEnded = sentRequests.length;
+
+  await act(() => jest.advanceTimersByTimeAsync(6_000));
+
+  expect(
+    sentRequests.slice(requestsWhenTheSessionEnded).map(({ url }) => url),
+  ).toEqual([]);
+});
+
+it("still reads Home's balance again when Home is left while its check that finds the transfer has ended is out", async () => {
+  const { bankAnswer } = await launchWithATransferLastSeenProcessing({
+    status: TransferStatus.Processing,
+    funds: TransferFunds.Debited,
+  });
+  await sendHomesCheckWithItsAnswerThatTheTransferEndedStillOut(bankAnswer);
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Transfer history" }),
+  );
+  const readsWhenHomeWasLeft = readsOfTheBalance();
+
+  await act(() => jest.advanceTimersByTimeAsync(6_000));
+
+  expect(readsOfTheBalance()).toBe(readsWhenHomeWasLeft + 1);
 });
 
 it("keeps quoting the bank's reference a launch's check found, after a later launch's read of the transfer fails", async () => {

@@ -1,7 +1,10 @@
 import { focusManager, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useEffectEvent, useRef } from "react";
+import { use, useEffect, useEffectEvent, useRef } from "react";
 
-import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
+import {
+  ScreensCoveredContext,
+  useIsScreenOnTop,
+} from "@/shared/hooks/use-is-screen-on-top";
 import { reportError } from "@/shared/observability/observability";
 
 import { isSettledTransferOutcome } from "../../../api/get-transfer/get-transfer";
@@ -20,10 +23,13 @@ export function useRecheckEarlierTransferWhileOnTop({
 }) {
   const queryClient = useQueryClient();
   const screenOnTop = useIsScreenOnTop();
+  const screensCovered = use(ScreensCoveredContext);
   const transferIdsToldSettledRef = useRef(new Set<string>());
-  // Once per transfer: a settled answer row 5 cannot show, such as one no newer than the copy held, keeps it ticking.
   const tellEarlierTransferSettled = useEffectEvent(
     (settledTransferId: string) => {
+      // Covered, not off top: under the session-ended view reads answer 401, but a check out as Home is left still owes it.
+      if (screensCovered) return;
+      // Once per transfer: a settled answer row 5 cannot show, such as one no newer than the copy held, keeps it ticking.
       if (transferIdsToldSettledRef.current.has(settledTransferId)) return;
       transferIdsToldSettledRef.current.add(settledTransferId);
       onSettled();
