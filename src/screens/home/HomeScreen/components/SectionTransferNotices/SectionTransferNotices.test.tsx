@@ -16,6 +16,8 @@ import {
 } from "@/domains/transfer/hooks/pending-transfers";
 import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
+import { clearTransferScenario } from "@/test/clear-transfer-scenario";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { relaunchApp, renderRoute } from "@/test/render-route";
@@ -149,6 +151,51 @@ it("keeps checking a transfer Home warns about while Home stays open, and tells 
   ).toBeOnTheScreen();
   expect(screen.queryByText(STILL_BEING_CHECKED)).toBeNull();
 });
+
+it(
+  "keeps checking from Home a transfer Result could not reach the bank about, and tells Home how it ended once the bank answers",
+  scenarioTest("transfer.status_unreachable", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer", disabled: false }),
+    );
+    await fireEvent.changeText(
+      await screen.findByLabelText("DuitNow mobile number"),
+      "012-345 6789",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByText("RM 12,845.50");
+    await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+    await screen.findByRole(
+      "header",
+      { name: "Checking your transfer" },
+      { timeout: 10_000 },
+    );
+    await act(() => jest.advanceTimersByTimeAsync(17_000));
+    await screen.findByRole("header", { name: "Still checking your transfer" });
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    expect(
+      await screen.findByText(/^Your last transfer is still being checked/),
+    ).toBeOnTheScreen();
+    clearTransferScenario();
+
+    await act(() => jest.advanceTimersByTimeAsync(15_000));
+
+    expect(
+      await screen.findByText(
+        /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/,
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByText(/^Your last transfer is still being checked/),
+    ).toBeNull();
+  }),
+);
 
 it("shows the balance and today's limit read again once Home's check finds the transfer it warned about has ended", async () => {
   const { body: account } = await sendToBank<GetPrimaryAccountResponse>(
