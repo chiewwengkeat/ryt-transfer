@@ -76,6 +76,7 @@ export default function CardBalance({
       <Card>
         <BannerAction
           tone="negative"
+          announce={!failureIsSessionEnd}
           message={t(`common.${failureScenario}.body`)}
           action={{
             label: t(`common.${failureScenario}.retry`),

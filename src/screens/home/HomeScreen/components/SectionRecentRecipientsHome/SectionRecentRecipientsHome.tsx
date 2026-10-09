@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
+import { isSessionEndFailure } from "@/shared/http/transport-error";
 import { useIsOffline } from "@/shared/platform/offline";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 
@@ -20,6 +21,7 @@ export default function SectionRecentRecipientsHome() {
       {recents.isError && !offline && (
         <BannerAction
           tone="negative"
+          announce={!isSessionEndFailure(recents.error)}
           message={t("common.start_unexpected.body")}
           action={{
             label: t("common.start_unexpected.retry"),

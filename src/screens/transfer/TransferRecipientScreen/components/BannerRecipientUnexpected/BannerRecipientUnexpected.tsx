@@ -11,15 +11,15 @@ interface Props {
 }
 export default function BannerRecipientUnexpected({ failure, onRetry }: Props) {
   const { t } = useTranslation("transfer");
+  const failureIsSessionEnd = isSessionEndFailure(failure);
   // Sign-in reads the list again, which clears this.
   useTrackScenarioShown(
-    isSessionEndFailure(failure)
-      ? undefined
-      : TransferFlowScenario.RecipientUnexpected,
+    failureIsSessionEnd ? undefined : TransferFlowScenario.RecipientUnexpected,
   );
   return (
     <BannerAction
       tone="negative"
+      announce={!failureIsSessionEnd}
       message={t("common.recipient_unexpected.body")}
       action={{
         label: t("common.recipient_unexpected.retry"),

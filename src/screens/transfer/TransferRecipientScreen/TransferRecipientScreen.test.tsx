@@ -9,6 +9,7 @@ import { AccessibilityInfo } from "react-native";
 
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { parseTypedAmount } from "@/shared/lib/money/money";
+import { moveAppTo } from "@/test/harness/app-state";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
@@ -271,7 +272,9 @@ it("says something unexpected went wrong in the bank sheet when the banks cannot
   expect(banksUnexpected).not.toBeOnTheScreen();
 });
 
-it("reports only the session's end for banks that failed into it with the bank sheet open, listing them once signed in again", async () => {
+it("reports only the session's end, and says no failure, for banks that failed into it with the bank sheet open, listing them once signed in again", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
   let answerBanks: (response: Response) => void = () => undefined;
   mswServer.use(
     http.get(
@@ -303,6 +306,27 @@ it("reports only the session's end for banks that failed into it with the bank s
   expect(reportedScenarios().slice(reportsBeforeTheSessionEnded)).toEqual([
     "transfer.session_ended",
   ]);
+  expect(announce).not.toHaveBeenCalledWith("Something unexpected went wrong.");
+});
+
+it("never says the recent recipients failed when only the session's end failed them, once they sign in again", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  await renderRoute("/transfer");
+  await screen.findAllByRole("button", { name: /••••/ });
+  mswServer.use(http.all("*", () => new HttpResponse(null, { status: 401 })));
+
+  moveAppTo("background");
+  moveAppTo("active");
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  mswServer.resetHandlers();
+  await fireEvent.press(signInAgain);
+  await act(() => jest.advanceTimersByTimeAsync(2_000));
+
+  expect(screen.queryByText("Something unexpected went wrong.")).toBeNull();
+  expect(announce).not.toHaveBeenCalledWith("Something unexpected went wrong.");
 });
 
 it("hides the bank sheet's something-unexpected message while the phone has no connection", async () => {

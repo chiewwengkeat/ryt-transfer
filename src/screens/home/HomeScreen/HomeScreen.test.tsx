@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { t } from "i18next";
 import { http, HttpResponse } from "msw";
-import { BackHandler } from "react-native";
+import { AccessibilityInfo, BackHandler } from "react-native";
 
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import {
@@ -214,7 +214,9 @@ it("reports only the session's end when Home's own reads answer that it has ende
   expect(reportedScenarios()).toEqual(["transfer.session_ended"]);
 });
 
-it("reports no failure of a balance that loaded and then answered that the session had ended, once they sign in again", async () => {
+it("neither reports nor says a failure of the balance and recent recipients that loaded and then answered that the session had ended, once they sign in again", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
   await renderRoute("/");
   expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
   mswServer.use(http.all("*", () => new HttpResponse(null, { status: 401 })));
@@ -229,6 +231,7 @@ it("reports no failure of a balance that loaded and then answered that the sessi
 
   expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
   expect(reportedScenarios()).not.toContain("transfer.start_unexpected");
+  expect(announce).not.toHaveBeenCalledWith("Something unexpected went wrong.");
 });
 
 it.each([
