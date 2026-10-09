@@ -22,12 +22,12 @@ import {
   reportBiometricSensorUnavailable,
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { moveAppTo } from "@/test/harness/app-state";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
 import {
   observedRecords,
   reportedScenarios,
 } from "@/test/harness/recording-sink";
-import { moveAppTo } from "@/test/move-app-to";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";

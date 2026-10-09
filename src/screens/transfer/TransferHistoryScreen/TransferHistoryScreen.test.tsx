@@ -10,9 +10,9 @@ import {
 import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
 import { lookUpTestRecipient } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { moveAppTo } from "@/test/harness/app-state";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { observedRecords } from "@/test/harness/recording-sink";
-import { moveAppTo } from "@/test/move-app-to";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";

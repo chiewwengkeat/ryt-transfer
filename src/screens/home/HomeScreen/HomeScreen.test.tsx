@@ -10,12 +10,12 @@ import {
 } from "@/test/bank-client";
 import { clearTransferScenario } from "@/test/clear-transfer-scenario";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { moveAppTo } from "@/test/harness/app-state";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import {
   observedRecords,
   reportedScenarios,
 } from "@/test/harness/recording-sink";
-import { moveAppTo } from "@/test/move-app-to";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";

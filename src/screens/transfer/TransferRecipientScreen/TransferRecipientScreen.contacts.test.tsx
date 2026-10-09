@@ -6,6 +6,7 @@ import {
 import { PermissionStatus } from "expo";
 import { Linking } from "react-native";
 
+import { moveAppTo } from "@/test/harness/app-state";
 import {
   setContactsPermission,
   setContactsPickerFailingOnce,
@@ -13,7 +14,6 @@ import {
   setPickedContactUnreadable,
 } from "@/test/harness/contacts-native-double";
 import { reportedScenarios } from "@/test/harness/recording-sink";
-import { moveAppTo } from "@/test/move-app-to";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
