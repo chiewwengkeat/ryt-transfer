@@ -4,15 +4,21 @@ import {
   screen,
   userEvent,
 } from "@testing-library/react-native";
+import { getFixedT } from "i18next";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
 import { parseTypedAmount } from "@/shared/lib/money/money";
+import { setPickedContactPhones } from "@/test/doubles/contacts-native-double";
 import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/drive-app";
+import {
+  findAccessibleGroupAround,
+  scenarioTest,
+} from "@/test/render/drive-app";
 
 import {
   dispatchTransferFlow,
@@ -22,6 +28,7 @@ import {
 const UNKNOWN_BANK_CODE = {
   error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
 };
+const malayTransferT = getFixedT(AppLanguage.Malay, "transfer");
 
 it.each(["012-345 6789", "60123456789", "+60 12 345 6789"])(
   "takes %s as a DuitNow mobile number and moves on to the amount",
@@ -369,4 +376,44 @@ it("starts blank after a transfer whose approval left unanswered, and keeps none
 
   expect(await screen.findByLabelText("Amount (RM)")).toHaveDisplayValue("");
   expect(view.getPathname()).toBe("/transfer/amount");
+});
+
+it("tells a screen reader that the recipient step's recent recipients, ID types, bank field and banks are in Bahasa Malaysia when the app opens with it picked", async () => {
+  pickAppLanguage(AppLanguage.Malay);
+  await renderRoute("/transfer");
+  const [firstRecent] = await screen.findAllByRole("button", { name: /••••/ });
+  expect(firstRecent).toHaveProp("accessibilityLanguage", "ms-MY");
+  const accountNumberChip = screen.getByRole("radio", {
+    name: malayTransferT("chip_id_type.id_type.account_number"),
+  });
+  expect(accountNumberChip).toHaveProp("accessibilityLanguage", "ms-MY");
+  await fireEvent.press(accountNumberChip);
+  const bankField = screen.getByRole("button", {
+    name: malayTransferT("field_bank.label"),
+  });
+  expect(bankField).toHaveProp("accessibilityLanguage", "ms-MY");
+  await fireEvent.press(bankField);
+
+  expect(await screen.findByRole("button", { name: "Maybank" })).toHaveProp(
+    "accessibilityLanguage",
+    "ms-MY",
+  );
+});
+
+it("tells a screen reader that a contact's numbers are in Bahasa Malaysia when the app opens with it picked", async () => {
+  setPickedContactPhones([
+    { id: "phone-1", label: "mobile", number: "012-345 6789" },
+    { id: "phone-2", label: "home", number: "+60 19-876 5432" },
+  ]);
+  pickAppLanguage(AppLanguage.Malay);
+  await renderRoute("/transfer");
+  await fireEvent.press(
+    await screen.findByRole("button", {
+      name: malayTransferT("button_contacts.label"),
+    }),
+  );
+
+  expect(
+    findAccessibleGroupAround(await screen.findByText("+60 19-876 5432")),
+  ).toHaveProp("accessibilityLanguage", "ms-MY");
 });
