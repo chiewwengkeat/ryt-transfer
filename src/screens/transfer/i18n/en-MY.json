@@ -390,7 +390,7 @@
     },
     "first_page_failed": "Couldn't load your transfers.",
     "out_of_date": "Couldn't refresh — this list may be out of date",
-    "try_again": "Try again",
+    "retry": "Try again",
     "day": {
       "title": "{{day}} ({{count}})",
       "label_one": "{{day}}, {{count}} transfer, {{net}}",
@@ -413,7 +413,7 @@
     "not_found": "Couldn't find this transfer.",
     "back": "Back",
     "failed": "Couldn't load this transfer.",
-    "try_again": "Try again",
+    "retry": "Try again",
     "out_of_date": "Couldn't refresh — these details may be out of date"
   }
 }

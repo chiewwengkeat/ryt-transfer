@@ -42,7 +42,7 @@ export default function TransferDetailsScreen() {
             transferQuery.isPaused) && (
             <BannerOutOfDate
               message={t("details.out_of_date")}
-              tryAgainLabel={t("details.try_again")}
+              tryAgainLabel={t("details.retry")}
               onTryAgain={() => {
                 void transferQuery.refetch();
               }}
@@ -54,7 +54,7 @@ export default function TransferDetailsScreen() {
         <ViewScreenFrame
           footer={
             <ButtonPrimary
-              label={t("details.try_again")}
+              label={t("details.retry")}
               onPress={() => {
                 void transferQuery.refetch();
               }}

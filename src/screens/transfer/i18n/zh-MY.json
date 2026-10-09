@@ -390,7 +390,7 @@
     },
     "first_page_failed": "无法加载您的转账。",
     "out_of_date": "无法刷新——此列表可能不是最新的",
-    "try_again": "重试",
+    "retry": "重试",
     "day": {
       "title": "{{day}}（{{count}}）",
       "label_one": "{{day}}，{{count}} 笔转账，{{net}}",
@@ -413,7 +413,7 @@
     "not_found": "找不到此转账。",
     "back": "返回",
     "failed": "无法加载此转账。",
-    "try_again": "重试",
+    "retry": "重试",
     "out_of_date": "无法刷新——这些详情可能不是最新的"
   }
 }

@@ -79,7 +79,7 @@ export default function TransferHistoryScreen() {
         <ViewScreenFrame
           footer={
             <ButtonPrimary
-              label={t("history.try_again")}
+              label={t("history.retry")}
               onPress={() => {
                 void resetTransferHistory(queryClient);
               }}
@@ -97,7 +97,7 @@ export default function TransferHistoryScreen() {
             <View style={styles.outOfDate}>
               <BannerOutOfDate
                 message={t("history.out_of_date")}
-                tryAgainLabel={t("history.try_again")}
+                tryAgainLabel={t("history.retry")}
                 onTryAgain={() => {
                   void resetTransferHistory(queryClient);
                 }}

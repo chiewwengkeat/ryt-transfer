@@ -390,7 +390,7 @@
     },
     "first_page_failed": "Pindahan anda tidak dapat dimuatkan.",
     "out_of_date": "Tidak dapat dimuat semula — senarai ini mungkin sudah lapuk",
-    "try_again": "Cuba lagi",
+    "retry": "Cuba lagi",
     "day": {
       "title": "{{day}} ({{count}})",
       "label_one": "{{day}}, {{count}} pindahan, {{net}}",
@@ -413,7 +413,7 @@
     "not_found": "Pindahan ini tidak dapat ditemui.",
     "back": "Kembali",
     "failed": "Pindahan ini tidak dapat dimuatkan.",
-    "try_again": "Cuba lagi",
+    "retry": "Cuba lagi",
     "out_of_date": "Tidak dapat dimuat semula — butiran ini mungkin sudah lapuk"
   }
 }
