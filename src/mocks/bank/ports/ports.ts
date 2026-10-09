@@ -1,6 +1,20 @@
 import { getRandomBytes } from "expo-crypto";
 import Storage from "expo-sqlite/kv-store";
 
+export function bindBankPorts(ports: typeof boundPorts) {
+  boundPorts = ports;
+}
+
+export function bankPorts() {
+  return boundPorts;
+}
+
+export function randomHex(byteCount: number) {
+  return Array.from(boundPorts.randomBytes(byteCount), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
 const BANK_STORAGE_KEY = "demo-bank";
 
 let boundPorts = {
@@ -17,17 +31,3 @@ let boundPorts = {
     spanDays: 548,
   },
 };
-
-export function bindBankPorts(ports: typeof boundPorts) {
-  boundPorts = ports;
-}
-
-export function bankPorts() {
-  return boundPorts;
-}
-
-export function randomHex(byteCount: number) {
-  return Array.from(boundPorts.randomBytes(byteCount), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
-}

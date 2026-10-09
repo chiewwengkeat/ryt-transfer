@@ -18,47 +18,9 @@ import {
   type BankErrorBody,
 } from "@/test/mock-bank/mock-bank";
 
-const TEST_START_MS = Date.parse("2026-10-08T10:00:00+08:00");
-const HOUR_MS = 60 * 60 * 1000;
-
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-function clockAt(epochMs: number) {
-  jest.spyOn(Date, "now").mockReturnValue(epochMs);
-}
-
-const readTransfer = (transferId: string) =>
-  sendToBank<GetTransferResponse & BankErrorBody>(
-    "GET",
-    `/transfers/${transferId}`,
-  );
-
-async function transferReadyToApprove(amountMinor = 2_550) {
-  const { biometricKeyId } = await pairTestPhone();
-  const started = await startTestTransfer(amountMinor);
-  const approval = signTestApproval(started, {
-    kind: "biometric",
-    keyId: biometricKeyId,
-  });
-  return {
-    started,
-    transferId: started.created.transfer.transferId,
-    approve: (idempotencyKey?: string) =>
-      sendToBank<ApproveTransferResponse & BankErrorBody>(
-        "POST",
-        started.approvalPath,
-        { body: approval, idempotencyKey },
-      ),
-    approvalRequest: (idempotencyKey: string) =>
-      fetch(`${BANK_ORIGIN}${started.approvalPath}`, {
-        method: "POST",
-        headers: { "Idempotency-Key": idempotencyKey },
-        body: JSON.stringify(approval),
-      }),
-  };
-}
 
 describe("overlays that answer for the connection", () => {
   it.each<[`${TransferScenarioId}`, "GET" | "POST", string, number, string]>([
@@ -284,3 +246,41 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
     expect(await readBankBalanceMinor()).toBe(balanceBefore - 2_550);
   });
 });
+
+const TEST_START_MS = Date.parse("2026-10-08T10:00:00+08:00");
+const HOUR_MS = 60 * 60 * 1000;
+
+function clockAt(epochMs: number) {
+  jest.spyOn(Date, "now").mockReturnValue(epochMs);
+}
+
+const readTransfer = (transferId: string) =>
+  sendToBank<GetTransferResponse & BankErrorBody>(
+    "GET",
+    `/transfers/${transferId}`,
+  );
+
+async function transferReadyToApprove(amountMinor = 2_550) {
+  const { biometricKeyId } = await pairTestPhone();
+  const started = await startTestTransfer(amountMinor);
+  const approval = signTestApproval(started, {
+    kind: "biometric",
+    keyId: biometricKeyId,
+  });
+  return {
+    started,
+    transferId: started.created.transfer.transferId,
+    approve: (idempotencyKey?: string) =>
+      sendToBank<ApproveTransferResponse & BankErrorBody>(
+        "POST",
+        started.approvalPath,
+        { body: approval, idempotencyKey },
+      ),
+    approvalRequest: (idempotencyKey: string) =>
+      fetch(`${BANK_ORIGIN}${started.approvalPath}`, {
+        method: "POST",
+        headers: { "Idempotency-Key": idempotencyKey },
+        body: JSON.stringify(approval),
+      }),
+  };
+}

@@ -21,43 +21,6 @@ import { pickTransferScenario } from "./bank";
 import type * as DemoBank from "./bank";
 import type * as SwitcherStore from "@/mocks/switcher/switcher-store/switcher-store";
 
-// A fresh module registry is a fresh app: nothing survives it but what the bank saved.
-function restartTheApp() {
-  let restarted:
-    | {
-        handlers: RequestHandler[];
-        getResponse: typeof Msw.getResponse;
-        restoredScenarioId: string | null;
-      }
-    | undefined;
-  jest.isolateModules(() => {
-    jest
-      .requireActual<typeof BankPorts>("./ports/ports")
-      .bindBankPorts(bankPorts());
-    restarted = {
-      handlers: jest
-        .requireActual<typeof DemoBank>("./bank")
-        .handlersForActiveScenario(),
-      getResponse: jest.requireActual<typeof Msw>("msw").getResponse,
-      restoredScenarioId: jest
-        .requireActual<typeof SwitcherStore>(
-          "@/mocks/switcher/switcher-store/switcher-store",
-        )
-        .switcherStore.getState().scenarioId,
-    };
-  });
-  return {
-    restoredScenarioId: restarted!.restoredScenarioId,
-    askBank: async <ResponseBody>(path: string) => {
-      const response = await restarted!.getResponse(
-        restarted!.handlers,
-        new Request(`${BANK_ORIGIN}${path}`),
-      );
-      return (await response!.json()) as ResponseBody;
-    },
-  };
-}
-
 it("keeps a completed transfer and its debit across a restart", async () => {
   const { biometricKeyId } = await pairTestPhone();
   const started = await startTestTransfer(2_550);
@@ -114,3 +77,40 @@ it.each(["transfer.retired", "toString"])(
     expect(answer.balance.currency).toBe("MYR");
   },
 );
+
+// A fresh module registry is a fresh app: nothing survives it but what the bank saved.
+function restartTheApp() {
+  let restarted:
+    | {
+        handlers: RequestHandler[];
+        getResponse: typeof Msw.getResponse;
+        restoredScenarioId: string | null;
+      }
+    | undefined;
+  jest.isolateModules(() => {
+    jest
+      .requireActual<typeof BankPorts>("./ports/ports")
+      .bindBankPorts(bankPorts());
+    restarted = {
+      handlers: jest
+        .requireActual<typeof DemoBank>("./bank")
+        .handlersForActiveScenario(),
+      getResponse: jest.requireActual<typeof Msw>("msw").getResponse,
+      restoredScenarioId: jest
+        .requireActual<typeof SwitcherStore>(
+          "@/mocks/switcher/switcher-store/switcher-store",
+        )
+        .switcherStore.getState().scenarioId,
+    };
+  });
+  return {
+    restoredScenarioId: restarted!.restoredScenarioId,
+    askBank: async <ResponseBody>(path: string) => {
+      const response = await restarted!.getResponse(
+        restarted!.handlers,
+        new Request(`${BANK_ORIGIN}${path}`),
+      );
+      return (await response!.json()) as ResponseBody;
+    },
+  };
+}

@@ -15,19 +15,6 @@ import {
 import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
 import { bankTransfersWithSeededHistory } from "@/mocks/bank/state/state";
 
-const PAGE_SIZE = 30;
-const MAX_PAGE_SIZE = 100;
-
-// The one order for history: its pages sort by it and its cursors compare by it.
-function compareNewestFirst(
-  [leftMs, leftId]: [number, string],
-  [rightMs, rightId]: [number, string],
-) {
-  if (leftMs !== rightMs) return rightMs - leftMs;
-  if (leftId === rightId) return 0;
-  return leftId < rightId ? 1 : -1;
-}
-
 export function bankTransfersNewestFirst() {
   return bankTransfersWithSeededHistory().sort((left, right) =>
     compareNewestFirst(
@@ -138,4 +125,17 @@ export function listBankTransfers(
       })),
     },
   };
+}
+
+const PAGE_SIZE = 30;
+const MAX_PAGE_SIZE = 100;
+
+// The one order for history: its pages sort by it and its cursors compare by it.
+function compareNewestFirst(
+  [leftMs, leftId]: [number, string],
+  [rightMs, rightId]: [number, string],
+) {
+  if (leftMs !== rightMs) return rightMs - leftMs;
+  if (leftId === rightId) return 0;
+  return leftId < rightId ? 1 : -1;
 }

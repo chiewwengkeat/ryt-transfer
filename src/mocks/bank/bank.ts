@@ -33,15 +33,6 @@ import {
 import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
 import { NO_SCENARIO_PICK } from "@/mocks/switcher/switcher-store/switcher-store";
 
-const accountHandlers = [
-  http.get(BANK_PATHS.primaryAccount, ({ request }) =>
-    answerBankRead(request, getBankPrimaryAccount),
-  ),
-  http.get(BANK_PATHS.transferLimits, ({ request }) =>
-    answerBankRead(request, getBankTransferLimits),
-  ),
-];
-
 // Stays exported: the bundle check finds this name in demo builds, and minify keeps only an export's.
 export const transferHandlers = [
   http.post(BANK_PATHS.recipientLookup, ({ request }) =>
@@ -73,22 +64,6 @@ export const transferHandlers = [
       listBankTransfers(new URL(request.url).searchParams),
     ),
   ),
-];
-
-const approvalHandlers = [
-  http.post(BANK_PATHS.approvalKeys, ({ request }) =>
-    answerBankWrite(
-      request,
-      registerBankApprovalKeys,
-      RegisterApprovalKeysErrorCode,
-    ),
-  ),
-];
-
-const bankHandlers = [
-  ...accountHandlers,
-  ...transferHandlers,
-  ...approvalHandlers,
 ];
 
 export function handlersForActiveScenario(): RequestHandler[] {
@@ -124,3 +99,28 @@ export function unlockDemoPin() {
 export function demoBankNotifications() {
   return [...bankState().notifications];
 }
+
+const accountHandlers = [
+  http.get(BANK_PATHS.primaryAccount, ({ request }) =>
+    answerBankRead(request, getBankPrimaryAccount),
+  ),
+  http.get(BANK_PATHS.transferLimits, ({ request }) =>
+    answerBankRead(request, getBankTransferLimits),
+  ),
+];
+
+const approvalHandlers = [
+  http.post(BANK_PATHS.approvalKeys, ({ request }) =>
+    answerBankWrite(
+      request,
+      registerBankApprovalKeys,
+      RegisterApprovalKeysErrorCode,
+    ),
+  ),
+];
+
+const bankHandlers = [
+  ...accountHandlers,
+  ...transferHandlers,
+  ...approvalHandlers,
+];

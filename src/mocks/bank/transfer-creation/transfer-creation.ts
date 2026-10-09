@@ -21,10 +21,6 @@ import { toMalaysiaIso } from "@/mocks/bank/malaysia-time/malaysia-time";
 import { bankPorts, randomHex } from "@/mocks/bank/ports/ports";
 import { bankState } from "@/mocks/bank/state/state";
 
-const APPROVAL_WINDOW_SECONDS = 60;
-// No wider: DuitNow carries the note onto the recipient's statement as it is.
-const NOTE_PATTERN = /^[A-Za-z0-9 ]{0,30}$/;
-
 export function createBankTransfer({
   body,
   nowMs,
@@ -148,3 +144,7 @@ export function createBankTransfer({
     },
   };
 }
+
+const APPROVAL_WINDOW_SECONDS = 60;
+// No wider: DuitNow carries the note onto the recipient's statement as it is.
+const NOTE_PATTERN = /^[A-Za-z0-9 ]{0,30}$/;

@@ -13,7 +13,6 @@ import {
 import { DEMO_CUSTOMER } from "@/mocks/bank/seed/seed";
 import { activeBankConditions, bankState } from "@/mocks/bank/state/state";
 
-const DEFAULT_DAILY_LIMIT_MINOR = 500_000;
 export const PER_TRANSFER_MAX_MINOR = 5_000_000;
 
 export function transferLimitsAt(nowMs: number) {
@@ -94,3 +93,5 @@ export function getBankTransferLimits({
     },
   };
 }
+
+const DEFAULT_DAILY_LIMIT_MINOR = 500_000;

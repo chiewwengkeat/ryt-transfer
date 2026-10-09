@@ -23,38 +23,6 @@ import { bankTransfersNewestFirst } from "@/mocks/bank/history/history";
 import { randomHex } from "@/mocks/bank/ports/ports";
 import { bankState, type BankTransferRecord } from "@/mocks/bank/state/state";
 
-const RECIPIENT_REF_LIFETIME_SECONDS = 600;
-const RECENT_RECIPIENT_COUNT = 10;
-
-const counterpartyKey = (id: BankTransferRecord["counterpartyId"]) =>
-  `${id.idType}:${id.idValue}:${id.bankCode}`;
-
-// Money moving or moved, so an attempt that failed never makes a recipient familiar.
-function sentTransfersNewestFirst() {
-  return bankTransfersNewestFirst().filter(
-    ({ transfer }) =>
-      transfer.direction === TransferDirection.Out &&
-      (transfer.status === TransferStatus.Processing ||
-        transfer.status === TransferStatus.Completed),
-  );
-}
-
-function recentRecipients() {
-  const seen = new Set<string>();
-  return sentTransfersNewestFirst()
-    .filter(({ counterpartyId }) => {
-      const key = counterpartyKey(counterpartyId);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .slice(0, RECENT_RECIPIENT_COUNT)
-    .map((record) => ({
-      recentId: `rcp_${stableHash(counterpartyKey(record.counterpartyId)).toString(16)}`,
-      record,
-    }));
-}
-
 export function lookupBankRecipient({
   body,
   nowMs,
@@ -155,4 +123,36 @@ export function listBankRecentRecipients(): BankAnswer<ListRecentRecipientsRespo
 
 export function listDuitNowBanks(): BankAnswer<ListBanksResponse> {
   return { status: 200, body: DUITNOW_BANKS };
+}
+
+const RECIPIENT_REF_LIFETIME_SECONDS = 600;
+const RECENT_RECIPIENT_COUNT = 10;
+
+const counterpartyKey = (id: BankTransferRecord["counterpartyId"]) =>
+  `${id.idType}:${id.idValue}:${id.bankCode}`;
+
+// Money moving or moved, so an attempt that failed never makes a recipient familiar.
+function sentTransfersNewestFirst() {
+  return bankTransfersNewestFirst().filter(
+    ({ transfer }) =>
+      transfer.direction === TransferDirection.Out &&
+      (transfer.status === TransferStatus.Processing ||
+        transfer.status === TransferStatus.Completed),
+  );
+}
+
+function recentRecipients() {
+  const seen = new Set<string>();
+  return sentTransfersNewestFirst()
+    .filter(({ counterpartyId }) => {
+      const key = counterpartyKey(counterpartyId);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, RECENT_RECIPIENT_COUNT)
+    .map((record) => ({
+      recentId: `rcp_${stableHash(counterpartyKey(record.counterpartyId)).toString(16)}`,
+      record,
+    }));
 }

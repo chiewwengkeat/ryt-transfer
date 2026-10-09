@@ -19,6 +19,37 @@ export const DUITNOW_BANKS = [
   { bankCode: "RYT", name: "Ryt Bank" },
 ];
 
+// FNV-1a: the same ID must resolve to the same name and bank on every launch and device.
+export function stableHash(text: string) {
+  let hash = 0x811c9dc5;
+  for (const character of text) {
+    hash = Math.imul(hash ^ (character.codePointAt(0) ?? 0), 0x01000193) >>> 0;
+  }
+  return hash;
+}
+
+export function directoryEntryFor(id: {
+  idType: RecipientIdType;
+  idValue: string;
+  bankCode?: string;
+}): LookupRecipientResponse["recipient"] {
+  const hash = stableHash(`${id.idType}:${id.idValue}`);
+  const names =
+    id.idType === RecipientIdType.Brn ? BUSINESS_NAMES : PERSON_NAMES;
+  // An account number names its bank; every other DuitNow ID is registered to one.
+  const bank =
+    (id.idType === RecipientIdType.AccountNumber &&
+      DUITNOW_BANKS.find((candidate) => candidate.bankCode === id.bankCode)) ||
+    DUITNOW_BANKS[hash % DUITNOW_BANKS.length]!;
+  return {
+    registeredName: names[(hash >>> 8) % names.length]!,
+    idType: id.idType,
+    idValueMasked: `•••• ${id.idValue.slice(-4)}`,
+    bankName: bank.name,
+    bankCode: bank.bankCode,
+  };
+}
+
 const PERSON_NAMES = [
   "NUR AISYAH BINTI AHMAD",
   "MUHAMMAD HAFIZ BIN ISMAIL",
@@ -53,34 +84,3 @@ const BUSINESS_NAMES = [
   "PUSAT TUISYEN CEMERLANG",
   "DOBI EXPRESS ENTERPRISE",
 ];
-
-// FNV-1a: the same ID must resolve to the same name and bank on every launch and device.
-export function stableHash(text: string) {
-  let hash = 0x811c9dc5;
-  for (const character of text) {
-    hash = Math.imul(hash ^ (character.codePointAt(0) ?? 0), 0x01000193) >>> 0;
-  }
-  return hash;
-}
-
-export function directoryEntryFor(id: {
-  idType: RecipientIdType;
-  idValue: string;
-  bankCode?: string;
-}): LookupRecipientResponse["recipient"] {
-  const hash = stableHash(`${id.idType}:${id.idValue}`);
-  const names =
-    id.idType === RecipientIdType.Brn ? BUSINESS_NAMES : PERSON_NAMES;
-  // An account number names its bank; every other DuitNow ID is registered to one.
-  const bank =
-    (id.idType === RecipientIdType.AccountNumber &&
-      DUITNOW_BANKS.find((candidate) => candidate.bankCode === id.bankCode)) ||
-    DUITNOW_BANKS[hash % DUITNOW_BANKS.length]!;
-  return {
-    registeredName: names[(hash >>> 8) % names.length]!,
-    idType: id.idType,
-    idValueMasked: `•••• ${id.idValue.slice(-4)}`,
-    bankName: bank.name,
-    bankCode: bank.bankCode,
-  };
-}

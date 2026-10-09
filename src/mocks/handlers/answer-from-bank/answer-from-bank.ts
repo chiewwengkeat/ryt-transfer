@@ -8,32 +8,6 @@ import {
 import { advanceBankTransfers } from "@/mocks/bank/settlement/settlement";
 import { bankState, persistBankState } from "@/mocks/bank/state/state";
 
-async function answerFromBank(
-  request: Request,
-  answerAt: (rawBody: string, nowMs: number) => BankAnswer,
-) {
-  await delay();
-  const rawBody = await request.text();
-  // Everything below is synchronous: no other request can land between expiry and execution.
-  const nowMs = Date.now();
-  advanceBankTransfers(nowMs);
-  const answer = answerAt(rawBody, nowMs);
-  persistBankState();
-  return httpResponseFrom(answer);
-}
-
-function jsonObjectIn(rawBody: string) {
-  let parsed: unknown = {};
-  try {
-    if (rawBody !== "") parsed = JSON.parse(rawBody);
-  } catch {
-    return undefined;
-  }
-  return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
-    ? (parsed as Record<string, unknown>)
-    : undefined;
-}
-
 // No refusal here: not every read's contract has a code for a malformed body.
 export function answerBankRead(request: Request, operate: BankOperation) {
   return answerFromBank(request, (rawBody, nowMs) =>
@@ -66,6 +40,32 @@ export function answerBankWrite(
       },
     ),
   );
+}
+
+async function answerFromBank(
+  request: Request,
+  answerAt: (rawBody: string, nowMs: number) => BankAnswer,
+) {
+  await delay();
+  const rawBody = await request.text();
+  // Everything below is synchronous: no other request can land between expiry and execution.
+  const nowMs = Date.now();
+  advanceBankTransfers(nowMs);
+  const answer = answerAt(rawBody, nowMs);
+  persistBankState();
+  return httpResponseFrom(answer);
+}
+
+function jsonObjectIn(rawBody: string) {
+  let parsed: unknown = {};
+  try {
+    if (rawBody !== "") parsed = JSON.parse(rawBody);
+  } catch {
+    return undefined;
+  }
+  return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+    ? (parsed as Record<string, unknown>)
+    : undefined;
 }
 
 type BankOperation = (call: {

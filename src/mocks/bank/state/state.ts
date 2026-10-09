@@ -23,36 +23,6 @@ import {
 } from "@/mocks/bank/seed/seed";
 import type { PendingTransferChange } from "@/mocks/bank/settlement/settlement";
 
-const SNAPSHOT_FORMAT_VERSION = 1;
-
-let loadedState: BankState | undefined;
-// Rebuilt from the anchor on every load rather than saved: the anchor already determines it.
-let seededTransfers: BankTransferRecord[] = [];
-
-function installBankState(state: BankState) {
-  const { transferCount, spanDays } = bankPorts().seed;
-  loadedState = state;
-  seededTransfers = seedTransferHistory(
-    state.anchorMs,
-    transferCount,
-    spanDays,
-  );
-  return state;
-}
-
-function freshBankState(anchorMs: number): BankState {
-  return {
-    anchorMs,
-    balanceMinor: SEED_BALANCE_MINOR,
-    transfers: [],
-    recipientRefs: {},
-    firstAnswers: {},
-    approvalKeys: [],
-    pinAttemptsRemaining: DEMO_PIN_ATTEMPTS,
-    notifications: [],
-  };
-}
-
 export function bankState() {
   if (loadedState) return loadedState;
 
@@ -148,6 +118,36 @@ export interface BankTransferRecord {
     signedDetails: Parameters<typeof buildSignedApprovalText>[0];
   };
   pendingChange?: { atMs: number; change: PendingTransferChange };
+}
+
+const SNAPSHOT_FORMAT_VERSION = 1;
+
+let loadedState: BankState | undefined;
+// Rebuilt from the anchor on every load rather than saved: the anchor already determines it.
+let seededTransfers: BankTransferRecord[] = [];
+
+function installBankState(state: BankState) {
+  const { transferCount, spanDays } = bankPorts().seed;
+  loadedState = state;
+  seededTransfers = seedTransferHistory(
+    state.anchorMs,
+    transferCount,
+    spanDays,
+  );
+  return state;
+}
+
+function freshBankState(anchorMs: number): BankState {
+  return {
+    anchorMs,
+    balanceMinor: SEED_BALANCE_MINOR,
+    transfers: [],
+    recipientRefs: {},
+    firstAnswers: {},
+    approvalKeys: [],
+    pinAttemptsRemaining: DEMO_PIN_ATTEMPTS,
+    notifications: [],
+  };
 }
 
 interface BankState {

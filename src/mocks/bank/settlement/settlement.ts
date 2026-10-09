@@ -12,7 +12,6 @@ import {
 } from "@/mocks/bank/state/state";
 
 export const SETTLES_AFTER_MS = 20_000;
-const REFUND_PENDING_MS = 10_000;
 
 export enum PendingTransferChange {
   Complete = "COMPLETE",
@@ -84,3 +83,5 @@ export function advanceBankTransfers(nowMs: number) {
     }
   }
 }
+
+const REFUND_PENDING_MS = 10_000;

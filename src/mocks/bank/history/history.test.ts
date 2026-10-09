@@ -16,18 +16,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-const listPage = (cursor?: string | null) =>
-  sendToBank<ListTransfersResponse>(
-    "GET",
-    cursor ? `/transfers?cursor=${encodeURIComponent(cursor)}` : "/transfers",
-  );
-
-async function wholeHistory() {
-  const first = await listPage();
-  const second = await listPage(first.body.nextCursor);
-  return { first: first.body, second: second.body };
-}
-
 it("pages history newest first, thirty at a time, with no gap or repeat", async () => {
   const { first, second } = await wholeHistory();
   const items = [...first.items, ...second.items];
@@ -113,3 +101,15 @@ it("lists an approved transfer first, and never one left to expire", async () =>
     abandoned.created.transfer.transferId,
   );
 });
+
+const listPage = (cursor?: string | null) =>
+  sendToBank<ListTransfersResponse>(
+    "GET",
+    cursor ? `/transfers?cursor=${encodeURIComponent(cursor)}` : "/transfers",
+  );
+
+async function wholeHistory() {
+  const first = await listPage();
+  const second = await listPage(first.body.nextCursor);
+  return { first: first.body, second: second.body };
+}

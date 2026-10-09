@@ -24,64 +24,6 @@ export const DEMO_CUSTOMER = {
 };
 export const SEED_BALANCE_MINOR = 1_284_550;
 
-const HISTORY_SEED = 0x5eed2026;
-const DAY_MS = 24 * 60 * 60 * 1000;
-const HOUR_MS = 60 * 60 * 1000;
-const NOTES = [
-  "Lunch",
-  "Dinner split",
-  "Groceries",
-  "Rent",
-  "Petrol",
-  "Birthday gift",
-  "Movie tickets",
-  "Badminton court",
-  "Car pool",
-  "Durian",
-  "Tuition fees",
-  "Phone bill",
-  "Thanks",
-  "Teh tarik",
-  "Wedding gift",
-  "Duit raya",
-];
-const SEEDED_OUTCOMES = [
-  {
-    drawBelow: 0.25,
-    outcome: {
-      direction: TransferDirection.In,
-      status: TransferStatus.Completed,
-      funds: TransferFunds.Credited,
-    },
-  },
-  {
-    drawBelow: 0.96,
-    outcome: {
-      direction: TransferDirection.Out,
-      status: TransferStatus.Completed,
-      funds: TransferFunds.Debited,
-    },
-  },
-  {
-    drawBelow: 0.985,
-    outcome: {
-      direction: TransferDirection.Out,
-      status: TransferStatus.Unsuccessful,
-      funds: TransferFunds.Refunded,
-      failureReason: TransferFailureReason.RecipientBankRejected,
-    },
-  },
-  {
-    drawBelow: 1,
-    outcome: {
-      direction: TransferDirection.Out,
-      status: TransferStatus.Unsuccessful,
-      funds: TransferFunds.NotDebited,
-      failureReason: TransferFailureReason.InsufficientFunds,
-    },
-  },
-];
-
 // mulberry32
 export function createSeededRandom(seed: number) {
   let state = seed >>> 0;
@@ -179,3 +121,61 @@ export function seedTransferHistory(
     };
   });
 }
+
+const HISTORY_SEED = 0x5eed2026;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const NOTES = [
+  "Lunch",
+  "Dinner split",
+  "Groceries",
+  "Rent",
+  "Petrol",
+  "Birthday gift",
+  "Movie tickets",
+  "Badminton court",
+  "Car pool",
+  "Durian",
+  "Tuition fees",
+  "Phone bill",
+  "Thanks",
+  "Teh tarik",
+  "Wedding gift",
+  "Duit raya",
+];
+const SEEDED_OUTCOMES = [
+  {
+    drawBelow: 0.25,
+    outcome: {
+      direction: TransferDirection.In,
+      status: TransferStatus.Completed,
+      funds: TransferFunds.Credited,
+    },
+  },
+  {
+    drawBelow: 0.96,
+    outcome: {
+      direction: TransferDirection.Out,
+      status: TransferStatus.Completed,
+      funds: TransferFunds.Debited,
+    },
+  },
+  {
+    drawBelow: 0.985,
+    outcome: {
+      direction: TransferDirection.Out,
+      status: TransferStatus.Unsuccessful,
+      funds: TransferFunds.Refunded,
+      failureReason: TransferFailureReason.RecipientBankRejected,
+    },
+  },
+  {
+    drawBelow: 1,
+    outcome: {
+      direction: TransferDirection.Out,
+      status: TransferStatus.Unsuccessful,
+      funds: TransferFunds.NotDebited,
+      failureReason: TransferFailureReason.InsufficientFunds,
+    },
+  },
+];

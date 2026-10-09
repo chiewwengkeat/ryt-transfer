@@ -4,19 +4,6 @@ import { base64Of, P256_SPKI_PREFIX } from "@/test/mock-bank/mock-bank";
 
 import { isP256PublicKey, verifyApprovalSignature } from "./verification";
 
-const SECRET_KEY = Uint8Array.from({ length: 32 }, (_, index) => index + 1);
-const SIGNED_TEXT = '{"format":"transfer-approval/1","amountMinor":12550}';
-
-const utf8Bytes = (text: string) => new TextEncoder().encode(text);
-
-const publicKeySpkiBase64 = base64Of([
-  ...P256_SPKI_PREFIX,
-  ...p256.getPublicKey(SECRET_KEY, false),
-]);
-const signature = p256.sign(utf8Bytes(SIGNED_TEXT), SECRET_KEY, {
-  format: "der",
-});
-
 it("accepts a DER signature over the exact signed text", () => {
   expect(
     verifyApprovalSignature({
@@ -78,4 +65,17 @@ it("recognises a P-256 public key only in its SubjectPublicKeyInfo wrapping", ()
       base64Of([...P256_SPKI_PREFIX, 0x04, ...new Uint8Array(64)]),
     ),
   ).toBe(false);
+});
+
+const SECRET_KEY = Uint8Array.from({ length: 32 }, (_, index) => index + 1);
+const SIGNED_TEXT = '{"format":"transfer-approval/1","amountMinor":12550}';
+
+const utf8Bytes = (text: string) => new TextEncoder().encode(text);
+
+const publicKeySpkiBase64 = base64Of([
+  ...P256_SPKI_PREFIX,
+  ...p256.getPublicKey(SECRET_KEY, false),
+]);
+const signature = p256.sign(utf8Bytes(SIGNED_TEXT), SECRET_KEY, {
+  format: "der",
 });
