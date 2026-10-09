@@ -26,11 +26,13 @@ import {
   signTestApproval,
   startTestTransfer,
 } from "@/test/bank-client";
+import { clearTransferScenario } from "@/test/clear-transfer-scenario";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { observedRecords } from "@/test/harness/recording-sink";
+import { holdTheNextTransferRead } from "@/test/hold-the-next-transfer-read";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
 import {
@@ -75,7 +77,7 @@ function buttonsOnTheResultPage() {
 }
 
 it(
-  "gives a receipt in Malaysia time, and Home's balance and limit move with the money",
+  "gives a receipt in Malaysia time with the note, offers only Done, and Home's balance and limit move with the money",
   scenarioTest("transfer.completed", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const { recipient } = await lookUpTestRecipient("012-345 6789");
@@ -90,6 +92,10 @@ it(
     await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
     await screen.findByText("RM 12,845.50");
     await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+    await fireEvent.changeText(
+      screen.getByLabelText("Note (optional)"),
+      "Lunch",
+    );
     await fireEvent.press(screen.getByRole("button", { name: "Review" }));
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -112,6 +118,9 @@ it(
       screen.getByText(formatMalaysianDateTime(body.transfer.updatedAt, t)),
     ).toBeOnTheScreen();
     expect(screen.getByText(body.transfer.reference ?? "")).toBeOnTheScreen();
+    expect(screen.getByText("Note")).toBeOnTheScreen();
+    expect(screen.getByText("Lunch")).toBeOnTheScreen();
+    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
 
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 
@@ -204,7 +213,7 @@ it(
 );
 
 it(
-  "says a held transfer will complete or be refunded, with the bank's reference to quote",
+  "says a held transfer will complete or be refunded, with the bank's reference to quote, and Home announces it once it completes",
   scenarioTest("transfer.held_for_review", async () => {
     await sendRm100FromHome();
 
@@ -218,6 +227,21 @@ it(
     ).toBeOnTheScreen();
     expect(screen.getByText(BANK_REFERENCE)).toBeOnTheScreen();
     expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    expect(
+      await screen.findByText(/^Your last transfer is still being checked/),
+    ).toBeOnTheScreen();
+
+    await act(() => jest.advanceTimersByTimeAsync(31_000));
+
+    expect(
+      await screen.findByText(
+        /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/,
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByText(/^Your last transfer is still being checked/),
+    ).toBeNull();
   }),
 );
 
@@ -257,19 +281,7 @@ it(
 it(
   "checks a transfer whose approval went unanswered, quoting its id, then shows how it ended",
   scenarioTest("transfer.approval_unanswered", async () => {
-    let releaseStatusRead: () => void = () => undefined;
-    const statusReadHeld = new Promise<void>((release) => {
-      releaseStatusRead = release;
-    });
-    mswServer.use(
-      http.get(
-        "*/transfers/:transferId",
-        async () => {
-          await statusReadHeld;
-        },
-        { once: true },
-      ),
-    );
+    const releaseStatusRead = holdTheNextTransferRead();
     const view = await sendRm100FromHome();
 
     expect(
@@ -326,9 +338,26 @@ it("moves Home's balance when a transfer whose answer was lost turns out sent wh
 });
 
 it(
-  "treats an approval answer the app does not know like no answer, and shows how the transfer ended",
+  "treats an approval answer the app does not know like no answer, checking it with its id to quote and only Done, then shows how it ended",
   scenarioTest("transfer.approval_unknown_answer", async () => {
-    await sendRm100FromHome();
+    const releaseStatusRead = holdTheNextTransferRead();
+    const view = await sendRm100FromHome();
+
+    expect(
+      await screen.findByRole("header", { name: "Checking your transfer" }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "This transfer is being checked, so don't send it again — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
+      ),
+    ).toBeOnTheScreen();
+    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    releaseStatusRead();
 
     expect(
       await screen.findByRole("header", { name: "Transfer sent" }),
@@ -370,7 +399,33 @@ it(
 );
 
 it(
-  "leaves an unanswered approval's outcome unconfirmed when checking it meets an answer the app does not know",
+  "stops reading a transfer the bank cannot find, and leaves nothing for the next launch",
+  scenarioTest("transfer.last_transfer_not_found", async () => {
+    const view = await sendRm100FromHome();
+    await screen.findByRole(
+      "header",
+      { name: "Transfer not found" },
+      { timeout: 10_000 },
+    );
+    const transferId = transferIdIn(view.getPathname());
+    const readsOfTheTransfer = () =>
+      sentRequests.filter(
+        ({ method, url }) =>
+          method === "GET" && url.endsWith(`/transfers/${transferId}`),
+      ).length;
+    const readsOnceNotFound = readsOfTheTransfer();
+
+    await act(() => jest.advanceTimersByTimeAsync(32_000));
+
+    expect(readsOfTheTransfer()).toBe(readsOnceNotFound);
+    const relaunched = await relaunchAppAndWaitForItsLaunchChecks(view);
+    expect(screen.queryByText(/^Your (last )?transfer/)).toBeNull();
+    expect(relaunched.getPathname()).toBe("/");
+  }),
+);
+
+it(
+  "leaves an unanswered approval's outcome unconfirmed when checking it meets an answer the app does not know, and opens History from it",
   scenarioTest("transfer.recovery_unexpected", async () => {
     const view = await sendRm100FromHome();
 
@@ -392,6 +447,59 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(buttonsOnTheResultPage()).toEqual(["Transfer history", "Done"]);
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Transfer history" }),
+    );
+
+    expect(view.getPathname()).toBe("/transfer-history");
+  }),
+);
+
+it(
+  "keeps checking on Home a transfer whose outcome was not confirmed, and announces it there once the bank answers",
+  scenarioTest("transfer.recovery_unexpected", async () => {
+    await sendRm100FromHome();
+    await screen.findByRole(
+      "header",
+      { name: "Outcome not confirmed" },
+      { timeout: 10_000 },
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    expect(
+      await screen.findByText(/^Your last transfer is still being checked/),
+    ).toBeOnTheScreen();
+    clearTransferScenario();
+
+    await act(() => jest.advanceTimersByTimeAsync(16_000));
+
+    expect(
+      await screen.findByText(
+        /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/,
+      ),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it(
+  "reopens at the next launch a transfer whose outcome was not confirmed, and shows how it ended",
+  scenarioTest("transfer.recovery_unexpected", async () => {
+    const view = await sendRm100FromHome();
+    await screen.findByRole(
+      "header",
+      { name: "Outcome not confirmed" },
+      { timeout: 10_000 },
+    );
+    const transferId = transferIdIn(view.getPathname());
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    clearTransferScenario();
+
+    const relaunched = await relaunchApp(view);
+
+    expect(
+      await screen.findByRole("header", { name: "Transfer sent" }),
+    ).toBeOnTheScreen();
+    expect(relaunched.getPathname()).toBe(`/transfer/result/${transferId}`);
   }),
 );
 
@@ -725,6 +833,51 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+  }),
+);
+
+it(
+  "keeps reading after saying the bank is unreachable, and shows the outcome here once the bank answers",
+  scenarioTest("transfer.status_unreachable", async () => {
+    await sendRm100FromHome();
+    await screen.findByRole(
+      "header",
+      { name: "Checking your transfer" },
+      { timeout: 10_000 },
+    );
+    await act(() => jest.advanceTimersByTimeAsync(17_000));
+    await screen.findByRole("header", { name: "Still checking your transfer" });
+    clearTransferScenario();
+
+    await act(() => jest.advanceTimersByTimeAsync(16_000));
+
+    expect(
+      await screen.findByRole("header", { name: "Transfer sent" }),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it(
+  "checks a transfer the bank could not be reached about again at the next launch, after leaving it",
+  scenarioTest("transfer.status_unreachable", async () => {
+    const view = await sendRm100FromHome();
+    await screen.findByRole(
+      "header",
+      { name: "Checking your transfer" },
+      { timeout: 10_000 },
+    );
+    await act(() => jest.advanceTimersByTimeAsync(17_000));
+    await screen.findByRole("header", { name: "Still checking your transfer" });
+    const transferId = transferIdIn(view.getPathname());
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    clearTransferScenario();
+
+    const relaunched = await relaunchApp(view);
+
+    expect(
+      await screen.findByRole("header", { name: "Transfer sent" }),
+    ).toBeOnTheScreen();
+    expect(relaunched.getPathname()).toBe(`/transfer/result/${transferId}`);
   }),
 );
 

@@ -18,6 +18,7 @@ import {
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { observedRecords } from "@/test/harness/recording-sink";
+import { holdTheNextTransferRead } from "@/test/hold-the-next-transfer-read";
 import { mswServer } from "@/test/msw-server";
 import {
   askOpenAppToReadAgain,
@@ -25,24 +26,6 @@ import {
   renderRoute,
 } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
-
-// A resolver that answers nothing hands the read on to the bank, once released.
-function holdTheNextStatusRead() {
-  let releaseStatusRead = () => undefined as void;
-  const statusReadHeld = new Promise<void>((release) => {
-    releaseStatusRead = release;
-  });
-  mswServer.use(
-    http.get(
-      "*/transfers/:transferId",
-      async () => {
-        await statusReadHeld;
-      },
-      { once: true },
-    ),
-  );
-  return releaseStatusRead;
-}
 
 async function sendRm100FromHome() {
   await pairPhoneAsTheDemoLaunchDoes();
@@ -87,7 +70,7 @@ it(
   scenarioTest("transfer.approval_unanswered", async () => {
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
     announce.mockClear();
-    const releaseStatusRead = holdTheNextStatusRead();
+    const releaseStatusRead = holdTheNextTransferRead();
     const { recipient } = await lookUpTestRecipient("012-345 6789");
     await sendRm100FromHome();
     expect(
@@ -119,7 +102,7 @@ it(
   "speaks an outcome that changes under the session-ended view only once signed in again",
   scenarioTest("transfer.approval_unanswered", async () => {
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
-    const releaseStatusRead = holdTheNextStatusRead();
+    const releaseStatusRead = holdTheNextTransferRead();
     const { recipient } = await lookUpTestRecipient("012-345 6789");
     await sendRm100FromHome();
     await screen.findByRole(
@@ -147,9 +130,52 @@ it(
 );
 
 it(
+  "reads the balance again once a checked approval ends over the balance or limit, so Home shows it as it now is",
+  scenarioTest("transfer.balance_or_limit_short_at_approval", async () => {
+    const { body: account } = await sendToBank<GetPrimaryAccountResponse>(
+      "GET",
+      "/accounts/primary",
+    );
+    const keys = await pairTestPhone();
+    const started = await startTestTransfer(10_000);
+    await sendToBank("POST", started.approvalPath, {
+      body: signTestApproval(started, {
+        kind: "biometric",
+        keyId: keys.biometricKeyId,
+      }),
+    });
+    await writePendingTransfer(account.customerId, {
+      transferId: started.created.transfer.transferId,
+      idempotencyKey: "approval-key",
+      createdAt: "2026-10-07T01:30:00.000Z",
+      stage: PendingTransferStage.Approving,
+    });
+    const releaseTransferRead = holdTheNextTransferRead();
+    const view = await renderRoute("/");
+    await screen.findByRole("header", { name: "Checking your last transfer" });
+    // Another payment lowers the balance after Home read it and before the bank's answer comes in.
+    mswServer.use(
+      http.get("*/accounts/primary", () =>
+        HttpResponse.json({
+          ...account,
+          balance: { minor: 1_184_550, currency: "MYR" },
+        } satisfies GetPrimaryAccountResponse),
+      ),
+    );
+
+    releaseTransferRead();
+    await screen.findByRole("header", { name: "Transfer not sent" });
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+
+    expect(await screen.findByText("RM 11,845.50")).toBeOnTheScreen();
+    expect(view.getPathname()).toBe("/");
+  }),
+);
+
+it(
   "keeps an outcome that lands under the session-ended view for Home to announce, should the app close before signing in again",
   scenarioTest("transfer.approval_unanswered", async () => {
-    const releaseStatusRead = holdTheNextStatusRead();
+    const releaseStatusRead = holdTheNextTransferRead();
     const view = await sendRm100FromHome();
     await finishOpeningScreen(
       await screen.findByRole(
