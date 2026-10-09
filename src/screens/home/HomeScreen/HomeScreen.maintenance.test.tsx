@@ -6,6 +6,7 @@ import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transf
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { type BankErrorBody, sendToBank } from "@/test/bank-client";
 import { pressHardwareBack } from "@/test/hardware-back";
+import { moveAppTo } from "@/test/harness/app-state";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -62,6 +63,46 @@ it(
         `Transfers are unavailable right now, until ${formatMalaysianDateTime(maintenanceAnswer.error.until ?? "", t)}.`,
       ),
     ).toBeOnTheScreen();
+    expect(screen.queryByText(/more today/)).toBeNull();
+  }),
+);
+
+it(
+  "keeps the balance, not a spinner, while maintenance's limits are asked again as the app returns to the front",
+  scenarioTest("transfer.under_maintenance", async () => {
+    await renderRoute("/");
+    await screen.findByText(/^Transfers are unavailable right now, until/);
+    let limitsAskedAgain = false;
+    let answerLimitsAgain = () => {};
+    mswServer.use(
+      http.get(
+        "*/transfer-limits",
+        async () => {
+          limitsAskedAgain = true;
+          // Returning nothing passes the request on to the bank, which answers maintenance again.
+          await new Promise<void>((resolve) => {
+            answerLimitsAgain = resolve;
+          });
+        },
+        { once: true },
+      ),
+    );
+
+    moveAppTo("background");
+    moveAppTo("active");
+    await waitFor(() => {
+      expect(limitsAskedAgain).toBe(true);
+    });
+    await act(() => jest.advanceTimersByTimeAsync(100));
+
+    expect(screen.queryByLabelText("Loading")).toBeNull();
+    expect(screen.getByText("RM 12,845.50")).toBeOnTheScreen();
+    answerLimitsAgain();
+    await act(() => jest.advanceTimersByTimeAsync(5_000));
+    expect(
+      screen.getByText(/^Transfers are unavailable right now, until/),
+    ).toBeOnTheScreen();
+    expect(screen.getByText("RM 12,845.50")).toBeOnTheScreen();
     expect(screen.queryByText(/more today/)).toBeNull();
   }),
 );

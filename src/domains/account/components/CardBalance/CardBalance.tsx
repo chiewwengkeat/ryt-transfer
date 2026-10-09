@@ -38,9 +38,14 @@ export default function CardBalance({
   const refetchInterval = useIsOffline() ? 10_000 : false;
   const account = useGetPrimaryAccount({ refetchInterval });
   const limits = useGetTransferLimits({ refetchInterval });
+  const [maintenanceBeforeReRead, setMaintenanceBeforeReRead] = useState(false);
   // Maintenance pauses transfers, not the balance: the balance still shows, and Transfer says why it waits.
+  // A re-read of limits that never loaded clears that answer until it lands: kept, the card stays compact.
   const limitsPausedForMaintenance =
-    getTransferLimitsMaintenance(limits.error) !== undefined;
+    getTransferLimitsMaintenance(limits.error) !== undefined ||
+    (limits.fetchStatus !== "idle" && maintenanceBeforeReRead);
+  if (limitsPausedForMaintenance !== maintenanceBeforeReRead)
+    setMaintenanceBeforeReRead(limitsPausedForMaintenance);
   const [failureBeforeReRead, setFailureBeforeReRead] = useState<Error | null>(
     null,
   );
@@ -100,7 +105,10 @@ export default function CardBalance({
       </Card>
     );
   }
-  if (account.data === undefined || limits.isPending) {
+  if (
+    account.data === undefined ||
+    (limits.isPending && !limitsPausedForMaintenance)
+  ) {
     return (
       <Card styles={{ main: [styles.main, styles.floor] }}>
         <Loader />
