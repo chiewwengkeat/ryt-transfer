@@ -1,12 +1,14 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
 import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients.type";
+import type { LookupRecipientResponse } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { requestJson } from "@/shared/http/transport";
+import { pressHardwareBack } from "@/test/hardware-back";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { reportedScenarios } from "@/test/harness/recording-sink";
-import { mswServer } from "@/test/msw-server";
+import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -15,11 +17,27 @@ const UNKNOWN_BANK_CODE = {
 };
 
 it(
-  "opens the recipient step with a recent recipient picked on Home, the amount empty and the name looked up afresh",
+  "opens the recipient step with a recent recipient picked on Home in place of the ID field, the amount empty, and review showing the name the bank holds today",
   scenarioTest("transfer.recent_recipient_chosen", async () => {
+    const nameTheBankHoldsToday = "NUR IMAN BINTI HASHIM";
     const {
       items: [firstRecent],
     } = await requestJson<ListRecentRecipientsResponse>("/recipients/recent");
+    const todaysNameCheck = await requestJson<LookupRecipientResponse>(
+      "/recipients/lookup",
+      { method: "POST", body: { recentId: firstRecent!.recentId } },
+    );
+    mswServer.use(
+      http.post("*/recipients/lookup", () =>
+        HttpResponse.json({
+          ...todaysNameCheck,
+          recipient: {
+            ...todaysNameCheck.recipient,
+            registeredName: nameTheBankHoldsToday,
+          },
+        }),
+      ),
+    );
     await renderRoute("/");
     const [firstRecentButton] = await screen.findAllByRole("button", {
       name: /••••/,
@@ -29,15 +47,16 @@ it(
     expect(
       await screen.findByText(firstRecent!.registeredName),
     ).toBeOnTheScreen();
+    expect(screen.queryByLabelText("DuitNow mobile number")).toBeNull();
+    expect(screen.getByRole("button", { name: "Change" })).toBeOnTheScreen();
     expect(reportedScenarios()).toContain("transfer.recent_recipient_chosen");
     await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByLabelText("Amount (RM)")).toHaveDisplayValue("");
     await screen.findByText("RM 12,845.50");
     await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
     await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-    expect(
-      await screen.findByText(firstRecent!.idValueMasked),
-    ).toBeOnTheScreen();
+    expect(await screen.findByText(nameTheBankHoldsToday)).toBeOnTheScreen();
+    expect(screen.getByText(firstRecent!.idValueMasked)).toBeOnTheScreen();
   }),
 );
 
@@ -119,21 +138,36 @@ it("lets a recent recipient picked on the recipient step be changed for a typed 
 });
 
 it(
-  "says something unexpected went wrong when recent recipients cannot load, and still takes a typed number",
+  "says something unexpected went wrong when recent recipients cannot load, asks for them again on Try again, still takes a typed number, and goes back to Home",
   scenarioTest("transfer.recipient_unexpected", async () => {
+    const recentRecipientReadsSent = () =>
+      sentRequests.filter(({ url }) => url.endsWith("/recipients/recent"))
+        .length;
     const view = await renderRoute("/transfer");
 
     expect(
       await screen.findByText("Something unexpected went wrong."),
     ).toBeOnTheScreen();
-    expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
     expect(reportedScenarios()).toContain("transfer.recipient_unexpected");
+    const readsBeforeTryAgain = recentRecipientReadsSent();
+    await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => {
+      expect(recentRecipientReadsSent()).toBe(readsBeforeTryAgain + 1);
+    });
     await fireEvent.changeText(
       screen.getByLabelText("DuitNow mobile number"),
       "012-345 6789",
     );
     await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
     expect(view.getPathname()).toBe("/transfer/amount");
+    await pressHardwareBack();
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Back to Home" }),
+    );
+    expect(
+      await screen.findByRole("button", { name: "Transfer" }),
+    ).toBeOnTheScreen();
+    expect(view.getPathname()).toBe("/");
   }),
 );
 
