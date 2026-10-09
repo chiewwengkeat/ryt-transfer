@@ -8,7 +8,7 @@ import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { queryClient } from "@/root/query-client/query-client";
 
 // ⛔ Never on a 401: after signing in again, a transfer still being checked needs its record.
-export async function endSession() {
+export async function forgetSignedInCustomer() {
   const customerId = queryClient.getQueryData(
     getPrimaryAccountOptions().queryKey,
   )?.customerId;

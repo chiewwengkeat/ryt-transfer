@@ -12,7 +12,7 @@ import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 
-import { endSession } from "./forget-signed-in-customer";
+import { forgetSignedInCustomer } from "./forget-signed-in-customer";
 
 it("reopens none of their transfers at the next launch, though one still awaits approval", async () => {
   const {
@@ -30,7 +30,7 @@ it("reopens none of their transfers at the next launch, though one still awaits 
     stage: PendingTransferStage.Approving,
   });
 
-  await act(() => endSession());
+  await act(() => forgetSignedInCustomer());
   const relaunched = await relaunchApp(view);
   await act(() => jest.advanceTimersByTimeAsync(500));
 
@@ -46,7 +46,7 @@ it("closes the amount step of the transfer they were entering", async () => {
   await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
   await screen.findByLabelText("Amount (RM)");
 
-  await act(() => endSession());
+  await act(() => forgetSignedInCustomer());
 
   await waitFor(() => {
     expect(view.getPathname()).toBe("/transfer");
@@ -63,7 +63,7 @@ it("opens History on its loader, never on the transfers it showed before the ses
   expect(await screen.findAllByText(transferRowTime)).not.toHaveLength(0);
   await pressHardwareBack();
 
-  await act(() => endSession());
+  await act(() => forgetSignedInCustomer());
   await fireEvent.press(
     screen.getByRole("button", { name: "Transfer history" }),
   );
@@ -77,7 +77,7 @@ it("keeps the host app's choice of the PIN over face or fingerprint, so the next
   approvalSettingsStore.setState({ biometricApprovalOn: false });
   await renderRoute("/transfer");
 
-  await act(() => endSession());
+  await act(() => forgetSignedInCustomer());
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
     "012-345 6789",
@@ -101,7 +101,7 @@ it("approves the first transfer after signing in again with no setting up, becau
   const view = await renderRoute("/");
   await screen.findByText("RM 12,845.50");
 
-  await act(() => endSession());
+  await act(() => forgetSignedInCustomer());
   await relaunchApp(view);
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer", disabled: false }),
@@ -141,7 +141,7 @@ it("closes a PIN sheet left open, so approving from it cannot sit sending into t
   );
   await screen.findByRole("button", { name: "Approve" });
 
-  await act(() => endSession());
+  await act(() => forgetSignedInCustomer());
 
   expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
 });

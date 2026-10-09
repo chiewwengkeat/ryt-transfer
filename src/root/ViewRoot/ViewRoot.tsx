@@ -24,7 +24,7 @@ import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import { demoLayer } from "@/root/app-launch/app-launch";
 import { queryClient } from "@/root/query-client/query-client";
-import { endSession } from "./lib/forget-signed-in-customer/forget-signed-in-customer";
+import { forgetSignedInCustomer } from "./lib/forget-signed-in-customer/forget-signed-in-customer";
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
 import "@/root/translations/translations";
 
@@ -128,14 +128,14 @@ export default function ViewRoot() {
         <demoLayer.ViewDemo
           appSheetOpen={appSheetOpen && !sessionEnded}
           onResetDemo={async () => {
-            // First: endSession's clear() leaves a mounted screen showing its last read, so it reads the reset bank now.
+            // First: forgetSignedInCustomer's clear() leaves a mounted screen showing its last read, so it reads the reset bank now.
             await queryClient.resetQueries();
-            await endSession();
+            await forgetSignedInCustomer();
             // The reset bank knows none of this phone's keys, and pairing skips a phone whose key ids are on file.
             await deleteAllSecureRecords();
             await deleteApprovalKeys();
             await demoLayer?.pairPhoneAtFirstLaunch();
-            // Remounts every screen: endSession's clear() leaves their reads on removed queries, which no later answer reaches.
+            // Remounts every screen: forgetSignedInCustomer's clear() leaves their reads on removed queries, which no later answer reaches.
             setNavigatorMounts((mounts) => mounts + 1);
           }}
         >
