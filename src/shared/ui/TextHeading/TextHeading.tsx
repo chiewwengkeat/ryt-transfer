@@ -43,6 +43,8 @@ export default function TextHeading({ children, autoFocus = false }: Props) {
       ref={headingRef}
       accessibilityRole="header"
       accessibilityLanguage={i18n.language}
+      // Grown further, a title's longest word outgrows a small phone's line and breaks mid-word.
+      maxFontSizeMultiplier={2}
       style={styles.heading}
     >
       {children}
