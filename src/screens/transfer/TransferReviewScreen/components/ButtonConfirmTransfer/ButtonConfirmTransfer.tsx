@@ -1,8 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
-import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AccessibilityInfo } from "react-native";
 
 import {
   BiometricSignOutcome,
@@ -12,10 +10,7 @@ import { isApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-lock"
 import { showApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
-import {
-  CoolingOffReason,
-  type CreateTransferResponse,
-} from "@/domains/transfer/api/create-transfer/create-transfer.type";
+import type { CreateTransferResponse } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import {
   ApprovalPath,
@@ -25,15 +20,9 @@ import {
   TransferFlowScenario,
   TransferFlowStep,
   transferFlowStore,
-  TransferHoldKind,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
-import type {
-  TransferDraft,
-  TransferHold,
-} from "@/screens/transfer/state/transfer-flow.type";
-import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
-import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
+import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
 import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 
@@ -44,6 +33,7 @@ import { useApprovalPinLocked } from "./hooks/use-approval-pin-locked";
 import { usePhoneCheckBeforeApproval } from "./hooks/use-phone-check-before-approval";
 import { useReviewLeaveWatch } from "./hooks/use-review-leave-watch";
 import { useSendTransferApproval } from "./hooks/use-send-transfer-approval";
+import { useTransferHoldReason } from "./hooks/use-transfer-hold-reason";
 
 interface Props {
   draft: TransferDraft;
@@ -55,30 +45,12 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const createTransfer = useCreateTransfer();
   const sendTransferApproval = useSendTransferApproval();
   const transferBeingSent = useTransferFlow(isTransferBeingSent);
-  const hold = useTransferFlow((flow) =>
-    flow.step === TransferFlowStep.Reviewing ? flow.hold : undefined,
-  );
   const amountRefusedAsShort = useTransferFlow(
     (flow) =>
       flow.step === TransferFlowStep.Reviewing &&
       flow.notice === TransferFlowScenario.BalanceOrLimitShortAtConfirmation,
   );
-  const coolingOffUntil =
-    hold?.kind === TransferHoldKind.CoolingOff ? hold.until : undefined;
-  // The hold itself, not its time: the bank refusing again with the same time holds Transfer again.
-  const [liftedHold, setLiftedHold] = useState<TransferHold>();
-  useEffect(() => {
-    if (coolingOffUntil === undefined) return;
-    const timer = setTimeout(
-      () => {
-        setLiftedHold(hold);
-      },
-      Date.parse(coolingOffUntil) - Date.now(),
-    );
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [hold, coolingOffUntil]);
+  const holdReason = useTransferHoldReason();
   const offline = useIsOffline();
   const { pinLocked: approvalPinLocked, isPinLockedNow } =
     useApprovalPinLocked();
@@ -86,33 +58,6 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     usePhoneCheckBeforeApproval();
   const startWatchingForReviewLeave = useReviewLeaveWatch();
 
-  const holdReason =
-    hold === undefined || hold === liftedHold
-      ? undefined
-      : hold.kind === TransferHoldKind.AccountLocked
-        ? t("common.account_locked.disabled_reason")
-        : hold.until === undefined
-          ? t(
-              hold.reason === CoolingOffReason.NewAccount
-                ? "common.cooling_off_new_account.disabled_reason_without_time"
-                : "common.cooling_off_new_phone.disabled_reason_without_time",
-            )
-          : t(
-              hold.reason === CoolingOffReason.NewAccount
-                ? "common.cooling_off_new_account.disabled_reason"
-                : "common.cooling_off_new_phone.disabled_reason",
-              { time: formatMalaysianDateTime(hold.until, t) },
-            );
-  const screenOnTop = useIsScreenOnTop();
-  const spokenHoldReasonRef = useRef<string>(undefined);
-  // A disabled button's reason is never read out unless focus lands on it, so a hold says so as it appears, or
-  // once the screen is back on top.
-  useEffect(() => {
-    if (!screenOnTop || spokenHoldReasonRef.current === holdReason) return;
-    spokenHoldReasonRef.current = holdReason;
-    if (holdReason !== undefined)
-      AccessibilityInfo.announceForAccessibility(holdReason);
-  }, [holdReason, screenOnTop]);
   // Not the data: a name check that fails on a later run keeps the earlier answer's data.
   if (!lookup.isSuccess) return null;
   // The notice's Change amount is the way on: the bank has just refused this amount.
