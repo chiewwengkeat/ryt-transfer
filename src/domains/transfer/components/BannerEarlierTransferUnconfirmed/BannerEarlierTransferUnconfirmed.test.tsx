@@ -3,6 +3,7 @@ import { focusManager } from "@tanstack/react-query";
 import { delay, http, HttpResponse } from "msw";
 
 import {
+  type Transfer,
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
@@ -13,6 +14,7 @@ import {
 import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -68,6 +70,67 @@ it(
     ).toBeOnTheScreen();
   }),
 );
+
+async function launchHomeKeepingAnEarlierTransfer(
+  answerItsRead: (transfer: Transfer) => Promise<Response> | Response,
+) {
+  const {
+    body: { customerId },
+  } = await sendToBank<{ customerId: string }>("GET", "/accounts/primary");
+  const { created } = await startTestTransfer(10_000);
+  await writePendingTransfer(customerId, {
+    transferId: created.transfer.transferId,
+    idempotencyKey: "approval-key",
+    createdAt: "2026-10-07T01:30:00.000Z",
+    stage: PendingTransferStage.Processing,
+  });
+  mswServer.use(
+    http.get("*/transfers/:transferId", () => answerItsRead(created.transfer)),
+  );
+  await renderRoute("/");
+}
+
+it("reports no earlier transfer still being checked that it warns about only while the launch's read is out, and that read finds ended", async () => {
+  let answerTheLaunchRead = () => undefined as void;
+  const launchReadHeld = new Promise<void>((release) => {
+    answerTheLaunchRead = release;
+  });
+  await launchHomeKeepingAnEarlierTransfer(async (transfer) => {
+    await launchReadHeld;
+    return HttpResponse.json({
+      transfer: { ...transfer, status: TransferStatus.Completed },
+    });
+  });
+  expect(
+    await screen.findByText(/^Your last transfer is still being checked/),
+  ).toBeOnTheScreen();
+
+  await act(() => {
+    answerTheLaunchRead();
+  });
+
+  expect(
+    await screen.findByText(/^Your transfer of RM 100\.00 to .+ was sent/),
+  ).toBeOnTheScreen();
+  expect(reportedScenarios()).not.toContain(
+    "transfer.earlier_transfer_unconfirmed",
+  );
+});
+
+it("reports the earlier transfer still being checked once the launch's read of it fails", async () => {
+  await launchHomeKeepingAnEarlierTransfer(
+    () => new HttpResponse(null, { status: 503 }),
+  );
+
+  expect(
+    await screen.findByText(/^Your last transfer is still being checked/),
+  ).toBeOnTheScreen();
+  await waitFor(() => {
+    expect(reportedScenarios()).toContain(
+      "transfer.earlier_transfer_unconfirmed",
+    );
+  });
+});
 
 it("goes on warning about the earlier transfer while this one's approval is in flight, and leaves this one to its own answer", async () => {
   await pairPhoneAsTheDemoLaunchDoes();

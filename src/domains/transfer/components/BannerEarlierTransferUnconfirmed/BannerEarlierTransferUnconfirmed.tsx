@@ -17,8 +17,11 @@ export default function BannerEarlierTransferUnconfirmed({
     customerId,
     unconfirmed: [newestUnconfirmed],
   } = usePendingTransferNotices();
+  // Drawn before the transfer is read, but reported only after: a record kept from before this launch may have ended since.
   useTrackScenarioShown(
-    newestUnconfirmed && "transfer.earlier_transfer_unconfirmed",
+    newestUnconfirmed?.checkedWithBank
+      ? "transfer.earlier_transfer_unconfirmed"
+      : undefined,
   );
   useRecheckEarlierTransferWhileOnTop({
     customerId,

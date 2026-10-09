@@ -76,7 +76,12 @@ export function usePendingTransferNotices() {
       const notice = isSettledTransferOutcome(transfer?.outcome)
         ? NEXT_LAUNCH_NOTICE_OF_OUTCOME[transfer.outcome]
         : undefined;
-      return { ...record, transfer, notice };
+      return {
+        ...record,
+        transfer,
+        notice,
+        checkedWithBank: transfers[index]?.isPending === false,
+      };
     })
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   return {
