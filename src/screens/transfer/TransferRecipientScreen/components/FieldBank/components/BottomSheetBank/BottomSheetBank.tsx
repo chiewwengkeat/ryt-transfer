@@ -6,6 +6,7 @@ import { useListBanks } from "@/domains/transfer/api/list-banks/list-banks";
 import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
 import { useIsOffline } from "@/shared/platform/offline";
 import { colors, minTouchTarget, typography } from "@/shared/theme/theme";
+import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import Loader from "@/shared/ui/Loader/Loader";
@@ -17,7 +18,7 @@ interface Props {
 export default function BottomSheetBank({ onBankChosen, onClose }: Props) {
   const { t, i18n } = useTranslation("transfer");
   const banks = useListBanks();
-  // The shell's offline notice already explains a list that cannot load.
+  // The shell's offline notice sits under the sheet, so the sheet says why its list waits.
   const offline = useIsOffline();
   const [bankSearch, setBankSearch] = useState("");
   const matchingBanks =
@@ -37,17 +38,27 @@ export default function BottomSheetBank({ onBankChosen, onClose }: Props) {
         onChangeText: setBankSearch,
       }}
     >
-      {banks.isError ? (
-        !offline && (
+      {matchingBanks === undefined ? (
+        offline && !banks.isFetching ? (
+          <BannerAction
+            message={t("common.offline.notice")}
+            action={{
+              label: t("common.recipient_unexpected.retry"),
+              onPress: () => {
+                void banks.refetch();
+              },
+            }}
+          />
+        ) : banks.isError ? (
           <BannerRecipientUnexpected
             failure={banks.error}
             onRetry={() => {
               void banks.refetch();
             }}
           />
+        ) : (
+          <Loader />
         )
-      ) : matchingBanks === undefined ? (
-        <Loader />
       ) : matchingBanks.length === 0 ? (
         <BannerNotice message={t("recipient.bank_no_match")} />
       ) : (

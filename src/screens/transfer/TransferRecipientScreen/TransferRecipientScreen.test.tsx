@@ -329,7 +329,7 @@ it("never says the recent recipients failed when only the session's end failed t
   expect(announce).not.toHaveBeenCalledWith("Something unexpected went wrong.");
 });
 
-it("hides the bank sheet's something-unexpected message while the phone has no connection", async () => {
+it("says in the bank sheet that the banks wait for a connection, offering Try again, once the phone has none", async () => {
   mswServer.use(
     http.get("*/banks", () =>
       HttpResponse.json(UNKNOWN_BANK_CODE, { status: 400 }),
@@ -349,7 +349,35 @@ it("hides the bank sheet's something-unexpected message while the phone has no c
   });
 
   expect(banksUnexpected).not.toBeOnTheScreen();
+  expect(screen.getByText(OFFLINE_NOTICE)).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
   expect(screen.getByLabelText("Search banks")).toBeOnTheScreen();
+});
+
+it("says in the bank sheet that the banks wait for a connection when asking for them finds none, again after a Try again that finds none, and lists them on one that gets through", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  const timesSaid = () =>
+    announce.mock.calls.filter(([words]) => words === OFFLINE_NOTICE).length;
+  mswServer.use(http.all("*", () => HttpResponse.error()));
+  await renderRoute("/transfer");
+  await fireEvent.press(
+    await screen.findByRole("radio", { name: "Account number" }),
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Bank" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Try again" }),
+  );
+  const saidBeforeItsAnswer = timesSaid();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  const saidOnceItFoundNone = timesSaid();
+
+  mswServer.resetHandlers();
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+
+  expect(
+    await screen.findByRole("button", { name: "Public Bank" }),
+  ).toBeOnTheScreen();
+  expect(saidOnceItFoundNone).toBe(saidBeforeItsAnswer + 1);
 });
 
 it(
