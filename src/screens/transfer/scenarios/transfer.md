@@ -557,7 +557,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 
 ### App closed during approval
 `transfer.app_closed_during_approval`
-- **When:** the app was closed after the approval was sent and before its answer was shown
+- **When:** the app was closed after the approval was sent and before the bank's answer reached the phone
 - **Money:** not confirmed yet
 - **Shown as:** at the next launch, then the result page
 - **Tell them:** their last transfer is being checked, then its outcome, with a reference to quote to support — not confirmed yet
