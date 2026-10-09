@@ -17,6 +17,7 @@ import {
   startTestTransfer,
 } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { mswServer } from "@/test/msw-server";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -166,8 +167,7 @@ it(
       name: "Transfer not sent",
     });
     expect(heading).toBeOnTheScreen();
-    // Jest plays no screen transitions: this is the phone's signal that the page has finished opening.
-    await fireEvent(heading, "appear");
+    await finishOpeningScreen(heading);
     expect(
       screen.getByText(
         "It was not sent because your balance or limit changed — no money moved.",

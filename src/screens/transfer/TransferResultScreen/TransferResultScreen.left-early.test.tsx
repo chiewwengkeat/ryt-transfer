@@ -1,6 +1,7 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 
@@ -44,9 +45,9 @@ it("tells Home the transfer was sent when Back leaves the result page as it open
 
 it("says nothing more on Home once the result page has finished opening and Back leaves it", async () => {
   const view = await approveRm100Transfer();
-  const heading = await screen.findByRole("header", { name: "Transfer sent" });
-  // Jest plays no screen transitions: this is the phone's signal that the page has finished opening.
-  await fireEvent(heading, "appear");
+  await finishOpeningScreen(
+    await screen.findByRole("header", { name: "Transfer sent" }),
+  );
 
   await pressHardwareBack();
 

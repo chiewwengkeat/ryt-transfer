@@ -28,6 +28,7 @@ import {
   startTestTransfer,
 } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { observedRecords } from "@/test/harness/recording-sink";
@@ -57,13 +58,6 @@ async function sendRm100FromHome() {
     await screen.findByRole("button", { name: "Transfer" }),
   );
   return view;
-}
-
-// Jest plays no screen transitions: this is the phone's signal that the page has finished opening.
-async function finishOpeningThePage(
-  elementOnThePage: Parameters<typeof fireEvent>[0],
-) {
-  await fireEvent(elementOnThePage, "appear");
 }
 
 function transferIdIn(pathname: string | undefined) {
@@ -140,12 +134,8 @@ it("moves a screen reader to the outcome a moment after the page has finished op
   await sendRm100FromHome();
   const heading = await screen.findByRole("header", { name: "Transfer sent" });
   const focusRequestsWhileOpening = outcomeFocusRequests().length;
-  let resultPage = heading.parent;
-  while (resultPage !== null && resultPage.type !== "RNSScreen")
-    resultPage = resultPage.parent;
-  if (resultPage === null) throw new Error("Result is not a native screen.");
 
-  await fireEvent(resultPage, "appear");
+  await finishOpeningScreen(heading);
   await act(() => jest.advanceTimersByTimeAsync(500));
   const focusRequestsHalfASecondAfterOpening = outcomeFocusRequests().length;
   await act(() => jest.advanceTimersByTimeAsync(500));
@@ -654,7 +644,7 @@ it(
       name: "Transfer processing",
     });
     expect(heading).toBeOnTheScreen();
-    await finishOpeningThePage(heading);
+    await finishOpeningScreen(heading);
     await waitFor(async () => {
       expect(await listPendingTransfers(customerId)).toEqual([
         expect.objectContaining({ stage: PendingTransferStage.Processing }),
@@ -901,7 +891,7 @@ it(
       name: "Checking your last transfer",
     });
     expect(heading).toBeOnTheScreen();
-    await finishOpeningThePage(heading);
+    await finishOpeningScreen(heading);
     expect(
       screen.getByText(
         "The app closed before your last transfer's answer arrived. It's being checked, and its outcome will show here — not confirmed yet.",
@@ -954,7 +944,7 @@ it(
       name: "Transfer sent",
     });
     expect(heading).toBeOnTheScreen();
-    await finishOpeningThePage(heading);
+    await finishOpeningScreen(heading);
     await waitFor(async () => {
       expect(await listPendingTransfers(customerId)).toEqual([]);
     });

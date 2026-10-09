@@ -19,6 +19,7 @@ import {
   startTestTransfer,
 } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { mswServer } from "@/test/msw-server";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -103,8 +104,7 @@ it("keeps an earlier transfer the launch check finds with an outcome the app can
 
   const heading = await screen.findByRole("header", { name: "Transfer sent" });
   expect(heading).toBeOnTheScreen();
-  // Jest plays no screen transitions: this is the phone's signal that the page has finished opening.
-  await fireEvent(heading, "appear");
+  await finishOpeningScreen(heading);
   await waitFor(async () => {
     expect(await listPendingTransfers(customerId)).toEqual([
       expect.objectContaining({
