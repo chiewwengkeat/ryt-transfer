@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
@@ -8,6 +9,7 @@ import {
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferFlowNotice } from "@/screens/transfer/state/transfer-flow.type";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
+import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 
 interface Props {
@@ -32,24 +34,34 @@ export default function BannerFlowNotice({ step }: Props) {
     /^transfer\./,
     "",
   ) as `${TransferFlowNotice}` extends `transfer.${infer Name}` ? Name : never;
-  return (
-    <BannerNotice
-      tone="negative"
-      message={
-        notice === TransferFlowScenario.UnderMaintenance &&
-        noticeDetail?.until !== undefined
-          ? t("common.under_maintenance.until", {
-              time: formatMalaysianDateTime(noticeDetail.until, t),
-            })
-          : notice === TransferFlowScenario.BalanceOrLimitShortAtConfirmation &&
-              noticeDetail?.code !== undefined
-            ? t(
-                noticeDetail.code === CreateTransferErrorCode.InsufficientFunds
-                  ? "common.balance_or_limit_short_at_confirmation.over_balance"
-                  : "common.balance_or_limit_short_at_confirmation.over_limit",
-              )
-            : t(`common.${noticeName}.body`)
-      }
-    />
-  );
+  const message =
+    notice === TransferFlowScenario.UnderMaintenance &&
+    noticeDetail?.until !== undefined
+      ? t("common.under_maintenance.until", {
+          time: formatMalaysianDateTime(noticeDetail.until, t),
+        })
+      : notice === TransferFlowScenario.BalanceOrLimitShortAtConfirmation &&
+          noticeDetail?.code !== undefined
+        ? t(
+            noticeDetail.code === CreateTransferErrorCode.InsufficientFunds
+              ? "common.balance_or_limit_short_at_confirmation.over_balance"
+              : "common.balance_or_limit_short_at_confirmation.over_limit",
+          )
+        : t(`common.${noticeName}.body`);
+  if (notice === TransferFlowScenario.BalanceOrLimitShortAtConfirmation)
+    return (
+      <BannerAction
+        tone="negative"
+        message={message}
+        action={{
+          label: t(
+            "common.balance_or_limit_short_at_confirmation.change_amount",
+          ),
+          onPress: () => {
+            router.dismissTo("/transfer/amount");
+          },
+        }}
+      />
+    );
+  return <BannerNotice tone="negative" message={message} />;
 }

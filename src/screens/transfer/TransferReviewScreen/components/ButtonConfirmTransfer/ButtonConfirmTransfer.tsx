@@ -57,6 +57,11 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const hold = useTransferFlow((flow) =>
     flow.step === TransferFlowStep.Reviewing ? flow.hold : undefined,
   );
+  const amountRefusedAsShort = useTransferFlow(
+    (flow) =>
+      flow.step === TransferFlowStep.Reviewing &&
+      flow.notice === TransferFlowScenario.BalanceOrLimitShortAtConfirmation,
+  );
   const coolingOffUntil =
     hold?.kind === TransferHoldKind.CoolingOff ? hold.until : undefined;
   // The hold itself, not its time: the bank refusing again with the same time holds Transfer again.
@@ -104,6 +109,8 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   }, [holdReason]);
   // Not the data: a name check that fails on a later run keeps the earlier answer's data.
   if (!lookup.isSuccess) return null;
+  // The notice's Change amount is the way on: the bank has just refused this amount.
+  if (amountRefusedAsShort) return null;
   const confirmedLookup = lookup.data;
 
   const createAndApproveTransfer = async (path: ApprovalPath) => {

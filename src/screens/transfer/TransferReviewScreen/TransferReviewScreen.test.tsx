@@ -1738,9 +1738,9 @@ function countSent(method: string, pathEnd: string) {
 }
 
 it(
-  "says the balance no longer covers the amount, and reads it and the limits again for the amount step",
+  "says the balance no longer covers the amount, reads it and the limits again, and leads back to the amount instead of offering Transfer",
   scenarioTest("transfer.balance_or_limit_short_at_confirmation", async () => {
-    await openReviewOfRm100();
+    const view = await openReviewOfRm100();
     const transferButton = await screen.findByRole("button", {
       name: "Transfer",
     });
@@ -1759,6 +1759,11 @@ it(
       );
     });
     expect(countSent("POST", "/approve")).toBe(0);
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Change amount" }),
+    );
+    expect(view.getPathname()).toBe("/transfer/amount");
   }),
 );
 
