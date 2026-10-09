@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
+import { usePhoneReportsConnection } from "@/shared/platform/offline";
 import { spacing } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
@@ -14,10 +15,13 @@ export default function BannerOutOfDate({
   tryAgainLabel,
   onTryAgain,
 }: Props) {
+  const phoneReportsConnection = usePhoneReportsConnection();
   return (
     <View style={styles.banner}>
       <BannerNotice message={message} />
-      <ButtonSecondary label={tryAgainLabel} onPress={onTryAgain} />
+      {phoneReportsConnection && (
+        <ButtonSecondary label={tryAgainLabel} onPress={onTryAgain} />
+      )}
     </View>
   );
 }

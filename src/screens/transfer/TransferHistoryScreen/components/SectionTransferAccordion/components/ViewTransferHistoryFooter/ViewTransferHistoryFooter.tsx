@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { usePhoneReportsConnection } from "@/shared/platform/offline";
 import { colors, spacing } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
@@ -21,6 +22,7 @@ export default function ViewTransferHistoryFooter({
 }: Props) {
   const { t, i18n } = useTranslation("transfer");
   const { bottom } = useSafeAreaInsets();
+  const phoneReportsConnection = usePhoneReportsConnection();
 
   return (
     <View style={[styles.footer, { paddingBottom: spacing.md + bottom }]}>
@@ -28,10 +30,12 @@ export default function ViewTransferHistoryFooter({
       {isFetchNextPageError && !isFetchingNextPage ? (
         <>
           <BannerNotice tone="negative" message={t("history.footer.failed")} />
-          <ButtonSecondary
-            label={t("history.footer.retry")}
-            onPress={onRetry}
-          />
+          {phoneReportsConnection && (
+            <ButtonSecondary
+              label={t("history.footer.retry")}
+              onPress={onRetry}
+            />
+          )}
         </>
       ) : !hasNextPage ? (
         <TextBody tone="secondary">{t("history.footer.end")}</TextBody>

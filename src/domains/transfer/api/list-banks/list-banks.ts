@@ -14,6 +14,10 @@ export const getListBanksOptions = () =>
     // Reference data looked up by code: one read serves the whole session.
     staleTime: Infinity,
     gcTime: Infinity,
+    // Asked even offline, so the bank sheet's Try again fails visibly instead of pausing unseen.
+    networkMode: "always",
+    // Not the default under "always": the list must still load by itself once the phone is back.
+    refetchOnReconnect: true,
   });
 
 export function useListBanks() {

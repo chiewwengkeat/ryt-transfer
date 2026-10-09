@@ -575,7 +575,7 @@ it("keeps the notice while Try again is on its way after a refresh fails, until 
   });
 });
 
-it("keeps the rows it has under the notice when History opens offline", async () => {
+it("keeps the rows it has under the notice, offering no Try again, when History opens offline", async () => {
   await renderRoute("/");
   await act(() => {
     router.push("/transfer-history");
@@ -596,6 +596,9 @@ it("keeps the rows it has under the notice when History opens offline", async ()
   await act(() => jest.advanceTimersByTimeAsync(60_000));
 
   expect(screen.getByText(OUT_OF_DATE)).toBeOnTheScreen();
+  expect(
+    screen.queryByRole("button", { name: "Try again" }),
+  ).not.toBeOnTheScreen();
   expect(
     screen.getByRole("button", { name: /^Aisyah Rahman/ }),
   ).toBeOnTheScreen();
@@ -625,7 +628,7 @@ it("keeps the rows under the notice when pulled offline, and refreshes them once
   expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
 });
 
-it("says it couldn't load the transfers when History first opens offline, and lists them once back online", async () => {
+it("says it couldn't load the transfers when History first opens offline, offering no Try again, and lists them once back online", async () => {
   await renderRoute("/");
   await act(() => {
     setPhoneNetwork(OFFLINE);
@@ -638,12 +641,94 @@ it("says it couldn't load the transfers when History first opens offline, and li
   expect(
     await screen.findByText("Couldn't load your transfers."),
   ).toBeOnTheScreen();
+  expect(
+    screen.queryByRole("button", { name: "Try again" }),
+  ).not.toBeOnTheScreen();
   expect(screen.queryByLabelText("Loading")).not.toBeOnTheScreen();
   await act(() => {
     setPhoneNetwork(ONLINE);
   });
   expect(
     await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+});
+
+it("offers no Try again on a first page that failed while the phone has no connection, and lists the transfers on one pressed once back online", async () => {
+  const recoverFirstPage = failTransferHistoryPages("first");
+  await renderRoute("/transfer-history");
+  expect(
+    await screen.findByText("Couldn't load your transfers."),
+  ).toBeOnTheScreen();
+
+  await act(() => {
+    setPhoneNetwork(OFFLINE);
+  });
+
+  expect(
+    screen.queryByRole("button", { name: "Try again" }),
+  ).not.toBeOnTheScreen();
+  recoverFirstPage();
+  await act(() => {
+    setPhoneNetwork(ONLINE);
+  });
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Try again" }),
+  );
+
+  expect(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+});
+
+it("offers no Try again under a failed refresh's notice while the phone has no connection, and refreshes on one pressed once back online", async () => {
+  await renderRoute("/transfer-history");
+  const aisyah = await screen.findByRole("button", { name: /^Aisyah Rahman/ });
+  const recoverFirstPage = failTransferHistoryPages("first");
+  await fireEvent(aisyah, "refresh");
+  expect(await screen.findByText(OUT_OF_DATE)).toBeOnTheScreen();
+
+  await act(() => {
+    setPhoneNetwork(OFFLINE);
+  });
+
+  expect(
+    screen.queryByRole("button", { name: "Try again" }),
+  ).not.toBeOnTheScreen();
+  recoverFirstPage();
+  serveTransferHistoryPages([[LIM_ON_4_OCTOBER]]);
+  await act(() => {
+    setPhoneNetwork(ONLINE);
+  });
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Try again" }),
+  );
+
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
+  expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
+});
+
+it("offers no Retry for an older page that failed while the phone has no connection, says nothing is out of date, and loads the page on one pressed once back online", async () => {
+  serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
+  const recoverLaterPages = failTransferHistoryPages("later");
+  await renderRoute("/transfer-history");
+  expect(await screen.findByText("Couldn't load more.")).toBeOnTheScreen();
+
+  await act(() => {
+    setPhoneNetwork(OFFLINE);
+  });
+
+  expect(screen.queryByRole("button", { name: "Retry" })).not.toBeOnTheScreen();
+  expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
+  recoverLaterPages();
+  await act(() => {
+    setPhoneNetwork(ONLINE);
+  });
+  await fireEvent.press(await screen.findByRole("button", { name: "Retry" }));
+
+  expect(
+    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
   ).toBeOnTheScreen();
 });
 

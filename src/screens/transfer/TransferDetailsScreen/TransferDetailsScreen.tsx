@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { TransportError } from "@/shared/http/transport-error";
+import { usePhoneReportsConnection } from "@/shared/platform/offline";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
@@ -17,6 +18,7 @@ export default function TransferDetailsScreen() {
   const { transferId } = useLocalSearchParams<{ transferId: string }>();
   const { transferQuery, transfer } =
     useGetTransferWithHistoryPlaceholder(transferId);
+  const phoneReportsConnection = usePhoneReportsConnection();
 
   return (
     <>
@@ -53,12 +55,14 @@ export default function TransferDetailsScreen() {
       ) : transferQuery.isError || transferQuery.isPaused ? (
         <ViewScreenFrame
           footer={
-            <ButtonPrimary
-              label={t("details.retry")}
-              onPress={() => {
-                void transferQuery.refetch();
-              }}
-            />
+            phoneReportsConnection ? (
+              <ButtonPrimary
+                label={t("details.retry")}
+                onPress={() => {
+                  void transferQuery.refetch();
+                }}
+              />
+            ) : undefined
           }
         >
           <BannerNotice tone="negative" message={t("details.failed")} />

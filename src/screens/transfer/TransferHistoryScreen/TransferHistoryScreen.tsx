@@ -11,6 +11,7 @@ import {
   trimTransferHistoryToFirstPage,
   useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
+import { usePhoneReportsConnection } from "@/shared/platform/offline";
 import { colors, spacing } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
@@ -26,6 +27,7 @@ export default function TransferHistoryScreen() {
   const { t } = useTranslation("transfer");
   const queryClient = useQueryClient();
   const transferHistory = useListTransfers();
+  const phoneReportsConnection = usePhoneReportsConnection();
   // Clear on each open: a failure left from an earlier visit would be announced as this one's.
   const [refreshFailed, setRefreshFailed] = useState(false);
   // The query keeps one status, which a page fetch after a failed refresh overwrites: only a refresh's outcome counts.
@@ -69,12 +71,14 @@ export default function TransferHistoryScreen() {
       ) : transferHistory.data === undefined ? (
         <ViewScreenFrame
           footer={
-            <ButtonPrimary
-              label={t("history.retry")}
-              onPress={() => {
-                void resetTransferHistory(queryClient);
-              }}
-            />
+            phoneReportsConnection ? (
+              <ButtonPrimary
+                label={t("history.retry")}
+                onPress={() => {
+                  void resetTransferHistory(queryClient);
+                }}
+              />
+            ) : undefined
           }
         >
           <BannerNotice

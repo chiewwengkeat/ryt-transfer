@@ -11,7 +11,7 @@ import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-
 import { parseTypedAmount } from "@/shared/lib/money/money";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { reportedScenarios } from "@/test/harness/recording-sink";
-import { mswServer } from "@/test/msw-server";
+import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -357,6 +357,37 @@ it("says in the bank sheet that the banks wait for a connection when asking for 
     await screen.findByRole("button", { name: "Public Bank" }),
   ).toBeOnTheScreen();
   expect(saidOnceItFoundNone).toBe(saidBeforeItsAnswer + 1);
+});
+
+it("asks the bank for its list on a Try again pressed while the phone has no connection, and lists the banks by itself once the phone is back", async () => {
+  const bankListReads = () =>
+    sentRequests.filter(({ url }) => new URL(url).pathname.endsWith("/banks"))
+      .length;
+  await renderRoute("/transfer");
+  const accountNumber = await screen.findByRole("radio", {
+    name: "Account number",
+  });
+  await act(() => {
+    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+  });
+  mswServer.use(http.all("*", () => HttpResponse.error()));
+  await fireEvent.press(accountNumber);
+  await fireEvent.press(screen.getByRole("button", { name: "Bank" }));
+  const tryAgain = await screen.findByRole("button", { name: "Try again" });
+  const readsBeforeThePress = bankListReads();
+
+  await fireEvent.press(tryAgain);
+  await act(() => jest.advanceTimersByTimeAsync(5_000));
+
+  expect(bankListReads()).toBeGreaterThan(readsBeforeThePress);
+  expect(screen.getByText(OFFLINE_NOTICE)).toBeOnTheScreen();
+  mswServer.resetHandlers();
+  await act(() => {
+    setPhoneNetwork({ isConnected: true, isInternetReachable: true });
+  });
+  expect(
+    await screen.findByRole("button", { name: "Public Bank" }),
+  ).toBeOnTheScreen();
 });
 
 it(
