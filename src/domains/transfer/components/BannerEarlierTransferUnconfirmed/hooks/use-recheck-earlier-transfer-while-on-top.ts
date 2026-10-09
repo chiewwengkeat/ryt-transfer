@@ -1,7 +1,7 @@
 import { focusManager, useQueryClient } from "@tanstack/react-query";
-import { useIsFocused } from "expo-router";
 import { useEffect } from "react";
 
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import { reportError } from "@/shared/observability/observability";
 
 import { refreshPendingTransferNotices } from "../../../hooks/pending-transfer-notices";
@@ -16,9 +16,9 @@ export function useRecheckEarlierTransferWhileOnTop({
   transferId: string | undefined;
 }) {
   const queryClient = useQueryClient();
-  const screenFocused = useIsFocused();
+  const screenOnTop = useIsScreenOnTop();
   useEffect(() => {
-    if (!screenFocused || customerId === undefined || transferId === undefined)
+    if (!screenOnTop || customerId === undefined || transferId === undefined)
       return;
     const timer = setInterval(() => {
       // Not during a write: an approval in flight has a record too, and only its own answer may read or list it.
@@ -33,7 +33,7 @@ export function useRecheckEarlierTransferWhileOnTop({
     return () => {
       clearInterval(timer);
     };
-  }, [screenFocused, customerId, transferId, queryClient]);
+  }, [screenOnTop, customerId, transferId, queryClient]);
 }
 
 const RECHECK_INTERVAL_MS = 15_000;

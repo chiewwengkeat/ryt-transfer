@@ -14,9 +14,10 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
+import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { reportedScenarios } from "@/test/harness/recording-sink";
-import { mswServer } from "@/test/msw-server";
+import { mswServer, sentRequests } from "@/test/msw-server";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -143,6 +144,34 @@ it("keeps checking a transfer Home warns about while Home stays open, and tells 
     ),
   ).toBeOnTheScreen();
   expect(screen.queryByText(STILL_BEING_CHECKED)).toBeNull();
+});
+
+it("stops checking the transfer Home warns about while the session-ended view covers Home", async () => {
+  const { bankAnswer } = await launchWithATransferLastSeenProcessing({
+    status: TransferStatus.Processing,
+    funds: TransferFunds.Debited,
+  });
+  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+  const readsOfTheTransfer = () =>
+    sentRequests.filter(
+      ({ method, url }) =>
+        method === "GET" &&
+        url.endsWith(`/transfers/${bankAnswer.transfer.transferId}`),
+    ).length;
+  mswServer.use(
+    http.get("*/any-request", () => new HttpResponse(null, { status: 401 })),
+  );
+  await act(async () => {
+    await requestJson("/any-request").catch(() => undefined);
+  });
+  expect(
+    screen.getByRole("header", { name: "Your session has ended" }),
+  ).toBeOnTheScreen();
+  const readsWhenTheSessionEnded = readsOfTheTransfer();
+
+  await act(() => jest.advanceTimersByTimeAsync(31_000));
+
+  expect(readsOfTheTransfer()).toBe(readsWhenTheSessionEnded);
 });
 
 it("keeps quoting the bank's reference a launch's check found, after a later launch's read of the transfer fails", async () => {
