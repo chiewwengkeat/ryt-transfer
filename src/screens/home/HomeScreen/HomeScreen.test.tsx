@@ -425,3 +425,13 @@ it("lists the recipient of a transfer just sent first among the recent recipient
     ).toHaveAccessibleName(sentRecipientRow);
   });
 });
+
+it("opens the transfer history from Home", async () => {
+  const view = await renderRoute("/");
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer history" }),
+  );
+
+  expect(view.getPathname()).toBe("/transfer-history");
+});
