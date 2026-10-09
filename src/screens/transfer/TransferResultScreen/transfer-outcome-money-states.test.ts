@@ -1,6 +1,12 @@
-import { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
+import {
+  isSettledTransferOutcome,
+  TransferOutcomeScenario,
+} from "@/domains/transfer/api/get-transfer/get-transfer";
 
-import { MONEY_STATE_BY_OUTCOME } from "./transfer-outcome-money-states";
+import {
+  MONEY_STATE_BY_OUTCOME,
+  MoneyState,
+} from "./transfer-outcome-money-states";
 
 // Jest defines it; the app's types deliberately leave out Node's globals.
 declare const __dirname: string;
@@ -28,6 +34,17 @@ it("gives each outcome its matrix section's money state", () => {
         outcome,
         matrixSections.find((section) => section.id === outcome)?.money,
       ]),
+    ),
+  );
+});
+
+it("treats as settled exactly the outcomes whose money state is confirmed", () => {
+  const outcomes = Object.values(TransferOutcomeScenario);
+
+  expect(outcomes.filter(isSettledTransferOutcome)).toEqual(
+    outcomes.filter(
+      (outcome) =>
+        MONEY_STATE_BY_OUTCOME[outcome] !== MoneyState.NotConfirmedYet,
     ),
   );
 });
