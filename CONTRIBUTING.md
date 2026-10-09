@@ -8,7 +8,7 @@ Run all three before you push. CI runs them on every push.
 
 ```sh
 pnpm typecheck
-pnpm lint    # ESLint, Prettier, the placement-ladder check and the secret scan
+pnpm lint    # ESLint, Prettier, the placement check and the secret scan
 pnpm test    # Jest, then the tests of the repo's own scripts and lint rules
 ```
 
@@ -18,6 +18,8 @@ CI also runs `production-bundle`, a job of its own that exports the app in each 
 
 ## Layout
 
+Two principles shape every rule below: an engineer reading the code should meet as little of what they do not need as possible, and no two engineers should read a rule two ways. [Decision 011](docs/decisions/011-low-mental-load.md) argues each rule, and [001](docs/decisions/001-vertical-slices.md) the slices.
+
 The app is cut into vertical slices of two kinds:
 
 - A **screens folder**, `src/screens/<flow>/`, holds one flow's screens and whatever only that flow uses.
@@ -25,64 +27,101 @@ The app is cut into vertical slices of two kinds:
 
 A screens folder and a domain about the same thing share a singular name, as `src/screens/transfer/` and `src/domains/transfer/` do. Around the slices:
 
-| Folder        | Holds                                                                                                                                                                                                             |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/app/`    | The routes, kept thin: they re-export the screens and the shell's views. A flow's layout holds its navigator, `+native-intent.tsx` filters the links that open the app, and the root layout re-exports the shell. |
-| `src/shell/`  | The app's root: its views, its providers, the root stack, the query client, the translation bundles it registers, and the one place app code loads `src/mocks/` from.                                             |
-| `src/shared/` | Code that knows nothing about banking: UI, hooks, theme, i18n, HTTP, config, platform wrappers, observability, plain helpers.                                                                                     |
-| `src/mocks/`  | The mock bank and its scenarios, for development and demo builds only.                                                                                                                                            |
-| `src/test/`   | The test harness.                                                                                                                                                                                                 |
+| Folder        | Holds                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/`    | The routes, kept thin: each re-exports a screen or a view. A flow's layout holds its navigator, the root layout re-exports the root view, and `+native-intent.tsx` re-exports the filter on the links that open the app.                                                                                                                                                                      |
+| `src/root/`   | What exists once for the whole app and that every screen sits inside: the root view, `ViewRoot/`, with its providers, the root stack and the views it lays over the app, and the modules a route imports or that set up the whole app while it loads: the launch steps, the query client, the translation registry and the link filter. It is the one place app code loads `src/mocks/` from. |
+| `src/shared/` | Code that knows nothing about banking: UI, hooks, theme, i18n, HTTP, config, platform wrappers, observability, plain helpers.                                                                                                                                                                                                                                                                 |
+| `src/mocks/`  | The mock bank and its scenarios, for development and demo builds only.                                                                                                                                                                                                                                                                                                                        |
+| `src/test/`   | The test harness, by role: `setup/`, `render/`, `mock-bank/`, `doubles/`, `fixtures/`, and `scenarios/` for the matrix scanner.                                                                                                                                                                                                                                                               |
+
+Outside `src/`, `.config/` holds the tooling's configuration: Metro's, commitlint's, the globs that define test code, and ESLint's slice boundaries, import bans and rules in `.config/eslint/`. `eslint-rules/` holds only a note and stays empty: coding-agent tooling keys on the folder.
 
 ### Adding a slice
 
-- A screens folder holds `<Name>Screen/` folders beside `components/`, `hooks/`, `state/` and `i18n/`, and nothing else. The transfer folder also keeps the scenario matrix in `scenarios/`.
-- A domain holds `api/`, `components/`, `hooks/` and `i18n/`, and nothing else. Each endpoint has a folder of its own in `api/`: `<endpoint>.type.ts` holds its request and response types, and `<endpoint>.ts` the code that calls it or works on its cached data, including any hook a component calls. Lint fails a component that calls `useQuery`, `useMutation` or `useInfiniteQuery` itself, so a component reads and writes through such a hook. The types can land before the rest, while only the mock bank answers the endpoint. A domain's query keys all come from its `api/<area>.keys.ts`.
-- A domain's `hooks/` holds its public modules that are not components: its hooks, and any plain module another slice calls.
-- A screen's route in `src/app/` re-exports the screen's entry file, `<Name>Screen/<Name>Screen.tsx`, and an `ErrorBoundary`.
-- A flow's layout in `src/app/` holds the flow's navigator, the guard on which of its routes may open, and what leaving the flow does. `src/app/+native-intent.tsx` filters the links that open the app.
-- A slice's strings go in its `i18n/` folder, one bundle per language, registered in `src/shell/translations.ts`. The Demo menu's own strings, the `demo` namespace in `src/mocks/switcher/i18n/`, are the exception: the shell may not import `src/mocks/`, so the menu registers them itself the first time it renders.
+- A screens folder holds `<Name>Screen/` folders beside `components/`, `hooks/`, `lib/` and `i18n/`, and nothing else. The transfer folder also keeps its flow's store in `flow-store/` and the scenario matrix in `scenarios/`.
+- A screen's folder holds its entry file, `<Name>Screen.tsx`, beside `components/`, `hooks/`, `lib/` and `tests/`.
+- A domain holds `api/`, `components/`, `hooks/`, `lib/` and `i18n/`, and nothing else. Each endpoint has a folder of its own in `api/`: `<endpoint>.type.ts` holds its request and response types, and `<endpoint>.ts` the code that calls it or works on its cached data, including the rules about what that data means and any hook a component calls. Lint fails a component that calls `useQuery`, `useMutation` or `useInfiniteQuery` itself, so a component reads and writes through such a hook. The types can land before the rest, while only the mock bank answers the endpoint. A domain's query keys all come from its `api/<area>.keys.ts`.
+- `src/root/` holds `ViewRoot/` and kebab-case module folders, each a module a route imports or one that sets up the whole app while it loads. Below `ViewRoot/`, pieces nest as they do in a screen's folder.
+- A screen's route in `src/app/` re-exports the screen's entry file and an `ErrorBoundary`.
+- A flow's layout in `src/app/` holds the flow's navigator, the guard on which of its routes may open, and what leaving the flow does.
+- A slice's strings go in its `i18n/` folder, one bundle per language, registered in `src/root/translations/translations.ts`. The Demo menu's own strings, the `demo` namespace in `src/mocks/switcher/i18n/`, are the exception: app code may not import `src/mocks/`, so the menu registers them itself the first time it renders.
 
-The placement check fails any other entry in a slice (`scripts/slice-layout.js`).
+The placement check fails any other entry in a slice or at the top of `src/root/` (`scripts/slice-layout.js`).
 
 ### Imports
 
-Imports run one way: a screens folder may use domains and shared code, a domain only itself and shared code, and shared code only shared code. Nothing imports sideways: no screens folder imports another, no domain imports another, and a screen's own `components/` and `hooks/` are private to that screen.
+Imports run one way: a screens folder may use domains and shared code, a domain only itself and shared code, and shared code only shared code. Nothing imports sideways: no screens folder imports another, no domain imports another, and a screen's own `components/`, `hooks/` and `lib/` are private to that screen.
 
-App code outside a domain reaches it only through its public files: an endpoint's `<endpoint>.ts` and `<endpoint>.type.ts`, a domain component's own file, the domain's `api/<area>.keys.ts`, and the files directly in its `hooks/`. Routes and the shell reach a screens folder only through a screen's entry file and the folder's `state/`. The shell also imports the `i18n/` bundles of screens folders and domains alike, which it registers. In app code, only the shell may load `src/mocks/`, and only through `require`, never an `import`. Tests are not app code: the test harness in `src/test/` may import from any slice, the mock bank included; any other test keeps the import rules of the code beside it and may also import the harness.
+App code outside a domain reaches it only through its public files: an endpoint's `<endpoint>.ts` and `<endpoint>.type.ts`, a domain component's own file, a domain module's `<x>.ts` and `<x>.type.ts` in `hooks/<x>/` or `lib/<x>/`, and the domain's `api/<area>.keys.ts`. Routes and the root reach a screens folder only through a screen's entry file and the flow store's `flow-store.ts` and `flow-store.type.ts`, and routes reach the root only through `ViewRoot.tsx` and its top-level modules. The root also imports the `i18n/` bundles of screens folders and domains alike, which it registers. In app code, only `src/root/` may load `src/mocks/`, and only through `require`, never an `import`, but for a type-only import of the demo contract from `src/mocks/demo-layer/demo-layer.ts`.
 
-`eslint.boundaries.mjs` holds the slice rules and `eslint.bans.mjs` the import bans; `pnpm lint` fails a breach of either.
+Tests are not app code. The harness in `src/test/` may import from any slice, the mock bank included. A repository check, named `.check.test.ts(x)`, may also import `src/mocks/` and `src/root/` directly. Any other test keeps the import rules of the code beside it and may also import the harness.
 
-## Where a component or hook goes
+Inside a folder, import with `./`; once an import leaves the folder, with `@/`, so every importer outside a folder spells a module's path the same way. Lint fails any `../` in `src/`; the matrix scanner's one climb, to `.config/test-files.js`, says why on its line.
+
+`.config/eslint/boundaries.mjs` holds the slice rules and `.config/eslint/bans.mjs` the import bans; `pnpm lint` fails a breach of either.
+
+## Where a component, hook or module goes
 
 Colocation first: a piece of code lives as close to its users as possible. Most components serve a single screen, and keeping each one inside that screen keeps the screen's code together instead of scattering it through a folder the whole flow shares.
 
 1. Used by one screen → inside that screen: `src/screens/<flow>/<Name>Screen/components/<Component>/<Component>.tsx`.
 2. Used by two or more screens of one screens folder → `src/screens/<flow>/components/<Component>/`.
-3. Used by two or more screens folders, or by the shell → `src/domains/<area>/components/<Component>/`, in the area whose data it shows.
-4. Knows nothing about banking → `src/shared/ui/`.
+3. Used by two or more screens folders → `src/domains/<area>/components/<Component>/`, in the area whose data it shows.
+4. Knows nothing about banking, and used by two or more slices → `src/shared/ui/`. A banking-free piece stays beside its users until a second slice uses it.
 
-Hooks climb the same ladder in `hooks/` folders, except that a hook only the shell uses, which knows nothing about banking beyond the app's routes, stays in `src/shell/` until code outside the shell uses it: the shell holds the root stack, so a hook that reads the current route, such as the one that lifts the capture block on a receipt, belongs beside it. A component that only one other component uses nests in that component's own `components/`. The views the shell is built from, which the root layout and the not-found route re-export the way a screen's route re-exports its screen, sit in `src/shell/<Component>/`, and a component only one of them uses nests inside it. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test. API modules always live in their domain's `api/`.
+Hooks and modules climb the same ladder. A hook is named `use-*` and lives in `hooks/<use-x>/<use-x>.ts`; any other module that is not a component lives in `lib/<x>/<x>.ts`. A module that exports a hook beside plain functions is placed by its main export. Shared code keeps its modules in area folders, such as `src/shared/platform/network/network.ts`; an area whose one module shares its name is both, as `src/shared/config/config.ts` is.
 
-`scripts/check-placement-ladder.js` fails a component or hook placed higher than its users need, or one no app code uses, and the import rules fail one placed too low. It checks every component and hook in a `components/` or `hooks/` folder of a screens folder, a domain or shared code; the base components directly in `src/shared/ui/` are exempt, since they are built before any screen uses them. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case of who uses a piece, the script is the authority, not this summary. It cannot tell whether a piece knows about banking, so that call is the reviewer's: a hook only the shell uses, knowing nothing of banking beyond the routes, passes the script in a domain, and still belongs in `src/shell/`. It never looks inside `src/shell/`, so the nesting of the shell's own pieces is the reviewer's to hold too.
+Every module and hook sits in a folder of its own, named for it, with its test and its role files beside it. Only files inside that folder import its role files; code elsewhere imports `<x>.ts` or `<x>.type.ts`. Routes, a screen's entry file, string bundles, each domain's `api/<area>.keys.ts`, test code and the scenario matrix are exempt. API modules always live in their domain's `api/`.
+
+A piece that only one other piece uses nests in that piece's own `components/`, `hooks/` or `lib/`, but a hook or `lib/` module owns no nested pieces: a module only it uses is placed by the component or screen that owns it. A piece only `src/root/` uses lives in the one domain its files import; one that imports none, or more than one slice, nests in the root view that uses it, as the session-ended view nests in `src/root/ViewRoot/components/`. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test.
+
+`scripts/check-placement-ladder.js` fails a component, hook or `lib/` module placed higher than its users need, or one no app code uses, and the import rules fail one placed too low. It checks every piece in a `components/`, `hooks/` or `lib/` folder of a screens folder, a domain, shared code and `src/root/` below its top level. A base component directly in `src/shared/ui/` passes with no user at all, since it can be built before any screen uses it, and fails once every user sits in one slice. The check also fails any test file under `src/app/`, which Expo Router would bundle as a route. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case of who uses a piece, the script is the authority, not this summary. It cannot tell whether a piece knows about banking: that call is the reviewer's.
+
+## Sizes and folds
+
+Fewer files that each read at a glance, rather than many small ones a reader has to jump between. Every limit is a number of lines in the file as committed, after Prettier. A limit applies when a file is created, moved, split or folded; a file that later grows past one may be split then, and never must be.
+
+| File                                            | Lines                        |
+| ----------------------------------------------- | ---------------------------- |
+| A test file, tooling tests included             | at most 500; lint fails more |
+| A test file, before it should merge             | about 200                    |
+| A module that is neither a component nor a test | at most about 320            |
+| A module, before it folds into its one user     | 100                          |
+| A component taking a fold                       | at most 200                  |
+| A module taking a fold                          | at most 250                  |
+| A merged harness file                           | at most 250                  |
+
+- A module under 100 lines whose only user in app code is one file folds into that file, smallest first and repeated until nothing more folds, while the user stays within its limit. A test of its own moves into the user's tests, unless it checks what only a direct call can see, as the history list's row helper's and the demo reset cleanup's tests do.
+- A component whose only user is another component folds into that component's file while the file stays within 200 lines; past that, it nests in the user's `components/`. A component never folds into a module.
+- A folded piece is relocated, not rewritten. In the parent's file it sits after the parent's styles: each folded component in the order the parent renders them, as `<Child>Props`, the child, then `<child>Styles`, and then folded hooks and functions in the order they are called. A folded component keeps its Type-led name and a JSDoc of at most four lines, and nothing folded is exported: a second export ends Fast Refresh for the file.
+- These never fold: `src/mocks/demo-layer/demo-layer.ts`, the one file app code loads the mock bank through, though others fold into it; a module loaded for its side effect; the wrappers in `src/shared/platform/`; a hook that calls `useQuery`, `useMutation` or `useInfiniteQuery`, into a component; a module a route imports or one that sets up the whole app while it loads; the flow store and its refresh after an approval; domain and shared components; the harness, which merges within each role instead; and a module another test mocks by its path.
+- An endpoint's `.type.ts` stays beside it. Any other module's type file folds into the module while the module stays within 250 lines.
+- A test file may split from about 350 lines and should from about 420; a split's parts aim at 480 lines or fewer, leaving room for later lines. A test file under about 200 lines merges into another file of its unit: into the unit's unsuffixed file while that stays within 500 lines, otherwise into a family file named for what the merged tests share. A unit whose tests are one file stays as it is, and so do a suite that runs one test per load, a suite with a file-level `jest.mock` of a local module, and a demo-build suite with no other demo-build suite to join.
+- Tests that share a file share its module state and top-level hooks, including hooks a fixture it imports registers. Merge a file with top-level setup only into one whose tests pass beside it, and run a merged or split file under `jest --randomize`.
 
 ## Names and file shape
 
-Lint fails a breach of each of these (`eslint.config.mjs`). On an edge case, the rule's own file in `eslint-rules/` is the authority, not this summary.
+Lint fails a breach of each of these (`eslint.config.mjs`, with the repository's own rules in `.config/eslint/rules/`). On an edge case, the rule's own file is the authority, not this summary.
 
 - A component's name leads with its Type, from a closed list: `{Type}{Purpose}{Feature}{Variant}`, such as `CardBalance` or `ButtonPrimary`. Screens are the exception, each named `<Name>Screen`.
 - A component sits in a folder of its own, named for it: `<Component>/<Component>.tsx`. A file beside it takes the same name with a singular role suffix, such as `<Component>.type.ts`, never `.types.ts`.
 - A component file reads in one order: imports, `Props`, the component, `StyleSheet.create`, then the rest. A JSDoc on the component stays within four lines.
+- Every other file opens with what it is for. A module reads imports, exports, then its private helpers, constants and types; a test file reads imports and setup (`jest.mock`, top-level hooks), its tests, then its helpers; a script reads imports, the statements it runs, then its helpers. This app's Babel compiles `const`, `let` and `enum` to `var`, so a value read before its definition is a silent `undefined`, never an error: a value the file reads while it loads stays above its reader, marked `// eslint-disable-next-line fe/file-layout -- read at load by <reader>`, and `no-use-before-define` fails a read placed above its value. A file whose top level must run in its written order takes one file-level exception that says why.
 - A hook file is kebab-case and named for the hook it exports: `use-send-transfer-approval.ts` exports `useSendTransferApproval`.
 - Only files inside a component's folder import its internal files; code elsewhere imports the component itself.
 
+Review holds the rules no tool checks: a folder per module and per hook, only `use-*` modules in `hooks/`, where tests and their helpers sit, role files imported only from inside their folder, every size limit but the test cap, how a folded piece is written, the namespace rule for `t`, the `.check.test` suffix for repository checks only, and whether a piece knows about banking.
+
 ## Adding a scenario
 
-The scenario matrix, [`src/screens/transfer/scenarios/transfer.md`](src/screens/transfer/scenarios/transfer.md), is the one description of what can happen while someone sends money. Its header says how to read it and how to change it. A new scenario takes four edits, made in one commit:
+The scenario matrix, [`src/screens/transfer/scenarios/transfer.md`](src/screens/transfer/scenarios/transfer.md), is the one description of what can happen while someone sends money. Its header says how to read it and how to change it. A new scenario takes five edits, made in one commit:
 
 1. Its section in the matrix, written as the header says.
-2. Its id in `TRANSFER_SCENARIOS` (`src/mocks/scenarios/transfer-scenarios.ts`), under the same step, with what makes the mock bank behave that way: `conditions` change the bank's own state, `handlers` lay answers over the bank's, and an entry with neither is either the normal bank's own behaviour or caused on the phone or by what the person does. The Demo menu lists every entry with `conditions` or `handlers` under its step; `phoneSide` lists one with neither near the top, for a production behaviour the demo build leaves off, such as the capture block. The matrix test, `src/test/scenarios/transfer-matrix.test.ts`, fails until the registry and the matrix hold the same ids under the same steps.
-3. Its words, in all three languages, under `common.<name>` in the flow's bundles, where `<name>` is the id after `transfer.`.
-4. Its route test, as below.
+2. Its member in `TransferScenarioId` (`src/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id.ts`), named for the id after `transfer.` in PascalCase and valued as the id: `ApprovalExpired = "transfer.approval_expired"`. App code names a scenario by its member, never by a string.
+3. Its entry in `TRANSFER_SCENARIOS` (`src/mocks/scenarios/transfer-scenarios/transfer-scenarios.ts`), under the same step, with what makes the mock bank behave that way: `conditions` change the bank's own state, `handlers` lay answers over the bank's, and an entry with neither is either the normal bank's own behaviour or caused on the phone or by what the person does. The Demo menu lists every entry with `conditions` or `handlers` under its step; `phoneSide` lists one with neither near the top, for a production behaviour the demo build leaves off, such as the capture block. The registry must hold every member of the enum, so the type check fails until it and the enum agree, and the matrix check, `src/screens/transfer/scenarios/transfer.check.test.ts`, fails until the registry and the matrix hold the same ids under the same steps.
+4. Its words, in all three languages: whatever the app shows for it under `common.<name>` in the transfer domain's bundles (`src/domains/transfer/i18n/`), and its Demo menu title at `common.<name>.title` in the Demo menu's bundles (`src/mocks/switcher/i18n/`), where `<name>` is the id after `transfer.`.
+5. Its route test, as below.
 
 With no scenario picked, the mock bank behaves as a normal bank. Every test starts that way, with the bank reset before it, and a scenario changes only what its entry names. In development and demo builds, the Demo menu picks one scenario at a time, and its Normal entry goes back to the normal bank without clearing what the bank holds.
 
@@ -90,11 +129,13 @@ With no scenario picked, the mock bank behaves as a normal bank. Every test star
 
 Test a route the way a person uses it, against the mock bank:
 
-- `renderRoute(url)` (`src/test/render-route.tsx`) mounts the app's own routes at that URL with their real providers. Every request goes to the mock bank, and a request no handler answers fails the test. It switches Jest to fake timers until the test ends: Testing Library's `findBy` queries and `waitFor` advance them, a test that waits out a timeout advances them itself, and one that reads the mock bank directly first returns to real timers with `readBankOnRealTimers`, since the bank answers after a delay the fake timers hold.
-- `scenarioTest("transfer.<name>", run)` (`src/test/scenario-test.ts`) picks a scenario for one test. Give the id as a string literal: the matrix test reads that argument to fail an id the matrix lacks, and an id built at runtime escapes that check.
-- Every scenario in the matrix needs a route test that picks it, renders the route and asserts what the person sees. The matrix test fails a scenario with none: it counts a test only when the test passes the id to `scenarioTest`, calls `expect`, and sits in a file that calls `renderRoute`. A skipped test counts for nothing, and neither does any test in a file holding a focused one.
-- Route tests are split by behaviour and named for the screen they render, `<Name>Screen.<behaviour>.test.tsx`, beside that screen: `.offline`, `.language`, `.phone-security`. Every test of a behaviour lives in that one file and nowhere else, and a suffix names exactly one behaviour. A test file holds at most 500 lines. One that would hold fewer than about 150 is better merged with others into one file under a more general name, such as the screen's own `<Name>Screen.test.tsx`. A test of the demo build's own behaviour carries `.demo` in its name. Jest runs as production, so a test that must run as the demo build imports `@/test/demo-build` before anything else.
+- `renderRoute(url)` (`src/test/render/render-route.tsx`) mounts the app's own routes at that URL with their real providers. Every request goes to the mock bank, and a request no handler answers fails the test. It switches Jest to fake timers until the test ends: Testing Library's `findBy` queries and `waitFor` advance them, a test that waits out a timeout advances them itself, and one that reads the mock bank directly first returns to real timers with `readBankOnRealTimers` (`src/test/render/drive-app.ts`), since the bank answers after a delay the fake timers hold.
+- `scenarioTest("transfer.<name>", run)` (`src/test/render/drive-app.ts`) picks a scenario for one test. Give the id as a string literal: the matrix check reads that argument to fail an id the matrix lacks, and an id built at runtime escapes that check.
+- Every scenario in the matrix needs a route test that picks it, renders the route and asserts what the person sees. The matrix check fails a scenario with none: it counts a test only when the test passes the id to `scenarioTest`, calls `expect`, and sits in a file that calls `renderRoute` itself, so a helper shared by test files never takes that call from them. A skipped test counts for nothing, and neither does any test in a file holding a focused one, or in a repository check.
+- A screen's tests sit in its `tests/` folder, `src/screens/<flow>/<Name>Screen/tests/`, and the root view's in `src/root/ViewRoot/tests/`; every other test sits beside its module. A helper that one screen's test files share sits in that `tests/` folder as `<Name>Screen.<role>.ts(x)`, such as `<Name>Screen.helper.tsx`.
+- Route tests are split by behaviour and named for the screen they render, `<Name>Screen.<behaviour>.test.tsx`: `.offline`, `.holds`, `.phone-security`. Every test of a behaviour lives in that one file and nowhere else. A suffix names one behaviour, or, once small files merge, the family their tests share, and a screen's small behaviours live in its unsuffixed `<Name>Screen.test.tsx`. A behaviour over the cap splits into files named for its parts. No split or merge adds or removes a `describe`, since that changes the full name of every test inside it. A test of the demo build's own behaviour carries `.demo` in its name. Jest runs as production, so a test that must run as the demo build imports `@/test/setup/demo-build` before anything else.
 - A shared component's route tests sit beside the component, in `<Component>.test.tsx`, rather than in the suites of the screens they walk: `src/shared/ui/FieldText/FieldText.test.tsx` renders the amount and recipient steps to test the field.
+- A repository check sits beside what it checks and is named `<x>.check.test.ts(x)`, as the matrix's, the scenario enum's and the translations' checks are. The suffix lets it import `src/mocks/` and `src/root/` directly and earns it no scenario credit; it marks nothing else.
 - Query by accessible name, through `accessibilityRole` and `accessibilityLabel`; lint bans `testID`.
 - Assert what a person could observe: text, roles, where they ended up, and the requests that left the app. Never assert on component state or on which module a value passed through.
 
@@ -102,30 +143,29 @@ Only these are tested below the route: the money and date helpers, the transport
 
 - `src/shared/ui/BottomSheetFrame/`: a body taller than the sheet still scrolls, which needs a layout pass Jest never runs, and a sheet that may not be dismissed holds Back and the escape gesture, which no route leaves reachable.
 - `src/shared/ui/ViewScreenFrame/`: the footer height it publishes changes only on layout, which a route render never fires.
-- `src/shared/observability/render-trace.ts`: the trace is compiled only into development builds, and every route test runs as production.
+- `src/shared/observability/render-trace/render-trace.ts`: the trace is compiled only into development builds, and every route test runs as production.
 - `src/mocks/switcher/components/ViewDemo/`: its menu's order, Unlock PIN's place, its own place above the app, its menu opening over an app sheet, and its screen-reader language, against a stand-in app; the demo build's route tests reach it through the root too.
 
 ## Translations
 
 Every string the production app shows comes from a bundle in English (`en-MY`), Malay (`ms-MY`) and Chinese (`zh-MY`), each named by its language's code in `AppLanguage` (`src/shared/i18n/i18n.ts`), except the language names: each is a constant in its own script, never a translation key, so it reads the same whichever language is picked. A Malay or Chinese string is a machine translation, set as it comes out, with no human review.
 
-- A slice's bundle groups its strings under one top-level key per screen, or per component that keeps its own (`review`, `card_balance`), plus `common` for what two or more of them share. A scenario's words sit under `common.<name>` even when only one screen shows them. A leaf key is named for its role (`title`, `body_secondary`), never numbered.
+- Each slice's bundles form a namespace: `shared`, `account`, `approval`, `home` and `transfer`. The transfer screens' bundle and the transfer domain's merge into the one `transfer` namespace a top-level key at a time, so a top-level key lives in only one of the two.
+- No namespace is the default. Every shared word is written `t("shared:…")`. A component that shows its own words and shared ones calls `useTranslation(["<own>", "shared"])`, and one that shows only shared words calls `useTranslation(["shared"])`, so its keys are type-checked either way. Never take `t` from a `useTranslation()` with no namespace: that `t` accepts any string, typos included, and shows a raw key on screen. Call `useTranslation()` with no namespace only to read `i18n`.
+- A bundle groups its strings under one top-level key per screen or module. A component's words sit under its own name, a folded component's included (`card_balance`, `button_confirm_transfer`), and words that only one hook or plain module reads sit under that module's name. A screen's group holds only the words the screen file shows itself. `common` holds only words two or more modules share, and scenario words. A leaf key is named for its role (`title`, `body_secondary`), never numbered.
+- A scenario's words sit under `common.<name>` in the transfer domain's bundle, even when only one screen shows them, and its Demo menu title at `common.<name>.title` in the Demo menu's bundle.
 - A Malay or Chinese bundle has every key of the English bundle beside it, and each of its strings keeps the English string's `{{placeholders}}`.
 - A plural comes as a twin. English has `_one` and `_other`; Malay and Chinese repeat their `_other` string under `_one`. Hermes lacks `Intl.PluralRules`, so i18next reads `_one` for a count of one in every language, and a missing twin shows English.
 - A money state's phrase appears in each language exactly as the matrix's money table gives it.
 - Where a scenario's **Never** reads "offer to send it again", nothing the person can press carries any of the nine retry words in the matrix header's table, in any language, since an English word left on a Malay button still offers a resend; and no message offers to send it again. A message may still warn against sending again.
 - When an English string changes, re-translate its Malay and Chinese in the same commit. No check notices a translation left behind by a change to its English.
 
-Three tests read the bundles, each a different way:
+Two repository checks read the bundles:
 
-- `src/shell/translations.test.ts` reads the bundles the app registers, and fails on a top-level key defined twice in one namespace, or on a Malay or Chinese plural whose `_one` twin is missing or differs from its `_other`.
-- `src/test/translation-parity.test.tsx` reads every namespace, the Demo menu's included, and fails when a Malay or Chinese bundle lacks a key English has, carries one English lacks, changes a string's placeholders, or holds a plural whose twins differ.
-- `src/test/translation-bundles.test.ts` reads every bundle file on disk, and fails on a key repeated inside one object, or on a matrix id with no strings under the transfer bundle's `common`.
-
-`src/test/scenarios/transfer-matrix.test.ts` holds two of the rules above, over the bundles the app registers:
-
-- The money phrase: for a scenario whose **Tell them** ends in a money state, it fails each language in which no string of `common.<name>` carries that state's phrase. A longer phrase holding the shorter one does not count, so "no money moved" never passes for "money moved".
-- The retry words: under a scenario whose **Never** forbids a resend, it fails any string of `common.<name>` but its `body` that carries a retry word.
+- `src/root/translations/translations.check.test.tsx` fails a top-level key defined twice in one namespace; a Malay or Chinese bundle, in any namespace, the Demo menu's included, that lacks a key English has, carries one English lacks or changes a string's placeholders; a Malay or Chinese plural whose `_one` twin is missing or differs from its `_other`; a key repeated inside one object of any bundle file; a matrix id with no title in the Demo menu's bundle; and a group under the transfer bundle's `common` that names no matrix id, unless the check lists it among the words two modules share.
+- `src/screens/transfer/scenarios/transfer.strings.check.test.ts` holds two of the rules above, over the bundles the app registers:
+  - The money phrase: for a scenario whose **Tell them** ends in a money state, it fails each language in which no string of `common.<name>` carries that state's phrase. A longer phrase holding the shorter one does not count, so "no money moved" never passes for "money moved".
+  - The retry words: under a scenario whose **Never** forbids a resend, it fails any string of `common.<name>` but its `body` that carries a retry word.
 
 ## Build variants
 
