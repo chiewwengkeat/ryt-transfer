@@ -9,7 +9,10 @@ import {
   holdNextBiometricPrompt,
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { reportedScenarios } from "@/test/harness/recording-sink";
+import {
+  observedRecords,
+  reportedScenarios,
+} from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -176,6 +179,35 @@ it("reports no face or fingerprint match that comes back under the session-ended
   expect(reportedScenarios().slice(reportCountAtTheView)).not.toContain(
     "transfer.biometrics_recognised",
   );
+});
+
+it("reports the outcome of an approval answered under the session-ended view only once signed in again", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const releasePrompt = holdNextBiometricPrompt();
+  await openReviewOfRm100();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  await waitFor(() => {
+    expect(biometricPromptsShown()).toHaveLength(1);
+  });
+  const signInButton = await endTheSessionThroughAnotherRead();
+  const recordCountAtTheView = observedRecords.length;
+  const outcomesReportedSinceTheView = () =>
+    observedRecords
+      .slice(recordCountAtTheView)
+      .filter(({ name }) => name === "transfer_outcome")
+      .map(({ properties }) => properties);
+
+  releasePrompt();
+  await screen.findByText("Transfer sent", { includeHiddenElements: true });
+  const outcomesUnderTheView = outcomesReportedSinceTheView();
+  await fireEvent.press(signInButton);
+
+  expect(outcomesUnderTheView).toEqual([]);
+  await waitFor(() => {
+    expect(outcomesReportedSinceTheView()).toEqual([
+      { scenario: "transfer.completed" },
+    ]);
+  });
 });
 
 it("reports no approval key the bank stops knowing as it answers under the session-ended view", async () => {

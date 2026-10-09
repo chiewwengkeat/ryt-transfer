@@ -7,7 +7,7 @@ import {
   useLocalSearchParams,
   useNavigation,
 } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
@@ -96,9 +96,13 @@ export default function TransferResultScreen() {
     setHeldScenario(latestScenario);
   const scenario = readingAgainAfterFailure ? heldScenario : latestScenario;
 
+  const reportedScenarioRef = useRef<TransferOutcomeScenario>(undefined);
+  // Held while covered, never dropped: after sign-in the outcome is still on screen, so what shows then is reported.
   useEffect(() => {
+    if (!screenOnTop || reportedScenarioRef.current === scenario) return;
+    reportedScenarioRef.current = scenario;
     trackEvent("transfer_outcome", { scenario });
-  }, [scenario]);
+  }, [scenario, screenOnTop]);
   useEffect(() => {
     // Settled after opening: any refresh the approve call made predates it, and it may have moved money.
     if (outcomeSettled && !openedSettled)
