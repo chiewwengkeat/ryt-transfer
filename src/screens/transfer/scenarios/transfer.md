@@ -15,7 +15,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 | not confirmed yet | belum disahkan | 尚未确认 |
 | money returned | wang telah dipulangkan | 款项已退回 |
 
-**Retry words.** Where **Never** reads "offer to send it again", nothing the person can press carries one of these words: no button or action label, in any language. Where **Never** reads "offer to send it again", no language's message offers it. Messages keep their warnings, such as "shouldn't send it again" or "check History before sending again".
+**Retry words.** Where **Never** reads "offer to send it again", nothing the person can press carries one of these words: no button or action label, in any language. Where **Never** reads "offer to send it again", no language's message offers it. Messages keep their warnings, such as "shouldn't send it again" or "check Transfer history before sending again".
 
 | Retry word | Language |
 | --- | --- |
@@ -96,6 +96,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **Tell them:** their last transfer is still being checked, so they shouldn't send it again, with a reference to quote to support — not confirmed yet
 - **They can:** carry on with a new transfer at their own risk
 - **Never:** offer to send it again
+- **Afterwards:** while Home or the review step is open and in front, the app asks the bank about the newest such transfer about every 15 seconds; an older one is asked about at the next launch, or once the newer one settles
 - **Why:** the earlier transfer may still complete, so a second one could pay twice, and the person decides with that in front of them
 
 ### Screenshots blocked
@@ -518,7 +519,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 `transfer.refunded_after_processing`
 - **When:** a transfer that was processing ends unsuccessful, and the bank refunds it automatically
 - **Money:** money returned
-- **Shown as:** in History, and on the result page if it is still open; otherwise as a notice the next time the app opens
+- **Shown as:** in History, and on the result page if it is still open; otherwise as a notice on Home: within about 15 seconds while Home is open and in front, otherwise at the next launch
 - **Tell them:** it didn't go through, and the money is being or has been returned automatically
 - **They can:** see it in History; nothing else is needed
 - **Why:** money that left and came back is a different answer from money that never left, and the person sees which
