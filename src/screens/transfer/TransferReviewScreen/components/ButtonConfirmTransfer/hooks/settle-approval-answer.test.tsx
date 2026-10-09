@@ -103,6 +103,32 @@ it(
   }),
 );
 
+it(
+  "warns Home not to send it again when the approval's answer is lost and the result page never opens, and reopens that page at the next launch",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    const resultPageDropped = dropTheResultPageAsItOpens();
+    try {
+      const view = await approveRm100Transfer();
+
+      expect(
+        await screen.findByText(
+          /^Your last transfer is still being checked, so don't send it again — not confirmed yet\./,
+          { timeout: 10_000 },
+        ),
+      ).toBeOnTheScreen();
+      expect(view.getPathname()).toBe("/");
+      resultPageDropped.mockRestore();
+      const relaunched = await relaunchApp(view);
+      expect(
+        await screen.findByRole("header", { name: "Transfer sent" }),
+      ).toBeOnTheScreen();
+      expect(relaunched.getPathname()).toMatch(RESULT_PATH);
+    } finally {
+      resultPageDropped.mockRestore();
+    }
+  }),
+);
+
 function answerEveryApprovalWith(
   status: number,
   error: Record<string, unknown>,

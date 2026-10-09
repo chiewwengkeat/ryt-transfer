@@ -128,19 +128,18 @@ export async function settleApprovalAnswer({
       break;
   }
 
-  // Here, not only on the result page: Back can skip that page as it opens. A settled record is kept for Home to
-  // announce, and awaited so the page's own settle, which clears it, always comes after.
-  if (transfer !== undefined)
-    await settlePendingTransfer({
-      queryClient,
-      customerId,
-      transferId,
-      outcome: outcomeOfTransfer(transfer),
-      reference: transfer.reference,
-      keepSettled: true,
-    }).catch((error: unknown) => {
-      reportError(error, { boundary: "pending_transfer" });
-    });
+  // Here, not only on the result page: Back can skip that page as it opens, and Home and review must still warn or
+  // announce. Awaited, so the page's own settle always comes after.
+  await settlePendingTransfer({
+    queryClient,
+    customerId,
+    transferId,
+    outcome: transfer && outcomeOfTransfer(transfer),
+    reference: transfer?.reference,
+    keepSettled: true,
+  }).catch((error: unknown) => {
+    reportError(error, { boundary: "pending_transfer" });
+  });
   openResultPageOfSentApproval({
     queryClient,
     transferId,
