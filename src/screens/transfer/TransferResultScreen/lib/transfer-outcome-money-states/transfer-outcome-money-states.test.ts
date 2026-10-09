@@ -17,7 +17,7 @@ const { readFileSync } = jest.requireActual<{
 }>("node:fs");
 
 const matrixSections = readFileSync(
-  `${__dirname}/../scenarios/transfer.md`,
+  `${__dirname}/../../../scenarios/transfer.md`,
   "utf8",
 )
   .split(/^### /m)

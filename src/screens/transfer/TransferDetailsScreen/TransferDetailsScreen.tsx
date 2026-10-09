@@ -10,7 +10,7 @@ import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerOutOfDate from "../components/BannerOutOfDate/BannerOutOfDate";
 import SectionTransferDetails from "../components/SectionTransferDetails/SectionTransferDetails";
-import { useGetTransferWithHistoryPlaceholder } from "./hooks/use-get-transfer-with-history-placeholder";
+import { useGetTransferWithHistoryPlaceholder } from "./hooks/use-get-transfer-with-history-placeholder/use-get-transfer-with-history-placeholder";
 
 export default function TransferDetailsScreen() {
   const { t } = useTranslation("transfer");

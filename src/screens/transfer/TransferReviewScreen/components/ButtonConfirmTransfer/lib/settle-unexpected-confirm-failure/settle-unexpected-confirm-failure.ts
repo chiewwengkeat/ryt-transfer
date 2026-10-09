@@ -13,7 +13,7 @@ import {
 import {
   openResultPageOfSentApproval,
   settleApprovalAnswer,
-} from "./settle-approval-answer";
+} from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/settle-approval-answer/settle-approval-answer";
 
 export async function settleUnexpectedConfirmFailure(queryClient: QueryClient) {
   // A sheet left sending cannot be closed by the person, and nothing else will close it.

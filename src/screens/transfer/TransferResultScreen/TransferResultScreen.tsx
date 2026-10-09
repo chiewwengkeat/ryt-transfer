@@ -35,7 +35,7 @@ import ViewOutcomeEntrance from "./components/ViewOutcomeEntrance/ViewOutcomeEnt
 import {
   MONEY_STATE_BY_OUTCOME,
   MoneyState,
-} from "./transfer-outcome-money-states";
+} from "./lib/transfer-outcome-money-states/transfer-outcome-money-states";
 
 export default function TransferResultScreen() {
   const { t } = useTranslation("transfer");

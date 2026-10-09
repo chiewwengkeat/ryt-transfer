@@ -7,7 +7,7 @@ import {
   TransferDirection,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { MONEY_MOVED_SIGN } from "@/domains/transfer/api/list-transfers/list-transfers";
-import { useTransferStatusWord } from "@/screens/transfer/hooks/use-transfer-status-word";
+import { useTransferStatusWord } from "@/screens/transfer/hooks/use-transfer-status-word/use-transfer-status-word";
 import { formatMalaysianTime } from "@/shared/lib/dates/dates";
 import { asSen, formatMoney, parseWireAmount } from "@/shared/lib/money/money";
 import {

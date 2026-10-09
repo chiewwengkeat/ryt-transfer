@@ -27,13 +27,13 @@ import { useIsOffline } from "@/shared/platform/offline/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 
 import ButtonUsePinInstead from "./components/ButtonUsePinInstead/ButtonUsePinInstead";
-import { settleCreateFailure } from "./hooks/settle-create-failure";
-import { settleUnexpectedConfirmFailure } from "./hooks/settle-unexpected-confirm-failure";
-import { useApprovalPinLocked } from "./hooks/use-approval-pin-locked";
-import { usePhoneCheckBeforeApproval } from "./hooks/use-phone-check-before-approval";
-import { useReviewLeaveWatch } from "./hooks/use-review-leave-watch";
-import { useSendTransferApproval } from "./hooks/use-send-transfer-approval";
-import { useTransferHoldReason } from "./hooks/use-transfer-hold-reason";
+import { settleCreateFailure } from "./lib/settle-create-failure/settle-create-failure";
+import { settleUnexpectedConfirmFailure } from "./lib/settle-unexpected-confirm-failure/settle-unexpected-confirm-failure";
+import { useApprovalPinLocked } from "./hooks/use-approval-pin-locked/use-approval-pin-locked";
+import { usePhoneCheckBeforeApproval } from "./hooks/use-phone-check-before-approval/use-phone-check-before-approval";
+import { useReviewLeaveWatch } from "./hooks/use-review-leave-watch/use-review-leave-watch";
+import { useSendTransferApproval } from "./hooks/use-send-transfer-approval/use-send-transfer-approval";
+import { useTransferHoldReason } from "./hooks/use-transfer-hold-reason/use-transfer-hold-reason";
 
 interface Props {
   draft: TransferDraft;

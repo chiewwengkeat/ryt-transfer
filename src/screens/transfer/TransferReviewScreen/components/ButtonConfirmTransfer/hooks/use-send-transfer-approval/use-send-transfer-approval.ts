@@ -32,10 +32,10 @@ import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-scr
 import { formatMoney } from "@/shared/lib/money/money";
 import { reportError } from "@/shared/observability/observability";
 
-import { approveWithBiometricKey } from "./approve-with-biometric-key";
-import { approveWithPin } from "./approve-with-pin";
-import { settleApprovalAnswer } from "./settle-approval-answer";
-import { useRegisterApprovalKeysAgain } from "./use-register-approval-keys-again";
+import { approveWithBiometricKey } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-biometric-key/approve-with-biometric-key";
+import { approveWithPin } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-pin/approve-with-pin";
+import { settleApprovalAnswer } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/settle-approval-answer/settle-approval-answer";
+import { useRegisterApprovalKeysAgain } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/hooks/use-register-approval-keys-again/use-register-approval-keys-again";
 
 export function useSendTransferApproval() {
   const { t } = useTranslation("transfer");

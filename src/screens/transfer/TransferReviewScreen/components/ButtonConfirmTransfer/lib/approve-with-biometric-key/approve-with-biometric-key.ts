@@ -10,7 +10,7 @@ import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfe
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { reportError } from "@/shared/observability/observability";
 
-import { approveWithPin } from "./approve-with-pin";
+import { approveWithPin } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-pin/approve-with-pin";
 
 export async function approveWithBiometricKey(
   approval: Parameters<typeof approveWithPin>[0],
