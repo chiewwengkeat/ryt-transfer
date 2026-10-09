@@ -42,7 +42,8 @@ export async function approveWithBiometricKey(
         !keysSetUpAgain
       ) {
         const keys = await approval.setUpApprovalAgain();
-        if (keys.notice !== undefined) await leaveApprovalNotSent(keys.notice);
+        if (keys.notice !== undefined)
+          await leaveApprovalNotSent(keys.notice, keys);
         else if (keys.pin === undefined)
           await approveWithBiometricKey(approval, amountAndName, true);
         else

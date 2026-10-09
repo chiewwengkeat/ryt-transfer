@@ -29,7 +29,10 @@ export async function approveWithPin(
     signedText: string;
     noLongerOnThisTransfer: () => boolean;
     trackScenarioShownWhileOnTop: (scenario: TransferFlowScenario) => void;
-    leaveApprovalNotSent: (notice: TransferFlowNotice) => Promise<void>;
+    leaveApprovalNotSent: (
+      notice: TransferFlowNotice,
+      sheet?: { closedBySessionEnd?: boolean },
+    ) => Promise<void>;
     forgetPendingTransfer: () => Promise<void>;
     sendApproval: (
       request: ApproveTransferRequest,
@@ -67,9 +70,11 @@ export async function approveWithPin(
   for (;;) {
     const pin = pinInHand ?? (await askForApprovalPin({ ...words, refusal }));
     pinInHand = undefined;
-    if (pin === null) {
+    if (typeof pin !== "string") {
       await approval.forgetPendingTransfer();
-      await leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled);
+      await leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled, {
+        closedBySessionEnd: pin === undefined,
+      });
       return null;
     }
     const possessionSignature = await signWithPossessionKey(
@@ -114,7 +119,7 @@ export async function approveWithPin(
     ) {
       const keys = await approval.setUpApprovalAgain(pin);
       if (keys.notice !== undefined) {
-        await leaveApprovalNotSent(keys.notice);
+        await leaveApprovalNotSent(keys.notice, keys);
         return null;
       }
       pinInHand = keys.pin;

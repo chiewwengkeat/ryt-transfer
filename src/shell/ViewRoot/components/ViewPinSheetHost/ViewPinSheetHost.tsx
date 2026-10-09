@@ -10,18 +10,20 @@ import { addUnauthorizedListener } from "@/shared/http/transport";
 
 export default function ViewPinSheetHost() {
   const pinSheet = useStore(approvalPinSheetStore);
-  // An ended session or a root going away closes the sheet with its flow, as closing it by hand would.
+  // An ended session or a root going away closes the sheet with its flow; only the root's going away answers as the
+  // person closing it would, since the session's end has a report of its own.
   useEffect(() => {
-    const answerShownSheetAsClosed = () => {
+    const answerShownSheetAsClosed = (closedAnswer: null | undefined) => {
       const shown = approvalPinSheetStore.getState();
-      if (shown.step !== ApprovalPinSheetStep.Closed) shown.answer(null);
+      if (shown.step !== ApprovalPinSheetStep.Closed)
+        shown.answer(closedAnswer);
     };
-    const removeUnauthorizedListener = addUnauthorizedListener(
-      answerShownSheetAsClosed,
-    );
+    const removeUnauthorizedListener = addUnauthorizedListener(() => {
+      answerShownSheetAsClosed(undefined);
+    });
     return () => {
       removeUnauthorizedListener();
-      answerShownSheetAsClosed();
+      answerShownSheetAsClosed(null);
       // A sending sheet ignores the answer, and a root mounted afresh must not find it still open.
       approvalPinSheetStore.setState(
         approvalPinSheetStore.getInitialState(),

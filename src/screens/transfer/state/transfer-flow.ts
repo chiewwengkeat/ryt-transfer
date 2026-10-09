@@ -31,12 +31,15 @@ export const transferFlowStore = createStore<TransferFlowState>()(
   () => STARTING_FLOW,
 );
 
-export function dispatchTransferFlow(action: TransferFlowAction) {
+export function dispatchTransferFlow(
+  action: TransferFlowAction,
+  { reported = true } = {},
+) {
   const flow = transferFlowStore.getState();
   const nextFlow = reduceTransferFlow(flow, action);
   if (nextFlow === flow) return false;
   transferFlowStore.setState(nextFlow, true);
-  trackTransferStepOrScenarioChange(flow, nextFlow);
+  if (reported) trackTransferStepOrScenarioChange(flow, nextFlow);
   return true;
 }
 

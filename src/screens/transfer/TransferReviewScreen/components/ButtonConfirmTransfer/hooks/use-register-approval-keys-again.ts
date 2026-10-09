@@ -65,8 +65,11 @@ export function useRegisterApprovalKeysAgain() {
               })
             : undefined,
       });
-      if (askedPin === null)
-        return { notice: TransferFlowScenario.ApprovalCancelled } as const;
+      if (typeof askedPin !== "string")
+        return {
+          notice: TransferFlowScenario.ApprovalCancelled,
+          closedBySessionEnd: askedPin === undefined,
+        } as const;
       pin = askedPin;
     }
   };

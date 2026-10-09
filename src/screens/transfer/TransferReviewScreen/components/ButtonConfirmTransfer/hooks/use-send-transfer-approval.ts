@@ -70,13 +70,17 @@ export function useSendTransferApproval() {
       if (screenOnTopRef.current) trackScenarioShown(scenario);
       else scenarioReachedUnderAViewRef.current = scenario;
     };
-    const leaveApprovalNotSent = async (notice: TransferFlowNotice) => {
+    const leaveApprovalNotSent = async (
+      notice: TransferFlowNotice,
+      { closedBySessionEnd = false }: { closedBySessionEnd?: boolean } = {},
+    ) => {
       if (noLongerOnThisTransfer()) return;
       closeApprovalPinSheet();
-      dispatchTransferFlow({
-        type: TransferFlowActionType.ApprovalNotSent,
-        notice,
-      });
+      dispatchTransferFlow(
+        { type: TransferFlowActionType.ApprovalNotSent, notice },
+        // Not their cancel: the session's end closed the sheet, and its own report says so.
+        { reported: !closedBySessionEnd },
+      );
       // ⛔ Shown after the dispatch, which reports the scenario: a locked PIN is reported as its sheet opens.
       if (notice === TransferFlowScenario.PinLocked)
         await showApprovalPinLocked(t("common.pin_locked.body"));

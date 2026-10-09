@@ -125,6 +125,45 @@ it(
   }),
 );
 
+it("reports only the session's end for a PIN sheet it closes, which they find closed as not sent once signed in again", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  );
+  await screen.findByText("Enter your bank PIN to approve this transfer.");
+  const scenariosReportedSinceTheSheet = scenariosReportedFromNowOn();
+
+  await fireEvent.press(await endTheSessionThroughAnotherRead());
+
+  expect(
+    await screen.findByText("The transfer was not sent — no money moved."),
+  ).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  expect(scenariosReportedSinceTheSheet()).toEqual(["transfer.session_ended"]);
+});
+
+it("reports only the session's end for a sheet setting approval up again that it closes", async () => {
+  await pairPhoneBeforeTheBankForgetsItsKeys();
+  await scenarioTest("transfer.approval_key_unknown", async () => {
+    await openReviewOfRm100();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    await screen.findByText("Approval needs setting up again on this phone.");
+    const scenariosReportedSinceTheSheet = scenariosReportedFromNowOn();
+
+    await fireEvent.press(await endTheSessionThroughAnotherRead());
+
+    expect(
+      await screen.findByText("The transfer was not sent — no money moved."),
+    ).toBeOnTheScreen();
+    await act(() => jest.advanceTimersByTimeAsync(1_000));
+    expect(scenariosReportedSinceTheSheet()).toEqual([
+      "transfer.session_ended",
+    ]);
+  })();
+});
+
 it("reports a PIN the bank locks as it answers under the session-ended view only once signed in again, its sheet still showing", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   approvalSettingsStore.setState({ biometricApprovalOn: false });

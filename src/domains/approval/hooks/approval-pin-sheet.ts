@@ -15,9 +15,9 @@ export const approvalPinSheetStore = createStore<ApprovalPinSheet>()(
   () => CLOSED_SHEET,
 );
 
-// null: the sheet was closed instead.
+// null: the person closed the sheet instead; undefined: the session's end closed it.
 export function askForApprovalPin(words: ApprovalPinSheetWords) {
-  return new Promise<string | null>((resolve) => {
+  return new Promise<string | null | undefined>((resolve) => {
     approvalPinSheetStore.setState(
       {
         step: ApprovalPinSheetStep.AwaitingPin,
@@ -25,7 +25,7 @@ export function askForApprovalPin(words: ApprovalPinSheetWords) {
         answer: (pin) => {
           // Sending at once, before the caller resumes: from here the sheet can no longer be closed.
           approvalPinSheetStore.setState(
-            pin === null
+            typeof pin !== "string"
               ? CLOSED_SHEET
               : {
                   step: ApprovalPinSheetStep.Sending,
@@ -75,5 +75,5 @@ type ApprovalPinSheet =
         | ApprovalPinSheetStep.AwaitingPin
         | ApprovalPinSheetStep.Sending
         | ApprovalPinSheetStep.PinLocked;
-      answer: (pin: string | null) => void;
+      answer: (pin: string | null | undefined) => void;
     } & ApprovalPinSheetWords);
