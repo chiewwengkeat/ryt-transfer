@@ -14,7 +14,12 @@ import {
 } from "@/shared/http/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
 import { useIsOffline } from "@/shared/platform/offline";
-import { colors, spacing, typography } from "@/shared/theme/theme";
+import {
+  colors,
+  minTouchTarget,
+  spacing,
+  typography,
+} from "@/shared/theme/theme";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
@@ -127,6 +132,14 @@ export default function CardBalance({
 const styles = StyleSheet.create({
   main: {
     padding: spacing.lg,
+    // The failure state's height at default text size, held by both states so a retry moves nothing
+    // below: card padding, the notice's padding and one line, the card's gap, the button.
+    minHeight:
+      2 * spacing.lg +
+      2 * spacing.md +
+      typography.body.lineHeight +
+      spacing.sm +
+      minTouchTarget,
   },
   balance: { ...typography.heading, color: colors.textPrimary },
 });
