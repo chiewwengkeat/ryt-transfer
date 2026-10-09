@@ -1,7 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
+import { accountKeys } from "@/domains/account/api/account.keys";
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
+import { getListRecentRecipientsOptions } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
+import { resetTransferHistory } from "@/domains/transfer/api/list-transfers/list-transfers";
 import BannerEarlierTransferUnconfirmed from "@/domains/transfer/components/BannerEarlierTransferUnconfirmed/BannerEarlierTransferUnconfirmed";
 import {
   refreshPendingTransferNotices,
@@ -20,7 +23,15 @@ export default function SectionTransferNotices() {
 
   return (
     <>
-      <BannerEarlierTransferUnconfirmed />
+      <BannerEarlierTransferUnconfirmed
+        onEarlierTransferSettled={() => {
+          void queryClient.invalidateQueries({ queryKey: accountKeys.all });
+          void resetTransferHistory(queryClient);
+          void queryClient.invalidateQueries({
+            queryKey: getListRecentRecipientsOptions().queryKey,
+          });
+        }}
+      />
       {settled.map(({ transferId, transfer, notice }) => {
         const amountAndName = {
           amount: formatMoney(transfer.amount),

@@ -1,9 +1,10 @@
 import { focusManager, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import { reportError } from "@/shared/observability/observability";
 
+import { isSettledTransferOutcome } from "../../../api/get-transfer/get-transfer";
 import { refreshPendingTransferNotices } from "../../../hooks/pending-transfer-notices";
 import { checkPendingTransferOnce } from "../../../hooks/transfer-status-checks";
 
@@ -11,12 +12,17 @@ import { checkPendingTransferOnce } from "../../../hooks/transfer-status-checks"
 export function useRecheckEarlierTransferWhileOnTop({
   customerId,
   transferId,
+  onSettled,
 }: {
   customerId: string | undefined;
   transferId: string | undefined;
+  onSettled?: () => void;
 }) {
   const queryClient = useQueryClient();
   const screenOnTop = useIsScreenOnTop();
+  const tellEarlierTransferSettled = useEffectEvent(() => {
+    onSettled?.();
+  });
   useEffect(() => {
     if (!screenOnTop || customerId === undefined || transferId === undefined)
       return;
@@ -37,7 +43,12 @@ export function useRecheckEarlierTransferWhileOnTop({
           overtaken ||= type === "removed";
         });
       void (async () => {
-        await checkPendingTransferOnce(queryClient, customerId, transferId);
+        if (
+          isSettledTransferOutcome(
+            await checkPendingTransferOnce(queryClient, customerId, transferId),
+          )
+        )
+          tellEarlierTransferSettled();
         await refreshPendingTransferNotices(
           queryClient,
           customerId,

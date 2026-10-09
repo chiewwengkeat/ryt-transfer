@@ -137,6 +137,7 @@ export async function checkPendingTransferOnce(
         outcome,
         transfer.reference,
       );
+    return outcome;
   } catch (error) {
     if (classifyTransferReadFailure(error) === TransferReadFailure.NotFound)
       await clearPendingTransfer(customerId, transferId);

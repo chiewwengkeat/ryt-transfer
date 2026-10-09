@@ -3,6 +3,7 @@ import { focusManager } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import {
   type Transfer,
   TransferFailureReason,
@@ -144,6 +145,55 @@ it("keeps checking a transfer Home warns about while Home stays open, and tells 
     ),
   ).toBeOnTheScreen();
   expect(screen.queryByText(STILL_BEING_CHECKED)).toBeNull();
+});
+
+it("shows the balance and today's limit read again once Home's check finds the transfer it warned about has ended", async () => {
+  const { body: account } = await sendToBank<GetPrimaryAccountResponse>(
+    "GET",
+    "/accounts/primary",
+  );
+  const { body: limits } = await sendToBank<GetTransferLimitsResponse>(
+    "GET",
+    "/transfer-limits",
+  );
+  const { bankAnswer } = await launchWithATransferLastSeenProcessing({
+    status: TransferStatus.Processing,
+    funds: TransferFunds.Debited,
+  });
+  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+  expect(screen.getByText("RM 12,845.50")).toBeOnTheScreen();
+  mswServer.use(
+    http.get("*/accounts/primary", () =>
+      HttpResponse.json({
+        ...account,
+        balance: { ...account.balance, minor: account.balance.minor - 10_000 },
+      }),
+    ),
+    http.get("*/transfer-limits", () =>
+      HttpResponse.json({
+        ...limits,
+        daily: {
+          ...limits.daily,
+          remaining: {
+            ...limits.daily.remaining,
+            minor: limits.daily.remaining.minor - 10_000,
+          },
+        },
+      }),
+    ),
+  );
+  bankAnswer.transfer = {
+    ...bankAnswer.transfer,
+    status: TransferStatus.Completed,
+    version: bankAnswer.transfer.version + 1,
+  };
+
+  await act(() => jest.advanceTimersByTimeAsync(15_000));
+
+  expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
+  expect(
+    screen.getByText("You can send RM 4,900.00 more today"),
+  ).toBeOnTheScreen();
 });
 
 it("stops checking the transfer Home warns about while the session-ended view covers Home", async () => {

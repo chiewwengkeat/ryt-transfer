@@ -6,7 +6,12 @@ import { usePendingTransferNotices } from "../../hooks/pending-transfer-notices"
 import { useTrackScenarioShown } from "../../hooks/use-track-scenario-shown";
 import { useRecheckEarlierTransferWhileOnTop } from "./hooks/use-recheck-earlier-transfer-while-on-top";
 
-export default function BannerEarlierTransferUnconfirmed() {
+interface Props {
+  onEarlierTransferSettled?: () => void;
+}
+export default function BannerEarlierTransferUnconfirmed({
+  onEarlierTransferSettled,
+}: Props) {
   const { t } = useTranslation("transfer");
   const {
     customerId,
@@ -18,6 +23,7 @@ export default function BannerEarlierTransferUnconfirmed() {
   useRecheckEarlierTransferWhileOnTop({
     customerId,
     transferId: newestUnconfirmed?.transferId,
+    onSettled: onEarlierTransferSettled,
   });
   if (newestUnconfirmed === undefined) return null;
 
