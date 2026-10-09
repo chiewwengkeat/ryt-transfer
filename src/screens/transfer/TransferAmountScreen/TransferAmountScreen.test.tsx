@@ -9,7 +9,12 @@ import { http, HttpResponse } from "msw";
 import { accountKeys } from "@/domains/account/api/account.keys";
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
-import { readBankBalanceMinor } from "@/test/bank-client";
+import {
+  type BankErrorBody,
+  readBankBalanceMinor,
+  sendToBank,
+} from "@/test/bank-client";
+import { clearTransferScenario } from "@/test/clear-transfer-scenario";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { reportedScenarios } from "@/test/harness/recording-sink";
@@ -193,9 +198,9 @@ it("opens one review when Review is pressed twice before the step redraws, and o
 });
 
 it(
-  "shows a new customer's lower daily limit again on the amount step, and names it when the amount is over",
+  "shows a new customer's lower daily limit again on the amount step, names it when the amount is over, and moves on with the whole of it",
   scenarioTest("transfer.new_customer_daily_limit", async () => {
-    await openAmountStep();
+    const view = await openAmountStep();
     expect(
       await screen.findByText("You can send RM 1,000.00 more today"),
     ).toBeOnTheScreen();
@@ -210,20 +215,35 @@ it(
         "That is more than the RM 1,000.00 you can still send today.",
       ),
     ).toBeOnTheScreen();
+    await fireEvent.changeText(
+      screen.getByLabelText("Amount (RM)"),
+      "1,000.00",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+    expect(view.getPathname()).toBe("/transfer/review");
   }),
 );
 
 it(
-  "says something unexpected went wrong on the amount step, and holds Review until the limit loads",
+  "says something unexpected went wrong on the amount step, holds Review until the limit loads, and lets a retry load it or Back leave",
   scenarioTest("transfer.amount_unexpected", async () => {
-    await openAmountStep();
+    const view = await openAmountStep();
 
     expect(
       await screen.findByText("Something unexpected went wrong."),
     ).toBeOnTheScreen();
-    expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Review" })).toBeDisabled();
     expect(reportedScenarios()).toContain("transfer.amount_unexpected");
+    clearTransferScenario();
+    await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+    expect(
+      await screen.findByText("You can send RM 5,000.00 more today"),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
+
+    await pressHardwareBack();
+
+    expect(view.getPathname()).toBe("/transfer");
   }),
 );
 
@@ -246,8 +266,9 @@ it(
 );
 
 it(
-  "holds Review until today's limit loads when maintenance began before it ever did",
+  "holds Review until today's limit loads when maintenance began before it ever did, and asks the bank again at the time it gave",
   scenarioTest("transfer.under_maintenance", async () => {
+    const { body } = await sendToBank<BankErrorBody>("GET", "/transfer-limits");
     await openAmountStep();
 
     expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
@@ -257,6 +278,20 @@ it(
         "You can send once your balance and today's limit have loaded.",
       ),
     ).toBeOnTheScreen();
+    clearTransferScenario();
+    await act(() => jest.advanceTimersByTimeAsync(60_000));
+    expect(screen.getByRole("button", { name: "Review" })).toBeDisabled();
+
+    await act(() =>
+      jest.advanceTimersByTimeAsync(
+        Date.parse(body.error.until ?? "") - Date.now(),
+      ),
+    );
+
+    expect(
+      await screen.findByText("You can send RM 5,000.00 more today"),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
   }),
 );
 
