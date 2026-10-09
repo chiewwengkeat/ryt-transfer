@@ -151,6 +151,21 @@ it(
   }),
 );
 
+it("reports only the session's end when Home's own reads answer that it has ended", async () => {
+  mswServer.use(http.all("*", () => new HttpResponse(null, { status: 401 })));
+
+  await renderRoute("/");
+
+  expect(
+    await screen.findByRole("header", { name: "Your session has ended" }),
+  ).toBeOnTheScreen();
+  // ⛔ Keep this wait: without it the reports are read before the balance has failed, and this passes either way.
+  await screen.findAllByText("Something unexpected went wrong.", {
+    includeHiddenElements: true,
+  });
+  expect(reportedScenarios()).toEqual(["transfer.session_ended"]);
+});
+
 it.each([
   ["balance", "/accounts/primary", "primary_account"],
   ["limit", "/transfer-limits", "transfer_limits"],

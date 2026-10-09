@@ -1,4 +1,3 @@
-import { useIsFocused } from "expo-router";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
@@ -8,6 +7,7 @@ import {
   getTransferLimitsMaintenance,
   useGetTransferLimits,
 } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import {
   TransportError,
   TransportErrorKind,
@@ -56,16 +56,16 @@ export default function CardBalance({
         : account.data !== undefined && limits.isSuccess
           ? "transfer.balance_and_limit_shown"
           : undefined;
-  const screenFocused = useIsFocused();
+  const screenOnTop = useIsScreenOnTop();
   const reportedScenarioRef = useRef<string>(undefined);
   // useTrackScenarioShown's rule, which an account component may not import: only on top, once per showing.
   useEffect(() => {
     if (shownScenario === undefined) reportedScenarioRef.current = undefined;
-    else if (screenFocused && reportedScenarioRef.current !== shownScenario) {
+    else if (screenOnTop && reportedScenarioRef.current !== shownScenario) {
       reportedScenarioRef.current = shownScenario;
       onScenarioShown(shownScenario);
     }
-  }, [shownScenario, screenFocused, onScenarioShown]);
+  }, [shownScenario, screenOnTop, onScenarioShown]);
 
   if (failureScenario !== undefined) {
     return (
