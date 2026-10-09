@@ -82,7 +82,7 @@ export default function CardBalance({
 
   if (failureScenario !== undefined) {
     return (
-      <Card styles={{ main: styles.main }}>
+      <Card styles={{ main: [styles.main, styles.floor] }}>
         <BannerAction
           tone="negative"
           announce={!failureIsSessionEnd}
@@ -102,14 +102,17 @@ export default function CardBalance({
   }
   if (account.data === undefined || limits.isPending) {
     return (
-      <Card styles={{ main: styles.main }}>
+      <Card styles={{ main: [styles.main, styles.floor] }}>
         <Loader />
       </Card>
     );
   }
 
   return (
-    <Card styles={{ main: styles.main }}>
+    <Card
+      // Below a balance shown alone, during maintenance, the floor is a blank band.
+      styles={{ main: [styles.main, limits.isSuccess && styles.floor] }}
+    >
       <View
         accessible
         // The group, not its texts: a screen reader reads the group as one element, in the group's language.
@@ -136,10 +139,10 @@ export default function CardBalance({
 }
 
 const styles = StyleSheet.create({
-  main: {
-    padding: spacing.lg,
-    // The failure state's height at default text size, held by every state so a retry moves nothing
-    // below: card padding, the notice's padding and one line, the card's gap, the button.
+  main: { padding: spacing.lg },
+  floor: {
+    // The failure state's height at default text size, so a retry moves nothing below: card
+    // padding, the notice's padding and one line, the card's gap, the button.
     minHeight:
       2 * spacing.lg +
       2 * spacing.md +
