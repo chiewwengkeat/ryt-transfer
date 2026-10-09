@@ -9,6 +9,7 @@ import {
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
 import { pressHardwareBack } from "@/test/render/drive-app";
 import { sentRequests } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
@@ -480,3 +481,19 @@ it.each([
     expect(screen.getByText(readTime)).toBeOnTheScreen();
   },
 );
+
+it("shows when a transfer was sent in Bahasa Malaysia, and in Chinese once the language is switched", async () => {
+  const transfer = buildHistoryTransfer({
+    createdAt: "2026-03-05T15:42:00+08:00",
+  });
+  serveTransferHistoryPages([[transfer]]);
+  serveTransferDetails(transfer);
+  pickAppLanguage(AppLanguage.Malay);
+  await renderRoute(`/transfer-history/${transfer.transferId}`);
+
+  expect(await screen.findByText("5 Mac 2026, 3:42 PTG")).toBeOnTheScreen();
+  await act(() => {
+    pickAppLanguage(AppLanguage.Chinese);
+  });
+  expect(await screen.findByText("2026年3月5日 下午3:42")).toBeOnTheScreen();
+});
