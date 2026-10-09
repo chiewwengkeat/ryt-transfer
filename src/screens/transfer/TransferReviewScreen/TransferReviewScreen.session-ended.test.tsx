@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
@@ -78,6 +78,11 @@ async function endTheSessionThroughAnotherRead() {
   return screen.findByRole("button", { name: "Sign in again" });
 }
 
+function scenariosReportedFromNowOn() {
+  const reportCountNow = reportedScenarios().length;
+  return () => reportedScenarios().slice(reportCountNow);
+}
+
 // The scenario forgets only keys registered in an earlier millisecond than it began, and a 1 ms
 // timer can fire within the same one, so this waits for the clock itself to move on.
 async function pairPhoneBeforeTheBankForgetsItsKeys() {
@@ -114,30 +119,33 @@ it(
   }),
 );
 
-it("reports no PIN approval that opens under the session-ended view", async () => {
+it("reports a PIN approval that opens under the session-ended view only once signed in again, its sheet still showing", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   approvalSettingsStore.setState({ biometricApprovalOn: false });
   await openReviewOfRm100();
   const create = holdTheNextPost("*/transfers");
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   await create.waitUntilSent();
-  await endTheSessionThroughAnotherRead();
-  const reportCountAtTheView = reportedScenarios().length;
+  const signInButton = await endTheSessionThroughAnotherRead();
+  const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
+  const sheetWords =
+    "Face or fingerprint approval isn't available, so approve with your PIN.";
 
   create.release();
+  await screen.findByText(sheetWords, { includeHiddenElements: true });
+  const reportedUnderTheView = scenariosReportedSinceTheView();
+  await fireEvent.press(signInButton);
 
-  expect(
-    await screen.findByText(
-      "Face or fingerprint approval isn't available, so approve with your PIN.",
-      { includeHiddenElements: true },
-    ),
-  ).toBeOnTheScreen();
-  expect(reportedScenarios().slice(reportCountAtTheView)).not.toContain(
-    "transfer.biometrics_unavailable",
-  );
+  expect(reportedUnderTheView).toEqual([]);
+  expect(await screen.findByText(sheetWords)).toBeOnTheScreen();
+  await waitFor(() => {
+    expect(scenariosReportedSinceTheView()).toEqual([
+      "transfer.biometrics_unavailable",
+    ]);
+  });
 });
 
-it("reports no wrong PIN the bank answers under the session-ended view", async () => {
+it("reports a wrong PIN the bank answers under the session-ended view only once signed in again, its sheet still showing", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   approvalSettingsStore.setState({ biometricApprovalOn: false });
   await openReviewOfRm100();
@@ -145,22 +153,23 @@ it("reports no wrong PIN the bank answers under the session-ended view", async (
   const approval = holdTheNextPost("*/transfers/:transferId/approve");
   await enterPin("111111");
   await approval.waitUntilSent();
-  await endTheSessionThroughAnotherRead();
-  const reportCountAtTheView = reportedScenarios().length;
+  const signInButton = await endTheSessionThroughAnotherRead();
+  const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
+  const refusalWords = "That PIN is incorrect. You have 2 tries left.";
 
   approval.release();
+  await screen.findByText(refusalWords, { includeHiddenElements: true });
+  const reportedUnderTheView = scenariosReportedSinceTheView();
+  await fireEvent.press(signInButton);
 
-  expect(
-    await screen.findByText("That PIN is incorrect. You have 2 tries left.", {
-      includeHiddenElements: true,
-    }),
-  ).toBeOnTheScreen();
-  expect(reportedScenarios().slice(reportCountAtTheView)).not.toContain(
-    "transfer.pin_incorrect",
-  );
+  expect(reportedUnderTheView).toEqual([]);
+  expect(await screen.findByText(refusalWords)).toBeOnTheScreen();
+  await waitFor(() => {
+    expect(scenariosReportedSinceTheView()).toEqual(["transfer.pin_incorrect"]);
+  });
 });
 
-it("reports no face or fingerprint match that comes back under the session-ended view", async () => {
+it("reports no face or fingerprint match that comes back under the session-ended view, even once signed in again", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const releasePrompt = holdNextBiometricPrompt();
   await openReviewOfRm100();
@@ -168,15 +177,16 @@ it("reports no face or fingerprint match that comes back under the session-ended
   await waitFor(() => {
     expect(biometricPromptsShown()).toHaveLength(1);
   });
-  await endTheSessionThroughAnotherRead();
-  const reportCountAtTheView = reportedScenarios().length;
+  const signInButton = await endTheSessionThroughAnotherRead();
+  const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
 
   releasePrompt();
+  await screen.findByText("Transfer sent", { includeHiddenElements: true });
+  await fireEvent.press(signInButton);
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
 
-  expect(
-    await screen.findByText("Transfer sent", { includeHiddenElements: true }),
-  ).toBeOnTheScreen();
-  expect(reportedScenarios().slice(reportCountAtTheView)).not.toContain(
+  expect(scenariosReportedSinceTheView()).not.toContain(
     "transfer.biometrics_recognised",
   );
 });
@@ -210,31 +220,33 @@ it("reports the outcome of an approval answered under the session-ended view onl
   });
 });
 
-it("reports no approval key the bank stops knowing as it answers under the session-ended view", async () => {
+it("reports an approval key the bank stops knowing as it answers under the session-ended view only once signed in again, its sheet still showing", async () => {
   await pairPhoneBeforeTheBankForgetsItsKeys();
   await scenarioTest("transfer.approval_key_unknown", async () => {
     await openReviewOfRm100();
     const approval = holdTheNextPost("*/transfers/:transferId/approve");
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await approval.waitUntilSent();
-    await endTheSessionThroughAnotherRead();
-    const reportCountAtTheView = reportedScenarios().length;
+    const signInButton = await endTheSessionThroughAnotherRead();
+    const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
+    const sheetWords = "Approval needs setting up again on this phone.";
 
     approval.release();
+    await screen.findByText(sheetWords, { includeHiddenElements: true });
+    const reportedUnderTheView = scenariosReportedSinceTheView();
+    await fireEvent.press(signInButton);
 
-    expect(
-      await screen.findByText(
-        "Approval needs setting up again on this phone.",
-        { includeHiddenElements: true },
-      ),
-    ).toBeOnTheScreen();
-    expect(reportedScenarios().slice(reportCountAtTheView)).not.toContain(
-      "transfer.approval_key_unknown",
-    );
+    expect(reportedUnderTheView).toEqual([]);
+    expect(await screen.findByText(sheetWords)).toBeOnTheScreen();
+    await waitFor(() => {
+      expect(scenariosReportedSinceTheView()).toEqual([
+        "transfer.approval_key_unknown",
+      ]);
+    });
   })();
 });
 
-it("reports no wrong PIN the bank answers while setting approval up again under the session-ended view", async () => {
+it("reports a wrong PIN the bank answers while setting approval up again under the session-ended view only once signed in again, its sheet still showing", async () => {
   await pairPhoneBeforeTheBankForgetsItsKeys();
   await scenarioTest("transfer.approval_key_unknown", async () => {
     await openReviewOfRm100();
@@ -243,18 +255,21 @@ it("reports no wrong PIN the bank answers while setting approval up again under 
     const registration = holdTheNextPost("*/approval-keys");
     await enterPin("111111");
     await registration.waitUntilSent();
-    await endTheSessionThroughAnotherRead();
-    const reportCountAtTheView = reportedScenarios().length;
+    const signInButton = await endTheSessionThroughAnotherRead();
+    const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
+    const refusalWords = "That PIN is incorrect. You have 2 tries left.";
 
     registration.release();
+    await screen.findByText(refusalWords, { includeHiddenElements: true });
+    const reportedUnderTheView = scenariosReportedSinceTheView();
+    await fireEvent.press(signInButton);
 
-    expect(
-      await screen.findByText("That PIN is incorrect. You have 2 tries left.", {
-        includeHiddenElements: true,
-      }),
-    ).toBeOnTheScreen();
-    expect(reportedScenarios().slice(reportCountAtTheView)).not.toContain(
-      "transfer.pin_incorrect",
-    );
+    expect(reportedUnderTheView).toEqual([]);
+    expect(await screen.findByText(refusalWords)).toBeOnTheScreen();
+    await waitFor(() => {
+      expect(scenariosReportedSinceTheView()).toEqual([
+        "transfer.pin_incorrect",
+      ]);
+    });
   })();
 });

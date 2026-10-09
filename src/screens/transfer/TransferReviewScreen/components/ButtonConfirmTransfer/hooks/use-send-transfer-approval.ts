@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
+  ApprovalPinSheetStep,
+  approvalPinSheetStore,
   closeApprovalPinSheet,
   showApprovalPinLocked,
 } from "@/domains/approval/hooks/approval-pin-sheet";
@@ -44,8 +46,17 @@ export function useSendTransferApproval() {
   const screenOnTop = useIsScreenOnTop();
   // A ref, not the render's value: the approval reaches each scenario long after the press, maybe under another view.
   const screenOnTopRef = useRef(screenOnTop);
+  const scenarioReachedUnderAViewRef = useRef<TransferFlowScenario>(undefined);
   useEffect(() => {
     screenOnTopRef.current = screenOnTop;
+    const scenarioReached = scenarioReachedUnderAViewRef.current;
+    if (!screenOnTop || scenarioReached === undefined) return;
+    scenarioReachedUnderAViewRef.current = undefined;
+    // Only while its sheet still asks for the PIN: once the sheet has closed, Result or review shows what came after.
+    if (
+      approvalPinSheetStore.getState().step === ApprovalPinSheetStep.AwaitingPin
+    )
+      trackScenarioShown(scenarioReached);
   }, [screenOnTop]);
 
   return async (path = ApprovalPath.Biometric) => {
@@ -57,6 +68,7 @@ export function useSendTransferApproval() {
       isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId);
     const trackScenarioShownWhileOnTop = (scenario: TransferFlowScenario) => {
       if (screenOnTopRef.current) trackScenarioShown(scenario);
+      else scenarioReachedUnderAViewRef.current = scenario;
     };
     const leaveApprovalNotSent = async (notice: TransferFlowNotice) => {
       if (noLongerOnThisTransfer()) return;
