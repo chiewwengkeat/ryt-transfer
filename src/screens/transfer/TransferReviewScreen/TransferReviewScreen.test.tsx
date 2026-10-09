@@ -36,6 +36,7 @@ import {
   phoneKeyOptions,
 } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
 import {
@@ -1630,22 +1631,30 @@ it(
 );
 
 it(
-  "says the too-many-checks words once, not again as Try again appears after the minute",
+  "says the too-many-checks words once review has finished opening and the screen reader has placed its focus, and not again as Try again appears after the minute",
   scenarioTest("transfer.too_many_name_checks", async () => {
     const tooManyChecks =
       "Too many name checks in a short time. Try again in a minute.";
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+    announce.mockClear();
+    const timesSaid = () =>
+      announce.mock.calls.filter(([words]) => words === tooManyChecks).length;
     await openReviewOfRm100();
-    await screen.findByText(tooManyChecks);
-    expect(announce).toHaveBeenCalledWith(tooManyChecks);
-    const announcementsBeforeTheMinute = announce.mock.calls.length;
+    const refusal = await screen.findByText(tooManyChecks);
+    const saidWhileReviewOpens = timesSaid();
+    await finishOpeningScreen(refusal);
+    await act(() => jest.advanceTimersByTimeAsync(500));
+    const saidWhileTheFocusLands = timesSaid();
+    await act(() => jest.advanceTimersByTimeAsync(500));
+    const saidOnceTheFocusHasLanded = timesSaid();
 
     await act(() => jest.advanceTimersByTimeAsync(60_000));
 
+    expect(saidWhileReviewOpens).toBe(0);
+    expect(saidWhileTheFocusLands).toBe(0);
+    expect(saidOnceTheFocusHasLanded).toBe(1);
     expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
-    expect(
-      announce.mock.calls.slice(announcementsBeforeTheMinute),
-    ).not.toContainEqual([tooManyChecks]);
+    expect(timesSaid()).toBe(1);
   }),
 );
 
@@ -1656,7 +1665,7 @@ it(
       "Too many name checks in a short time. Try again in a minute.";
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
     await openReviewOfRm100();
-    await screen.findByText(tooManyChecks);
+    await finishOpeningScreen(await screen.findByText(tooManyChecks));
     await act(() => jest.advanceTimersByTimeAsync(60_000));
     const announcementsBeforeTryAgain = announce.mock.calls.length;
 

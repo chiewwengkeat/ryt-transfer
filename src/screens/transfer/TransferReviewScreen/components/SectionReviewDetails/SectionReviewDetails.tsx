@@ -1,6 +1,11 @@
-import { router } from "expo-router";
+import {
+  type NativeStackNavigationProp,
+  router,
+  useNavigation,
+} from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Platform } from "react-native";
 
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { LookupRecipientErrorCode } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
@@ -55,6 +60,26 @@ export default function SectionReviewDetails({ draft }: Props) {
       ? TransferFlowScenario.FirstTransferToRecipient
       : undefined,
   );
+  const navigation =
+    useNavigation<NativeStackNavigationProp<Record<string, object>>>();
+  const [failureAnnouncementDue, setFailureAnnouncementDue] = useState(false);
+  // Said while review opens, a failure is cut off by the screen reader's own focus move, which follows the push.
+  useEffect(() => {
+    let announcementTimer: ReturnType<typeof setTimeout> | undefined;
+    const stopListening = navigation.addListener(
+      "transitionEnd",
+      ({ data }) => {
+        if (data.closing) return;
+        announcementTimer = setTimeout(() => {
+          setFailureAnnouncementDue(true);
+        }, VOICEOVER_FOCUS_WAIT_MS);
+      },
+    );
+    return () => {
+      stopListening();
+      clearTimeout(announcementTimer);
+    };
+  }, [navigation]);
   const refusedAt = lookup.errorUpdatedAt;
   const [waitedOutRefusalAt, setWaitedOutRefusalAt] = useState<number>();
   // Try again only after the minute the words ask for: the bank limits name checks on purpose.
@@ -75,6 +100,7 @@ export default function SectionReviewDetails({ draft }: Props) {
     return (
       <BannerAction
         tone="negative"
+        announce={failureAnnouncementDue}
         message={t("common.recipient_not_found.body")}
         action={{
           label: t("common.recipient_not_found.change_recipient"),
@@ -90,6 +116,7 @@ export default function SectionReviewDetails({ draft }: Props) {
       <BannerAction
         key={refusedAt}
         tone="negative"
+        announce={failureAnnouncementDue}
         message={t(`common.${nameCheckFailure}.body`)}
         action={
           nameCheckFailure !== "too_many_name_checks" ||
@@ -121,3 +148,6 @@ export default function SectionReviewDetails({ draft }: Props) {
     </Card>
   );
 }
+
+// VoiceOver places its own focus up to half a second after the push ends; TalkBack cuts nothing off.
+const VOICEOVER_FOCUS_WAIT_MS = Platform.select({ ios: 1_000, default: 0 });
