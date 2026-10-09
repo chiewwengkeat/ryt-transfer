@@ -100,6 +100,21 @@ it("keeps the Demo banner above an ended session, so a reviewer can return to no
   ).toBeOnTheScreen();
 });
 
+it("shows the Demo banner over a session that ended with a screen's sheet open, so a reviewer can still return to normal", async () => {
+  await renderDemoRoot();
+  await pickDemoScenario("Session ended");
+  await fireEvent.press(screen.getByRole("button", { name: "Choose a bank" }));
+
+  await readTheAccountAsAScreenWould();
+
+  expect(
+    screen.getByRole("header", { name: "Your session has ended" }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: "Back to normal" }),
+  ).toBeOnTheScreen();
+});
+
 it("hides the app and the session-ended view from screen readers while the Demo menu is open", async () => {
   await renderDemoRoot();
   const appBeforeMenu = screen.queryByRole("button", { name: "Choose a bank" });

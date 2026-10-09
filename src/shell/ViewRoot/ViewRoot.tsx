@@ -113,7 +113,7 @@ export default function ViewRoot() {
       ) : (
         // Outside the session-ended view, so a reviewer who picked an ended session can still return to normal.
         <demoLayer.ViewDemo
-          appSheetOpen={appSheetOpen}
+          appSheetOpen={appSheetOpen && !sessionEnded}
           onResetDemo={async () => {
             // First: endSession's clear() leaves a mounted screen showing its last read, so it reads the reset bank now.
             await queryClient.resetQueries();
