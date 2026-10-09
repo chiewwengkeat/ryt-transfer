@@ -129,7 +129,7 @@ Three tests read the bundles, each a different way:
 
 ## Build variants
 
-`EXPO_PUBLIC_APP_VARIANT` picks the build: `development`, `demo` or `production`. Unset or empty means `production`, so a build with no variant fails closed. Development and demo carry the mock bank and the Demo menu. Production carries neither and calls an API address that never resolves.
+`EXPO_PUBLIC_APP_VARIANT` picks the build: `development`, `demo` or `production`. Unset or empty means `production`, so a build with no variant fails closed. Development and demo carry the mock bank and the Demo menu. Production carries neither and calls an API address that never resolves. Development and demo carry their own name, app id and URL scheme, so they install beside production.
 
 | Variant       | Metro        | iOS                   | Android                   | An Android APK, with no device  |
 | ------------- | ------------ | --------------------- | ------------------------- | ------------------------------- |
@@ -137,7 +137,7 @@ Three tests read the bundles, each a different way:
 | `demo`        |              | `pnpm ios:demo`       | `pnpm android:demo`       | `pnpm build:android:demo`       |
 | `production`  |              | `pnpm ios:production` | `pnpm android:production` | `pnpm build:android:production` |
 
-Every script sets its variant itself. Those that build also regenerate the native project for it, and the APK scripts write to `dist/`.
+Every script sets its variant itself. Those that build also regenerate the native project for it, and the APK scripts write to `dist/`. The variant is baked into the native app and inlined into the JavaScript bundle, and a fresh project leaves Gradle no stale bundle to reuse; a bare `npx expo run:*` reuses whatever native project the last variant left behind.
 
 - Code that a production build must not contain is loaded by a `require` gated on a literal comparison of `process.env.EXPO_PUBLIC_APP_VARIANT`, written at the `require` itself. Metro strips only that form: code behind an imported predicate, or reached by a static `import`, ships in every build.
 - Decisions made at runtime read `isProductionBuild` from `src/shared/config/config.ts`.
