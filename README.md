@@ -39,11 +39,11 @@ Build variants and checks: [CONTRIBUTING.md](CONTRIBUTING.md#build-variants) and
 ## Assumptions
 
 - **A Malaysian bank's customer.** Ringgit only, held as whole sen, and times shown in Malaysia time.
-- **Transfers go over DuitNow**, to a mobile number, an NRIC, a passport, a business registration number, an army or police number, or an account number at a named bank. The bank, never the app, looks up the name the ID is registered to.
-- **The module runs inside the bank's own app**, which already signs the customer in, pairs the phone, sets up and resets the PIN, holds the biometrics setting and manages the session. The module reads that setting and hears of a PIN reset through [two seams](docs/features.md#for-the-host-app), and hands a session the bank ended back to it.
-- **The bank's API is designed here.** No backend exists, so each endpoint's request and response types, in its domain's `api/` folder, are a proposed contract, and the simulated bank answers it. Production calls an address that never resolves.
-- **The bank creates a transfer before anyone approves it.** Creating checks the balance, the limits, any waiting period and the account lock; only the approval moves money. Every write carries an idempotency key the bank honours for 24 hours.
-- **The bank's rules are the simulated bank's**: RM5,000 a day, or RM1,000 on a new account, at most RM50,000 in one transfer, 60 seconds to approve, three tries at a six-digit PIN, and a wait of 12 hours after a new phone is paired or an hour after the account opens. The app shows the limits the bank returns rather than assuming them.
+- **Transfers go over DuitNow**, to an ID or a bank account; the bank, never the app, looks up the registered name.
+- **The module runs inside the bank's own app**, which owns sign-in and the PIN and talks to it through [two seams](docs/features.md#for-the-host-app).
+- **The bank's API is designed here.** No backend exists, so each endpoint's types are a proposed contract.
+- **The bank creates a transfer before anyone approves it.** Creating checks the balance and limits; only the approval moves money.
+- **The bank's rules are the simulated bank's**: RM5,000 a day, RM50,000 a transfer, 60 seconds to approve, three PIN tries.
 
 ## Why it's built this way
 

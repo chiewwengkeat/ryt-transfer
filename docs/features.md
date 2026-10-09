@@ -52,6 +52,8 @@ The app speaks English, Malay and Chinese, and follows the phone's language unti
 
 ## For the host app
 
+The module runs inside the bank's own app, which already signs the customer in, pairs the phone, sets up and resets the PIN, holds the biometrics setting and manages the session, and the module hands a session the bank ended back to it.
+
 The host app tells the module two things about its customer, both through `src/domains/approval/hooks/approval-settings.ts`:
 
 - Its "Enable Biometrics" setting, as `biometricApprovalOn` in `approvalSettingsStore`. While it is off, approval goes straight to the PIN. Ending a session leaves the setting as the host app set it.
