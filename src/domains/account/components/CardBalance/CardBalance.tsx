@@ -105,7 +105,13 @@ export default function CardBalance({
         accessibilityLanguage={i18n.language}
       >
         <TextBody tone="secondary">{t("card_balance.label")}</TextBody>
-        <Text style={styles.balance}>{formatMoney(account.data.balance)}</Text>
+        <Text
+          // Grown further, the balance outgrows a small phone's line and breaks inside the number.
+          maxFontSizeMultiplier={2}
+          style={styles.balance}
+        >
+          {formatMoney(account.data.balance)}
+        </Text>
       </View>
       {limits.isSuccess && (
         <TextBody>
