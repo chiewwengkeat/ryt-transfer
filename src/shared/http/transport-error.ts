@@ -18,3 +18,12 @@ export class TransportError extends Error {
     this.name = "TransportError";
   }
 }
+
+// The session-ended view shows and reports the session's end, so a request it failed is no failure of its own.
+export function isSessionEndFailure(error: unknown) {
+  return (
+    error instanceof TransportError &&
+    error.kind === TransportErrorKind.Http &&
+    error.status === 401
+  );
+}

@@ -6,6 +6,7 @@ import {
 import { useEffect, useState } from "react";
 
 import {
+  isSessionEndFailure,
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
@@ -201,12 +202,12 @@ function classifyTransferReadFailure(error: unknown) {
   if (!(error instanceof TransportError)) return TransferReadFailure.Unexpected;
   if (error.code === GetTransferErrorCode.TransferNotFound)
     return TransferReadFailure.NotFound;
-  // None of these is the bank answering about the transfer; the session-ended view handles a 401.
-  return error.kind === TransportErrorKind.Network ||
+  // None of these is the bank answering about the transfer.
+  return isSessionEndFailure(error) ||
+    error.kind === TransportErrorKind.Network ||
     error.kind === TransportErrorKind.Timeout ||
     error.kind === TransportErrorKind.Aborted ||
-    (error.kind === TransportErrorKind.Http &&
-      (error.status === 401 || (error.status ?? 0) >= 500))
+    (error.kind === TransportErrorKind.Http && (error.status ?? 0) >= 500)
     ? TransferReadFailure.BankUnreached
     : TransferReadFailure.Unexpected;
 }

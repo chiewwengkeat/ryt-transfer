@@ -9,6 +9,7 @@ import {
 } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import {
+  isSessionEndFailure,
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
@@ -48,11 +49,8 @@ export default function CardBalance({
               (failure.status ?? 0) >= 500))
         ? "balance_unavailable"
         : unexpectedScenario;
-  // The session's end, which its own view reports: after sign-in this stays shown until the card's reads answer again.
-  const failureIsSessionEnd =
-    failure instanceof TransportError &&
-    failure.kind === TransportErrorKind.Http &&
-    failure.status === 401;
+  // After sign-in this stays shown until the card's reads answer again.
+  const failureIsSessionEnd = isSessionEndFailure(failure);
   const shownScenario = failureIsSessionEnd
     ? undefined
     : failureScenario !== undefined

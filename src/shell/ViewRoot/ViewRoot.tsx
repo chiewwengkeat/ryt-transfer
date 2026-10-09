@@ -15,6 +15,7 @@ import {
 import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top";
 import { addUnauthorizedListener } from "@/shared/http/transport";
 import {
+  isSessionEndFailure,
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
@@ -163,16 +164,16 @@ function readAgainEveryReadButAnsweredNameChecks({
       status === "pending" ||
       (status === "error" &&
         (!refusalsAreAnswers ||
+          isSessionEndFailure(error) ||
           (error instanceof TransportError &&
             ([
               TransportErrorKind.Network,
               TransportErrorKind.Timeout,
               TransportErrorKind.Aborted,
             ].includes(error.kind) ||
+              // A server error the bank put no code on is no answer from it.
               (error.kind === TransportErrorKind.Http &&
-                (error.status === 401 ||
-                  // A server error the bank put no code on is no answer from it.
-                  ((error.status ?? 0) >= 500 &&
-                    error.code === undefined))))))),
+                (error.status ?? 0) >= 500 &&
+                error.code === undefined))))),
   });
 }
