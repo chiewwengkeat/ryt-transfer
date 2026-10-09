@@ -6,6 +6,7 @@ import {
 } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
+import { accountKeys } from "@/domains/account/api/account.keys";
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import { readBankBalanceMinor } from "@/test/bank-client";
@@ -15,7 +16,7 @@ import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
 import { pressHandlerOf } from "@/test/press-handler-of";
 import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
-import { renderRoute } from "@/test/render-route";
+import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 async function openAmountStep() {
@@ -139,6 +140,26 @@ it(
     expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(1_284_550);
   }),
 );
+
+it("reports only the session's end when the amount step's own reads answer that it has ended", async () => {
+  await openAmountStep();
+  await screen.findByText("RM 12,845.50");
+  const reportCountBeforeTheEnd = reportedScenarios().length;
+  mswServer.use(http.all("*", () => new HttpResponse(null, { status: 401 })));
+
+  askOpenAppToReadAgain(accountKeys.primaryAccount);
+
+  expect(
+    await screen.findByRole("header", { name: "Your session has ended" }),
+  ).toBeOnTheScreen();
+  // ⛔ Keep this wait: without it the reports are read before the balance has failed, and this passes either way.
+  await screen.findAllByText("Something unexpected went wrong.", {
+    includeHiddenElements: true,
+  });
+  expect(reportedScenarios().slice(reportCountBeforeTheEnd)).toEqual([
+    "transfer.session_ended",
+  ]);
+});
 
 it("moves on to review with an amount within the balance and both limits", async () => {
   const view = await openAmountStep();
