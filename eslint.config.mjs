@@ -178,5 +178,11 @@ export default defineConfig(
       "fe/singular-role-suffix": "error",
     },
   },
+  {
+    files: ["**/*.{js,mjs,cjs,ts,tsx}"],
+    ignores: ["src/app/**", "**/*.d.ts"],
+    plugins: { fe },
+    rules: { "fe/file-layout": "off" },
+  },
   prettier,
 );
