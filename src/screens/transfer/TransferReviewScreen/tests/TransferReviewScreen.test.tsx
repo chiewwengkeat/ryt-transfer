@@ -1,7 +1,10 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { getFixedT } from "i18next";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
+import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   TransferFunds,
   TransferStatus,
@@ -11,6 +14,7 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
+import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
 import {
   lookUpTestRecipient,
   readBankBalanceMinor,
@@ -25,6 +29,7 @@ import {
 } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
+  findAccessibleGroupAround,
   pressHardwareBack,
   readBankOnRealTimers,
   scenarioTest,
@@ -38,6 +43,9 @@ afterEach(() => {
 });
 
 const RECIPIENT_MOBILE = "012-345 6789";
+
+const STILL_BEING_CHECKED =
+  "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
 
 // Home holds Transfer back until its first reads land, so a press made sooner does nothing.
 async function waitForHomeToOfferTransfer() {
@@ -267,6 +275,88 @@ it(
 );
 
 it(
+  "drops the warning on review once the earlier transfer completes, with no notice there, and the amount step behind shows the balance and limit read again",
+  scenarioTest("transfer.earlier_transfer_unconfirmed", async () => {
+    const { body: account } = await sendToBank<GetPrimaryAccountResponse>(
+      "GET",
+      "/accounts/primary",
+    );
+    const { body: limits } = await sendToBank<GetTransferLimitsResponse>(
+      "GET",
+      "/transfer-limits",
+    );
+    const { created } = await startTestTransfer(10_000);
+    await writePendingTransfer(account.customerId, {
+      transferId: created.transfer.transferId,
+      idempotencyKey: "approval-key",
+      createdAt: "2026-10-07T01:30:00.000Z",
+      stage: PendingTransferStage.Processing,
+    });
+    const bankAnswer = {
+      transfer: {
+        ...created.transfer,
+        reference: "20261007C0FFEE00",
+        status: TransferStatus.Processing,
+        funds: TransferFunds.Debited,
+      },
+    };
+    mswServer.use(
+      http.get("*/transfers/:transferId", () => HttpResponse.json(bankAnswer)),
+    );
+    await renderRoute("/transfer");
+    await fireEvent.changeText(
+      await screen.findByLabelText("DuitNow mobile number"),
+      "012-345 6789",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByText("RM 12,845.50");
+    await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+    expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+    mswServer.use(
+      http.get("*/accounts/primary", () =>
+        HttpResponse.json({
+          ...account,
+          balance: {
+            ...account.balance,
+            minor: account.balance.minor - 10_000,
+          },
+        }),
+      ),
+      http.get("*/transfer-limits", () =>
+        HttpResponse.json({
+          ...limits,
+          daily: {
+            ...limits.daily,
+            remaining: {
+              ...limits.daily.remaining,
+              minor: limits.daily.remaining.minor - 10_000,
+            },
+          },
+        }),
+      ),
+    );
+    bankAnswer.transfer = {
+      ...bankAnswer.transfer,
+      status: TransferStatus.Completed,
+      version: bankAnswer.transfer.version + 1,
+    };
+
+    await act(() => jest.advanceTimersByTimeAsync(15_000));
+
+    await waitFor(() => {
+      expect(screen.queryByText(STILL_BEING_CHECKED)).toBeNull();
+    });
+    expect(screen.queryByText(/was sent — money moved\.$/)).toBeNull();
+    await pressHardwareBack();
+    expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
+    expect(
+      screen.getByText("You can send RM 4,900.00 more today"),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it(
   "goes Home from the receipt on Back, and the next transfer starts blank",
   scenarioTest("transfer.completed", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
@@ -334,4 +424,62 @@ it("sends no note when the note is left blank", async () => {
   expect(screen.queryByText("Note")).toBeNull();
   expect(createBodies).toHaveLength(1);
   expect(createBodies[0]).not.toHaveProperty("note");
+});
+
+it("tells a screen reader that a transfer's fields and review rows are in Bahasa Malaysia once it is picked", async () => {
+  await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "EN, change language" }),
+  );
+  await fireEvent.press(screen.getByRole("radio", { name: "Bahasa Malaysia" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Pindahan", disabled: false }),
+  );
+  const mobileField = await screen.findByLabelText(
+    "Nombor telefon bimbit DuitNow",
+  );
+  expect(mobileField).toHaveProp("accessibilityLanguage", "ms-MY");
+  await fireEvent.changeText(mobileField, "012-345 6789");
+  await fireEvent.press(screen.getByRole("button", { name: "Teruskan" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Jumlah (RM)"), "100");
+  await fireEvent.press(screen.getByRole("button", { name: "Semak" }));
+  await screen.findByRole("button", { name: "Pindahkan" });
+
+  expect(findAccessibleGroupAround(screen.getByText("Jumlah"))).toHaveProp(
+    "accessibilityLanguage",
+    "ms-MY",
+  );
+});
+
+it("tells a screen reader that the PIN keypad is in Bahasa Malaysia when the app opens with it picked", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  approvalSettingsStore.setState({ biometricApprovalOn: false });
+  pickAppLanguage(AppLanguage.Malay);
+  await renderRoute("/transfer");
+  await fireEvent.changeText(
+    await screen.findByLabelText("Nombor telefon bimbit DuitNow"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Teruskan" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Jumlah (RM)"), "100");
+  await fireEvent.press(screen.getByRole("button", { name: "Semak" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Pindahkan" }),
+  );
+  const malayApprovalT = getFixedT(AppLanguage.Malay, "approval");
+
+  expect(await screen.findByRole("button", { name: "1" })).toHaveProp(
+    "accessibilityLanguage",
+    "ms-MY",
+  );
+  expect(
+    screen.getByRole("button", { name: malayApprovalT("keypad_pin.delete") }),
+  ).toHaveProp("accessibilityLanguage", "ms-MY");
+  expect(
+    screen.getByLabelText(
+      malayApprovalT("keypad_pin.digits_entered", { entered: 0, length: 6 }),
+    ),
+  ).toHaveProp("accessibilityLanguage", "ms-MY");
 });
