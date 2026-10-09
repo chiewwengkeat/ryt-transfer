@@ -24,7 +24,7 @@ import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import { demoLayer } from "@/root/app-launch/app-launch";
 import { queryClient } from "@/root/query-client/query-client";
-import { endSession } from "@/root/session/end-session";
+import { endSession } from "./lib/forget-signed-in-customer/forget-signed-in-customer";
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
 import "@/root/translations/translations";
 

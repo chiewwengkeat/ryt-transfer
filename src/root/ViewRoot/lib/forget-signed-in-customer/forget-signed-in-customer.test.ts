@@ -12,7 +12,7 @@ import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 
-import { endSession } from "./end-session";
+import { endSession } from "./forget-signed-in-customer";
 
 it("reopens none of their transfers at the next launch, though one still awaits approval", async () => {
   const {
