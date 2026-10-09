@@ -5,6 +5,7 @@ import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { relaunchApp, renderRoute } from "@/test/render-route";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 const SENT_NOTICE =
   /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/;
@@ -12,14 +13,7 @@ const SENT_NOTICE =
 async function approveRm100Transfer() {
   await pairPhoneAsTheDemoLaunchDoes();
   const view = await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );

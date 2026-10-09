@@ -22,6 +22,7 @@ import { watchRoutesDrawnOnTop } from "@/test/harness/screen-stack-double";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 const SENDING_MESSAGE = "Sending your transfer. The bank's answer comes next.";
 const RESULT_PATH = /^\/transfer\/result\/[\w-]+$/;
@@ -29,14 +30,7 @@ const RESULT_PATH = /^\/transfer\/result\/[\w-]+$/;
 async function reviewRm100Transfer() {
   await pairPhoneAsTheDemoLaunchDoes();
   const view = await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview();
   return view;
 }
 

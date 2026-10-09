@@ -6,6 +6,7 @@ import { lookUpTestRecipient } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 const sentNameChecks = () =>
   sentRequests.filter(({ url }) => url.endsWith("/recipients/lookup"));
@@ -15,14 +16,7 @@ const TOO_MANY_NAME_CHECKS =
 
 async function reviewRm100ToTheTestRecipient() {
   await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview();
 }
 
 async function endSessionWithAnyRequest() {

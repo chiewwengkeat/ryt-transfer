@@ -41,6 +41,7 @@ import {
   renderRoute,
 } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 const BANK_REFERENCE =
   /^If you contact us, quote this reference: \d{8}[\dA-F]{8}$/;
@@ -51,14 +52,7 @@ async function sendRm100FromHome() {
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );

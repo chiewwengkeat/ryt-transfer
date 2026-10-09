@@ -56,6 +56,7 @@ import {
   renderRoute,
 } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 import { TransferFlowStep } from "../state/transfer-flow";
 
@@ -81,16 +82,7 @@ async function openReviewOfRm100(
     await waitForHomeToOfferTransfer();
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   }
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    RECIPIENT_MOBILE,
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  if (note !== undefined)
-    await fireEvent.changeText(screen.getByLabelText("Note (optional)"), note);
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview({ note });
   return view;
 }
 

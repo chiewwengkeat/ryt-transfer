@@ -14,17 +14,11 @@ import { pressHardwareBack } from "@/test/hardware-back";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 async function openReviewOfRm100() {
   const view = await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview();
   return view;
 }
 

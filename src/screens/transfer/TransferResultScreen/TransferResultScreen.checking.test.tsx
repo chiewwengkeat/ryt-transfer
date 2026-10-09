@@ -30,6 +30,7 @@ import {
   renderRoute,
 } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 async function sendRm100FromHome() {
   await pairPhoneAsTheDemoLaunchDoes();
@@ -37,16 +38,7 @@ async function sendRm100FromHome() {
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await fireEvent.changeText(
-    await screen.findByLabelText("Amount (RM)"),
-    "100",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );

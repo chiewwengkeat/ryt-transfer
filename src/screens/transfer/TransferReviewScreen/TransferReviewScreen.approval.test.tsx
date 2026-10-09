@@ -31,6 +31,7 @@ import {
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 const DEMO_PIN = "246810";
 
@@ -42,14 +43,7 @@ async function confirmRm100ApprovedByPin() {
 async function openReviewOfRm100() {
   await pairPhoneAsTheDemoLaunchDoes();
   const view = await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview();
   await screen.findByRole("button", { name: "Transfer" });
   return view;
 }
