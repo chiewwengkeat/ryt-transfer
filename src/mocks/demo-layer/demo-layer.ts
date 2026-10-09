@@ -1,4 +1,5 @@
 import { randomUUID } from "expo-crypto";
+import { getResponse, HttpResponse, type RequestHandler } from "msw";
 import type { ComponentType, ReactNode } from "react";
 
 import { registerApprovalKeys } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
@@ -8,12 +9,10 @@ import {
   saveApprovalKeyIds,
 } from "@/domains/approval/hooks/approval-keys";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { bankState } from "@/mocks/bank/state";
 import { handlersForActiveScenario } from "@/mocks/demo-bank";
-import { subscribeToBiometricsOff } from "@/mocks/switcher/biometrics-off";
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
-import { subscribeToPhoneSidePick } from "@/mocks/switcher/phone-side-picks";
 import { switcherStore } from "@/mocks/switcher/switcher-store";
-import { createDemoSend } from "@/mocks/transport/demo-send";
 import type { Send } from "@/shared/http/transport";
 
 export default {
@@ -56,4 +55,48 @@ export interface DemoLayer {
   subscribeToRootedPhone: (
     onChange: (phoneRooted: boolean) => void,
   ) => () => void;
+}
+
+// Stays exported: the bundle check finds this name in demo builds, and minify keeps only an export's.
+export function createDemoSend(getHandlers: () => RequestHandler[]): Send {
+  return async (request) => {
+    let response: Response | undefined;
+    try {
+      response = await getResponse(getHandlers(), request);
+    } catch (failure) {
+      // The 500 setupServer gives a handler that throws: a phone must see what Jest sees.
+      const { name, message, stack } =
+        failure instanceof Error ? failure : new Error(String(failure));
+      return HttpResponse.json(
+        { name, message, stack },
+        { status: 500, statusText: "Unhandled Exception" },
+      );
+    }
+    // fetch rejects with a TypeError on a dead network; no answer, and a scenario's
+    // HttpResponse.error(), must reach the app exactly as that does.
+    if (response === undefined || response.type === "error")
+      throw new TypeError("Network request failed");
+    return response;
+  };
+}
+
+function subscribeToBiometricsOff(onChange: (biometricsOff: boolean) => void) {
+  return subscribeToPhoneSidePick(
+    TransferScenarioId.BiometricsUnavailable,
+    onChange,
+  );
+}
+
+function subscribeToPhoneSidePick(
+  scenarioId: TransferScenarioId,
+  onChange: (picked: boolean) => void,
+) {
+  // Loaded first: loading restores a pick saved before a restart, and the first answer must carry it.
+  bankState();
+  const isPicked = (pick: ReturnType<typeof switcherStore.getState>) =>
+    pick.scenarioId === scenarioId;
+  onChange(isPicked(switcherStore.getState()));
+  return switcherStore.subscribe((pick, previousPick) => {
+    if (isPicked(pick) !== isPicked(previousPick)) onChange(isPicked(pick));
+  });
 }

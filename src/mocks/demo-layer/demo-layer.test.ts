@@ -1,12 +1,16 @@
 import { delay, http, HttpResponse } from "msw";
 import type { RequestHandler } from "msw";
 
+import { bankPorts } from "@/mocks/bank/ports";
+import type * as BankPorts from "@/mocks/bank/ports";
+import { clearTransferScenario, pickTransferScenario } from "@/mocks/demo-bank";
 import { API_BASE_URL } from "@/shared/config/config";
 import { configureTransport, requestJson } from "@/shared/http/transport";
 import { TransportErrorKind } from "@/shared/http/transport-error";
 import { mswServer } from "@/test/msw-server";
 
-import { createDemoSend } from "./demo-send";
+import demoLayer, { createDemoSend } from "./demo-layer";
+import type * as DemoLayerModule from "./demo-layer";
 
 const PROBE_URL = `${API_BASE_URL}/probe`;
 const activeHandlers: RequestHandler[] = [];
@@ -92,4 +96,38 @@ it("reaches the app as the transport's network error when unanswered", async () 
   await expect(requestJson("/probe")).rejects.toMatchObject({
     kind: TransportErrorKind.Network,
   });
+});
+
+it("answers at once whether No biometrics is picked, then each time that changes", () => {
+  const answers: boolean[] = [];
+
+  const unsubscribe = demoLayer.subscribeToBiometricsOff((biometricsOff) => {
+    answers.push(biometricsOff);
+  });
+  pickTransferScenario("transfer.biometrics_unavailable");
+  pickTransferScenario("transfer.offline");
+  clearTransferScenario();
+  unsubscribe();
+  pickTransferScenario("transfer.biometrics_unavailable");
+
+  expect(answers).toEqual([false, true, false]);
+});
+
+it("answers that biometrics are off at once when the app restarts with No biometrics still picked", () => {
+  pickTransferScenario("transfer.biometrics_unavailable");
+  const answersAfterRestart: boolean[] = [];
+
+  // A fresh module registry is a fresh app: nothing survives it but what the bank saved.
+  jest.isolateModules(() => {
+    jest
+      .requireActual<typeof BankPorts>("@/mocks/bank/ports")
+      .bindBankPorts(bankPorts());
+    jest
+      .requireActual<typeof DemoLayerModule>("./demo-layer")
+      .default.subscribeToBiometricsOff((biometricsOff) => {
+        answersAfterRestart.push(biometricsOff);
+      })();
+  });
+
+  expect(answersAfterRestart).toEqual([true]);
 });
