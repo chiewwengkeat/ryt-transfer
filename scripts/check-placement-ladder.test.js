@@ -312,10 +312,10 @@ test("counts the final importers behind a file that imports a component and expo
 
 const CARD_TRANSFER_FILE =
   "src/screens/transfer/components/CardTransfer/CardTransfer.tsx";
-const CARDS_STATE_FILE = "src/screens/transfer/state/cards.ts";
+const CARDS_STATE_FILE = "src/screens/transfer/flow-store/cards.ts";
 const CARDS_STATE_SOURCE =
   'import CardTransfer from "../components/CardTransfer/CardTransfer";\n\nexport const Card = CardTransfer;\n';
-const cardsStateUser = moduleImporting("@/screens/transfer/state/cards");
+const cardsStateUser = moduleImporting("@/screens/transfer/flow-store/cards");
 
 test("counts the final importers behind a file that exports an imported component as a const", () => {
   const { exitCode, errors } = runPlacementCheckOn({

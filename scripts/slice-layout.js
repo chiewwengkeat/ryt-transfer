@@ -1,7 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const SCREENS_FOLDER_ENTRIES = ["components", "hooks", "lib", "state", "i18n"];
+const SCREENS_FOLDER_ENTRIES = ["components", "hooks", "lib", "i18n"];
 const TRANSFER_FOLDER_ENTRIES = ["flow-store", "scenarios"];
 const DOMAIN_ENTRIES = ["api", "components", "hooks", "lib", "i18n"];
 const SCREEN_FOLDER = /^[A-Z][A-Za-z0-9]*Screen$/;

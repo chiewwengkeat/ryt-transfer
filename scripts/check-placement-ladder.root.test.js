@@ -110,13 +110,16 @@ test("fails a domain hook only the root view uses whose files import no domain, 
 test("keeps a piece that imports one domain and a screens folder nested in the root view, since no domain may read a screens folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     ...domainKeys,
-    "src/screens/transfer/state/transfer-flow.ts":
+    "src/screens/transfer/flow-store/transfer-flow.ts":
       "export const transferFlow = {};\n",
     [ROOT_VIEW_FILE]: moduleImporting(
       "./components/BannerOffline/BannerOffline",
     ),
     "src/root/ViewRoot/components/BannerOffline/BannerOffline.tsx":
-      moduleImporting(TRANSFER_KEYS, "@/screens/transfer/state/transfer-flow"),
+      moduleImporting(
+        TRANSFER_KEYS,
+        "@/screens/transfer/flow-store/transfer-flow",
+      ),
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);

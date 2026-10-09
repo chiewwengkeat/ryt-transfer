@@ -64,7 +64,7 @@ for (const [entry, file] of [
 test("passes every folder the design names inside a screens folder and a domain", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     "src/screens/transfer/scenarios/transfer.md": "# Scenarios\n",
-    "src/screens/transfer/state/flow-store.ts":
+    "src/screens/transfer/flow-store/flow-store.ts":
       "export const flowStore = {};\n",
     "src/screens/transfer/i18n/en-MY.json": "{}\n",
     "src/domains/transfer/api/transfer.keys.ts": "export const keys = {};\n",
