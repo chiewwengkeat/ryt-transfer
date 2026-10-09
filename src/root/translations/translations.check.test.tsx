@@ -22,28 +22,18 @@ function findKeysDefinedTwice(bundles: Parameters<typeof initTranslations>[0]) {
   return found;
 }
 
-// Hermes lacks Intl.PluralRules, so i18next reads `_one` for a count of 1 in every language: a Malay or Chinese
-// `_other` with no twin shows English. Jest has the rules, so only this structural check sees it.
-function findPluralsWithoutTwin(
+function findPluralsWithoutEqualTwinInBundles(
   bundles: Parameters<typeof initTranslations>[0],
 ) {
-  const found: string[] = [];
-  const visit = (node: Record<string, unknown>, path: string) => {
-    for (const [key, value] of Object.entries(node)) {
-      if (typeof value === "object" && value !== null)
-        visit(value as Record<string, unknown>, `${path}${key}.`);
-      else if (
-        key.endsWith("_other") &&
-        node[key.replace(/_other$/, "_one")] !== value
-      )
-        found.push(`${path}${key}`);
-    }
-  };
-  for (const [language, namespaces] of Object.entries(bundles))
-    if (language !== "en-MY")
-      for (const [namespace, parts] of Object.entries(namespaces))
-        for (const part of parts) visit(part, `${language} ${namespace}:`);
-  return found;
+  return Object.entries(bundles)
+    .filter(([language]) => language !== "en-MY")
+    .flatMap(([language, namespaces]) =>
+      Object.entries(namespaces).flatMap(([namespace, parts]) =>
+        parts.flatMap((part) =>
+          findPluralsWithoutEqualTwin(part, `${language} ${namespace}:`),
+        ),
+      ),
+    );
 }
 
 it("finds a top-level key that two bundles of one namespace both define", () => {
@@ -60,7 +50,7 @@ it("registers no top-level key twice within a namespace", () => {
 
 it("finds a Malay or Chinese plural whose `_one` twin is missing or differs", () => {
   expect(
-    findPluralsWithoutTwin({
+    findPluralsWithoutEqualTwinInBundles({
       "en-MY": { common: [{ count_other: "{{count}} transfers" }] },
       "ms-MY": {
         common: [
@@ -88,7 +78,7 @@ it("finds a Malay or Chinese plural whose `_one` twin is missing or differs", ()
 });
 
 it("registers every Malay and Chinese plural with its `_one` twin", () => {
-  expect(findPluralsWithoutTwin(TRANSLATION_BUNDLES)).toEqual([]);
+  expect(findPluralsWithoutEqualTwinInBundles(TRANSLATION_BUNDLES)).toEqual([]);
 });
 
 // Objects count as keys too, so a namespace registered empty, or not at all, still differs from English's.
@@ -116,7 +106,7 @@ function readPlaceholdersByKeyPath(
 }
 
 // Hermes lacks Intl.PluralRules, so i18next reads `_one` for a count of 1 in every language: in Malay and
-// Chinese it must say what `_other` says.
+// Chinese it must say what `_other` says. Jest has the rules, so only a structural check sees it.
 function findPluralsWithoutEqualTwin(
   strings: unknown,
   keyPrefix = "",
