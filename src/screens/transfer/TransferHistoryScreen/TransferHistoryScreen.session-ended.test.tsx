@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
 
 import { renderRoute } from "@/test/render-route";
@@ -44,6 +44,23 @@ it("says no failure of a first read only the session's end failed, and lists the
   expect(announce).not.toHaveBeenCalledWith("Couldn't load your transfers.");
 });
 
+it("says a first read's failure that follows signing in again", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  failTransferHistoryPages("first", 401);
+  await renderRoute("/transfer-history");
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  failTransferHistoryPages("first");
+
+  await fireEvent.press(signInAgain);
+
+  await waitFor(() => {
+    expect(announce).toHaveBeenCalledWith("Couldn't load your transfers.");
+  });
+});
+
 it("says no failure of a next page only the session's end failed, and loads it once they sign in again", async () => {
   const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
   announce.mockClear();
@@ -65,6 +82,24 @@ it("says no failure of a next page only the session's end failed, and loads it o
     await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
   ).toBeOnTheScreen();
   expect(announce).not.toHaveBeenCalledWith("Couldn't load more.");
+});
+
+it("says a next page's failure that follows signing in again", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
+  failTransferHistoryPages("later", 401);
+  await renderRoute("/transfer-history");
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  failTransferHistoryPages("later");
+
+  await fireEvent.press(signInAgain);
+
+  await waitFor(() => {
+    expect(announce).toHaveBeenCalledWith("Couldn't load more.");
+  });
 });
 
 it("says no failure of a pull only the session's end failed, and shows the newest page once they sign in again", async () => {

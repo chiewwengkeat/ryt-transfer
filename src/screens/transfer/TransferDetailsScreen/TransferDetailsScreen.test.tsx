@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
 
 import {
@@ -311,6 +311,24 @@ it("says no failure of a link's read only the session's end failed, and shows th
 
   expect(await screen.findByText("Aisyah Rahman")).toBeOnTheScreen();
   expect(announce).not.toHaveBeenCalledWith("Couldn't load this transfer.");
+});
+
+it("says a link's failed read that follows signing in again", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  serveTransferHistoryPages([[]]);
+  failTransferDetails(401);
+  await renderRoute(`/transfer-history/${AISYAH.transferId}`);
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  failTransferDetails();
+
+  await fireEvent.press(signInAgain);
+
+  await waitFor(() => {
+    expect(announce).toHaveBeenCalledWith("Couldn't load this transfer.");
+  });
 });
 
 it.each([
