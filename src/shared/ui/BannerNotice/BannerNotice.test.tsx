@@ -46,8 +46,9 @@ it("announces each new message once, by announcing it and through no live region
 it("holds a message that changes beneath another screen until its own screen is on top again, then says it once", async () => {
   const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
   await renderRoute("/", SCREEN_WITH_BANNER_UNDER_DETAILS);
+  // Relative, as the app's generated routes hold no "/details" and would reject it.
   await act(() => {
-    router.push("/details");
+    router.push("./details");
   });
   announce.mockClear();
 
@@ -60,7 +61,7 @@ it("holds a message that changes beneath another screen until its own screen is 
     router.back();
   });
   await act(() => {
-    router.push("/details");
+    router.push("./details");
   });
   await act(() => {
     router.back();
