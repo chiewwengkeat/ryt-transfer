@@ -56,6 +56,42 @@ async function fireContentLayout(
   });
 }
 
+// Jest lays nothing out and focuses nothing. As React Native reports it, the y ignores the scroll: it is the
+// field's place in the content. The field is 48 tall; the labelled control kept in view below it takes 92.
+function focusFieldAtContentY(fieldTopInContent: number) {
+  jest.spyOn(TextInput.State, "currentlyFocusedInput").mockReturnValue({
+    measureLayout: (
+      _relativeTo: unknown,
+      reportLayout: (
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+      ) => void,
+    ) => {
+      reportLayout(16, fieldTopInContent, 358, 48);
+    },
+  } as unknown as ReturnType<typeof TextInput.State.currentlyFocusedInput>);
+}
+
+async function mountFrameScrolledTo(scrollOffset: number) {
+  await render(<ScreenFramesInStack />);
+  let content = screen.getByText("Home").parent;
+  while (content !== null && content.type !== "RCTScrollView")
+    content = content.parent;
+  if (content === null) throw new Error("The frame's content does not scroll.");
+  await fireEvent.scroll(content, {
+    nativeEvent: { contentOffset: { x: 0, y: scrollOffset } },
+  });
+  return content;
+}
+
+function watchScrolls() {
+  const scrollTo = jest.spyOn(ScrollView.prototype, "scrollTo");
+  scrollTo.mockClear();
+  return scrollTo;
+}
+
 it("publishes the footer height of the screen on top, even when it is the shorter one", async () => {
   const view = await render(<ScreenFramesInStack />);
   await fireFooterLayout("Home footer", 120);
@@ -77,33 +113,50 @@ it("falls back to the footer of the screen beneath once the screen on top unmoun
 });
 
 it("scrolls the field being typed in up only as far as keeps room below it for the next control", async () => {
-  // Jest lays nothing out and focuses nothing: a focused field 200 points down what shows, 48 tall; a labelled control takes 92.
-  jest.spyOn(TextInput.State, "currentlyFocusedInput").mockReturnValue({
-    measureLayout: (
-      _relativeTo: unknown,
-      reportLayout: (
-        x: number,
-        y: number,
-        width: number,
-        height: number,
-      ) => void,
-    ) => {
-      reportLayout(16, 200, 358, 48);
-    },
-  } as unknown as ReturnType<typeof TextInput.State.currentlyFocusedInput>);
-  const scrollTo = jest.spyOn(ScrollView.prototype, "scrollTo");
-  await render(<ScreenFramesInStack />);
-  let content = screen.getByText("Home").parent;
-  while (content !== null && content.type !== "RCTScrollView")
-    content = content.parent;
-  if (content === null) throw new Error("The frame's content does not scroll.");
+  focusFieldAtContentY(200);
+  const content = await mountFrameScrolledTo(0);
+  const scrollTo = watchScrolls();
 
   await fireContentLayout(content, 500);
-  const scrolledWithRoomToSpare = scrollTo.mock.calls.length;
   await fireContentLayout(content, 300);
 
-  expect(scrolledWithRoomToSpare).toBe(0);
-  expect(scrollTo).toHaveBeenLastCalledWith({ y: 200 + 48 + 92 - 300 });
+  expect(scrollTo.mock.calls).toEqual([[{ y: 200 + 48 + 92 - 300 }]]);
+});
+
+it("scrolls a screen already scrolled down from where it is, only as far as the field needs", async () => {
+  focusFieldAtContentY(300);
+  const content = await mountFrameScrolledTo(100);
+  const scrollTo = watchScrolls();
+
+  await fireContentLayout(content, 500);
+  await fireContentLayout(content, 300);
+
+  expect(scrollTo.mock.calls).toEqual([[{ y: 300 + 48 + 92 - 300 }]]);
+});
+
+it("leaves a screen already scrolled down where it is until the field runs out of room below it", async () => {
+  focusFieldAtContentY(400);
+  const content = await mountFrameScrolledTo(300);
+  const scrollTo = watchScrolls();
+
+  await fireContentLayout(content, 500);
+  await fireContentLayout(content, 300);
+  const scrollsWithRoomToSpare = [...scrollTo.mock.calls];
+  await fireContentLayout(content, 200);
+
+  expect(scrollsWithRoomToSpare).toEqual([]);
+  expect(scrollTo.mock.calls).toEqual([[{ y: 400 + 48 + 92 - 200 }]]);
+});
+
+it("never scrolls the field's own top out of sight, even where the room below it cannot all show", async () => {
+  focusFieldAtContentY(300);
+  const content = await mountFrameScrolledTo(100);
+  const scrollTo = watchScrolls();
+
+  await fireContentLayout(content, 500);
+  await fireContentLayout(content, 100);
+
+  expect(scrollTo.mock.calls).toEqual([[{ y: 300 }]]);
 });
 
 it("publishes 0 while the screen on top has no footer", async () => {

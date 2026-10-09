@@ -81,24 +81,24 @@ export default function ViewScreenFrame({ children, footer }: Props) {
           onLayout={(event) => {
             const shownHeight = event.nativeEvent.layout.height;
             if (frameRef.current === null) return;
-            // As the keyboard shrinks this, the field being typed in keeps room below it for one labelled control: the next one.
+            // As the keyboard shrinks this, the field being typed in keeps room below it for one labelled control, the
+            // next one, short of scrolling its own top out of sight.
             TextInput.State.currentlyFocusedInput()?.measureLayout(
               frameRef.current,
-              (_x, fieldTopShown, _width, fieldHeight) => {
-                const roomShort =
-                  fieldTopShown +
-                  fieldHeight +
-                  spacing.md +
-                  typography.label.lineHeight +
-                  spacing.xs +
-                  minTouchTarget -
-                  shownHeight;
-                if (roomShort > 0)
-                  scrollViewRef.current?.scrollTo({
-                    y:
-                      scrollOffsetRef.current +
-                      Math.min(fieldTopShown, roomShort),
-                  });
+              // React Native leaves the scroll offset out of this y: it is the field's place in the content, which starts at the frame's top.
+              (_x, fieldTopInContent, _width, fieldHeight) => {
+                const scrollOffsetNeeded = Math.min(
+                  fieldTopInContent,
+                  fieldTopInContent +
+                    fieldHeight +
+                    spacing.md +
+                    typography.label.lineHeight +
+                    spacing.xs +
+                    minTouchTarget -
+                    shownHeight,
+                );
+                if (scrollOffsetNeeded > scrollOffsetRef.current)
+                  scrollViewRef.current?.scrollTo({ y: scrollOffsetNeeded });
               },
             );
           }}
