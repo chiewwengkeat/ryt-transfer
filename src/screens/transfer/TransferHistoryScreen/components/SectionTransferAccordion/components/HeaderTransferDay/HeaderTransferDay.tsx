@@ -77,9 +77,11 @@ export default function HeaderTransferDay({
           </TextBody>
         </View>
         {netText !== null && (
-          <TextBody strong tone="secondary">
-            {netText}
-          </TextBody>
+          <View style={styles.net}>
+            <TextBody strong tone="secondary">
+              {netText}
+            </TextBody>
+          </View>
         )}
       </View>
     </Pressable>
@@ -109,4 +111,6 @@ const styles = StyleSheet.create({
     rowGap: spacing.xs,
   },
   title: { flexGrow: 1, flexShrink: 1 },
+  // Shrinkable so the title's seven ems count: Yoga ignores a lone flexible child's basis.
+  net: { flexShrink: 1 },
 });
