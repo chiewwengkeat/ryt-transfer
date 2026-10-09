@@ -3,6 +3,15 @@ import { AppLanguage } from "@/shared/i18n/i18n";
 
 import { findRouteTestedScenarioIds } from "@/test/scenarios/find-route-tested-scenario-ids";
 
+import {
+  matrixHeader,
+  MONEY_PHRASES,
+  parsedSteps,
+  RESEND_BAN,
+  RETRY_WORDS,
+  scenarioSections,
+} from "./transfer.helper";
+
 // Jest defines it; the app's types deliberately leave out Node's globals.
 declare const __dirname: string;
 
@@ -12,10 +21,6 @@ const { readFileSync, readdirSync } = jest.requireActual<{
 }>("node:fs");
 
 const SOURCE_ROOT = `${__dirname}/../../..`;
-const MATRIX = readFileSync(
-  `${SOURCE_ROOT}/screens/transfer/scenarios/transfer.md`,
-  "utf8",
-);
 
 const STEP_NAMES = [
   "Start",
@@ -34,43 +39,6 @@ const MONEY_STATES = [
 ];
 const REQUIRED_LABELS = ["When", "Money", "Shown as", "Tell them", "They can"];
 const OPTIONAL_LABELS = ["Never", "Afterwards", "Why"];
-
-const [matrixHeader = "", ...stepChunks] = MATRIX.split(/^## /m);
-const parsedSteps = stepChunks.map((chunk) => {
-  const [stepName = "", ...sectionChunks] = chunk.split(/^### /m);
-  return {
-    name: stepName.trim(),
-    sections: sectionChunks.map((section) => {
-      const [heading = "", idLine = "", ...body] = section.trim().split("\n");
-      return {
-        heading,
-        id: /^`([^`]+)`$/.exec(idLine)?.[1] ?? `(no id under ${heading})`,
-        labels: body.flatMap((line) => {
-          const [, name, value] =
-            /^[-*] \*\*([^*]+):\*\* (.+)$/.exec(line) ?? [];
-          return name && value ? [{ name, value }] : [];
-        }),
-      };
-    }),
-  };
-});
-const scenarioSections = parsedSteps.flatMap((step) => step.sections);
-const MONEY_PHRASES = [
-  ...matrixHeader.matchAll(/^\| ([a-z ]+) \| (\S[^|]*?) \| (\S[^|]*?) \|$/gm),
-].map(([, english = "", malay = "", chinese = ""]) => ({
-  [AppLanguage.English]: english,
-  [AppLanguage.Malay]: malay,
-  [AppLanguage.Chinese]: chinese,
-}));
-const RETRY_WORDS = [
-  ...matrixHeader.matchAll(/^\| ([^|]+?) \| (\w+) \|$/gm),
-].flatMap(([, word = "", languageName = ""]) => {
-  const language = Object.entries(AppLanguage).find(
-    ([name]) => name === languageName,
-  )?.[1];
-  return language === undefined ? [] : [{ word, language }];
-});
-const RESEND_BAN = "offer to send it again";
 
 // Mirrors GitHub's heading anchors, which the index links must match.
 const anchorOf = (heading: string) =>

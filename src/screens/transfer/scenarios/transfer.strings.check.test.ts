@@ -1,55 +1,13 @@
 import { AppLanguage } from "@/shared/i18n/i18n";
 import { TRANSLATION_BUNDLES } from "@/root/translations/translations";
 
-// Jest defines it; the app's types deliberately leave out Node's globals.
-declare const __dirname: string;
+import {
+  MONEY_PHRASES,
+  RESEND_BAN,
+  RETRY_WORDS,
+  scenarioSections,
+} from "./transfer.helper";
 
-const { readFileSync } = jest.requireActual<{
-  readFileSync: (path: string, encoding: "utf8") => string;
-}>("node:fs");
-
-const SOURCE_ROOT = `${__dirname}/../../..`;
-const MATRIX = readFileSync(
-  `${SOURCE_ROOT}/screens/transfer/scenarios/transfer.md`,
-  "utf8",
-);
-
-const [matrixHeader = "", ...stepChunks] = MATRIX.split(/^## /m);
-const parsedSteps = stepChunks.map((chunk) => {
-  const [stepName = "", ...sectionChunks] = chunk.split(/^### /m);
-  return {
-    name: stepName.trim(),
-    sections: sectionChunks.map((section) => {
-      const [heading = "", idLine = "", ...body] = section.trim().split("\n");
-      return {
-        heading,
-        id: /^`([^`]+)`$/.exec(idLine)?.[1] ?? `(no id under ${heading})`,
-        labels: body.flatMap((line) => {
-          const [, name, value] =
-            /^[-*] \*\*([^*]+):\*\* (.+)$/.exec(line) ?? [];
-          return name && value ? [{ name, value }] : [];
-        }),
-      };
-    }),
-  };
-});
-const scenarioSections = parsedSteps.flatMap((step) => step.sections);
-const MONEY_PHRASES = [
-  ...matrixHeader.matchAll(/^\| ([a-z ]+) \| (\S[^|]*?) \| (\S[^|]*?) \|$/gm),
-].map(([, english = "", malay = "", chinese = ""]) => ({
-  [AppLanguage.English]: english,
-  [AppLanguage.Malay]: malay,
-  [AppLanguage.Chinese]: chinese,
-}));
-const RETRY_WORDS = [
-  ...matrixHeader.matchAll(/^\| ([^|]+?) \| (\w+) \|$/gm),
-].flatMap(([, word = "", languageName = ""]) => {
-  const language = Object.entries(AppLanguage).find(
-    ([name]) => name === languageName,
-  )?.[1];
-  return language === undefined ? [] : [{ word, language }];
-});
-const RESEND_BAN = "offer to send it again";
 // Fail-closed: any role not named here counts as pressable, a new message role included.
 const MESSAGE_ROLES = ["body"];
 const REGISTERED_TRANSFER_COMMON = Object.fromEntries(
