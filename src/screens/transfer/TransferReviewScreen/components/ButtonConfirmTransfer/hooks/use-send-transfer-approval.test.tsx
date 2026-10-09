@@ -2,7 +2,6 @@ import type { QueryClient } from "@tanstack/react-query";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
-import { AppState } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { rememberApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-lock";
@@ -28,6 +27,7 @@ import {
   observedRecords,
   reportedScenarios,
 } from "@/test/harness/recording-sink";
+import { moveAppTo } from "@/test/move-app-to";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -501,10 +501,8 @@ it("closes the PIN sheet as not sent when the session ends while it waits for th
 
   // The app reads again only on its return from the background, never on "active" alone.
   await act(() => {
-    for (const appState of ["background", "active"] as const)
-      for (const [eventName, listener] of jest.mocked(AppState).addEventListener
-        .mock.calls)
-        if (eventName === "change") listener(appState);
+    moveAppTo("background");
+    moveAppTo("active");
   });
   await fireEvent.press(
     await screen.findByRole("button", { name: "Sign in again" }),
@@ -810,9 +808,7 @@ it("asks the phone again on coming back to the app, taking the PIN choice away o
 
   reportBiometricSensorUnavailable("BIOMETRY_NOT_ENROLLED");
   await act(() => {
-    for (const [eventName, listener] of jest.mocked(AppState).addEventListener
-      .mock.calls)
-      if (eventName === "change") listener("active");
+    moveAppTo("active");
   });
 
   await waitFor(() => {
