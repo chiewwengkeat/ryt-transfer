@@ -5,7 +5,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
+import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 
 import BottomSheetDemo from "./components/BottomSheetDemo/BottomSheetDemo";

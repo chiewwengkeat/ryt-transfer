@@ -3,7 +3,7 @@ import { http, HttpResponse } from "msw";
 import { useState } from "react";
 import { Pressable, Text } from "react-native";
 
-import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
+import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import { requestJson } from "@/shared/http/transport";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import { lookUpTestRecipient } from "@/test/bank-client";
@@ -15,8 +15,9 @@ import { renderRoute } from "@/test/render-route";
 // The demo build's root: Jest runs as production, whose launch loads no demo layer.
 jest.mock("@/root/app-launch/app-launch", () => ({
   __esModule: true,
-  demoLayer: jest.requireActual<{ default: DemoLayer }>("@/mocks/demo-layer")
-    .default,
+  demoLayer: jest.requireActual<{ default: DemoLayer }>(
+    "@/mocks/demo-layer/demo-layer",
+  ).default,
 }));
 
 function ScreenWithASheet() {

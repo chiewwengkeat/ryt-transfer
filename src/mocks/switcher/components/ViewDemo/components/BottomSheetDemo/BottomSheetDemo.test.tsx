@@ -1,14 +1,15 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 
-import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
+import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { renderRoute } from "@/test/render-route";
 
 // The demo build's root: Jest runs as production, whose launch loads no demo layer.
 jest.mock("@/root/app-launch/app-launch", () => ({
   __esModule: true,
-  demoLayer: jest.requireActual<{ default: DemoLayer }>("@/mocks/demo-layer")
-    .default,
+  demoLayer: jest.requireActual<{ default: DemoLayer }>(
+    "@/mocks/demo-layer/demo-layer",
+  ).default,
 }));
 
 // Real time, not fake: locking the PIN and sending again outlasts Jest's 5 s under a loaded parallel run.

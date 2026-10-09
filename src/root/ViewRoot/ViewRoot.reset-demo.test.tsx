@@ -4,12 +4,12 @@ import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { hasApprovalKeysOnFile } from "@/domains/approval/hooks/approval-keys";
-import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { TransferStatus } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
+import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { biometricPromptsShown } from "@/test/biometrics-double";
@@ -20,8 +20,9 @@ import { renderRoute } from "@/test/render-route";
 // The demo build's root: Jest runs as production, whose launch loads no demo layer.
 jest.mock("@/root/app-launch/app-launch", () => ({
   __esModule: true,
-  demoLayer: jest.requireActual<{ default: DemoLayer }>("@/mocks/demo-layer")
-    .default,
+  demoLayer: jest.requireActual<{ default: DemoLayer }>(
+    "@/mocks/demo-layer/demo-layer",
+  ).default,
 }));
 
 async function sendRm100FromHomeAndReturn() {

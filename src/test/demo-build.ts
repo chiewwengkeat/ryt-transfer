@@ -1,4 +1,4 @@
-import demoLayer from "@/mocks/demo-layer";
+import demoLayer from "@/mocks/demo-layer/demo-layer";
 import * as config from "@/shared/config/config";
 import { allowScreenCapture } from "@/shared/platform/screen-capture";
 import type * as AppLaunch from "@/root/app-launch/app-launch";

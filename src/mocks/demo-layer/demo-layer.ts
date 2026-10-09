@@ -1,4 +1,5 @@
 import { randomUUID } from "expo-crypto";
+import type { ComponentType, ReactNode } from "react";
 
 import { registerApprovalKeys } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
 import {
@@ -6,15 +7,14 @@ import {
   createApprovalKeys,
   saveApprovalKeyIds,
 } from "@/domains/approval/hooks/approval-keys";
-import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-
-import { handlersForActiveScenario } from "./demo-bank";
-import { subscribeToBiometricsOff } from "./switcher/biometrics-off";
-import ViewDemo from "./switcher/components/ViewDemo/ViewDemo";
-import { subscribeToPhoneSidePick } from "./switcher/phone-side-picks";
-import { switcherStore } from "./switcher/switcher-store";
-import { createDemoSend } from "./transport/demo-send";
+import { handlersForActiveScenario } from "@/mocks/demo-bank";
+import { subscribeToBiometricsOff } from "@/mocks/switcher/biometrics-off";
+import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
+import { subscribeToPhoneSidePick } from "@/mocks/switcher/phone-side-picks";
+import { switcherStore } from "@/mocks/switcher/switcher-store";
+import { createDemoSend } from "@/mocks/transport/demo-send";
+import type { Send } from "@/shared/http/transport";
 
 export default {
   demoSend: createDemoSend(handlersForActiveScenario),
@@ -37,3 +37,23 @@ export default {
     await saveApprovalKeyIds({ possessionKeyId, biometricKeyId });
   },
 } satisfies DemoLayer;
+
+export interface DemoLayer {
+  demoSend: Send;
+  pairPhoneAtFirstLaunch: () => Promise<void>;
+  ViewDemo: ComponentType<{
+    appSheetOpen: boolean;
+    children: ReactNode;
+    onResetDemo: () => Promise<void>;
+  }>;
+  subscribeToBiometricsOff: (
+    onChange: (biometricsOff: boolean) => void,
+  ) => () => void;
+  subscribeToScenarioChange: (onChange: () => void) => () => void;
+  subscribeToScreenCaptureBlock: (
+    onChange: (captureBlocked: boolean) => void,
+  ) => () => void;
+  subscribeToRootedPhone: (
+    onChange: (phoneRooted: boolean) => void,
+  ) => () => void;
+}

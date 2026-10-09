@@ -1,6 +1,6 @@
 import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
-import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { warmUpDeviceIntegrityCheck } from "@/domains/approval/hooks/device-integrity-verdict";
+import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import { isProductionBuild } from "@/shared/config/config";
 import { configureTransport } from "@/shared/http/transport";
 import { reportError } from "@/shared/observability/observability";
@@ -31,7 +31,8 @@ warmUpDeviceIntegrityCheck();
 export const demoLayer =
   process.env.EXPO_PUBLIC_APP_VARIANT === "demo" ||
   process.env.EXPO_PUBLIC_APP_VARIANT === "development"
-    ? (require("@/mocks/demo-layer") as { default: DemoLayer }).default
+    ? (require("@/mocks/demo-layer/demo-layer") as { default: DemoLayer })
+        .default
     : null;
 
 if (demoLayer !== null) {
