@@ -9,7 +9,10 @@ import { reportError } from "@/shared/observability/observability";
 
 import { isSettledTransferOutcome } from "../../../api/get-transfer/get-transfer";
 import { refreshPendingTransferNotices } from "../../../hooks/pending-transfer-notices";
-import { checkPendingTransferOnce } from "../../../hooks/transfer-status-checks";
+import {
+  checkPendingTransferOnce,
+  UNSETTLED_TRANSFER_READ_INTERVAL_MS,
+} from "../../../hooks/transfer-status-checks";
 
 // The bank can answer long after Result was left. Only on top: a Result over this counts each failed read it sees.
 export function useRecheckEarlierTransferWhileOnTop({
@@ -74,12 +77,10 @@ export function useRecheckEarlierTransferWhileOnTop({
           stopWatchingWrites();
           stopWatchingClears();
         });
-    }, RECHECK_INTERVAL_MS);
+    }, UNSETTLED_TRANSFER_READ_INTERVAL_MS);
     return () => {
       stopped = true;
       clearInterval(timer);
     };
   }, [screenOnTop, customerId, transferId, queryClient]);
 }
-
-const RECHECK_INTERVAL_MS = 15_000;
