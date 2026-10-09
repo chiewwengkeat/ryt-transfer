@@ -2,7 +2,6 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
-import { accountKeys } from "@/domains/account/api/account.keys";
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
   PendingTransferStage,
@@ -18,18 +17,19 @@ import {
 import {
   biometricPromptsShown,
   holdNextBiometricPrompt,
-} from "@/test/biometrics-double";
+} from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { endTheSessionThroughAnotherRead } from "@/test/end-the-session";
 import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { holdTheNextTransferRead } from "@/test/hold-the-next-transfer-read";
 import { mswServer } from "@/test/msw-server";
 import {
-  askOpenAppToReadAgain,
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 async function sendRm100FromHome() {
   await pairPhoneAsTheDemoLaunchDoes();
@@ -37,36 +37,11 @@ async function sendRm100FromHome() {
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await fireEvent.changeText(
-    await screen.findByLabelText("Amount (RM)"),
-    "100",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
   return view;
-}
-
-async function endTheSessionThroughAnotherRead() {
-  mswServer.use(
-    http.get(
-      "*/accounts/primary",
-      () =>
-        HttpResponse.json(
-          { error: { code: "UNAUTHORIZED", message: "Test." } },
-          { status: 401 },
-        ),
-      { once: true },
-    ),
-  );
-  askOpenAppToReadAgain(accountKeys.primaryAccount);
-  return screen.findByRole("button", { name: "Sign in again" });
 }
 
 // Jest has no screen reader: the focus request is the nearest thing it can see.

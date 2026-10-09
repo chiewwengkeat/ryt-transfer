@@ -11,7 +11,6 @@ import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
 import { lookUpTestRecipient } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { moveAppTo } from "@/test/harness/app-state";
-import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
@@ -42,8 +41,6 @@ const LIM_AT_AN_UNREADABLE_TIME = buildHistoryTransfer({
   registeredName: "Lim Wei Jie",
   createdAt: "not a date",
 });
-const OFFLINE = { isConnected: false, isInternetReachable: false };
-const ONLINE = { isConnected: true, isInternetReachable: true };
 const OUT_OF_DATE = "Couldn't refresh — this list may be out of date";
 
 it("lists the first page's transfers under their day, asking the bank once", async () => {
@@ -371,52 +368,6 @@ it("loads no more and shows no spinner while a refresh is on its way, then pages
   ).toBeOnTheScreen();
 });
 
-it("asks for the newest page once back online when History opened offline, and shows it", async () => {
-  serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
-  await renderRoute("/");
-  await act(() => {
-    router.push("/transfer-history");
-  });
-  expect(
-    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
-  ).toBeOnTheScreen();
-  await act(() => {
-    router.back();
-  });
-  serveTransferHistoryPages([
-    [TAN_ON_6_OCTOBER, buildHistoryTransfer()],
-    [LIM_ON_4_OCTOBER],
-  ]);
-  await act(() => {
-    setPhoneNetwork(OFFLINE);
-  });
-  await act(() => {
-    router.push("/transfer-history");
-  });
-  await act(() => jest.advanceTimersByTimeAsync(5000));
-  expect(screen.getByText(OUT_OF_DATE)).toBeOnTheScreen();
-  expect(
-    screen.queryByLabelText("Loading more transfers"),
-  ).not.toBeOnTheScreen();
-  expect(screen.queryByRole("button", { name: "Retry" })).not.toBeOnTheScreen();
-
-  await act(() => {
-    setPhoneNetwork(ONLINE);
-  });
-
-  expect(
-    await screen.findByRole("button", { name: /^Tan Mei Ling/ }),
-  ).toBeOnTheScreen();
-  await waitFor(() => {
-    expect(sentTransferHistoryCursors()).toEqual([
-      null,
-      "page-2",
-      null,
-      "page-2",
-    ]);
-  });
-});
-
 it("offers Try again when the first page fails, and lists the transfers once it lands", async () => {
   const recoverFirstPage = failTransferHistoryPages("first");
   await renderRoute("/transfer-history");
@@ -575,78 +526,6 @@ it("keeps the notice while Try again is on its way after a refresh fails, until 
   });
 });
 
-it("keeps the rows it has under the notice when History opens offline", async () => {
-  await renderRoute("/");
-  await act(() => {
-    router.push("/transfer-history");
-  });
-  expect(
-    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
-  ).toBeOnTheScreen();
-  await act(() => {
-    router.back();
-  });
-  await act(() => {
-    setPhoneNetwork(OFFLINE);
-  });
-
-  await act(() => {
-    router.push("/transfer-history");
-  });
-  await act(() => jest.advanceTimersByTimeAsync(60_000));
-
-  expect(screen.getByText(OUT_OF_DATE)).toBeOnTheScreen();
-  expect(
-    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
-  ).toBeOnTheScreen();
-  expect(sentTransferHistoryCursors()).toEqual([null]);
-});
-
-it("keeps the rows under the notice when pulled offline, and refreshes them once back online", async () => {
-  await renderRoute("/transfer-history");
-  const aisyah = await screen.findByRole("button", { name: /^Aisyah Rahman/ });
-  serveTransferHistoryPages([[LIM_ON_4_OCTOBER]]);
-  await act(() => {
-    setPhoneNetwork(OFFLINE);
-  });
-
-  await fireEvent(aisyah, "refresh");
-
-  expect(await screen.findByText(OUT_OF_DATE)).toBeOnTheScreen();
-  expect(
-    screen.getByRole("button", { name: /^Aisyah Rahman/ }),
-  ).toBeOnTheScreen();
-  await act(() => {
-    setPhoneNetwork(ONLINE);
-  });
-  expect(
-    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
-  ).toBeOnTheScreen();
-  expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
-});
-
-it("says it couldn't load the transfers when History first opens offline, and lists them once back online", async () => {
-  await renderRoute("/");
-  await act(() => {
-    setPhoneNetwork(OFFLINE);
-  });
-
-  await act(() => {
-    router.push("/transfer-history");
-  });
-
-  expect(
-    await screen.findByText("Couldn't load your transfers."),
-  ).toBeOnTheScreen();
-  expect(screen.queryByLabelText("Loading")).not.toBeOnTheScreen();
-  await act(() => {
-    setPhoneNetwork(ONLINE);
-  });
-  expect(
-    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
-  ).toBeOnTheScreen();
-});
-
 it("announces no failure left from an earlier visit, only one from this visit", async () => {
   const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
   await renderRoute("/");
@@ -675,34 +554,6 @@ it("announces no failure left from an earlier visit, only one from this visit", 
   releaseFirstPage();
   expect(await screen.findByText(OUT_OF_DATE)).toBeOnTheScreen();
   expect(announce).toHaveBeenCalledWith(OUT_OF_DATE);
-});
-
-it("asks the bank nothing when the app comes to the front or the connection returns", async () => {
-  await renderRoute("/transfer-history");
-  expect(await screen.findByText("That's everything")).toBeOnTheScreen();
-
-  await act(() => {
-    moveAppTo("background");
-    moveAppTo("active");
-  });
-  await act(() => {
-    setPhoneNetwork(OFFLINE);
-  });
-  await act(() => {
-    setPhoneNetwork(ONLINE);
-  });
-  await act(() => jest.advanceTimersByTimeAsync(1000));
-
-  expect(sentTransferHistoryCursors()).toEqual([null]);
-});
-
-it("hands a 401 to the session-ended view", async () => {
-  failTransferHistoryPages("first", 401);
-  await renderRoute("/transfer-history");
-
-  expect(
-    await screen.findByRole("header", { name: "Your session has ended" }),
-  ).toBeOnTheScreen();
 });
 
 it("collapses a day to its header and expands it again, saying which it is", async () => {

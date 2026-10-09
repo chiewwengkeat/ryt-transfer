@@ -8,7 +8,9 @@
     },
     "balance_unavailable": {
       "title": "Balance or limit can't load",
-      "disabled_reason": "You can send once your balance and today's limit have loaded."
+      "disabled_reason": "You can send once your balance and today's limit have loaded.",
+      "body": "Your balance couldn't be loaded.",
+      "retry": "Try again"
     },
     "under_maintenance": {
       "title": "Transfers under maintenance",
@@ -71,7 +73,9 @@
       "over_per_transfer_max": "That is more than {{amount}}, the most you can send in one transfer."
     },
     "amount_unexpected": {
-      "title": "Something unexpected while entering the amount"
+      "title": "Something unexpected while entering the amount",
+      "body": "Something unexpected went wrong.",
+      "retry": "Try again"
     },
     "recipient_found": {
       "title": "Recipient found"
@@ -293,7 +297,8 @@
       "received_at": "Received",
       "completed_at": "Completed",
       "refunded_at": "Refunded"
-    }
+    },
+    "back_to_home": "Back to Home"
   },
   "recipient": {
     "title": "Transfer",
@@ -325,8 +330,7 @@
     "bank_search_label": "Search banks",
     "bank_no_match": "No bank matches your search.",
     "close_sheet": "Close",
-    "continue": "Continue",
-    "home": "Back to Home"
+    "continue": "Continue"
   },
   "amount": {
     "title": "Amount",
@@ -339,22 +343,11 @@
   "review": {
     "title": "Review",
     "recipient_name": "To",
-    "amount": "Amount",
-    "note": "Note",
     "transfer": "Transfer",
     "prompt_title": "Approve transfer",
     "prompt_title_ios": "Approve {{amount}} to {{name}}",
     "prompt_subtitle": "{{amount}} to {{name}}",
     "prompt_cancel": "Cancel"
-  },
-  "section_review_recipient": {
-    "bank": "Bank",
-    "mobile": "Mobile number",
-    "nric": "NRIC number",
-    "account_number": "Account number",
-    "passport": "Passport number",
-    "brn": "Business registration number",
-    "army_police": "Army or police number"
   },
   "approval": {},
   "result": {
@@ -383,14 +376,13 @@
   },
   "history": {
     "title": "Transfer history",
-    "home": "Back to Home",
     "empty": {
       "title": "No transfers yet",
       "body": "Transfers you send or receive will show here."
     },
     "first_page_failed": "Couldn't load your transfers.",
     "out_of_date": "Couldn't refresh — this list may be out of date",
-    "try_again": "Try again",
+    "retry": "Try again",
     "day": {
       "title": "{{day}} ({{count}})",
       "label_one": "{{day}}, {{count}} transfer, {{net}}",
@@ -413,7 +405,7 @@
     "not_found": "Couldn't find this transfer.",
     "back": "Back",
     "failed": "Couldn't load this transfer.",
-    "try_again": "Try again",
+    "retry": "Try again",
     "out_of_date": "Couldn't refresh — these details may be out of date"
   }
 }

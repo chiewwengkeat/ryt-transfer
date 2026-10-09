@@ -36,6 +36,11 @@ export function useIsOffline() {
   );
 }
 
+// Reads pause on the phone's own report alone, so this, not useIsOffline, says whether a retry can send.
+export function usePhoneReportsConnection() {
+  return useSyncExternalStore(subscribeToOfflineChanges, () => phoneConnected);
+}
+
 export function reportRequestOutcome(
   request: string,
   failure?: TransportErrorKind,

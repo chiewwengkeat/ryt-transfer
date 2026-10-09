@@ -2,10 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
-import {
-  isCreateTransferUnanswered,
-  readCreateTransferRefusal,
-} from "@/domains/transfer/api/create-transfer/create-transfer";
+import { readCreateTransferRefusal } from "@/domains/transfer/api/create-transfer/create-transfer";
 import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
@@ -13,7 +10,10 @@ import {
   TransferFlowActionType,
   TransferHoldKind,
 } from "@/screens/transfer/flow-store/flow-store";
-import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
+import {
+  isSessionEndFailure,
+  isUnansweredWriteFailure,
+} from "@/shared/http/transport-error/transport-error";
 
 export function settleCreateFailure({
   failure,
@@ -28,7 +28,7 @@ export function settleCreateFailure({
     dispatchTransferFlow({ type: TransferFlowActionType.CreateNotSent });
     return;
   }
-  if (isCreateTransferUnanswered(failure)) {
+  if (isUnansweredWriteFailure(failure)) {
     dispatchTransferFlow({
       type: TransferFlowActionType.CreateUnanswered,
       notice: TransferScenarioId.ConfirmationUnanswered,

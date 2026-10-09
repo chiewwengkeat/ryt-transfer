@@ -5,8 +5,8 @@ import { Pressable, StyleSheet, Text } from "react-native";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
-  getTransferLimitsMaintenance,
   useGetTransferLimits,
+  useTransferLimitsMaintenance,
 } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
 import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
@@ -169,7 +169,7 @@ function useStartTransferDisabledReason() {
   const offline = useIsOffline();
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
-  const maintenance = getTransferLimitsMaintenance(limits.error);
+  const maintenance = useTransferLimitsMaintenance(limits);
 
   return offline
     ? t("common.offline.disabled_reason")

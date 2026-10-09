@@ -15,7 +15,10 @@ import {
   refreshPendingTransferNotices,
   usePendingTransferNotices,
 } from "@/domains/transfer/lib/pending-transfer-notices/pending-transfer-notices";
-import { checkPendingTransferOnce } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
+import {
+  checkPendingTransferOnce,
+  UNSETTLED_TRANSFER_READ_INTERVAL_MS,
+} from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 
 interface Props {
@@ -117,12 +120,10 @@ function useRecheckEarlierTransferWhileOnTop({
           stopWatchingWrites();
           stopWatchingClears();
         });
-    }, RECHECK_INTERVAL_MS);
+    }, UNSETTLED_TRANSFER_READ_INTERVAL_MS);
     return () => {
       stopped = true;
       clearInterval(timer);
     };
   }, [screenOnTop, customerId, transferId, queryClient]);
 }
-
-const RECHECK_INTERVAL_MS = 15_000;

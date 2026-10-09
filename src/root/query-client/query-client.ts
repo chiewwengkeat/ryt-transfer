@@ -7,6 +7,7 @@ import {
 import { AppState, type AppStateStatus } from "react-native";
 
 import {
+  isUnansweredReadFailure,
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
@@ -41,12 +42,7 @@ export function createQueryClient() {
       queries: {
         // A timeout retries like a dropped connection: on a slow line, a second try often lands.
         retry: (failureCount, error) =>
-          failureCount < 2 &&
-          error instanceof TransportError &&
-          (error.kind === TransportErrorKind.Network ||
-            error.kind === TransportErrorKind.Timeout ||
-            (error.kind === TransportErrorKind.Http &&
-              (error.status ?? 0) >= 500)),
+          failureCount < 2 && isUnansweredReadFailure(error),
       },
       // A write goes once, now: a retry, or a replay on reconnecting, could move money nobody approved again.
       mutations: { retry: 0, networkMode: "always" },

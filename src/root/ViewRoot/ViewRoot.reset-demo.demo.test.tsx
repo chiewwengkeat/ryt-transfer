@@ -1,3 +1,5 @@
+import "@/test/demo-build";
+
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
@@ -9,21 +11,13 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
-import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import { requestJson } from "@/shared/http/transport/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
-import { biometricPromptsShown } from "@/test/biometrics-double";
+import { biometricPromptsShown } from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { enterPinAndApprove } from "@/test/enter-pin-and-approve";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
-
-// The demo build's root: Jest runs as production, whose launch loads no demo layer.
-jest.mock("@/root/app-launch/app-launch", () => ({
-  __esModule: true,
-  demoLayer: jest.requireActual<{ default: DemoLayer }>(
-    "@/mocks/demo-layer/demo-layer",
-  ).default,
-}));
 
 async function sendRm100FromHomeAndReturn() {
   await fireEvent.press(
@@ -68,12 +62,6 @@ async function startRm100TransferFromHomeUnderNoBiometrics() {
   );
 }
 
-async function approveWithPin(pin: string) {
-  for (const digit of pin)
-    await fireEvent.press(await screen.findByRole("button", { name: digit }));
-  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
-}
-
 it("puts Home back to the demo's opening balance and limit, and a transfer after the reset still goes through", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/");
@@ -98,11 +86,11 @@ it("keeps no PIN lock past Reset demo, so the next transfer gets its keypad", as
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/");
   await startRm100TransferFromHomeUnderNoBiometrics();
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 2 tries left.");
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 1 try left.");
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
   await act(() => {
     router.dismissTo("/");

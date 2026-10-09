@@ -17,6 +17,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
+import { pressHardwareBack } from "@/test/hardware-back";
 
 import BottomSheetFrame from "./BottomSheetFrame";
 
@@ -111,12 +112,6 @@ function screenReaderStopsUnder(
 
 async function openBankSheet() {
   await fireEvent.press(screen.getByRole("button", { name: "Choose a bank" }));
-}
-
-async function pressHardwareBack() {
-  await act(() => {
-    DeviceEventEmitter.emit("hardwareBackPress");
-  });
 }
 
 afterEach(() => {

@@ -29,7 +29,8 @@ export default function ButtonPrimary({
   disabledReason,
 }: Props) {
   const { i18n } = useTranslation();
-  const disabled = loading || disabledReason !== undefined;
+  const hasDisabledReason = disabledReason !== undefined;
+  const disabled = loading || hasDisabledReason;
   return (
     <View style={styles.container}>
       <Pressable
@@ -43,19 +44,21 @@ export default function ButtonPrimary({
         onPress={onPress}
         style={({ pressed }) => [
           styles.button,
-          disabled && styles.buttonDisabled,
+          hasDisabledReason && styles.buttonDisabled,
           pressed && styles.buttonPressed,
         ]}
       >
         {loading ? (
-          <ActivityIndicator color={colors.onAccent} />
+          <ActivityIndicator
+            color={hasDisabledReason ? colors.accent : colors.onAccent}
+          />
         ) : (
           <Text style={[styles.label, disabled && styles.labelDisabled]}>
             {label}
           </Text>
         )}
       </Pressable>
-      {disabledReason !== undefined && (
+      {hasDisabledReason && (
         <TextBody tone="secondary">{disabledReason}</TextBody>
       )}
     </View>

@@ -34,7 +34,7 @@ import {
   cancelNextBiometricPrompt,
   holdNextBiometricPrompt,
   phoneKeyOptions,
-} from "@/test/biometrics-double";
+} from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { pressHardwareBack } from "@/test/hardware-back";
@@ -56,6 +56,7 @@ import {
   renderRoute,
 } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 import { TransferFlowStep } from "@/screens/transfer/flow-store/flow-store";
 
@@ -81,16 +82,7 @@ async function openReviewOfRm100(
     await waitForHomeToOfferTransfer();
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   }
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    RECIPIENT_MOBILE,
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  if (note !== undefined)
-    await fireEvent.changeText(screen.getByLabelText("Note (optional)"), note);
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview({ note });
   return view;
 }
 
@@ -1202,7 +1194,11 @@ it("never offers to send again when the bank answers none of three tries at the 
   expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
   expect(countSent("POST", "/approve")).toBe(3);
-  releaseApprovals();
+  // Waited out here: the released reads fail as no network and redraw Home, which teardown would warn of.
+  await act(async () => {
+    releaseApprovals();
+    await jest.advanceTimersByTimeAsync(1_000);
+  });
 });
 
 it("never says the transfer was not sent when the session ends as the bank answers the approval", async () => {

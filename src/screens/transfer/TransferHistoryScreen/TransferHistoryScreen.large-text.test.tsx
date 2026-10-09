@@ -31,14 +31,14 @@ function flexBasisOf(element: ReturnType<typeof screen.getByText> | null) {
     .flexBasis;
 }
 
+// Jest lays nothing out: these pin the styles a device's wrap relies on, and only a device shows the wrap.
 it("keeps a transfer's name and a day's title in a column that widens with the text size, wrapping the amount below them instead of squeezing them", async () => {
   serveTransferHistoryPages([[buildHistoryTransfer()]]);
   setPhoneTextSize(1);
   await renderRoute("/transfer-history");
   const nameColumn = (await screen.findByText("Aisyah Rahman")).parent;
-  const dayTitleColumn = within(
-    screen.getByRole("button", { expanded: true }),
-  ).getByText(/\(1\)$/).parent;
+  const dayHeader = screen.getByRole("button", { expanded: true });
+  const dayTitleColumn = within(dayHeader).getByText(/\(1\)$/).parent;
   const nameWidthAtDefaultSize = flexBasisOf(nameColumn);
   const dayTitleWidthAtDefaultSize = flexBasisOf(dayTitleColumn);
   expect(nameWidthAtDefaultSize).toBeGreaterThan(0);
@@ -56,4 +56,12 @@ it("keeps a transfer's name and a day's title in a column that widens with the t
   );
   expect(nameColumn?.parent).toHaveStyle({ flexWrap: "wrap" });
   expect(dayTitleColumn?.parent).toHaveStyle({ flexWrap: "wrap" });
+  // Yoga ignores a column's basis while the column is its row's only flexible child.
+  const transferRow = screen.getByRole("button", { name: /Aisyah Rahman/ });
+  expect(within(transferRow).getByText("-RM 50.00").parent).toHaveStyle({
+    flexShrink: 1,
+  });
+  expect(within(dayHeader).getByText("-RM 50.00").parent).toHaveStyle({
+    flexShrink: 1,
+  });
 });

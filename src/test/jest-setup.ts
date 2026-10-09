@@ -21,8 +21,8 @@ import { forgetRequestOutcomes } from "@/shared/platform/offline/offline";
 import type * as ShellQueryClient from "@/root/query-client/query-client";
 import "@/root/translations/translations";
 
-import type * as BiometricsDouble from "./biometrics-double";
-import { resetBiometricsDouble } from "./biometrics-double";
+import type * as BiometricsDouble from "./harness/biometrics-double";
+import { resetBiometricsDouble } from "./harness/biometrics-double";
 import {
   contactsNativeDouble,
   resetContactsNativeDouble,
@@ -115,7 +115,7 @@ jest.mock("react-native/Libraries/Utilities/BackHandler", () =>
 jest.mock(
   "@sbaiahmed1/react-native-biometrics",
   () =>
-    jest.requireActual<typeof BiometricsDouble>("./biometrics-double")
+    jest.requireActual<typeof BiometricsDouble>("./harness/biometrics-double")
       .biometricsLibraryDouble,
 );
 jest.mock("react-native-screens", () =>

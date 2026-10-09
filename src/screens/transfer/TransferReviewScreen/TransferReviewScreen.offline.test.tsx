@@ -8,6 +8,7 @@ import { mswServer, sentRequests } from "@/test/msw-server";
 import { pickTransferScenario } from "@/test/pick-transfer-scenario";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+import { enterTransferRecipientAndAmount } from "@/test/walk-to-transfer-review";
 
 const RECIPIENT_MOBILE = "012-345 6789";
 const OFFLINE_NOTICE =
@@ -15,13 +16,7 @@ const OFFLINE_NOTICE =
 
 async function openReviewWhileNoRequestReachesTheBank() {
   await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    RECIPIENT_MOBILE,
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  await enterTransferRecipientAndAmount();
   mswServer.use(http.all("*", () => HttpResponse.error()));
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   await screen.findByRole("button", { name: "Try again" });

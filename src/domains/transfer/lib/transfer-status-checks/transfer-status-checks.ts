@@ -28,7 +28,7 @@ import {
 
 // The schedule is each read's retry, front-loaded while the bank's answer is likeliest to land.
 const STATUS_READ_TIMES_MS = [2_000, 4_000, 8_000, 16_000];
-const STATUS_READ_INTERVAL_MS_AFTER = 15_000;
+export const UNSETTLED_TRANSFER_READ_INTERVAL_MS = 15_000;
 const UNANSWERED_READS_BEFORE_UNREACHABLE = 4;
 
 export enum TransferReadFailure {
@@ -57,7 +57,7 @@ export function useTransferStatusCheck(
       const elapsedMs = Date.now() - openedAtMs;
       const nextReadAtMs =
         STATUS_READ_TIMES_MS.find((readAtMs) => readAtMs > elapsedMs) ??
-        elapsedMs + STATUS_READ_INTERVAL_MS_AFTER;
+        elapsedMs + UNSETTLED_TRANSFER_READ_INTERVAL_MS;
       return nextReadAtMs - elapsedMs;
     },
   });

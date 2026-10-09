@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StatusBar, StyleSheet, View } from "react-native";
 
 import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
@@ -19,10 +19,9 @@ import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
-import { screenTransitionOptions } from "@/shared/lib/motion/motion";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
-import { demoLayer } from "@/root/app-launch/app-launch";
+import { demoLayer, stackScreenOptions } from "@/root/app-launch/app-launch";
 import { queryClient } from "@/root/query-client/query-client";
 import { forgetSignedInCustomer } from "./lib/forget-signed-in-customer/forget-signed-in-customer";
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
@@ -40,6 +39,11 @@ export default function ViewRoot() {
   const [sessionEnded, setSessionEnded] = useState(false);
   const [appSheetOpen, setAppSheetOpen] = useState(false);
   const [navigatorMounts, setNavigatorMounts] = useState(0);
+  useEffect(() => {
+    // Android otherwise keeps the status bar's icons white, unseen on the app's white headers. Called,
+    // not rendered: a <StatusBar> here stalled route tests under renderRoute's fake timers.
+    StatusBar.setBarStyle("dark-content");
+  }, []);
   useEffect(() => {
     const removeUnauthorizedListener = addUnauthorizedListener(() => {
       setSessionEnded(true);
@@ -81,20 +85,7 @@ export default function ViewRoot() {
             // Production has no Demo header to hide, so its root need not re-render as sheets open.
             onSheetOpenChange={demoLayer === null ? undefined : setAppSheetOpen}
           >
-            <Stack
-              key={navigatorMounts}
-              // Android's header pads for the status bar itself, a place the Demo header has already taken.
-              screenOptions={
-                demoLayer === null
-                  ? screenTransitionOptions
-                  : () => ({
-                      ...screenTransitionOptions(),
-                      unstable_nativeProps: {
-                        headerConfig: { disableTopInsetApplication: true },
-                      },
-                    })
-              }
-            >
+            <Stack key={navigatorMounts} screenOptions={stackScreenOptions}>
               <Stack.Screen name="transfer" options={{ headerShown: false }} />
             </Stack>
             <BannerOffline />

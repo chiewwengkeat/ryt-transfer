@@ -166,12 +166,12 @@ function SectionReviewRecipient({ recipient }: SectionReviewRecipientProps) {
   return (
     <>
       <RowDetail
-        label={t("section_review_recipient.bank")}
+        label={t("common.section_transfer_details.bank")}
         value={recipient.bankName}
       />
       <RowDetail
         label={t(
-          `section_review_recipient.${recipient.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+          `common.section_transfer_details.${recipient.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
         )}
         value={recipient.idValueMasked}
       />
@@ -186,9 +186,15 @@ function SectionReviewAmount({ draft }: SectionReviewAmountProps) {
   const { t } = useTranslation("transfer");
   return (
     <>
-      <RowDetail label={t("review.amount")} value={formatMoney(draft.amount)} />
+      <RowDetail
+        label={t("common.section_transfer_details.amount")}
+        value={formatMoney(draft.amount)}
+      />
       {draft.note !== undefined && (
-        <RowDetail label={t("review.note")} value={draft.note} />
+        <RowDetail
+          label={t("common.section_transfer_details.note")}
+          value={draft.note}
+        />
       )}
     </>
   );

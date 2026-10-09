@@ -22,6 +22,7 @@ import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+import { readsOfTheBalance } from "@/test/sent-request-filters";
 
 const STILL_BEING_CHECKED =
   "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
@@ -56,11 +57,6 @@ async function launchWithATransferLastSeenProcessing(
     recipientName: lookup.recipient.registeredName,
   };
 }
-
-const readsOfTheBalance = () =>
-  sentRequests.filter(
-    ({ method, url }) => method === "GET" && url.endsWith("/accounts/primary"),
-  ).length;
 
 it.each([
   ["sent", { status: TransferStatus.Completed }, "was sent — money moved."],

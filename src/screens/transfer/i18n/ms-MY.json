@@ -8,7 +8,9 @@
     },
     "balance_unavailable": {
       "title": "Baki atau had tidak dapat dimuatkan",
-      "disabled_reason": "Anda boleh menghantar setelah baki dan had hari ini dimuatkan."
+      "disabled_reason": "Anda boleh menghantar setelah baki dan had hari ini dimuatkan.",
+      "body": "Baki anda tidak dapat dimuatkan.",
+      "retry": "Cuba lagi"
     },
     "under_maintenance": {
       "title": "Pindahan dalam penyelenggaraan",
@@ -71,7 +73,9 @@
       "over_per_transfer_max": "Jumlah itu melebihi {{amount}}, jumlah maksimum bagi satu pindahan."
     },
     "amount_unexpected": {
-      "title": "Sesuatu yang tidak dijangka semasa memasukkan jumlah"
+      "title": "Sesuatu yang tidak dijangka semasa memasukkan jumlah",
+      "body": "Berlaku masalah yang tidak dijangka.",
+      "retry": "Cuba lagi"
     },
     "recipient_found": {
       "title": "Penerima ditemui"
@@ -293,7 +297,8 @@
       "received_at": "Diterima pada",
       "completed_at": "Selesai pada",
       "refunded_at": "Dipulangkan pada"
-    }
+    },
+    "back_to_home": "Kembali ke Laman Utama"
   },
   "recipient": {
     "title": "Pindahan",
@@ -325,8 +330,7 @@
     "bank_search_label": "Cari bank",
     "bank_no_match": "Tiada bank yang sepadan dengan carian anda.",
     "close_sheet": "Tutup",
-    "continue": "Teruskan",
-    "home": "Kembali ke Laman Utama"
+    "continue": "Teruskan"
   },
   "amount": {
     "title": "Jumlah",
@@ -339,22 +343,11 @@
   "review": {
     "title": "Semak",
     "recipient_name": "Kepada",
-    "amount": "Jumlah",
-    "note": "Nota",
     "transfer": "Pindahkan",
     "prompt_title": "Luluskan pindahan",
     "prompt_title_ios": "Luluskan {{amount}} kepada {{name}}",
     "prompt_subtitle": "{{amount}} kepada {{name}}",
     "prompt_cancel": "Batal"
-  },
-  "section_review_recipient": {
-    "bank": "Bank",
-    "mobile": "Nombor telefon bimbit",
-    "nric": "Nombor NRIC",
-    "account_number": "Nombor akaun",
-    "passport": "Nombor pasport",
-    "brn": "Nombor pendaftaran perniagaan",
-    "army_police": "Nombor tentera atau polis"
   },
   "approval": {},
   "result": {
@@ -383,14 +376,13 @@
   },
   "history": {
     "title": "Sejarah pindahan",
-    "home": "Kembali ke Laman Utama",
     "empty": {
       "title": "Belum ada pindahan",
       "body": "Pindahan yang anda hantar atau terima akan dipaparkan di sini."
     },
     "first_page_failed": "Pindahan anda tidak dapat dimuatkan.",
     "out_of_date": "Tidak dapat dimuat semula — senarai ini mungkin sudah lapuk",
-    "try_again": "Cuba lagi",
+    "retry": "Cuba lagi",
     "day": {
       "title": "{{day}} ({{count}})",
       "label_one": "{{day}}, {{count}} pindahan, {{net}}",
@@ -413,7 +405,7 @@
     "not_found": "Pindahan ini tidak dapat ditemui.",
     "back": "Kembali",
     "failed": "Pindahan ini tidak dapat dimuatkan.",
-    "try_again": "Cuba lagi",
+    "retry": "Cuba lagi",
     "out_of_date": "Tidak dapat dimuat semula — butiran ini mungkin sudah lapuk"
   }
 }

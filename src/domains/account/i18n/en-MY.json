@@ -2,19 +2,5 @@
   "card_balance": {
     "label": "Balance",
     "remaining_today": "You can send {{amount}} more today"
-  },
-  "common": {
-    "start_unexpected": {
-      "body": "Something unexpected went wrong.",
-      "retry": "Try again"
-    },
-    "amount_unexpected": {
-      "body": "Something unexpected went wrong.",
-      "retry": "Try again"
-    },
-    "balance_unavailable": {
-      "body": "Your balance couldn't be loaded.",
-      "retry": "Try again"
-    }
   }
 }

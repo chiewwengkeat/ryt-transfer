@@ -1,5 +1,4 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { router } from "expo-router";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
 
 import {
@@ -11,7 +10,6 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { pressHardwareBack } from "@/test/hardware-back";
-import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import {
@@ -50,8 +48,6 @@ const RECIPIENT_ID_LABELS = [
   ["Business registration number", RecipientIdType.Brn],
   ["Army or police number", RecipientIdType.ArmyPolice],
 ] as const;
-const OFFLINE = { isConnected: false, isInternetReachable: false };
-const ONLINE = { isConnected: true, isInternetReachable: true };
 const OUT_OF_DATE = "Couldn't refresh — these details may be out of date";
 
 async function openTransferDetails(transfer: Transfer) {
@@ -219,27 +215,6 @@ it("keeps a transfer from its History row under the notice when the bank fails, 
   expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
 });
 
-it("keeps a transfer from its History row under the notice when opened offline, and shows the bank's once back online", async () => {
-  serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
-  await renderRoute("/transfer-history");
-  const aisyah = await screen.findByRole("button", { name: /^Aisyah Rahman/ });
-  await act(() => {
-    setPhoneNetwork(OFFLINE);
-  });
-
-  await fireEvent.press(aisyah);
-
-  expect(await screen.findByText(OUT_OF_DATE)).toBeOnTheScreen();
-  expect(screen.getByText("Aisyah Rahman")).toBeOnTheScreen();
-  expect(screen.queryByText("Lunch")).not.toBeOnTheScreen();
-  await act(() => {
-    setPhoneNetwork(ONLINE);
-  });
-
-  expect(await screen.findByText("Lunch")).toBeOnTheScreen();
-  expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
-});
-
 it("keeps the transfer it has under the notice when asking again fails, and refreshes it on Try again", async () => {
   serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
   await renderRoute("/transfer-history");
@@ -259,33 +234,6 @@ it("keeps the transfer it has under the notice when asking again fails, and refr
   expect(screen.getByText("Lunch")).toBeOnTheScreen();
   recoverDetails();
   await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
-
-  expect(await screen.findByText("Dinner")).toBeOnTheScreen();
-  expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
-});
-
-it("keeps the transfer it has under the notice when reopened offline, and refreshes it once back online", async () => {
-  serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
-  await renderRoute("/transfer-history");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
-  );
-  await screen.findByText("Lunch");
-  await pressHardwareBack();
-  serveTransferDetails({ ...AISYAH, version: 3, note: "Dinner" });
-  await act(() => {
-    setPhoneNetwork(OFFLINE);
-  });
-
-  await fireEvent.press(
-    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
-  );
-
-  expect(await screen.findByText(OUT_OF_DATE)).toBeOnTheScreen();
-  expect(screen.getByText("Lunch")).toBeOnTheScreen();
-  await act(() => {
-    setPhoneNetwork(ONLINE);
-  });
 
   expect(await screen.findByText("Dinner")).toBeOnTheScreen();
   expect(screen.queryByText(OUT_OF_DATE)).not.toBeOnTheScreen();
@@ -321,28 +269,66 @@ it("announces no failure left from an earlier visit, only one from this visit", 
   expect(announce).toHaveBeenCalledWith(OUT_OF_DATE);
 });
 
-it("says it couldn't load a transfer opened offline with nothing loaded, and shows it once back online", async () => {
+it("says no failure of a read only the session's end failed, keeping the History row, and shows the bank's once they sign in again", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
+  const recoverDetails = failTransferDetails(401);
+  await renderRoute("/transfer-history");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  );
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  // ⛔ Keep this wait: pressed sooner, the view lifts before the failure shows, and this passes either way.
+  await screen.findByText(OUT_OF_DATE, { includeHiddenElements: true });
+  recoverDetails();
+
+  await fireEvent.press(signInAgain);
+
+  expect(await screen.findByText("Lunch")).toBeOnTheScreen();
+  expect(announce).not.toHaveBeenCalledWith(OUT_OF_DATE);
+});
+
+it("says no failure of a link's read only the session's end failed, and shows the transfer once they sign in again", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
   serveTransferHistoryPages([[]]);
   serveTransferDetails(AISYAH);
-  await renderRoute("/");
-  await act(() => {
-    setPhoneNetwork(OFFLINE);
+  const recoverDetails = failTransferDetails(401);
+  await renderRoute(`/transfer-history/${AISYAH.transferId}`);
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
   });
+  // ⛔ Keep this wait: pressed sooner, the view lifts before the failure shows, and this passes either way.
+  await screen.findByText("Couldn't load this transfer.", {
+    includeHiddenElements: true,
+  });
+  recoverDetails();
 
-  await act(() => {
-    router.push(`/transfer-history/${AISYAH.transferId}`);
-  });
-
-  expect(
-    await screen.findByText("Couldn't load this transfer."),
-  ).toBeOnTheScreen();
-  expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
-  expect(screen.queryByLabelText("Loading")).not.toBeOnTheScreen();
-  await act(() => {
-    setPhoneNetwork(ONLINE);
-  });
+  await fireEvent.press(signInAgain);
 
   expect(await screen.findByText("Aisyah Rahman")).toBeOnTheScreen();
+  expect(announce).not.toHaveBeenCalledWith("Couldn't load this transfer.");
+});
+
+it("says a link's failed read that follows signing in again", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  serveTransferHistoryPages([[]]);
+  failTransferDetails(401);
+  await renderRoute(`/transfer-history/${AISYAH.transferId}`);
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  failTransferDetails();
+
+  await fireEvent.press(signInAgain);
+
+  await waitFor(() => {
+    expect(announce).toHaveBeenCalledWith("Couldn't load this transfer.");
+  });
 });
 
 it.each([

@@ -1,6 +1,7 @@
 export const colors = {
   background: "#F4F5F7",
   surface: "#FFFFFF",
+  surfacePressed: "#DBDBDB",
   textPrimary: "#16181D",
   textSecondary: "#4F5562",
   // At least 3:1 on surface and background: WCAG 2.2 AA asks it of an input's outline.
@@ -14,7 +15,7 @@ export const colors = {
 
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24 };
 
-export const radii = { sm: 8, md: 12, lg: 16 };
+export const radii = { sm: 8, md: 12 };
 
 export const shadows = {
   sm: [

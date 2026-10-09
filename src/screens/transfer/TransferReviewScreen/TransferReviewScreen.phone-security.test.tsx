@@ -11,6 +11,7 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
+import { approveFromReviewOpenedAgain } from "@/test/approve-from-review-opened-again";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import {
   biometricPromptsShown,
@@ -20,12 +21,14 @@ import {
   failNextBiometricPrompt,
   holdDeviceIntegrityChecks,
   reportDeviceIntegrity,
-} from "@/test/biometrics-double";
+} from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { observedRecords } from "@/test/harness/recording-sink";
-import { mswServer, sentRequests } from "@/test/msw-server";
+import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
+import { transferWritesSent } from "@/test/sent-request-filters";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 const PHONE_REFUSAL =
   "This phone's security can't be confirmed, so transfers are off on it.";
@@ -37,22 +40,8 @@ const PIN_SHEET = "Enter your bank PIN to approve this transfer.";
 
 async function openReviewOfRm100() {
   const view = await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview();
   return view;
-}
-
-function transferWritesSent() {
-  return sentRequests
-    .filter(({ method }) => method === "POST")
-    .map(({ url }) => new URL(url).pathname)
-    .filter((path) => path.startsWith("/transfers"));
 }
 
 async function approveWithPinFromTheSheet() {
@@ -60,14 +49,6 @@ async function approveWithPinFromTheSheet() {
   for (const digit of "246810")
     await fireEvent.press(screen.getByRole("button", { name: digit }));
   await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
-  await screen.findByText("Transfer sent");
-}
-
-async function approveFromReviewOpenedAgain() {
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
   await screen.findByText("Transfer sent");
 }
 

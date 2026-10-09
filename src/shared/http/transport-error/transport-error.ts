@@ -27,3 +27,25 @@ export function isSessionEndFailure(error: unknown) {
     error.status === 401
   );
 }
+
+export function isUnansweredReadFailure(error: unknown) {
+  return (
+    error instanceof TransportError &&
+    (error.kind === TransportErrorKind.Network ||
+      error.kind === TransportErrorKind.Timeout ||
+      (error.kind === TransportErrorKind.Http && (error.status ?? 0) >= 500))
+  );
+}
+
+export function isUnansweredWriteFailure(error: unknown) {
+  return (
+    error instanceof TransportError &&
+    (error.kind === TransportErrorKind.Network ||
+      error.kind === TransportErrorKind.Timeout ||
+      error.kind === TransportErrorKind.Unreadable ||
+      // A server error naming no bank code says nothing about the write, which may have run.
+      (error.kind === TransportErrorKind.Http &&
+        (error.status ?? 0) >= 500 &&
+        error.code === undefined))
+  );
+}

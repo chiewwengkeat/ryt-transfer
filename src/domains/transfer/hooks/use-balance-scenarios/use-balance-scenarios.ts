@@ -10,7 +10,7 @@ export function useBalanceScenarios(
   unexpectedScenarioId:
     TransferScenarioId.StartUnexpected | TransferScenarioId.AmountUnexpected,
 ) {
-  const { t } = useTranslation("account");
+  const { t } = useTranslation("transfer");
   const unexpectedWordsKey = scenarioWordsKey(unexpectedScenarioId);
   return {
     failureWords: {

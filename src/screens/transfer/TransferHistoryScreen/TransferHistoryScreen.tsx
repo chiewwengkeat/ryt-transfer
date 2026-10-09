@@ -1,6 +1,5 @@
 import { hashKey, useQueryClient } from "@tanstack/react-query";
-import { router, Stack } from "expo-router";
-import { HeaderBackButton } from "expo-router/react-navigation";
+import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
@@ -12,6 +11,8 @@ import {
   trimTransferHistoryToFirstPage,
   useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
+import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
+import { usePhoneReportsConnection } from "@/shared/platform/offline/offline";
 import { colors, spacing } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
@@ -20,12 +21,15 @@ import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerOutOfDate from "../components/BannerOutOfDate/BannerOutOfDate";
+import ButtonHeaderHome from "../components/ButtonHeaderHome/ButtonHeaderHome";
 import SectionTransferAccordion from "./components/SectionTransferAccordion/SectionTransferAccordion";
 
 export default function TransferHistoryScreen() {
   const { t } = useTranslation("transfer");
   const queryClient = useQueryClient();
   const transferHistory = useListTransfers();
+  const phoneReportsConnection = usePhoneReportsConnection();
+  const failureIsSessionEnd = isSessionEndFailure(transferHistory.error);
   // Clear on each open: a failure left from an earlier visit would be announced as this one's.
   const [refreshFailed, setRefreshFailed] = useState(false);
   // The query keeps one status, which a page fetch after a failed refresh overwrites: only a refresh's outcome counts.
@@ -61,16 +65,7 @@ export default function TransferHistoryScreen() {
         options={{
           title: t("history.title"),
           // First in its own stack, the root header that would go back hidden over it; a link can open it with nothing beneath.
-          headerLeft: (props) => (
-            <HeaderBackButton
-              {...props}
-              displayMode="minimal"
-              accessibilityLabel={t("history.home")}
-              onPress={() => {
-                router.dismissTo("/");
-              }}
-            />
-          ),
+          headerLeft: (props) => <ButtonHeaderHome {...props} />,
         }}
       />
       {transferHistory.isPending && !transferHistory.isPaused ? (
@@ -78,16 +73,19 @@ export default function TransferHistoryScreen() {
       ) : transferHistory.data === undefined ? (
         <ViewScreenFrame
           footer={
-            <ButtonPrimary
-              label={t("history.try_again")}
-              onPress={() => {
-                void resetTransferHistory(queryClient);
-              }}
-            />
+            phoneReportsConnection ? (
+              <ButtonPrimary
+                label={t("history.retry")}
+                onPress={() => {
+                  void resetTransferHistory(queryClient);
+                }}
+              />
+            ) : undefined
           }
         >
           <BannerNotice
             tone="negative"
+            announce={!failureIsSessionEnd}
             message={t("history.first_page_failed")}
           />
         </ViewScreenFrame>
@@ -96,8 +94,9 @@ export default function TransferHistoryScreen() {
           {(refreshFailed || transferHistory.isPaused) && (
             <View style={styles.outOfDate}>
               <BannerOutOfDate
+                announce={!failureIsSessionEnd}
                 message={t("history.out_of_date")}
-                tryAgainLabel={t("history.try_again")}
+                tryAgainLabel={t("history.retry")}
                 onTryAgain={() => {
                   void resetTransferHistory(queryClient);
                 }}

@@ -1,24 +1,19 @@
+import "@/test/demo-build";
+
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { useState } from "react";
 import { Pressable, Text } from "react-native";
 
-import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import { requestJson } from "@/shared/http/transport/transport";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import { lookUpTestRecipient } from "@/test/bank-client";
-import { biometricPromptsShown } from "@/test/biometrics-double";
+import { biometricPromptsShown } from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { mswServer, sentRequests } from "@/test/msw-server";
+import { mswServer } from "@/test/msw-server";
+import { pickDemoScenario } from "@/test/pick-demo-scenario";
 import { renderRoute } from "@/test/render-route";
-
-// The demo build's root: Jest runs as production, whose launch loads no demo layer.
-jest.mock("@/root/app-launch/app-launch", () => ({
-  __esModule: true,
-  demoLayer: jest.requireActual<{ default: DemoLayer }>(
-    "@/mocks/demo-layer/demo-layer",
-  ).default,
-}));
+import { sentNameChecks } from "@/test/sent-request-filters";
 
 function ScreenWithASheet() {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -53,14 +48,6 @@ async function renderDemoRoot() {
     overrides: { index: ScreenWithASheet },
   });
 }
-
-async function pickDemoScenario(title: string) {
-  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
-  await fireEvent.press(screen.getByRole("radio", { name: title }));
-}
-
-const sentNameChecks = () =>
-  sentRequests.filter(({ url }) => url.endsWith("/recipients/lookup"));
 
 async function readTheAccountAsAScreenWould() {
   // The bank answers after a delay, which the route's fake timers would hold forever.

@@ -1,6 +1,7 @@
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { AppState, StyleSheet } from "react-native";
 
 import {
   askForNextTransferHistoryPage,
@@ -9,14 +10,13 @@ import {
   type useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
+import { spacing } from "@/shared/theme/theme";
 
 import HeaderTransferDay from "./components/HeaderTransferDay/HeaderTransferDay";
 import ItemTransfer from "./components/ItemTransfer/ItemTransfer";
 import ViewTransferHistoryFooter from "./components/ViewTransferHistoryFooter/ViewTransferHistoryFooter";
 import { useTransferHistoryRenderMeasurement } from "./hooks/use-transfer-history-render-measurement/use-transfer-history-render-measurement";
 import { reuseTransferDayHeaderRow } from "./SectionTransferAccordion.helper";
-import { AppState, StyleSheet } from "react-native";
-import { spacing } from "@/shared/theme/theme";
 
 interface Props {
   transferHistory: ReturnType<typeof useListTransfers>;
@@ -95,7 +95,9 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
         <ViewTransferHistoryFooter
           hasNextPage={transferHistory.hasNextPage}
           isFetchingNextPage={transferHistory.isFetchingNextPage}
-          isFetchNextPageError={transferHistory.isFetchNextPageError}
+          fetchNextPageFailure={
+            transferHistory.isFetchNextPageError ? transferHistory.error : null
+          }
           onRetry={() => {
             void transferHistory.fetchNextPage();
           }}

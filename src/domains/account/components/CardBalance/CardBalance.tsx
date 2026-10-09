@@ -4,18 +4,22 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
-  getTransferLimitsMaintenance,
   useGetTransferLimits,
+  useTransferLimitsMaintenance,
 } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import {
   isSessionEndFailure,
-  TransportError,
-  TransportErrorKind,
+  isUnansweredReadFailure,
 } from "@/shared/http/transport-error/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
 import { useIsOffline } from "@/shared/platform/offline/offline";
-import { colors, spacing, typography } from "@/shared/theme/theme";
+import {
+  colors,
+  minTouchTarget,
+  spacing,
+  typography,
+} from "@/shared/theme/theme";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
@@ -43,7 +47,7 @@ export default function CardBalance({
   const limits = useGetTransferLimits({ refetchInterval });
   // Maintenance pauses transfers, not the balance: the balance still shows, and Transfer says why it waits.
   const limitsPausedForMaintenance =
-    getTransferLimitsMaintenance(limits.error) !== undefined;
+    useTransferLimitsMaintenance(limits) !== undefined;
   const [failureBeforeReRead, setFailureBeforeReRead] = useState<Error | null>(
     null,
   );
@@ -58,11 +62,7 @@ export default function CardBalance({
   const shownFailure =
     failure === null
       ? undefined
-      : failure instanceof TransportError &&
-          (failure.kind === TransportErrorKind.Network ||
-            failure.kind === TransportErrorKind.Timeout ||
-            (failure.kind === TransportErrorKind.Http &&
-              (failure.status ?? 0) >= 500))
+      : isUnansweredReadFailure(failure)
         ? "unavailable"
         : "unexpected";
   // After sign-in this stays shown until the card's reads answer again.
@@ -90,7 +90,7 @@ export default function CardBalance({
 
   if (shownFailure !== undefined) {
     return (
-      <Card>
+      <Card styles={{ main: [styles.main, styles.floor] }}>
         <BannerAction
           tone="negative"
           announce={!failureIsSessionEnd}
@@ -108,17 +108,35 @@ export default function CardBalance({
       </Card>
     );
   }
-  if (account.data === undefined || limits.isPending) return <Loader />;
+  if (
+    account.data === undefined ||
+    (limits.isPending && !limitsPausedForMaintenance)
+  ) {
+    return (
+      <Card styles={{ main: [styles.main, styles.floor] }}>
+        <Loader />
+      </Card>
+    );
+  }
 
   return (
-    <Card styles={{ main: styles.main }}>
+    <Card
+      // Below a balance shown alone, during maintenance, the floor is a blank band.
+      styles={{ main: [styles.main, limits.isSuccess && styles.floor] }}
+    >
       <View
         accessible
         // The group, not its texts: a screen reader reads the group as one element, in the group's language.
         accessibilityLanguage={i18n.language}
       >
         <TextBody tone="secondary">{t("card_balance.label")}</TextBody>
-        <Text style={styles.balance}>{formatMoney(account.data.balance)}</Text>
+        <Text
+          // Grown further, the balance outgrows a small phone's line and breaks inside the number.
+          maxFontSizeMultiplier={2}
+          style={styles.balance}
+        >
+          {formatMoney(account.data.balance)}
+        </Text>
       </View>
       {limits.isSuccess && (
         <TextBody>
@@ -132,8 +150,16 @@ export default function CardBalance({
 }
 
 const styles = StyleSheet.create({
-  main: {
-    padding: spacing.lg,
+  main: { padding: spacing.lg },
+  floor: {
+    // The failure state's height at default text size, so a retry moves nothing below: card
+    // padding, the notice's padding and one line, the card's gap, the button.
+    minHeight:
+      2 * spacing.lg +
+      2 * spacing.md +
+      typography.body.lineHeight +
+      spacing.sm +
+      minTouchTarget,
   },
   balance: { ...typography.heading, color: colors.textPrimary },
 });

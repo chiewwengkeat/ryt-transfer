@@ -193,7 +193,9 @@ it("lists the recent recipients on Try again after they could not load", async (
   expect(recentsUnexpected).not.toBeOnTheScreen();
 });
 
-it("reports only the session's end for recents that failed into it, whose message goes once signing in again reads them", async () => {
+it("reports only the session's end for recents that failed into it, never saying they failed, whose message goes once signing in again reads them", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
   await renderRoute("/transfer");
   await screen.findAllByRole("button", { name: /••••/ });
   const reportsBeforeTheSessionEnded = reportedScenarios().length;
@@ -206,30 +208,11 @@ it("reports only the session's end for recents that failed into it, whose messag
   });
   mswServer.resetHandlers();
   await fireEvent.press(signInAgain);
-  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  await act(() => jest.advanceTimersByTimeAsync(2_000));
 
   expect(reportedScenarios().slice(reportsBeforeTheSessionEnded)).toEqual([
     "transfer.session_ended",
   ]);
-  expect(screen.queryByText("Something unexpected went wrong.")).toBeNull();
-});
-
-it("never says the recent recipients failed when only the session's end failed them, once they sign in again", async () => {
-  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
-  announce.mockClear();
-  await renderRoute("/transfer");
-  await screen.findAllByRole("button", { name: /••••/ });
-  mswServer.use(http.all("*", () => new HttpResponse(null, { status: 401 })));
-
-  moveAppTo("background");
-  moveAppTo("active");
-  const signInAgain = await screen.findByRole("button", {
-    name: "Sign in again",
-  });
-  mswServer.resetHandlers();
-  await fireEvent.press(signInAgain);
-  await act(() => jest.advanceTimersByTimeAsync(2_000));
-
   expect(screen.queryByText("Something unexpected went wrong.")).toBeNull();
   expect(announce).not.toHaveBeenCalledWith("Something unexpected went wrong.");
 });

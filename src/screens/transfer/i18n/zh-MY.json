@@ -8,7 +8,9 @@
     },
     "balance_unavailable": {
       "title": "无法加载余额或限额",
-      "disabled_reason": "余额和今日限额加载完成后，您即可转账。"
+      "disabled_reason": "余额和今日限额加载完成后，您即可转账。",
+      "body": "无法加载您的余额。",
+      "retry": "重试"
     },
     "under_maintenance": {
       "title": "转账系统维护中",
@@ -71,7 +73,9 @@
       "over_per_transfer_max": "该金额超过 {{amount}}，即单笔转账的最高金额。"
     },
     "amount_unexpected": {
-      "title": "输入金额时出现意外问题"
+      "title": "输入金额时出现意外问题",
+      "body": "出现了意外问题。",
+      "retry": "重试"
     },
     "recipient_found": {
       "title": "已找到收款人"
@@ -293,7 +297,8 @@
       "received_at": "收款时间",
       "completed_at": "完成时间",
       "refunded_at": "退款时间"
-    }
+    },
+    "back_to_home": "返回首页"
   },
   "recipient": {
     "title": "转账",
@@ -325,8 +330,7 @@
     "bank_search_label": "搜索银行",
     "bank_no_match": "没有与您的搜索匹配的银行。",
     "close_sheet": "关闭",
-    "continue": "继续",
-    "home": "返回首页"
+    "continue": "继续"
   },
   "amount": {
     "title": "金额",
@@ -339,22 +343,11 @@
   "review": {
     "title": "核对",
     "recipient_name": "收款人",
-    "amount": "金额",
-    "note": "备注",
     "transfer": "转账",
     "prompt_title": "批准转账",
     "prompt_title_ios": "批准向 {{name}} 转账 {{amount}}",
     "prompt_subtitle": "{{amount}} 转给 {{name}}",
     "prompt_cancel": "取消"
-  },
-  "section_review_recipient": {
-    "bank": "银行",
-    "mobile": "手机号码",
-    "nric": "身份证号码",
-    "account_number": "账号",
-    "passport": "护照号码",
-    "brn": "商业注册号码",
-    "army_police": "军警证件号码"
   },
   "approval": {},
   "result": {
@@ -383,14 +376,13 @@
   },
   "history": {
     "title": "转账记录",
-    "home": "返回首页",
     "empty": {
       "title": "暂无转账",
       "body": "您发送或收到的转账将显示在此处。"
     },
     "first_page_failed": "无法加载您的转账。",
     "out_of_date": "无法刷新——此列表可能不是最新的",
-    "try_again": "重试",
+    "retry": "重试",
     "day": {
       "title": "{{day}}（{{count}}）",
       "label_one": "{{day}}，{{count}} 笔转账，{{net}}",
@@ -413,7 +405,7 @@
     "not_found": "找不到此转账。",
     "back": "返回",
     "failed": "无法加载此转账。",
-    "try_again": "重试",
+    "retry": "重试",
     "out_of_date": "无法刷新——这些详情可能不是最新的"
   }
 }

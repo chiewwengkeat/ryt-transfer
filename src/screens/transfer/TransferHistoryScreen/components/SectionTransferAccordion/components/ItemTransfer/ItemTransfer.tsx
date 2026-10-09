@@ -64,17 +64,19 @@ export default function ItemTransfer({ transfer }: Props) {
             </TextBody>
           </View>
           {parsedAmount && (
-            <TextBody strong>
-              {moneyMovedSign === 0
-                ? traceFormatCalls(formatMoney)(parsedAmount)
-                : traceFormatCalls(formatMoney)(
-                    {
-                      ...parsedAmount,
-                      minor: asSen(moneyMovedSign * parsedAmount.minor),
-                    },
-                    { signDisplay: "exceptZero" },
-                  )}
-            </TextBody>
+            <View style={styles.amount}>
+              <TextBody strong>
+                {moneyMovedSign === 0
+                  ? traceFormatCalls(formatMoney)(parsedAmount)
+                  : traceFormatCalls(formatMoney)(
+                      {
+                        ...parsedAmount,
+                        minor: asSen(moneyMovedSign * parsedAmount.minor),
+                      },
+                      { signDisplay: "exceptZero" },
+                    )}
+              </TextBody>
+            </View>
           )}
         </View>
       </View>
@@ -100,6 +102,8 @@ const styles = StyleSheet.create({
     rowGap: spacing.xs,
   },
   details: { flexGrow: 1, flexShrink: 1 },
+  // Shrinkable so the details' seven ems count: Yoga ignores a lone flexible child's basis.
+  amount: { flexShrink: 1 },
 });
 
 interface IconTransferDirectionProps {

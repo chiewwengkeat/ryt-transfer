@@ -6,6 +6,7 @@ import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transf
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { type BankErrorBody, sendToBank } from "@/test/bank-client";
 import { pressHardwareBack } from "@/test/hardware-back";
+import { moveAppTo } from "@/test/harness/app-state";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
@@ -18,6 +19,31 @@ const LIMITS_OUTSIDE_MAINTENANCE = {
   },
   perTransferMax: { minor: 5_000_000, currency: "MYR" },
 } satisfies GetTransferLimitsResponse;
+
+async function returnToFrontHoldingTheLimitsRead() {
+  let limitsAskedAgain = false;
+  let answerLimitsAgain = () => {};
+  mswServer.use(
+    http.get(
+      "*/transfer-limits",
+      async () => {
+        limitsAskedAgain = true;
+        // Returning nothing passes the request on to the bank, which answers maintenance again.
+        await new Promise<void>((resolve) => {
+          answerLimitsAgain = resolve;
+        });
+      },
+      { once: true },
+    ),
+  );
+  moveAppTo("background");
+  moveAppTo("active");
+  await waitFor(() => {
+    expect(limitsAskedAgain).toBe(true);
+  });
+  await act(() => jest.advanceTimersByTimeAsync(100));
+  return () => answerLimitsAgain();
+}
 
 it(
   "stops saying how much more can be sent today once maintenance answers a later read, while the amount check keeps the limit already loaded",
@@ -63,6 +89,48 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(screen.queryByText(/more today/)).toBeNull();
+  }),
+);
+
+it(
+  "keeps the balance, not a spinner, while maintenance's limits are asked again as the app returns to the front",
+  scenarioTest("transfer.under_maintenance", async () => {
+    await renderRoute("/");
+    await screen.findByText(/^Transfers are unavailable right now, until/);
+
+    const answerLimitsAgain = await returnToFrontHoldingTheLimitsRead();
+
+    expect(screen.queryByLabelText("Loading")).toBeNull();
+    expect(screen.getByText("RM 12,845.50")).toBeOnTheScreen();
+    answerLimitsAgain();
+    await act(() => jest.advanceTimersByTimeAsync(5_000));
+    expect(
+      screen.getByText(/^Transfers are unavailable right now, until/),
+    ).toBeOnTheScreen();
+    expect(screen.getByText("RM 12,845.50")).toBeOnTheScreen();
+    expect(screen.queryByText(/more today/)).toBeNull();
+  }),
+);
+
+it(
+  "keeps saying when maintenance ends under a Transfer that stays off, while its limits are asked again as the app returns to the front",
+  scenarioTest("transfer.under_maintenance", async () => {
+    await renderRoute("/");
+    await screen.findByText(/^Transfers are unavailable right now, until/);
+
+    const answerLimitsAgain = await returnToFrontHoldingTheLimitsRead();
+
+    expect(
+      screen.getByText(/^Transfers are unavailable right now, until/),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByRole("button", { name: "Transfer", disabled: true }),
+    ).toBeOnTheScreen();
+    answerLimitsAgain();
+    await act(() => jest.advanceTimersByTimeAsync(5_000));
+    expect(
+      screen.getByText(/^Transfers are unavailable right now, until/),
+    ).toBeOnTheScreen();
   }),
 );
 

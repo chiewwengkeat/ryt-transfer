@@ -15,6 +15,7 @@ import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/
 import { requestJson } from "@/shared/http/transport/transport";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
+import { endSessionWithAnyRequest } from "@/test/end-the-session";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
@@ -47,15 +48,6 @@ function HomeBalanceOrItsFailure() {
 
 function answerBalance(amount: string) {
   mswServer.use(http.get("*/balance", () => HttpResponse.json({ amount })));
-}
-
-async function endSessionWithAnyRequest() {
-  mswServer.use(
-    http.get("*/any-request", () => new HttpResponse(null, { status: 401 })),
-  );
-  await act(async () => {
-    await requestJson("/any-request").catch(() => undefined);
-  });
 }
 
 it("covers the app with the session-ended view when a request answers 401", async () => {

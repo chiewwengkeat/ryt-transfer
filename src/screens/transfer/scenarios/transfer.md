@@ -530,7 +530,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **Money:** not confirmed yet
 - **Shown as:** the result page
 - **Tell them:** the result can't be shown right now, and to check their transfer history before sending again, with a reference to quote to support — not confirmed yet
-- **They can:** open Transfer history, or try loading the result again
+- **They can:** open Transfer history, or, while the phone reports a connection, try loading the result again
 - **Never:** offer to send it again
 - **Why:** once the bank has answered, money may have moved, so an unexplained failure here sends the person to History, never back to sending
 

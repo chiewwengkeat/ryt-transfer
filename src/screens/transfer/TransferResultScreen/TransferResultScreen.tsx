@@ -24,6 +24,7 @@ import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import { reportError, trackEvent } from "@/shared/observability/observability";
+import { usePhoneReportsConnection } from "@/shared/platform/offline/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
@@ -56,6 +57,7 @@ export default function TransferResultScreen() {
     [navigation],
   );
   const screenOnTop = useIsScreenOnTop();
+  const phoneReportsConnection = usePhoneReportsConnection();
   const outcomeShown = pageOpened && screenOnTop;
   const { transfer, readFailure, bankUnreachable } = useTransferStatusCheck(
     transferId,
@@ -178,14 +180,15 @@ export default function TransferResultScreen() {
               }}
             />
           )}
-          {scenario === TransferScenarioId.OutcomeUnexpected && (
-            <ButtonSecondary
-              label={t("common.outcome_unexpected.load_again")}
-              onPress={() => {
-                void transfer.refetch();
-              }}
-            />
-          )}
+          {scenario === TransferScenarioId.OutcomeUnexpected &&
+            phoneReportsConnection && (
+              <ButtonSecondary
+                label={t("common.outcome_unexpected.load_again")}
+                onPress={() => {
+                  void transfer.refetch();
+                }}
+              />
+            )}
         </ViewOutcomeEntrance>
       </ViewScreenFrame>
     </>

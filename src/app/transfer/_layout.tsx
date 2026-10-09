@@ -8,8 +8,7 @@ import {
   TransferFlowStep,
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
-import { screenTransitionOptions } from "@/shared/lib/motion/motion";
-import { demoLayer } from "@/root/app-launch/app-launch";
+import { stackScreenOptions } from "@/root/app-launch/app-launch";
 
 export default function TransferLayout() {
   // Open through Done: the result page replaces this stack a commit later, and closing first shows the recipient step.
@@ -25,19 +24,7 @@ export default function TransferLayout() {
   );
 
   return (
-    <Stack
-      // Android's header pads for the status bar itself, a place the Demo header has already taken.
-      screenOptions={
-        demoLayer === null
-          ? screenTransitionOptions
-          : () => ({
-              ...screenTransitionOptions(),
-              unstable_nativeProps: {
-                headerConfig: { disableTopInsetApplication: true },
-              },
-            })
-      }
-    >
+    <Stack screenOptions={stackScreenOptions}>
       <Stack.Protected guard={draftStepsOpen}>
         <Stack.Screen name="amount" />
         <Stack.Screen name="review" />

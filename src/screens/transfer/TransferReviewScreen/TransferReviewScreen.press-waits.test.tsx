@@ -8,39 +8,20 @@ import {
   biometricPromptsShown,
   biometricsLibraryDouble,
   holdDeviceIntegrityChecks,
-} from "@/test/biometrics-double";
+} from "@/test/harness/biometrics-double";
+import { approveFromReviewOpenedAgain } from "@/test/approve-from-review-opened-again";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
-import { mswServer, sentRequests } from "@/test/msw-server";
+import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
+import { transferWritesSent } from "@/test/sent-request-filters";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 async function openReviewOfRm100() {
   const view = await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview();
   return view;
-}
-
-function transferWritesSent() {
-  return sentRequests
-    .filter(({ method }) => method === "POST")
-    .map(({ url }) => new URL(url).pathname)
-    .filter((path) => path.startsWith("/transfers"));
-}
-
-async function approveFromReviewOpenedAgain() {
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  await screen.findByText("Transfer sent");
 }
 
 it("creates and approves nothing when review is left while Transfer reads the sensor under the bank's PIN lock, and approves from review opened again", async () => {

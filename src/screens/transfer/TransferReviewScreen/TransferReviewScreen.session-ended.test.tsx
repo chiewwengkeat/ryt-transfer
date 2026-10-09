@@ -2,39 +2,31 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
-import { accountKeys } from "@/domains/account/api/account.keys";
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { lookUpTestRecipient } from "@/test/bank-client";
 import {
   biometricPromptsShown,
   holdNextBiometricPrompt,
-} from "@/test/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+} from "@/test/harness/biometrics-double";
+import {
+  pairPhoneAsTheDemoLaunchDoes,
+  pairPhoneBeforeTheBankForgetsItsKeys,
+} from "@/test/demo-pairing";
+import { endTheSessionThroughAnotherRead } from "@/test/end-the-session";
+import { enterPinAndApprove } from "@/test/enter-pin-and-approve";
 import {
   observedRecords,
   reportedScenarios,
 } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
-import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
+import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 async function openReviewOfRm100() {
   await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await walkToTransferReview();
   await screen.findByRole("button", { name: "Transfer" });
-}
-
-async function enterPin(pin: string) {
-  for (const digit of pin)
-    await fireEvent.press(await screen.findByRole("button", { name: digit }));
-  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
 }
 
 // A resolver that answers nothing hands the request on to the bank, once released.
@@ -63,37 +55,9 @@ function holdTheNextPost(path: string) {
   };
 }
 
-async function endTheSessionThroughAnotherRead() {
-  mswServer.use(
-    http.get(
-      "*/accounts/primary",
-      () =>
-        HttpResponse.json(
-          { error: { code: "UNAUTHORIZED", message: "Test." } },
-          { status: 401 },
-        ),
-      { once: true },
-    ),
-  );
-  askOpenAppToReadAgain(accountKeys.primaryAccount);
-  return screen.findByRole("button", { name: "Sign in again" });
-}
-
 function scenariosReportedFromNowOn() {
   const reportCountNow = reportedScenarios().length;
   return () => reportedScenarios().slice(reportCountNow);
-}
-
-// The scenario forgets only keys registered in an earlier millisecond than it began, and a 1 ms
-// timer can fire within the same one, so this waits for the clock itself to move on.
-async function pairPhoneBeforeTheBankForgetsItsKeys() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const pairedAtMs = Date.now();
-  while (Date.now() <= pairedAtMs) {
-    await new Promise((resolve) => {
-      setTimeout(resolve, 1);
-    });
-  }
 }
 
 it(
@@ -334,7 +298,7 @@ it("reports a PIN the bank locks as it answers under the session-ended view only
   await openReviewOfRm100();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   const approval = holdTheNextPost("*/transfers/:transferId/approve");
-  await enterPin("111111");
+  await enterPinAndApprove("111111");
   await approval.waitUntilSent();
   const signInButton = await endTheSessionThroughAnotherRead();
   const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
@@ -422,7 +386,7 @@ it("reports a wrong PIN the bank answers under the session-ended view only once 
   await openReviewOfRm100();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   const approval = holdTheNextPost("*/transfers/:transferId/approve");
-  await enterPin("111111");
+  await enterPinAndApprove("111111");
   await approval.waitUntilSent();
   const signInButton = await endTheSessionThroughAnotherRead();
   const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
@@ -524,7 +488,7 @@ it("reports a wrong PIN the bank answers while setting approval up again under t
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await screen.findByText("Approval needs setting up again on this phone.");
     const registration = holdTheNextPost("*/approval-keys");
-    await enterPin("111111");
+    await enterPinAndApprove("111111");
     await registration.waitUntilSent();
     const signInButton = await endTheSessionThroughAnotherRead();
     const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
