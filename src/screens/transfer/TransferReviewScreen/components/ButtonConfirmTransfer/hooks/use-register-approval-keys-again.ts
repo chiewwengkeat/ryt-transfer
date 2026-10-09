@@ -7,10 +7,7 @@ import {
   isApprovalPinLocked,
   rememberApprovalPinLocked,
 } from "@/domains/approval/hooks/approval-pin-lock";
-import {
-  askForApprovalPin,
-  showApprovalPinLocked,
-} from "@/domains/approval/hooks/approval-pin-sheet";
+import { askForApprovalPin } from "@/domains/approval/hooks/approval-pin-sheet";
 import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
 import { reportError } from "@/shared/observability/observability";
@@ -50,10 +47,8 @@ export function useRegisterApprovalKeysAgain() {
         refusal?.code === RegisterApprovalKeysErrorCode.PinLocked ||
         (refusal?.code === RegisterApprovalKeysErrorCode.PinRequired &&
           (await isApprovalPinLocked()))
-      ) {
-        await showApprovalPinLocked(t("common.pin_locked.body"));
+      )
         return { notice: TransferFlowScenario.PinLocked } as const;
-      }
       if (failedUnexpectedly)
         return { notice: TransferFlowScenario.ApprovalKeyUnknown } as const;
       if (refusal?.code === RegisterApprovalKeysErrorCode.PinIncorrect)

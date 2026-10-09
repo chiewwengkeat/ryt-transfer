@@ -3,7 +3,10 @@ import { randomUUID } from "expo-crypto";
 import { useTranslation } from "react-i18next";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
-import { closeApprovalPinSheet } from "@/domains/approval/hooks/approval-pin-sheet";
+import {
+  closeApprovalPinSheet,
+  showApprovalPinLocked,
+} from "@/domains/approval/hooks/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import {
   buildSignedApprovalText,
@@ -43,16 +46,19 @@ export function useSendTransferApproval() {
     // ⛔ Any wait here can end with the flow off this transfer, and whatever it is on now this call leaves alone.
     const noLongerOnThisTransfer = () =>
       isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId);
-    const leaveApprovalNotSent = (notice: TransferFlowNotice) => {
+    const leaveApprovalNotSent = async (notice: TransferFlowNotice) => {
       if (noLongerOnThisTransfer()) return;
       closeApprovalPinSheet();
       dispatchTransferFlow({
         type: TransferFlowActionType.ApprovalNotSent,
         notice,
       });
+      // ⛔ Shown after the dispatch, which reports the scenario: a locked PIN is reported as its sheet opens.
+      if (notice === TransferFlowScenario.PinLocked)
+        await showApprovalPinLocked(t("common.pin_locked.body"));
     };
     if (customerId === undefined) {
-      leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
+      await leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
       return;
     }
     // A refused approval's record would reopen as an unconfirmed transfer at the next launch.

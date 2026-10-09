@@ -125,11 +125,12 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
         sensorRefusalOutcome === BiometricSignOutcome.NotSetUp ||
         sensorRefusalOutcome === BiometricSignOutcome.NoSensor)
     ) {
-      await showApprovalPinLocked(t("common.pin_locked.body"));
+      // ⛔ Dispatched first, since it reports the scenario: a locked PIN is reported as its sheet opens.
       dispatchTransferFlow({
         type: TransferFlowActionType.CreateNotSent,
         notice: TransferFlowScenario.PinLocked,
       });
+      await showApprovalPinLocked(t("common.pin_locked.body"));
       return;
     }
     const reviewing = transferFlowStore.getState();

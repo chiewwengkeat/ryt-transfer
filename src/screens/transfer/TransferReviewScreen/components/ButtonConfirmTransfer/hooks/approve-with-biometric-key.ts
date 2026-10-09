@@ -41,7 +41,7 @@ export async function approveWithBiometricKey(
         !keysSetUpAgain
       ) {
         const keys = await approval.setUpApprovalAgain();
-        if (keys.notice !== undefined) leaveApprovalNotSent(keys.notice);
+        if (keys.notice !== undefined) await leaveApprovalNotSent(keys.notice);
         else if (keys.pin === undefined)
           await approveWithBiometricKey(approval, amountAndName, true);
         else
@@ -60,10 +60,10 @@ export async function approveWithBiometricKey(
       return;
     }
     case BiometricSignOutcome.Cancelled:
-      leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled);
+      await leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled);
       return;
     case BiometricSignOutcome.NotRecognised:
-      leaveApprovalNotSent(TransferFlowScenario.BiometricsNotRecognised);
+      await leaveApprovalNotSent(TransferFlowScenario.BiometricsNotRecognised);
       return;
     case BiometricSignOutcome.LockedOut:
       await approveWithPin(approval, TransferFlowScenario.BiometricsLockedOut, {
@@ -105,7 +105,7 @@ export async function approveWithBiometricKey(
       return;
     }
     case BiometricSignOutcome.Failed:
-      leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
+      await leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
       return;
   }
 }

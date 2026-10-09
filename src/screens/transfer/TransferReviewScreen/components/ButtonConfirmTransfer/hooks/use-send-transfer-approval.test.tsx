@@ -159,6 +159,7 @@ it(
     expect(await screen.findByText(lockedMessage)).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "1" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+    expect(reportedScenarios()).toContain("transfer.pin_locked");
     await fireEvent.press(screen.getByRole("button", { name: "Close" }));
     expect(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -385,13 +386,14 @@ it.each([
     },
   ],
 ])(
-  "shows only that the PIN is locked and where to reset it, nothing about entering it, when %s",
+  "shows only that the PIN is locked and where to reset it, nothing about entering it, and reports it as it opens, when %s",
   async (_, meetTheLockedPin) => {
     await meetTheLockedPin();
 
     expect(
       await screen.findByRole("header", { name: "PIN locked" }),
     ).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.pin_locked");
     expect(
       screen.getByText(
         "Your PIN is locked. Reset it in the app's security settings.",
@@ -825,7 +827,6 @@ it(
     expect(
       await screen.findByRole("header", { name: "PIN locked" }),
     ).toBeOnTheScreen();
-    await fireEvent.press(screen.getByRole("button", { name: "Close" }));
     expect(reportedScenarios()).toContain("transfer.pin_locked");
     expect(reportedScenarios()).not.toContain("transfer.biometrics_locked_out");
   }),
