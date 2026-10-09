@@ -72,11 +72,15 @@ export default function HeaderTransferDay({
             { flexBasis: 7 * typography.body.fontSize * fontScale },
           ]}
         >
-          <TextBody strong>
+          <TextBody strong tone="secondary">
             {t("history.day.title", { day: dayLabel, count: summary.count })}
           </TextBody>
         </View>
-        {netText !== null && <TextBody strong>{netText}</TextBody>}
+        {netText !== null && (
+          <TextBody strong tone={"secondary"}>
+            {netText}
+          </TextBody>
+        )}
       </View>
     </Pressable>
   );
@@ -88,7 +92,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
     backgroundColor: colors.background,

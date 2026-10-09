@@ -14,7 +14,7 @@ import {
 } from "@/shared/http/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
 import { useIsOffline } from "@/shared/platform/offline";
-import { colors, typography } from "@/shared/theme/theme";
+import { colors, spacing, typography } from "@/shared/theme/theme";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
@@ -93,7 +93,7 @@ export default function CardBalance({
   if (account.data === undefined || limits.isPending) return <Loader />;
 
   return (
-    <Card>
+    <Card styles={{ main: styles.main }}>
       <View
         accessible
         // The group, not its texts: a screen reader reads the group as one element, in the group's language.
@@ -114,5 +114,8 @@ export default function CardBalance({
 }
 
 const styles = StyleSheet.create({
+  main: {
+    padding: spacing.lg,
+  },
   balance: { ...typography.heading, color: colors.textPrimary },
 });

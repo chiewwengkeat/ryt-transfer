@@ -15,6 +15,8 @@ import ViewTransferHistoryFooter from "./components/ViewTransferHistoryFooter/Vi
 import { useMalaysianToday } from "./hooks/use-malaysian-today";
 import { useTransferHistoryRenderMeasurement } from "./hooks/use-transfer-history-render-measurement";
 import { reuseTransferDayHeaderRow } from "./SectionTransferAccordion.helper";
+import { StyleSheet } from "react-native";
+import { spacing } from "@/shared/theme/theme";
 
 interface Props {
   transferHistory: ReturnType<typeof useListTransfers>;
@@ -117,6 +119,13 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
       }}
       // A refresh's new transfers land above the first row; holding that row in place would hide them.
       maintainVisibleContentPosition={{ disabled: true }}
+      contentContainerStyle={styles.main}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  main: {
+    marginHorizontal: spacing.md,
+  },
+});

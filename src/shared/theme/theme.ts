@@ -14,7 +14,19 @@ export const colors = {
 
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24 };
 
-export const radii = { sm: 8, md: 12 };
+export const radii = { sm: 8, md: 12, lg: 16 };
+
+export const shadows = {
+  sm: [
+    {
+      offsetX: 0,
+      offsetY: 2,
+      blurRadius: 8,
+      spreadDistance: 0,
+      color: "rgba(33, 33, 33, 0.04)",
+    },
+  ],
+} as const;
 
 export const typography = {
   heading: { fontSize: 22, lineHeight: 28, fontWeight: "700" },
