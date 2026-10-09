@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
@@ -17,6 +17,7 @@ import {
 } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { finishOpeningScreen } from "@/test/finish-opening-screen";
+import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
 import {
   askOpenAppToReadAgain,
@@ -45,7 +46,7 @@ function holdTheNextStatusRead() {
 
 async function sendRm100FromHome() {
   await pairPhoneAsTheDemoLaunchDoes();
-  await renderRoute("/");
+  const view = await renderRoute("/");
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );
@@ -62,6 +63,23 @@ async function sendRm100FromHome() {
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
+  return view;
+}
+
+async function endTheSessionOverTheResultPage() {
+  mswServer.use(
+    http.get(
+      "*/accounts/primary",
+      () =>
+        HttpResponse.json(
+          { error: { code: "UNAUTHORIZED", message: "Test." } },
+          { status: 401 },
+        ),
+      { once: true },
+    ),
+  );
+  askOpenAppToReadAgain(accountKeys.primaryAccount);
+  return screen.findByRole("button", { name: "Sign in again" });
 }
 
 it(
@@ -109,21 +127,7 @@ it(
       { name: "Checking your transfer" },
       { timeout: 10_000 },
     );
-    mswServer.use(
-      http.get(
-        "*/accounts/primary",
-        () =>
-          HttpResponse.json(
-            { error: { code: "UNAUTHORIZED", message: "Test." } },
-            { status: 401 },
-          ),
-        { once: true },
-      ),
-    );
-    askOpenAppToReadAgain(accountKeys.primaryAccount);
-    const signInButton = await screen.findByRole("button", {
-      name: "Sign in again",
-    });
+    const signInButton = await endTheSessionOverTheResultPage();
     announce.mockClear();
 
     releaseStatusRead();
@@ -141,6 +145,57 @@ it(
     });
   }),
 );
+
+it(
+  "keeps an outcome that lands under the session-ended view for Home to announce, should the app close before signing in again",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    const releaseStatusRead = holdTheNextStatusRead();
+    const view = await sendRm100FromHome();
+    await finishOpeningScreen(
+      await screen.findByRole(
+        "header",
+        { name: "Checking your transfer" },
+        { timeout: 10_000 },
+      ),
+    );
+    await endTheSessionOverTheResultPage();
+    releaseStatusRead();
+    await screen.findByRole("header", {
+      name: "Transfer sent",
+      includeHiddenElements: true,
+    });
+
+    await relaunchAppAndWaitForItsLaunchChecks(view);
+
+    expect(
+      screen.getByText(
+        /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/,
+      ),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it("reports the outcome shown once, not again when the page is back on top after signing in again", async () => {
+  await sendRm100FromHome();
+  await finishOpeningScreen(
+    await screen.findByRole("header", { name: "Transfer sent" }),
+  );
+  const signInButton = await endTheSessionOverTheResultPage();
+
+  await fireEvent.press(signInButton);
+
+  expect(
+    await screen.findByRole("header", { name: "Transfer sent" }),
+  ).toBeOnTheScreen();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  expect(
+    observedRecords.filter(({ name }) => name === "transfer_outcome"),
+  ).toEqual([
+    expect.objectContaining({
+      properties: { scenario: "transfer.completed" },
+    }),
+  ]);
+});
 
 it(
   "says a checked approval the bank ended over the balance or limit was not sent, offering only Done",

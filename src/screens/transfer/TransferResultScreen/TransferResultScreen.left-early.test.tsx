@@ -1,4 +1,5 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
+import { AccessibilityInfo } from "react-native";
 
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { finishOpeningScreen } from "@/test/finish-opening-screen";
@@ -56,13 +57,19 @@ it("says nothing more on Home once the result page has finished opening and Back
   expect(screen.queryByText(SENT_NOTICE)).toBeNull();
 });
 
-it("says nothing more on Home when Done leaves the result page before it has finished opening", async () => {
+it("says nothing more on Home, shown or spoken, when Done leaves the result page before it has finished opening", async () => {
   const view = await approveRm100Transfer();
   await screen.findByRole("header", { name: "Transfer sent" });
+  const announcements = jest
+    .spyOn(AccessibilityInfo, "announceForAccessibility")
+    .mockClear();
 
   await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 
   await waitOnHomeForItsBalance();
   expect(view.getPathname()).toBe("/");
   expect(screen.queryByText(SENT_NOTICE)).toBeNull();
+  expect(announcements.mock.calls.flat()).not.toContainEqual(
+    expect.stringMatching(SENT_NOTICE),
+  );
 });
