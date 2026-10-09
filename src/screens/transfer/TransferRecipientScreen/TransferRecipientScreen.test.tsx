@@ -112,6 +112,24 @@ it.each([
     })(),
 );
 
+it(
+  "drops what was wrong with a badly formed ID once it is fixed, and moves on",
+  scenarioTest("transfer.badly_formed_input", async () => {
+    const formatMessage = "Enter a Malaysian mobile number, like 012-345 6789.";
+    const view = await renderRoute("/transfer");
+    const mobileField = await screen.findByLabelText("DuitNow mobile number");
+    await fireEvent.changeText(mobileField, "03-2345 6789");
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByHintText(formatMessage)).toBeOnTheScreen();
+
+    await fireEvent.changeText(mobileField, "012-345 6789");
+    expect(screen.queryByHintText(formatMessage)).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+
+    expect(view.getPathname()).toBe("/transfer/amount");
+  }),
+);
+
 it.each([
   ["Mobile", "DuitNow mobile number", "+601123456789"],
   ["NRIC", "NRIC number", "900101145678"],

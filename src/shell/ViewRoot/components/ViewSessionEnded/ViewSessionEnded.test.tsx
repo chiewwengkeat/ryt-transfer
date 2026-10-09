@@ -12,6 +12,7 @@ import {
 } from "@/domains/transfer/hooks/pending-transfers";
 import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
+import { clearTransferScenario } from "@/test/clear-transfer-scenario";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
@@ -61,11 +62,37 @@ it(
       await screen.findByRole("header", { name: "Your session has ended" }),
     ).toBeOnTheScreen();
     expect(
+      screen.getByText("For your security, sign in again to carry on."),
+    ).toBeOnTheScreen();
+    expect(
       screen
         .getAllByRole("button")
         .map((button) => button.props.accessibilityLabel as unknown),
     ).toEqual(["Sign in again"]);
     expect(reportedScenarios()).toContain("transfer.session_ended");
+  }),
+);
+
+it(
+  "covers a transfer under way when the session ends there, and returns to its step once they sign in again",
+  scenarioTest("transfer.session_ended", async () => {
+    const view = await renderRoute("/transfer");
+    expect(
+      await screen.findByRole("header", { name: "Your session has ended" }),
+    ).toBeOnTheScreen();
+
+    clearTransferScenario();
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Sign in again" }),
+    );
+
+    expect(
+      screen.queryByRole("header", { name: "Your session has ended" }),
+    ).toBeNull();
+    expect(
+      await screen.findByLabelText("DuitNow mobile number"),
+    ).toBeOnTheScreen();
+    expect(view.getPathname()).toBe("/transfer");
   }),
 );
 

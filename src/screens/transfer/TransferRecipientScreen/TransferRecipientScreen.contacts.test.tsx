@@ -29,6 +29,12 @@ const GRANTED = {
   canAskAgain: true,
   expires: "never" as const,
 };
+const REFUSED = {
+  status: PermissionStatus.DENIED,
+  granted: false,
+  canAskAgain: false,
+  expires: "never" as const,
+};
 
 async function pressChooseFromContacts() {
   await renderRoute("/transfer");
@@ -40,12 +46,7 @@ async function pressChooseFromContacts() {
 it(
   "says how to allow contacts access when it is refused, and drops that once Settings grants it",
   scenarioTest("transfer.contacts_access_refused", async () => {
-    setContactsPermission({
-      status: PermissionStatus.DENIED,
-      granted: false,
-      canAskAgain: false,
-      expires: "never",
-    });
+    setContactsPermission(REFUSED);
     const openSettings = jest
       .spyOn(Linking, "openSettings")
       .mockResolvedValue(undefined);
@@ -65,6 +66,23 @@ it(
   }),
 );
 
+it(
+  "takes a typed number in place of a contact when contacts access is refused",
+  scenarioTest("transfer.contacts_access_refused", async () => {
+    setContactsPermission(REFUSED);
+    await pressChooseFromContacts();
+    await screen.findByText(REFUSED_MESSAGE);
+
+    await fireEvent.changeText(
+      screen.getByLabelText("DuitNow mobile number"),
+      "012-345 6789",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByLabelText("Amount (RM)")).toBeOnTheScreen();
+  }),
+);
+
 it("opens the picker under limited access, and treats a pick it may not read as refused access", async () => {
   setContactsPermission({ ...GRANTED, accessPrivileges: "limited" });
   setPickedContactUnreadable();
@@ -74,23 +92,31 @@ it("opens the picker under limited access, and treats a pick it may not read as 
 });
 
 it(
-  "says when the picked contact has no Malaysian mobile number, and fills in nothing",
+  "says when the picked contact has no Malaysian mobile number, fills in nothing, and takes the next contact's",
   scenarioTest("transfer.contact_without_mobile", async () => {
+    const noMobileMessage =
+      "That contact has no Malaysian mobile number. Pick another contact, or type a number.";
     setPickedContactPhones([
       { id: "phone-1", label: "work", number: "+60 3-2345 6789" },
       { id: "phone-2", label: "mobile", number: "+65 9123 4567" },
     ]);
     await pressChooseFromContacts();
 
-    expect(
-      await screen.findByText(
-        "That contact has no Malaysian mobile number. Pick another contact, or type a number.",
-      ),
-    ).toBeOnTheScreen();
+    expect(await screen.findByText(noMobileMessage)).toBeOnTheScreen();
     expect(screen.getByLabelText("DuitNow mobile number")).toHaveDisplayValue(
       "",
     );
     expect(reportedScenarios()).toContain("transfer.contact_without_mobile");
+
+    setPickedContactPhones([
+      { id: "phone-1", label: "mobile", number: "012-345 6789" },
+    ]);
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Choose from contacts" }),
+    );
+
+    expect(await screen.findByDisplayValue("+60123456789")).toBeOnTheScreen();
+    expect(screen.queryByText(noMobileMessage)).toBeNull();
   }),
 );
 

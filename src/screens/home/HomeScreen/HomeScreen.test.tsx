@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { t } from "i18next";
 import { http, HttpResponse } from "msw";
+import { BackHandler } from "react-native";
 
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import {
@@ -169,19 +170,21 @@ it.each([
 );
 
 it(
-  "shows a new customer's lower daily limit as it shows any limit",
+  "shows a new customer's balance, and their lower daily limit as it shows any limit",
   scenarioTest("transfer.new_customer_daily_limit", async () => {
     await renderRoute("/");
 
     expect(
       await screen.findByText("You can send RM 1,000.00 more today"),
     ).toBeOnTheScreen();
+    expect(screen.getByText("RM 12,845.50")).toBeOnTheScreen();
   }),
 );
 
 it(
-  "says something unexpected went wrong when the bank answers the balance in a way the app does not know",
+  "says something unexpected went wrong when the bank answers the balance in a way the app does not know, and lets Back leave",
   scenarioTest("transfer.start_unexpected", async () => {
+    const leaveApp = jest.spyOn(BackHandler, "exitApp");
     await renderRoute("/");
 
     expect(
@@ -190,6 +193,9 @@ it(
     expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
     expect(reportedScenarios()).toContain("transfer.start_unexpected");
+    await pressHardwareBack();
+    expect(leaveApp).toHaveBeenCalledTimes(1);
+    leaveApp.mockRestore();
   }),
 );
 
