@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { requestJson } from "@/shared/http/transport";
 import {
+  isUnansweredWriteFailure,
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
@@ -70,21 +71,7 @@ export function useApproveTransfer() {
         try {
           return await sendApproveRequest();
         } catch (failure) {
-          if (
-            !(failure instanceof TransportError) ||
-            !(
-              [
-                TransportErrorKind.Network,
-                TransportErrorKind.Timeout,
-                TransportErrorKind.Unreadable,
-              ].includes(failure.kind) ||
-              // A server error naming no bank code is no answer about the approval, so it is resent like a lost one.
-              (failure.kind === TransportErrorKind.Http &&
-                (failure.status ?? 0) >= 500 &&
-                failure.code === undefined)
-            )
-          )
-            throw failure;
+          if (!isUnansweredWriteFailure(failure)) throw failure;
         }
         await new Promise((resolve) => {
           setTimeout(resolve, resendDelayMs);
