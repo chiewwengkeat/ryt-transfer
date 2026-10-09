@@ -18,7 +18,7 @@ import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
-import { mswServer } from "@/test/msw-server";
+import { mswServer, sentRequests } from "@/test/msw-server";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -225,7 +225,7 @@ it(
 );
 
 it(
-  "says on review that the balance or limit changed when the bank finds them short as the approval arrives, and leads back to the amount",
+  "says on review that the balance or limit changed when the bank finds them short as the approval arrives, and leads back to an amount step that reads both again",
   scenarioTest("transfer.balance_or_limit_short_at_approval", async () => {
     const balanceBeforeMinor = await readBankBalanceMinor();
     const view = await approveRm100Transfer();
@@ -239,6 +239,20 @@ it(
     expect(view.getPathname()).toBe("/transfer/review");
     await pressHardwareBack();
     expect(view.getPathname()).toBe("/transfer/amount");
+    const readsAfterTheRefusal = sentRequests
+      .slice(
+        sentRequests.findLastIndex((request) =>
+          new URL(request.url).pathname.endsWith("/approve"),
+        ),
+      )
+      .filter((request) => request.method === "GET")
+      .map((request) => new URL(request.url).pathname);
+    expect(readsAfterTheRefusal).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/\/accounts\/primary$/),
+        expect.stringMatching(/\/transfer-limits$/),
+      ]),
+    );
     await expectNothingToRecheckAtTheNextLaunch(view);
     jest.useRealTimers();
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);

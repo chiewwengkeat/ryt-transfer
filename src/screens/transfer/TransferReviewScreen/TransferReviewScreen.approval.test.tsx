@@ -1497,12 +1497,44 @@ it("sets approval up again with the PIN when the bank no longer knows the phone'
   })();
 });
 
-it("sets approval up again with the PIN already entered when the bank no longer knows the phone's key on the PIN path", async () => {
+it("sets approval up again with the PIN already entered, the sheet still only sending, when the bank no longer knows the phone's key on the PIN path", async () => {
   await pairPhoneBeforeTheBankForgetsItsKeys();
   await scenarioTest("transfer.approval_key_unknown", async () => {
+    let releaseKeyRegistration: () => void = () => undefined;
+    const keyRegistrationHeld = new Promise<void>((release) => {
+      releaseKeyRegistration = () => {
+        release();
+      };
+    });
+    mswServer.use(
+      http.post(
+        "*/approval-keys",
+        async () => {
+          await keyRegistrationHeld;
+        },
+        { once: true },
+      ),
+    );
     await confirmRm100ApprovedByPin();
+    const requestsBeforeApproving = sentRequests.length;
 
     await approveWithPin(DEMO_PIN);
+    await waitFor(() => {
+      expect(
+        sentRequests
+          .slice(requestsBeforeApproving)
+          .some((request) =>
+            new URL(request.url).pathname.endsWith("/approval-keys"),
+          ),
+      ).toBe(true);
+    });
+    expect(
+      screen.queryByText("Approval needs setting up again on this phone."),
+    ).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Approve", busy: true }),
+    ).toBeOnTheScreen();
+    releaseKeyRegistration();
 
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
     const approvalKeyIds = await Promise.all(
