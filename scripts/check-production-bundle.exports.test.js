@@ -139,7 +139,7 @@ test("runs every export with Metro's cache cleared, JavaScript rather than bytec
   }
 });
 
-test("ships one marker with text for each mock group and msw's core, carried by demo and development, and for the render trace and its measurement, carried by development alone", () => {
+test("ships markers with text for the mock bank, the demo layer, the scenarios, the switcher and msw's core, carried by demo and development, and for the render trace and its measurement, carried by development alone", () => {
   assert.deepEqual(
     BUNDLE_MARKERS.map(
       ({ source, carriedBy }) => `${source}: ${carriedBy.join(" and ")}`,
