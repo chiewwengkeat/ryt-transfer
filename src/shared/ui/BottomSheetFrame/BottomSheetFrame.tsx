@@ -13,6 +13,7 @@ import {
   BackHandler,
   Keyboard,
   KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -75,6 +76,16 @@ export default function BottomSheetFrame({
   const sheetReduceMotion = usePhoneReducesMotion()
     ? ReduceMotion.Always
     : ReduceMotion.Never;
+  const [sheetOpened, setSheetOpened] = useState(false);
+  // Asked at mount, the title's focus is lost under the fading sheet: VoiceOver took Close, TalkBack often nothing.
+  useEffect(() => {
+    const titleFocusTimer = setTimeout(() => {
+      setSheetOpened(true);
+    }, SHEET_OPENING_MS + TITLE_FOCUS_DELAY_MS);
+    return () => {
+      clearTimeout(titleFocusTimer);
+    };
+  }, []);
 
   const closeOnBack = useEffectEvent(() => {
     if (dismissable) onClose();
@@ -104,7 +115,9 @@ export default function BottomSheetFrame({
             setSheetLayerTopInWindow(y);
           });
         }}
-        entering={FadeIn.reduceMotion(sheetReduceMotion)}
+        entering={FadeIn.duration(SHEET_OPENING_MS).reduceMotion(
+          sheetReduceMotion,
+        )}
         exiting={FadeOut.reduceMotion(sheetReduceMotion)}
         // Handled even when it cannot close, as Back is: iOS hands an unhandled escape on up to what holds the sheet.
         onAccessibilityEscape={() => {
@@ -127,12 +140,14 @@ export default function BottomSheetFrame({
           style={[styles.keyboardClear, { paddingTop: top + spacing.lg }]}
         >
           <Animated.View
-            entering={SlideInDown.reduceMotion(sheetReduceMotion)}
+            entering={SlideInDown.duration(SHEET_OPENING_MS).reduceMotion(
+              sheetReduceMotion,
+            )}
             style={[styles.panel, { paddingBottom: bottom + spacing.md }]}
           >
             <View style={styles.header}>
               <View style={styles.title}>
-                <TextHeading autoFocus>{title}</TextHeading>
+                <TextHeading autoFocus={sheetOpened}>{title}</TextHeading>
               </View>
               {dismissable && (
                 <Pressable
@@ -226,3 +241,8 @@ const styles = StyleSheet.create({
   body: { flexShrink: 1 },
   bodyContent: { gap: spacing.sm },
 });
+
+// Reanimated's default, stated so the title's focus can wait the opening out.
+const SHEET_OPENING_MS = 300;
+// VoiceOver places its own focus a moment after a view appears, and a request made before then loses to it.
+const TITLE_FOCUS_DELAY_MS = Platform.select({ ios: 1_000, default: 0 });

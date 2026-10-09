@@ -6,7 +6,13 @@ import {
   screen,
 } from "@testing-library/react-native";
 import { useState } from "react";
-import { BackHandler, DeviceEventEmitter, Text, View } from "react-native";
+import {
+  AccessibilityInfo,
+  BackHandler,
+  DeviceEventEmitter,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
@@ -113,6 +119,10 @@ async function pressHardwareBack() {
   });
 }
 
+afterEach(() => {
+  jest.useRealTimers();
+});
+
 it("opens over the screen and hides the screen from a screen reader", async () => {
   await render(<ScreenWithBankSheet />);
 
@@ -137,6 +147,27 @@ it("leaves a screen reader no unlabelled stop in an open sheet, its title the fi
   expect(secondStop).toHaveAccessibleName("Close");
   expect(laterStops).not.toHaveLength(0);
   for (const stop of laterStops) expect(stop).toHaveAccessibleName();
+});
+
+it("moves a screen reader to its title once it has opened, not as it starts to open", async () => {
+  jest.useFakeTimers();
+  // Jest has no screen reader: the focus request is the nearest thing it can see.
+  const focusRequests = jest.spyOn(AccessibilityInfo, "sendAccessibilityEvent");
+  const titleFocusRequests = () =>
+    focusRequests.mock.calls.filter(
+      ([target, eventType]) =>
+        eventType === "focus" &&
+        (target as { props?: { children?: unknown } }).props?.children ===
+          "Banks",
+    );
+  await render(<ScreenWithBankSheet />);
+
+  await openBankSheet();
+  const focusRequestsAsItOpens = titleFocusRequests().length;
+  await act(() => jest.advanceTimersByTimeAsync(1_300));
+
+  expect(focusRequestsAsItOpens).toBe(0);
+  expect(titleFocusRequests()).toHaveLength(1);
 });
 
 it("gives a screen reader no stop of the body's own, which would read all it holds as one string, while the body fits", async () => {
