@@ -19,24 +19,9 @@ import {
   waitForHomeToOfferTransfer,
 } from "./TransferReviewScreen.helper";
 
-const t = getFixedT(null, ["shared"]);
-
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
 
 it("offers to try again or leave when the bank's answer to the transfer cannot be read", async () => {
   mswServer.use(
@@ -316,3 +301,18 @@ it.each([
     expect(screen.queryByHintText(refusal)).toBeNull();
   },
 );
+
+const t = getFixedT(null, ["shared"]);
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}

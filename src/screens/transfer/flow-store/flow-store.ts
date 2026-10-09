@@ -75,9 +75,6 @@ export function isFlowNoLongerOnTransfer(
   return !("transferId" in flow) || flow.transferId !== transferId;
 }
 
-let scenarioReportsHeld = false;
-let flowReachedWhileReportsHeld: TransferFlowState | undefined;
-
 export function holdTransferScenarioReports() {
   scenarioReportsHeld = true;
 }
@@ -92,6 +89,9 @@ export function releaseTransferScenarioReports(
   if (flowReached !== undefined && flowReached === flowShownNow)
     trackTransferStep(flowReached, findScenarioTheFlowShows(flowReached));
 }
+
+let scenarioReportsHeld = false;
+let flowReachedWhileReportsHeld: TransferFlowState | undefined;
 
 function trackTransferStepOrScenarioChange(
   flow: TransferFlowState,

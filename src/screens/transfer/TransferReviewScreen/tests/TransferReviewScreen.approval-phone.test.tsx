@@ -31,35 +31,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
-const DEMO_PIN = "246810";
-
-async function pairPhoneAndOpenReviewOfRm100() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function confirmRm100Transfer() {
-  const view = await pairPhoneAndOpenReviewOfRm100();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  return view;
-}
-
 it("asks the phone again on coming back to the app, taking the PIN choice away once nothing is enrolled", async () => {
   await pairPhoneAndOpenReviewOfRm100();
   expect(
@@ -258,3 +229,32 @@ it("closes the PIN sheet and offers to try again or leave when the phone cannot 
   expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
   expect(countSent("POST", "/approve")).toBe(0);
 });
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
+
+const DEMO_PIN = "246810";
+
+async function pairPhoneAndOpenReviewOfRm100() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  await screen.findByRole("button", { name: "Transfer" });
+  return view;
+}
+
+async function confirmRm100Transfer() {
+  const view = await pairPhoneAndOpenReviewOfRm100();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  return view;
+}

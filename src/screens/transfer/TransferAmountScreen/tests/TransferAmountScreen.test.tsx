@@ -26,41 +26,6 @@ import {
 import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
 
-async function openAmountStep() {
-  const view = await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  return view;
-}
-
-function answerBalanceAndLimits(
-  balanceMinor: number,
-  remainingTodayMinor: number,
-) {
-  mswServer.use(
-    http.get("*/accounts/primary", () =>
-      HttpResponse.json({
-        customerId: "cus_test",
-        accountId: "acc_test",
-        balance: { minor: balanceMinor, currency: "MYR" },
-      } satisfies GetPrimaryAccountResponse),
-    ),
-    http.get("*/transfer-limits", () =>
-      HttpResponse.json({
-        daily: {
-          limit: { minor: remainingTodayMinor, currency: "MYR" },
-          usedToday: { minor: 0, currency: "MYR" },
-          remaining: { minor: remainingTodayMinor, currency: "MYR" },
-        },
-        perTransferMax: { minor: 5_000_000, currency: "MYR" },
-      } satisfies GetTransferLimitsResponse),
-    ),
-  );
-}
-
 it(
   "shows the balance and today's remaining limit again on the amount step",
   scenarioTest("transfer.balance_and_limit_shown", async () => {
@@ -401,3 +366,38 @@ it("opens the recipient step instead when no recipient is chosen yet", async () 
   ).toBeOnTheScreen();
   expect(view.getPathname()).toBe("/transfer");
 });
+
+async function openAmountStep() {
+  const view = await renderRoute("/transfer");
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  return view;
+}
+
+function answerBalanceAndLimits(
+  balanceMinor: number,
+  remainingTodayMinor: number,
+) {
+  mswServer.use(
+    http.get("*/accounts/primary", () =>
+      HttpResponse.json({
+        customerId: "cus_test",
+        accountId: "acc_test",
+        balance: { minor: balanceMinor, currency: "MYR" },
+      } satisfies GetPrimaryAccountResponse),
+    ),
+    http.get("*/transfer-limits", () =>
+      HttpResponse.json({
+        daily: {
+          limit: { minor: remainingTodayMinor, currency: "MYR" },
+          usedToday: { minor: 0, currency: "MYR" },
+          remaining: { minor: remainingTodayMinor, currency: "MYR" },
+        },
+        perTransferMax: { minor: 5_000_000, currency: "MYR" },
+      } satisfies GetTransferLimitsResponse),
+    ),
+  );
+}

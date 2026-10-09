@@ -23,19 +23,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
 it(
   "asks for a second look at the name on a first transfer to the recipient",
   scenarioTest("transfer.first_transfer_to_recipient", async () => {
@@ -303,3 +290,16 @@ it(
     expect(countSent("POST", "/recipients/lookup")).toBe(2);
   }),
 );
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}

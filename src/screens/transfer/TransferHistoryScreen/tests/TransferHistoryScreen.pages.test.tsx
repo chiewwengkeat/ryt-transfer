@@ -15,17 +15,6 @@ import {
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
 
-const sentTransferHistoryCursors = () =>
-  sentRequests
-    .map(({ url }) => new URL(url))
-    .filter(({ pathname }) => pathname.endsWith("/transfers"))
-    .map(({ searchParams }) => searchParams.get("cursor"));
-
-const LIM_ON_4_OCTOBER = buildHistoryTransfer({
-  registeredName: "Lim Wei Jie",
-  createdAt: "2026-10-04T13:05:00+08:00",
-});
-
 it("lists the first page's transfers under their day, asking the bank once", async () => {
   await renderRoute("/transfer-history");
 
@@ -312,4 +301,15 @@ it("pages through the bank's own history, its split day whole from the first pag
   });
   expect(screen.getByText("That's everything")).toBeOnTheScreen();
   expect(sentTransferHistoryCursors()).toEqual([null, expect.any(String)]);
+});
+
+const sentTransferHistoryCursors = () =>
+  sentRequests
+    .map(({ url }) => new URL(url))
+    .filter(({ pathname }) => pathname.endsWith("/transfers"))
+    .map(({ searchParams }) => searchParams.get("cursor"));
+
+const LIM_ON_4_OCTOBER = buildHistoryTransfer({
+  registeredName: "Lim Wei Jie",
+  createdAt: "2026-10-04T13:05:00+08:00",
 });

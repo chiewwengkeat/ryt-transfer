@@ -25,28 +25,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
-function loseEveryTryOfTheFirstCreate() {
-  // Its Transfer and both repeats.
-  mswServer.use(
-    ...Array.from({ length: 3 }, () =>
-      http.post("*/transfers", () => HttpResponse.error(), { once: true }),
-    ),
-  );
-}
-
 it(
   "confirms changed details as a new transfer after Ryt did not answer",
   scenarioTest("transfer.details_changed_after_no_answer", async () => {
@@ -214,3 +192,25 @@ it("reopens review without saying the details changed when nothing changed after
     ),
   ).toBeNull();
 });
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
+
+function loseEveryTryOfTheFirstCreate() {
+  // Its Transfer and both repeats.
+  mswServer.use(
+    ...Array.from({ length: 3 }, () =>
+      http.post("*/transfers", () => HttpResponse.error(), { once: true }),
+    ),
+  );
+}

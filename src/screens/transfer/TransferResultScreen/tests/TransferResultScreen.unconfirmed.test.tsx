@@ -16,30 +16,6 @@ import {
   renderRoute,
 } from "@/test/render/render-route";
 
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-function transferIdIn(pathname: string | undefined) {
-  return pathname?.replace("/transfer/result/", "") ?? "";
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}
-
 it(
   "says a transfer the bank cannot find can't be found, with its id to quote, and opens History to check it",
   scenarioTest("transfer.last_transfer_not_found", async () => {
@@ -209,3 +185,27 @@ it(
     expect(announcements).not.toHaveBeenCalled();
   }),
 );
+
+async function sendRm100FromHome() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await walkToTransferReview();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  return view;
+}
+
+function transferIdIn(pathname: string | undefined) {
+  return pathname?.replace("/transfer/result/", "") ?? "";
+}
+
+// The page's only offers: anything more could be a way to send the money twice.
+function buttonsOnTheResultPage() {
+  return screen
+    .getAllByRole("button")
+    .map((button) => button.props.accessibilityLabel as unknown);
+}

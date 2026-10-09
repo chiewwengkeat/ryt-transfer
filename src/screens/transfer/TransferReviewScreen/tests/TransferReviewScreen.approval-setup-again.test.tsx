@@ -25,47 +25,6 @@ import { renderRoute } from "@/test/render/render-route";
 
 import { approveRequests } from "./TransferReviewScreen.helper";
 
-const DEMO_PIN = "246810";
-
-async function confirmRm100ApprovedByPin() {
-  approvalSettingsStore.setState({ biometricApprovalOn: false });
-  return confirmRm100Transfer();
-}
-
-async function pairPhoneAndOpenReviewOfRm100() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function confirmRm100Transfer() {
-  const view = await pairPhoneAndOpenReviewOfRm100();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  return view;
-}
-
-async function sendAnotherRm100TransferFromResult() {
-  await fireEvent.press(screen.getByRole("button", { name: "Done" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await fireEvent.changeText(
-    await screen.findByLabelText("Amount (RM)"),
-    "100",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-}
-
 it(
   "sets face or fingerprint approval up again with the PIN that approved the transfer, so the next one needs no PIN",
   scenarioTest("transfer.biometrics_changed", async () => {
@@ -324,3 +283,44 @@ it.each([
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   },
 );
+
+const DEMO_PIN = "246810";
+
+async function confirmRm100ApprovedByPin() {
+  approvalSettingsStore.setState({ biometricApprovalOn: false });
+  return confirmRm100Transfer();
+}
+
+async function pairPhoneAndOpenReviewOfRm100() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  await screen.findByRole("button", { name: "Transfer" });
+  return view;
+}
+
+async function confirmRm100Transfer() {
+  const view = await pairPhoneAndOpenReviewOfRm100();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  return view;
+}
+
+async function sendAnotherRm100TransferFromResult() {
+  await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(
+    await screen.findByLabelText("Amount (RM)"),
+    "100",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+}

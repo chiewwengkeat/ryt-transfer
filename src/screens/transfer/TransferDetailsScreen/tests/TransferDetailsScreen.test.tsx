@@ -21,22 +21,6 @@ import {
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
 
-const sentPathnames = () =>
-  sentRequests.map(({ url }) => new URL(url).pathname);
-const sentTransferDetailsReads = () =>
-  sentPathnames().filter((pathname) => /\/transfers\/[^/]+$/.test(pathname));
-const sentTransferHistoryReads = () =>
-  sentPathnames().filter((pathname) => pathname.endsWith("/transfers"));
-
-const AISYAH = buildHistoryTransfer();
-// Every optional field set and two different minutes: each case overrides only what makes it that case.
-const AISYAH_IN_FULL = buildHistoryTransfer({
-  note: "Lunch",
-  reference: "RYT-20261005-0001",
-  failureReason: TransferFailureReason.RecipientBankRejected,
-  underReview: true,
-  updatedAt: "2026-10-06T09:05:00+08:00",
-});
 const SENT_AT = "5 Oct 2026, 3:42 pm";
 const SETTLED_AT = "6 Oct 2026, 9:05 am";
 const RECIPIENT_ID_LABELS = [
@@ -47,13 +31,6 @@ const RECIPIENT_ID_LABELS = [
   ["Business registration number", RecipientIdType.Brn],
   ["Army or police number", RecipientIdType.ArmyPolice],
 ] as const;
-const OUT_OF_DATE = "Couldn't refresh — these details may be out of date";
-
-async function openTransferDetails(transfer: Transfer) {
-  serveTransferHistoryPages([[transfer]]);
-  serveTransferDetails(transfer);
-  await renderRoute(`/transfer-history/${transfer.transferId}`);
-}
 
 it("shows a transfer from its History row at once, then as the bank tells it", async () => {
   const listed = buildHistoryTransfer({ status: TransferStatus.Processing });
@@ -497,3 +474,28 @@ it("shows when a transfer was sent in Bahasa Malaysia, and in Chinese once the l
   });
   expect(await screen.findByText("2026年3月5日 下午3:42")).toBeOnTheScreen();
 });
+
+const sentPathnames = () =>
+  sentRequests.map(({ url }) => new URL(url).pathname);
+const sentTransferDetailsReads = () =>
+  sentPathnames().filter((pathname) => /\/transfers\/[^/]+$/.test(pathname));
+const sentTransferHistoryReads = () =>
+  sentPathnames().filter((pathname) => pathname.endsWith("/transfers"));
+
+const AISYAH = buildHistoryTransfer();
+// Every optional field set and two different minutes: each case overrides only what makes it that case.
+const AISYAH_IN_FULL = buildHistoryTransfer({
+  note: "Lunch",
+  reference: "RYT-20261005-0001",
+  failureReason: TransferFailureReason.RecipientBankRejected,
+  underReview: true,
+  updatedAt: "2026-10-06T09:05:00+08:00",
+});
+
+const OUT_OF_DATE = "Couldn't refresh — these details may be out of date";
+
+async function openTransferDetails(transfer: Transfer) {
+  serveTransferHistoryPages([[transfer]]);
+  serveTransferDetails(transfer);
+  await renderRoute(`/transfer-history/${transfer.transferId}`);
+}

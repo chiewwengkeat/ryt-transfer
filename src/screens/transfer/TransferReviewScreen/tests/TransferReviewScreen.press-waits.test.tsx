@@ -19,12 +19,6 @@ import { secureStoreNativeDouble } from "@/test/doubles/native-doubles";
 import { mswServer, transferWritesSent } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
-async function openReviewOfRm100() {
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  return view;
-}
-
 it("creates and approves nothing when review is left while Transfer reads the sensor under the bank's PIN lock, and approves from review opened again", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await rememberApprovalPinLocked();
@@ -94,28 +88,6 @@ it("shows Use PIN instead's PIN-locked sheet and creates nothing when the bank's
   ).toBeNull();
   expect(transferWritesSent()).toEqual([]);
 });
-
-function holdFirstPinLockRead() {
-  const readSecureRecordForReal = secureStoreNativeDouble.getValueWithKeyAsync;
-  let releaseHeldRead = () => {};
-  let pinLockReadHeld = false;
-  const secureReads = jest
-    .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
-    .mockImplementation((key) => {
-      if (pinLockReadHeld || !key.includes("pin-locked"))
-        return readSecureRecordForReal(key);
-      pinLockReadHeld = true;
-      return new Promise((resolve) => {
-        releaseHeldRead = () => {
-          resolve(readSecureRecordForReal(key));
-        };
-      });
-    });
-  return () => {
-    releaseHeldRead();
-    secureReads.mockRestore();
-  };
-}
 
 it("offers Use PIN instead only once review's first read of the bank's PIN lock has answered", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
@@ -232,3 +204,31 @@ it("asks for no approval of a transfer whose review is popped while it is being 
     expect.stringMatching(/^\/transfers\/[\w-]+\/approve$/),
   ]);
 });
+
+async function openReviewOfRm100() {
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  return view;
+}
+
+function holdFirstPinLockRead() {
+  const readSecureRecordForReal = secureStoreNativeDouble.getValueWithKeyAsync;
+  let releaseHeldRead = () => {};
+  let pinLockReadHeld = false;
+  const secureReads = jest
+    .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
+    .mockImplementation((key) => {
+      if (pinLockReadHeld || !key.includes("pin-locked"))
+        return readSecureRecordForReal(key);
+      pinLockReadHeld = true;
+      return new Promise((resolve) => {
+        releaseHeldRead = () => {
+          resolve(readSecureRecordForReal(key));
+        };
+      });
+    });
+  return () => {
+    releaseHeldRead();
+    secureReads.mockRestore();
+  };
+}

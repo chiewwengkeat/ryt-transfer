@@ -30,30 +30,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-const OFFLINE_NOTICE =
-  "You're offline. Sending is paused until Ryt can be reached.";
-
-async function openReviewWhileNoRequestReachesTheBank() {
-  await renderRoute("/transfer");
-  await enterTransferRecipientAndAmount();
-  mswServer.use(http.all("*", () => HttpResponse.error()));
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await screen.findByRole("button", { name: "Try again" });
-}
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
 it(
   "says sending is paused on review too, and lets the transfer go ahead once a request reaches the bank",
   scenarioTest("transfer.offline", async () => {
@@ -275,3 +251,27 @@ it("pauses sending on review while the phone reports no connection", async () =>
   });
   expect(transferButton).toBeEnabled();
 });
+
+const OFFLINE_NOTICE =
+  "You're offline. Sending is paused until Ryt can be reached.";
+
+async function openReviewWhileNoRequestReachesTheBank() {
+  await renderRoute("/transfer");
+  await enterTransferRecipientAndAmount();
+  mswServer.use(http.all("*", () => HttpResponse.error()));
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await screen.findByRole("button", { name: "Try again" });
+}
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}

@@ -11,11 +11,6 @@ import {
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
 
-const AISYAH = buildHistoryTransfer();
-const OFFLINE = { isConnected: false, isInternetReachable: false };
-const ONLINE = { isConnected: true, isInternetReachable: true };
-const OUT_OF_DATE = "Couldn't refresh — these details may be out of date";
-
 it("keeps a transfer from its History row under the notice when opened offline, offering no Try again, and shows the bank's once back online", async () => {
   serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
   await renderRoute("/transfer-history");
@@ -123,3 +118,8 @@ it("offers Try again on a transfer it couldn't load only while the phone has a c
 
   expect(await screen.findByText("Aisyah Rahman")).toBeOnTheScreen();
 });
+
+const AISYAH = buildHistoryTransfer();
+const OFFLINE = { isConnected: false, isInternetReachable: false };
+const ONLINE = { isConnected: true, isInternetReachable: true };
+const OUT_OF_DATE = "Couldn't refresh — these details may be out of date";

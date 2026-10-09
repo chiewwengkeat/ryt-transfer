@@ -24,19 +24,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
 it("treats a key the bank says was used for other details as something unexpected", async () => {
   mswServer.use(
     http.post("*/transfers", () =>
@@ -358,3 +345,16 @@ it.each([
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 5_000);
   },
 );
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}

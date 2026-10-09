@@ -9,25 +9,6 @@ import {
   MoneyState,
 } from "./transfer-outcome-money-states";
 
-// Jest defines it; the app's types deliberately leave out Node's globals.
-declare const __dirname: string;
-
-const { readFileSync } = jest.requireActual<{
-  readFileSync: (path: string, encoding: "utf8") => string;
-}>("node:fs");
-
-const matrixSections = readFileSync(
-  `${__dirname}/../../../scenarios/transfer.md`,
-  "utf8",
-)
-  .split(/^### /m)
-  .slice(1)
-  .map((section) => ({
-    id: /^`([^`]+)`$/m.exec(section)?.[1],
-    money: /^- \*\*Money:\*\* (.+)$/m.exec(section)?.[1],
-    shownAs: /^- \*\*Shown as:\*\* (.+)$/m.exec(section)?.[1] ?? "",
-  }));
-
 it("gives each outcome its matrix section's money state", () => {
   expect(MONEY_STATE_BY_OUTCOME).toEqual(
     Object.fromEntries(
@@ -62,3 +43,22 @@ it("covers every section the matrix shows on the result page", () => {
     expect.arrayContaining(resultPageIds),
   );
 });
+
+// Jest defines it; the app's types deliberately leave out Node's globals.
+declare const __dirname: string;
+
+const { readFileSync } = jest.requireActual<{
+  readFileSync: (path: string, encoding: "utf8") => string;
+}>("node:fs");
+
+const matrixSections = readFileSync(
+  `${__dirname}/../../../scenarios/transfer.md`,
+  "utf8",
+)
+  .split(/^### /m)
+  .slice(1)
+  .map((section) => ({
+    id: /^`([^`]+)`$/m.exec(section)?.[1],
+    money: /^- \*\*Money:\*\* (.+)$/m.exec(section)?.[1],
+    shownAs: /^- \*\*Shown as:\*\* (.+)$/m.exec(section)?.[1] ?? "",
+  }));

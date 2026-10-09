@@ -20,28 +20,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-const REFUSED_MESSAGE =
-  "To choose from your contacts, allow contacts access in Settings. Or type the number.";
-const GRANTED = {
-  status: PermissionStatus.GRANTED,
-  granted: true,
-  canAskAgain: true,
-  expires: "never" as const,
-};
-const REFUSED = {
-  status: PermissionStatus.DENIED,
-  granted: false,
-  canAskAgain: false,
-  expires: "never" as const,
-};
-
-async function pressChooseFromContacts() {
-  await renderRoute("/transfer");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Choose from contacts" }),
-  );
-}
-
 it(
   "says how to allow contacts access when it is refused, and drops that once Settings grants it",
   scenarioTest("transfer.contacts_access_refused", async () => {
@@ -159,3 +137,25 @@ it("asks which number to use when the contact has several Malaysian mobiles, eac
   await fireEvent.press(screen.getByRole("button", { name: /19-876 5432/ }));
   expect(await screen.findByDisplayValue("+60198765432")).toBeOnTheScreen();
 });
+
+const REFUSED_MESSAGE =
+  "To choose from your contacts, allow contacts access in Settings. Or type the number.";
+const GRANTED = {
+  status: PermissionStatus.GRANTED,
+  granted: true,
+  canAskAgain: true,
+  expires: "never" as const,
+};
+const REFUSED = {
+  status: PermissionStatus.DENIED,
+  granted: false,
+  canAskAgain: false,
+  expires: "never" as const,
+};
+
+async function pressChooseFromContacts() {
+  await renderRoute("/transfer");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Choose from contacts" }),
+  );
+}

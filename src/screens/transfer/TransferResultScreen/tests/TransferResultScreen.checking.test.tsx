@@ -34,61 +34,6 @@ import {
   renderRoute,
 } from "@/test/render/render-route";
 
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-function transferIdIn(pathname: string | undefined) {
-  return pathname?.replace("/transfer/result/", "") ?? "";
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}
-
-// Jest has no screen reader: the focus request is the nearest thing it can see.
-function countOutcomeFocusRequestsFromNowOn() {
-  const focusRequests = jest.spyOn(AccessibilityInfo, "sendAccessibilityEvent");
-  focusRequests.mockClear();
-  return () =>
-    focusRequests.mock.calls.filter(
-      ([target, eventType]) =>
-        eventType === "focus" &&
-        (target as { props?: { children?: unknown } }).props?.children ===
-          "Transfer sent",
-    ).length;
-}
-
-async function signInAgainAndCountOutcomeFocusRequestsEachHalfSecond(
-  signInButton: Parameters<typeof fireEvent.press>[0],
-  outcomeFocusRequests: () => number,
-) {
-  const requestsBeforeSignIn = outcomeFocusRequests();
-  await fireEvent.press(signInButton);
-  const requestsAtSignIn = outcomeFocusRequests() - requestsBeforeSignIn;
-  await act(() => jest.advanceTimersByTimeAsync(500));
-  const requestsHalfASecondLater =
-    outcomeFocusRequests() - requestsBeforeSignIn;
-  await act(() => jest.advanceTimersByTimeAsync(500));
-  return [
-    requestsAtSignIn,
-    requestsHalfASecondLater,
-    outcomeFocusRequests() - requestsBeforeSignIn,
-  ];
-}
-
 it(
   "announces an outcome that changes in place, not the one the page opens with, and nothing from Home's banners beneath it",
   scenarioTest("transfer.approval_unanswered", async () => {
@@ -455,3 +400,58 @@ it("checks a transfer whose approval drew an answer the app does not know, under
     }),
   );
 });
+
+async function sendRm100FromHome() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await walkToTransferReview();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  return view;
+}
+
+function transferIdIn(pathname: string | undefined) {
+  return pathname?.replace("/transfer/result/", "") ?? "";
+}
+
+// The page's only offers: anything more could be a way to send the money twice.
+function buttonsOnTheResultPage() {
+  return screen
+    .getAllByRole("button")
+    .map((button) => button.props.accessibilityLabel as unknown);
+}
+
+// Jest has no screen reader: the focus request is the nearest thing it can see.
+function countOutcomeFocusRequestsFromNowOn() {
+  const focusRequests = jest.spyOn(AccessibilityInfo, "sendAccessibilityEvent");
+  focusRequests.mockClear();
+  return () =>
+    focusRequests.mock.calls.filter(
+      ([target, eventType]) =>
+        eventType === "focus" &&
+        (target as { props?: { children?: unknown } }).props?.children ===
+          "Transfer sent",
+    ).length;
+}
+
+async function signInAgainAndCountOutcomeFocusRequestsEachHalfSecond(
+  signInButton: Parameters<typeof fireEvent.press>[0],
+  outcomeFocusRequests: () => number,
+) {
+  const requestsBeforeSignIn = outcomeFocusRequests();
+  await fireEvent.press(signInButton);
+  const requestsAtSignIn = outcomeFocusRequests() - requestsBeforeSignIn;
+  await act(() => jest.advanceTimersByTimeAsync(500));
+  const requestsHalfASecondLater =
+    outcomeFocusRequests() - requestsBeforeSignIn;
+  await act(() => jest.advanceTimersByTimeAsync(500));
+  return [
+    requestsAtSignIn,
+    requestsHalfASecondLater,
+    outcomeFocusRequests() - requestsBeforeSignIn,
+  ];
+}

@@ -18,10 +18,6 @@ import {
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
-const UNKNOWN_BANK_CODE = {
-  error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
-};
-
 it(
   "opens the recipient step with a recent recipient picked on Home in place of the ID field, the amount empty, and review showing the name the bank holds today",
   scenarioTest("transfer.recent_recipient_chosen", async () => {
@@ -239,3 +235,7 @@ it("hides the recipient step's something-unexpected message while the phone has 
   expect(recentsUnexpected).not.toBeOnTheScreen();
   expect(screen.getByLabelText("DuitNow mobile number")).toBeOnTheScreen();
 });
+
+const UNKNOWN_BANK_CODE = {
+  error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
+};

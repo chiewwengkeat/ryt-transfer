@@ -1,11 +1,5 @@
 import { reuseTransferDayHeaderRow } from "./SectionTransferAccordion.helper";
 
-const daySummary = {
-  date: "2026-10-05",
-  count: 1,
-  net: { minor: -5000, currency: "MYR" as const },
-};
-
 it("hands back the same header row while a day's summary and open state stay the same", () => {
   expect(reuseTransferDayHeaderRow(daySummary, true)).toBe(
     reuseTransferDayHeaderRow(daySummary, true),
@@ -27,3 +21,9 @@ it("makes a new header row when the day's summary or its open state changes", ()
     expanded: false,
   });
 });
+
+const daySummary = {
+  date: "2026-10-05",
+  count: 1,
+  net: { minor: -5000, currency: "MYR" as const },
+};

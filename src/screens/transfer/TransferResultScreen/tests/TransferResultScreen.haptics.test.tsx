@@ -8,47 +8,11 @@ import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 import { scenarioTest, walkToTransferReview } from "@/test/render/drive-app";
 
-const notificationHaptics = jest.spyOn(Haptics, "notificationAsync");
-const impactHaptics = jest.spyOn(Haptics, "impactAsync");
-const selectionHaptics = jest.spyOn(Haptics, "selectionAsync");
-
 beforeEach(() => {
   notificationHaptics.mockClear();
   impactHaptics.mockClear();
   selectionHaptics.mockClear();
 });
-
-async function walkToReviewFromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function walkToStillUnreachable() {
-  await walkToReviewFromHome();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  await screen.findByRole(
-    "header",
-    { name: "Checking your transfer" },
-    { timeout: 10_000 },
-  );
-  await act(() => jest.advanceTimersByTimeAsync(17_000));
-  await screen.findByRole("header", { name: "Still checking your transfer" });
-}
-
-// On a phone a failing read takes a while to fail, and the page renders while it is in flight.
-function slowTransferReads() {
-  mswServer.use(
-    http.get("*/transfers/:transferId", async () => {
-      await delay(3_000);
-    }),
-  );
-}
 
 it(
   "gives one success haptic when the result page shows money moved, and none on the way there",
@@ -240,3 +204,39 @@ it("warns while an approval lost on its way to the bank is checked, then gives a
     [Haptics.NotificationFeedbackType.Error],
   ]);
 });
+
+const notificationHaptics = jest.spyOn(Haptics, "notificationAsync");
+const impactHaptics = jest.spyOn(Haptics, "impactAsync");
+const selectionHaptics = jest.spyOn(Haptics, "selectionAsync");
+
+async function walkToReviewFromHome() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await walkToTransferReview();
+  await screen.findByRole("button", { name: "Transfer" });
+  return view;
+}
+
+async function walkToStillUnreachable() {
+  await walkToReviewFromHome();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  await screen.findByRole(
+    "header",
+    { name: "Checking your transfer" },
+    { timeout: 10_000 },
+  );
+  await act(() => jest.advanceTimersByTimeAsync(17_000));
+  await screen.findByRole("header", { name: "Still checking your transfer" });
+}
+
+// On a phone a failing read takes a while to fail, and the page renders while it is in flight.
+function slowTransferReads() {
+  mswServer.use(
+    http.get("*/transfers/:transferId", async () => {
+      await delay(3_000);
+    }),
+  );
+}

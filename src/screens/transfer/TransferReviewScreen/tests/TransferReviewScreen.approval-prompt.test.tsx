@@ -35,35 +35,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
-const DEMO_PIN = "246810";
-
-async function pairPhoneAndOpenReviewOfRm100() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function confirmRm100Transfer() {
-  const view = await pairPhoneAndOpenReviewOfRm100();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  return view;
-}
-
 it(
   "says the face or fingerprint was not recognised, sends nothing, and leaves Transfer to try again or the PIN to approve",
   scenarioTest("transfer.biometrics_not_recognised", async () => {
@@ -312,3 +283,32 @@ it("says face or fingerprint approval is unavailable while it is turned off, and
   expect(sentPaths).toContain("POST /transfers");
   expect(sentPaths.filter((path) => path.endsWith("/approve"))).toEqual([]);
 });
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
+
+const DEMO_PIN = "246810";
+
+async function pairPhoneAndOpenReviewOfRm100() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  await screen.findByRole("button", { name: "Transfer" });
+  return view;
+}
+
+async function confirmRm100Transfer() {
+  const view = await pairPhoneAndOpenReviewOfRm100();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  return view;
+}

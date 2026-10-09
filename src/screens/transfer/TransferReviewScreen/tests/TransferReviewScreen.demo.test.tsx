@@ -22,69 +22,6 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 
-const PHONE_REFUSAL =
-  "This phone's security can't be confirmed, so transfers are off on it.";
-const PIN_OFFER =
-  "Your face or fingerprint was not recognised. You can try again, or use your PIN.";
-
-async function openReviewOfRm100() {
-  await renderRoute("/transfer");
-  await walkToTransferReview();
-}
-
-// A resolver that answers nothing hands the request on to the bank, once released.
-function holdTheNextPostTo(path: string) {
-  let sent = false;
-  let release = () => undefined as void;
-  const held = new Promise<void>((releaseHeld) => {
-    release = releaseHeld;
-  });
-  mswServer.use(
-    http.post(
-      path,
-      async () => {
-        sent = true;
-        await held;
-      },
-      { once: true },
-    ),
-  );
-  return {
-    release,
-    waitUntilSent: () =>
-      waitFor(() => {
-        expect(sent).toBe(true);
-      }),
-  };
-}
-
-// A slow keychain. A read, not a write: Reset demo's own deletes queue behind any write, so a held one holds it too.
-function holdTheNextReadOfTheSecureRecordIndex() {
-  const getValueWithKey = secureStoreNativeDouble.getValueWithKeyAsync;
-  let reached = false;
-  let release = () => undefined as void;
-  const held = new Promise<void>((releaseHeld) => {
-    release = releaseHeld;
-  });
-  const reads = jest
-    .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
-    .mockImplementation(async (key) => {
-      if (key.endsWith(".index")) {
-        reads.mockRestore();
-        reached = true;
-        await held;
-      }
-      return getValueWithKey(key);
-    });
-  return {
-    release,
-    waitUntilReached: () =>
-      waitFor(() => {
-        expect(reached).toBe(true);
-      }),
-  };
-}
-
 it("opens no result page for a transfer Reset demo ended while its answer was being kept", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const view = await renderRoute("/transfer");
@@ -254,3 +191,66 @@ it("shows the refusal with no earlier notice or button beside it that offers the
   expect(screen.queryByText(PIN_OFFER)).toBeNull();
   expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
 });
+
+const PHONE_REFUSAL =
+  "This phone's security can't be confirmed, so transfers are off on it.";
+const PIN_OFFER =
+  "Your face or fingerprint was not recognised. You can try again, or use your PIN.";
+
+async function openReviewOfRm100() {
+  await renderRoute("/transfer");
+  await walkToTransferReview();
+}
+
+// A resolver that answers nothing hands the request on to the bank, once released.
+function holdTheNextPostTo(path: string) {
+  let sent = false;
+  let release = () => undefined as void;
+  const held = new Promise<void>((releaseHeld) => {
+    release = releaseHeld;
+  });
+  mswServer.use(
+    http.post(
+      path,
+      async () => {
+        sent = true;
+        await held;
+      },
+      { once: true },
+    ),
+  );
+  return {
+    release,
+    waitUntilSent: () =>
+      waitFor(() => {
+        expect(sent).toBe(true);
+      }),
+  };
+}
+
+// A slow keychain. A read, not a write: Reset demo's own deletes queue behind any write, so a held one holds it too.
+function holdTheNextReadOfTheSecureRecordIndex() {
+  const getValueWithKey = secureStoreNativeDouble.getValueWithKeyAsync;
+  let reached = false;
+  let release = () => undefined as void;
+  const held = new Promise<void>((releaseHeld) => {
+    release = releaseHeld;
+  });
+  const reads = jest
+    .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
+    .mockImplementation(async (key) => {
+      if (key.endsWith(".index")) {
+        reads.mockRestore();
+        reached = true;
+        await held;
+      }
+      return getValueWithKey(key);
+    });
+  return {
+    release,
+    waitUntilReached: () =>
+      waitFor(() => {
+        expect(reached).toBe(true);
+      }),
+  };
+}

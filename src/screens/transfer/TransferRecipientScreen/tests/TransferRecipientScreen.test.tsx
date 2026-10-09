@@ -25,11 +25,6 @@ import {
   TransferFlowActionType,
 } from "@/screens/transfer/flow-store/flow-store";
 
-const UNKNOWN_BANK_CODE = {
-  error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
-};
-const malayTransferT = getFixedT(AppLanguage.Malay, "transfer");
-
 it.each(["012-345 6789", "60123456789", "+60 12 345 6789"])(
   "takes %s as a DuitNow mobile number and moves on to the amount",
   async (typedMobile) => {
@@ -417,3 +412,8 @@ it("tells a screen reader that a contact's numbers are in Bahasa Malaysia when t
     findAccessibleGroupAround(await screen.findByText("+60 19-876 5432")),
   ).toHaveProp("accessibilityLanguage", "ms-MY");
 });
+
+const UNKNOWN_BANK_CODE = {
+  error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
+};
+const malayTransferT = getFixedT(AppLanguage.Malay, "transfer");

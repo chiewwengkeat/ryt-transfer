@@ -30,38 +30,6 @@ import {
   renderRoute,
 } from "@/test/render/render-route";
 
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-function transferIdIn(pathname: string | undefined) {
-  return pathname?.replace("/transfer/result/", "") ?? "";
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}
-
-async function readCustomerId() {
-  const { body } = await sendToBank<GetPrimaryAccountResponse>(
-    "GET",
-    "/accounts/primary",
-  );
-  return body.customerId;
-}
-
 it(
   "reopens the transfer the app was closed during, quoting its id, with Home's warning beneath asking the bank nothing, then says no money moved once its window passes and leaves nothing for the next launch",
   scenarioTest("transfer.app_closed_during_approval", async () => {
@@ -196,24 +164,6 @@ it(
   }),
 );
 
-const SENT_NOTICE =
-  /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/;
-
-async function approveRm100Transfer() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-async function waitOnHomeForItsBalance() {
-  await screen.findByText("RM 12,745.50");
-  await act(() => jest.advanceTimersByTimeAsync(1_000));
-}
-
 it("tells Home the transfer was sent when Back leaves the result page as it opens, at the next launch too", async () => {
   const view = await approveRm100Transfer();
   await screen.findByRole("header", { name: "Transfer sent" });
@@ -302,3 +252,53 @@ it(
     }
   }),
 );
+
+async function sendRm100FromHome() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await walkToTransferReview();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  return view;
+}
+
+function transferIdIn(pathname: string | undefined) {
+  return pathname?.replace("/transfer/result/", "") ?? "";
+}
+
+// The page's only offers: anything more could be a way to send the money twice.
+function buttonsOnTheResultPage() {
+  return screen
+    .getAllByRole("button")
+    .map((button) => button.props.accessibilityLabel as unknown);
+}
+
+async function readCustomerId() {
+  const { body } = await sendToBank<GetPrimaryAccountResponse>(
+    "GET",
+    "/accounts/primary",
+  );
+  return body.customerId;
+}
+
+const SENT_NOTICE =
+  /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/;
+
+async function approveRm100Transfer() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  return view;
+}
+
+async function waitOnHomeForItsBalance() {
+  await screen.findByText("RM 12,745.50");
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+}

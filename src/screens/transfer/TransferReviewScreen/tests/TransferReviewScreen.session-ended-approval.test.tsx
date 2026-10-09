@@ -29,56 +29,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
-async function openReviewOfRm100UntilTransferShows() {
-  await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-}
-
-// A resolver that answers nothing hands the request on to the bank, once released.
-function holdTheNextPost(path: string) {
-  let sent = false;
-  let release = () => undefined as void;
-  const held = new Promise<void>((releaseHeld) => {
-    release = releaseHeld;
-  });
-  mswServer.use(
-    http.post(
-      path,
-      async () => {
-        sent = true;
-        await held;
-      },
-      { once: true },
-    ),
-  );
-  return {
-    release,
-    waitUntilSent: () =>
-      waitFor(() => {
-        expect(sent).toBe(true);
-      }),
-  };
-}
-
-function scenariosReportedFromNowOn() {
-  const reportCountNow = reportedScenarios().length;
-  return () => reportedScenarios().slice(reportCountNow);
-}
-
 it("reports only the session's end for a PIN sheet it closes, which they find closed as not sent once signed in again", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await openReviewOfRm100UntilTransferShows();
@@ -373,3 +323,53 @@ it("never says the transfer was not sent when the session ends as the bank answe
     }),
   ).toBeNull();
 });
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
+
+async function openReviewOfRm100UntilTransferShows() {
+  await renderRoute("/transfer");
+  await walkToTransferReview();
+  await screen.findByRole("button", { name: "Transfer" });
+}
+
+// A resolver that answers nothing hands the request on to the bank, once released.
+function holdTheNextPost(path: string) {
+  let sent = false;
+  let release = () => undefined as void;
+  const held = new Promise<void>((releaseHeld) => {
+    release = releaseHeld;
+  });
+  mswServer.use(
+    http.post(
+      path,
+      async () => {
+        sent = true;
+        await held;
+      },
+      { once: true },
+    ),
+  );
+  return {
+    release,
+    waitUntilSent: () =>
+      waitFor(() => {
+        expect(sent).toBe(true);
+      }),
+  };
+}
+
+function scenariosReportedFromNowOn() {
+  const reportCountNow = reportedScenarios().length;
+  return () => reportedScenarios().slice(reportCountNow);
+}

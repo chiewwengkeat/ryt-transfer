@@ -35,28 +35,6 @@ import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { observedRecords } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
-const PHONE_REFUSAL =
-  "This phone's security can't be confirmed, so transfers are off on it.";
-const PIN_OFFER =
-  "Your face or fingerprint was not recognised. You can try again, or use your PIN.";
-const EARLIER_TRANSFER_UNCONFIRMED =
-  /^Your last transfer is still being checked/;
-const PIN_SHEET = "Enter your bank PIN to approve this transfer.";
-
-async function openReviewOfRm100() {
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  return view;
-}
-
-async function approveWithPinFromTheSheet() {
-  await screen.findByText(PIN_SHEET);
-  for (const digit of "246810")
-    await fireEvent.press(screen.getByRole("button", { name: digit }));
-  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
-  await screen.findByText("Transfer sent");
-}
-
 it("refuses approval in place of the prompt on a phone that reports root, leaving no way to approve and sending nothing, then approves from review opened again once the phone reports clean", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   reportDeviceIntegrity({
@@ -419,3 +397,25 @@ it("checks the phone afresh at each press of Use PIN instead, so a phone that re
   expect(deviceIntegrityChecksAsked() - checksBeforePresses).toBe(2);
   expect(transferWritesSent()).toEqual(["/transfers"]);
 });
+
+const PHONE_REFUSAL =
+  "This phone's security can't be confirmed, so transfers are off on it.";
+const PIN_OFFER =
+  "Your face or fingerprint was not recognised. You can try again, or use your PIN.";
+const EARLIER_TRANSFER_UNCONFIRMED =
+  /^Your last transfer is still being checked/;
+const PIN_SHEET = "Enter your bank PIN to approve this transfer.";
+
+async function openReviewOfRm100() {
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  return view;
+}
+
+async function approveWithPinFromTheSheet() {
+  await screen.findByText(PIN_SHEET);
+  for (const digit of "246810")
+    await fireEvent.press(screen.getByRole("button", { name: digit }));
+  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
+  await screen.findByText("Transfer sent");
+}

@@ -31,30 +31,6 @@ import {
 } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-function transferIdIn(pathname: string | undefined) {
-  return pathname?.replace("/transfer/result/", "") ?? "";
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}
-
 it(
   "offers to load the result again, never to send again, when the bank answers with an outcome the app cannot name",
   scenarioTest("transfer.outcome_unexpected", async () => {
@@ -120,35 +96,6 @@ it(
     ).toBeOnTheScreen();
   }),
 );
-
-function answerApprovalAndReadsWithAnUnnamedOutcome(
-  recipient: Awaited<ReturnType<typeof lookUpTestRecipient>>["recipient"],
-  readAnswer: () => Partial<GetTransferResponse["transfer"]> = () => ({}),
-) {
-  const unnamedOutcome = (transferId: unknown) => ({
-    transferId: String(transferId),
-    version: 2,
-    direction: TransferDirection.Out,
-    status: TransferStatus.Unsuccessful,
-    funds: TransferFunds.Debited,
-    failureReason: TransferFailureReason.RecipientBankRejected,
-    counterparty: recipient,
-    amount: { minor: 10_000, currency: "MYR" },
-    reference: "20261007C0FFEE00",
-    createdAt: "2026-10-07T09:30:00+08:00",
-    updatedAt: "2026-10-07T09:30:05+08:00",
-  });
-  mswServer.use(
-    http.post("*/transfers/:transferId/approve", ({ params }) =>
-      HttpResponse.json({ transfer: unnamedOutcome(params.transferId) }),
-    ),
-    http.get("*/transfers/:transferId", ({ params }) =>
-      HttpResponse.json({
-        transfer: { ...unnamedOutcome(params.transferId), ...readAnswer() },
-      }),
-    ),
-  );
-}
 
 it(
   "keeps checking a transfer whose outcome the app cannot name, and shows the refund once the bank names it",
@@ -308,3 +255,56 @@ it("keeps an earlier transfer the launch check finds with an outcome the app can
   await act(() => jest.advanceTimersByTimeAsync(1_000));
   expect(relaunched.getPathname()).toBe("/");
 });
+
+async function sendRm100FromHome() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await walkToTransferReview();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  return view;
+}
+
+function transferIdIn(pathname: string | undefined) {
+  return pathname?.replace("/transfer/result/", "") ?? "";
+}
+
+// The page's only offers: anything more could be a way to send the money twice.
+function buttonsOnTheResultPage() {
+  return screen
+    .getAllByRole("button")
+    .map((button) => button.props.accessibilityLabel as unknown);
+}
+
+function answerApprovalAndReadsWithAnUnnamedOutcome(
+  recipient: Awaited<ReturnType<typeof lookUpTestRecipient>>["recipient"],
+  readAnswer: () => Partial<GetTransferResponse["transfer"]> = () => ({}),
+) {
+  const unnamedOutcome = (transferId: unknown) => ({
+    transferId: String(transferId),
+    version: 2,
+    direction: TransferDirection.Out,
+    status: TransferStatus.Unsuccessful,
+    funds: TransferFunds.Debited,
+    failureReason: TransferFailureReason.RecipientBankRejected,
+    counterparty: recipient,
+    amount: { minor: 10_000, currency: "MYR" },
+    reference: "20261007C0FFEE00",
+    createdAt: "2026-10-07T09:30:00+08:00",
+    updatedAt: "2026-10-07T09:30:05+08:00",
+  });
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", ({ params }) =>
+      HttpResponse.json({ transfer: unnamedOutcome(params.transferId) }),
+    ),
+    http.get("*/transfers/:transferId", ({ params }) =>
+      HttpResponse.json({
+        transfer: { ...unnamedOutcome(params.transferId), ...readAnswer() },
+      }),
+    ),
+  );
+}

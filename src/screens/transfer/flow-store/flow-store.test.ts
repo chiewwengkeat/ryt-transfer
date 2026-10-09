@@ -15,40 +15,6 @@ import {
   TransferHoldKind,
 } from "./flow-store";
 
-const COOLING_OFF_HOLD = {
-  kind: TransferHoldKind.CoolingOff,
-  until: "2026-10-08T12:00:00.000Z",
-  reason: CoolingOffReason.DevicePaired,
-} as const;
-
-function confirmTransferOfRm100() {
-  dispatchTransferFlow({ type: TransferFlowActionType.FlowLeft });
-  dispatchTransferFlow({
-    type: TransferFlowActionType.RecipientChosen,
-    recipient: { idType: RecipientIdType.Mobile, idValue: "+60123456789" },
-  });
-  dispatchTransferFlow({
-    type: TransferFlowActionType.AmountEntered,
-    amount: { minor: asSen(10_000), currency: "MYR" },
-  });
-  dispatchTransferFlow({
-    type: TransferFlowActionType.Confirmed,
-    lookup: {
-      recipient: {
-        registeredName: "Ali bin Abu",
-        idType: RecipientIdType.Mobile,
-        idValueMasked: "+60 12-*** 6789",
-        bankName: "Ryt Bank",
-        bankCode: "RYT",
-      },
-      recipientRef: "ref_1",
-      refExpiresInSeconds: 300,
-      firstTransfer: false,
-    },
-    idempotencyKey: "create-key",
-  });
-}
-
 it("returns an unanswered create to review with its key, and a refused one without", () => {
   confirmTransferOfRm100();
   dispatchTransferFlow({
@@ -143,3 +109,37 @@ it("takes a refused attempt back to approval on the same transfer and path, with
   });
   expect(transferFlowStore.getState()).not.toHaveProperty("attemptKey");
 });
+
+const COOLING_OFF_HOLD = {
+  kind: TransferHoldKind.CoolingOff,
+  until: "2026-10-08T12:00:00.000Z",
+  reason: CoolingOffReason.DevicePaired,
+} as const;
+
+function confirmTransferOfRm100() {
+  dispatchTransferFlow({ type: TransferFlowActionType.FlowLeft });
+  dispatchTransferFlow({
+    type: TransferFlowActionType.RecipientChosen,
+    recipient: { idType: RecipientIdType.Mobile, idValue: "+60123456789" },
+  });
+  dispatchTransferFlow({
+    type: TransferFlowActionType.AmountEntered,
+    amount: { minor: asSen(10_000), currency: "MYR" },
+  });
+  dispatchTransferFlow({
+    type: TransferFlowActionType.Confirmed,
+    lookup: {
+      recipient: {
+        registeredName: "Ali bin Abu",
+        idType: RecipientIdType.Mobile,
+        idValueMasked: "+60 12-*** 6789",
+        bankName: "Ryt Bank",
+        bankCode: "RYT",
+      },
+      recipientRef: "ref_1",
+      refExpiresInSeconds: 300,
+      firstTransfer: false,
+    },
+    idempotencyKey: "create-key",
+  });
+}

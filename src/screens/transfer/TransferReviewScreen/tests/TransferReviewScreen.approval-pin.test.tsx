@@ -39,27 +39,6 @@ import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 import { approveRequests } from "./TransferReviewScreen.helper";
 
-const DEMO_PIN = "246810";
-
-async function confirmRm100ApprovedByPin() {
-  approvalSettingsStore.setState({ biometricApprovalOn: false });
-  return confirmRm100Transfer();
-}
-
-async function pairPhoneAndOpenReviewOfRm100() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function confirmRm100Transfer() {
-  const view = await pairPhoneAndOpenReviewOfRm100();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  return view;
-}
-
 it(
   "approves with the bank PIN beside the phone's own key, and the bank moves the money",
   scenarioTest("transfer.biometrics_unavailable", async () => {
@@ -232,16 +211,6 @@ it("reopens nothing and warns of nothing at the next launch once the bank locks 
   expect(screen.queryByText(/still being checked/)).toBeNull();
 });
 
-async function lockThePinWithThreeWrongTries() {
-  await enterPinAndApprove("111111");
-  await screen.findByText("That PIN is incorrect. You have 2 tries left.");
-  await enterPinAndApprove("111111");
-  await screen.findByText("That PIN is incorrect. You have 1 try left.");
-  await enterPinAndApprove("111111");
-  await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
-  await screen.findByRole("button", { name: "Transfer" });
-}
-
 it("keeps the PIN the bank locked for the next transfer, whose Transfer shows the locked words with no keypad", async () => {
   await confirmRm100ApprovedByPin();
   await lockThePinWithThreeWrongTries();
@@ -407,25 +376,6 @@ it("opens the keypad again once the host app reports the PIN reset", async () =>
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
 });
 
-async function readWhatTheAppStillHolds() {
-  // Lets a finished call's zero-length cache timer run, which drops its variables.
-  await act(async () => {
-    await jest.advanceTimersByTimeAsync(0);
-  });
-  const { queryClient } = jest.requireMock<{ queryClient: QueryClient }>(
-    "@/root/query-client/query-client",
-  );
-  return JSON.stringify([
-    queryClient
-      .getMutationCache()
-      .getAll()
-      .map((mutation) => mutation.state.variables),
-    transferFlowStore.getState(),
-    approvalPinSheetStore.getState(),
-    observedRecords,
-  ]);
-}
-
 it("keeps the PIN nowhere once its approval is answered", async () => {
   await confirmRm100ApprovedByPin();
 
@@ -447,3 +397,53 @@ it("keeps a refused PIN nowhere once the sheet is closed on review", async () =>
   expect(await approveRequests().at(-1)?.text()).toContain("111111");
   expect(await readWhatTheAppStillHolds()).not.toContain("111111");
 });
+
+const DEMO_PIN = "246810";
+
+async function confirmRm100ApprovedByPin() {
+  approvalSettingsStore.setState({ biometricApprovalOn: false });
+  return confirmRm100Transfer();
+}
+
+async function pairPhoneAndOpenReviewOfRm100() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  await screen.findByRole("button", { name: "Transfer" });
+  return view;
+}
+
+async function confirmRm100Transfer() {
+  const view = await pairPhoneAndOpenReviewOfRm100();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  return view;
+}
+
+async function lockThePinWithThreeWrongTries() {
+  await enterPinAndApprove("111111");
+  await screen.findByText("That PIN is incorrect. You have 2 tries left.");
+  await enterPinAndApprove("111111");
+  await screen.findByText("That PIN is incorrect. You have 1 try left.");
+  await enterPinAndApprove("111111");
+  await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
+  await screen.findByRole("button", { name: "Transfer" });
+}
+
+async function readWhatTheAppStillHolds() {
+  // Lets a finished call's zero-length cache timer run, which drops its variables.
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(0);
+  });
+  const { queryClient } = jest.requireMock<{ queryClient: QueryClient }>(
+    "@/root/query-client/query-client",
+  );
+  return JSON.stringify([
+    queryClient
+      .getMutationCache()
+      .getAll()
+      .map((mutation) => mutation.state.variables),
+    transferFlowStore.getState(),
+    approvalPinSheetStore.getState(),
+    observedRecords,
+  ]);
+}

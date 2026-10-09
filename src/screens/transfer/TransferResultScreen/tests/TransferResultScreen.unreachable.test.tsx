@@ -15,30 +15,6 @@ import { scenarioTest, walkToTransferReview } from "@/test/render/drive-app";
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-function transferIdIn(pathname: string | undefined) {
-  return pathname?.replace("/transfer/result/", "") ?? "";
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}
-
 it(
   "says the bank is still unreachable once its reads at 2, 4, 8 and 16 seconds get no answer, quoting the transfer's id",
   scenarioTest("transfer.status_unreachable", async () => {
@@ -211,9 +187,6 @@ it("still says the bank is unreachable once it stops answering, after answering 
   ).toBeOnTheScreen();
 });
 
-const OFFLINE_NOTICE =
-  "You're offline. Sending is paused until Ryt can be reached.";
-
 it(
   "offers no load-again while the phone has no connection, and offers it again once the phone is back",
   scenarioTest("transfer.outcome_unexpected", async () => {
@@ -299,3 +272,30 @@ it(
     ).toHaveLength(1);
   }),
 );
+
+async function sendRm100FromHome() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await walkToTransferReview();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  return view;
+}
+
+function transferIdIn(pathname: string | undefined) {
+  return pathname?.replace("/transfer/result/", "") ?? "";
+}
+
+// The page's only offers: anything more could be a way to send the money twice.
+function buttonsOnTheResultPage() {
+  return screen
+    .getAllByRole("button")
+    .map((button) => button.props.accessibilityLabel as unknown);
+}
+
+const OFFLINE_NOTICE =
+  "You're offline. Sending is paused until Ryt can be reached.";

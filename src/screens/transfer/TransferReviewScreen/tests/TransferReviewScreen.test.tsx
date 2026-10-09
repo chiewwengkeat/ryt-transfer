@@ -47,22 +47,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-const STILL_BEING_CHECKED =
-  "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
 it(
   "shows the name and bank the bank holds for the number, and the number masked",
   scenarioTest("transfer.recipient_found", async () => {
@@ -374,21 +358,6 @@ it(
   }),
 );
 
-function refuseCreatesKeepingTheirBodies() {
-  const createBodies: unknown[] = [];
-  // Refused, so no approval follows: these tests are about what the create carries.
-  mswServer.use(
-    http.post("*/transfers", async ({ request }) => {
-      createBodies.push(await request.json());
-      return HttpResponse.json(
-        { error: { code: "INVALID_REQUEST", message: "Test." } },
-        { status: 400 },
-      );
-    }),
-  );
-  return createBodies;
-}
-
 it("shows the note on review, and sends it to the bank trimmed", async () => {
   const createBodies = refuseCreatesKeepingTheirBodies();
   await openReviewOfRm100("/transfer", "  Lunch with Ali  ");
@@ -479,3 +448,34 @@ it("tells a screen reader that the PIN keypad is in Bahasa Malaysia when the app
     ),
   ).toHaveProp("accessibilityLanguage", "ms-MY");
 });
+
+const STILL_BEING_CHECKED =
+  "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
+
+function refuseCreatesKeepingTheirBodies() {
+  const createBodies: unknown[] = [];
+  // Refused, so no approval follows: these tests are about what the create carries.
+  mswServer.use(
+    http.post("*/transfers", async ({ request }) => {
+      createBodies.push(await request.json());
+      return HttpResponse.json(
+        { error: { code: "INVALID_REQUEST", message: "Test." } },
+        { status: 400 },
+      );
+    }),
+  );
+  return createBodies;
+}

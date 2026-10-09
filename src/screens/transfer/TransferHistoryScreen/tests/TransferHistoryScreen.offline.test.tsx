@@ -11,24 +11,6 @@ import {
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
 
-const sentTransferHistoryCursors = () =>
-  sentRequests
-    .map(({ url }) => new URL(url))
-    .filter(({ pathname }) => pathname.endsWith("/transfers"))
-    .map(({ searchParams }) => searchParams.get("cursor"));
-
-const LIM_ON_4_OCTOBER = buildHistoryTransfer({
-  registeredName: "Lim Wei Jie",
-  createdAt: "2026-10-04T13:05:00+08:00",
-});
-const TAN_ON_6_OCTOBER = buildHistoryTransfer({
-  registeredName: "Tan Mei Ling",
-  createdAt: "2026-10-06T09:00:00+08:00",
-});
-const OFFLINE = { isConnected: false, isInternetReachable: false };
-const ONLINE = { isConnected: true, isInternetReachable: true };
-const OUT_OF_DATE = "Couldn't refresh — this list may be out of date";
-
 it("asks for the newest page once back online when History opened offline, and shows it", async () => {
   serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
   await renderRoute("/");
@@ -250,3 +232,21 @@ it("asks the bank nothing when the app comes to the front or the connection retu
 
   expect(sentTransferHistoryCursors()).toEqual([null]);
 });
+
+const sentTransferHistoryCursors = () =>
+  sentRequests
+    .map(({ url }) => new URL(url))
+    .filter(({ pathname }) => pathname.endsWith("/transfers"))
+    .map(({ searchParams }) => searchParams.get("cursor"));
+
+const LIM_ON_4_OCTOBER = buildHistoryTransfer({
+  registeredName: "Lim Wei Jie",
+  createdAt: "2026-10-04T13:05:00+08:00",
+});
+const TAN_ON_6_OCTOBER = buildHistoryTransfer({
+  registeredName: "Tan Mei Ling",
+  createdAt: "2026-10-06T09:00:00+08:00",
+});
+const OFFLINE = { isConnected: false, isInternetReachable: false };
+const ONLINE = { isConnected: true, isInternetReachable: true };
+const OUT_OF_DATE = "Couldn't refresh — this list may be out of date";

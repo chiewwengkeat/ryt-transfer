@@ -11,18 +11,6 @@ import {
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
 
-const sentTransferHistoryCursors = () =>
-  sentRequests
-    .map(({ url }) => new URL(url))
-    .filter(({ pathname }) => pathname.endsWith("/transfers"))
-    .map(({ searchParams }) => searchParams.get("cursor"));
-
-const LIM_ON_4_OCTOBER = buildHistoryTransfer({
-  registeredName: "Lim Wei Jie",
-  createdAt: "2026-10-04T13:05:00+08:00",
-});
-const OUT_OF_DATE = "Couldn't refresh — this list may be out of date";
-
 it("offers Retry when the next page fails, asks no more by itself, and shows the page once a retry lands", async () => {
   serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
   const recoverLaterPages = failTransferHistoryPages("later");
@@ -237,3 +225,15 @@ it("announces no failure left from an earlier visit, only one from this visit", 
   expect(await screen.findByText(OUT_OF_DATE)).toBeOnTheScreen();
   expect(announce).toHaveBeenCalledWith(OUT_OF_DATE);
 });
+
+const sentTransferHistoryCursors = () =>
+  sentRequests
+    .map(({ url }) => new URL(url))
+    .filter(({ pathname }) => pathname.endsWith("/transfers"))
+    .map(({ searchParams }) => searchParams.get("cursor"));
+
+const LIM_ON_4_OCTOBER = buildHistoryTransfer({
+  registeredName: "Lim Wei Jie",
+  createdAt: "2026-10-04T13:05:00+08:00",
+});
+const OUT_OF_DATE = "Couldn't refresh — this list may be out of date";

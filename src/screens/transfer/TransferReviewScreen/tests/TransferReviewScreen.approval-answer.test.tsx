@@ -31,35 +31,6 @@ import { watchRoutesDrawnOnTop } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 const t = getFixedT(null, ["shared"]);
-const SENDING_MESSAGE = "Sending your transfer. The bank's answer comes next.";
-const RESULT_PATH = /^\/transfer\/result\/[\w-]+$/;
-
-async function reviewRm100Transfer() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  return view;
-}
-
-async function approveRm100Transfer() {
-  const view = await reviewRm100Transfer();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-async function expectNothingToRecheckAtTheNextLaunch(
-  view: Awaited<ReturnType<typeof renderRoute>>,
-) {
-  const relaunched = await relaunchApp(view);
-  expect(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  ).toBeOnTheScreen();
-  await act(() => jest.advanceTimersByTimeAsync(1_000));
-  expect(relaunched.getPathname()).toBe("/");
-  expect(screen.queryByText(/still being checked/)).toBeNull();
-}
 
 it("opens the result page straight from review, showing no other screen of the transfer between them", async () => {
   await reviewRm100Transfer();
@@ -97,22 +68,6 @@ it("keeps review sending, with Transfer and Back held, from a PIN approval's ans
     for (const spy of [resultPageAsked, homeAsked]) spy.mockRestore();
   }
 });
-
-// ⛔ Stands in for Back skipping the result page: review holds Back until that page covers it, too late to press here.
-function dropTheResultPageAsItOpens() {
-  const pushRoute = router.push;
-  return jest
-    .spyOn(router, "push")
-    .mockImplementation((...pushed: Parameters<typeof router.push>) => {
-      const [href] = pushed;
-      if (
-        typeof href === "object" &&
-        href.pathname === "/transfer/result/[transferId]"
-      )
-        return;
-      pushRoute(...pushed);
-    });
-}
 
 it("tells Home the transfer was sent when the result page never opens, and reopens no result at the next launch", async () => {
   const resultPageDropped = dropTheResultPageAsItOpens();
@@ -224,17 +179,6 @@ it(
     }
   }),
 );
-
-function answerEveryApprovalWith(
-  status: number,
-  error: Record<string, unknown>,
-) {
-  mswServer.use(
-    http.post("*/transfers/:transferId/approve", () =>
-      HttpResponse.json({ error }, { status }),
-    ),
-  );
-}
 
 it(
   "says on review that the approval timed out once the bank's window has passed, and keeps no record to recheck",
@@ -496,3 +440,60 @@ it(
     expect(view.getPathname()).toMatch(RESULT_PATH);
   }),
 );
+
+const SENDING_MESSAGE = "Sending your transfer. The bank's answer comes next.";
+const RESULT_PATH = /^\/transfer\/result\/[\w-]+$/;
+
+async function reviewRm100Transfer() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  return view;
+}
+
+async function approveRm100Transfer() {
+  const view = await reviewRm100Transfer();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  return view;
+}
+
+async function expectNothingToRecheckAtTheNextLaunch(
+  view: Awaited<ReturnType<typeof renderRoute>>,
+) {
+  const relaunched = await relaunchApp(view);
+  expect(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  ).toBeOnTheScreen();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  expect(relaunched.getPathname()).toBe("/");
+  expect(screen.queryByText(/still being checked/)).toBeNull();
+}
+
+// ⛔ Stands in for Back skipping the result page: review holds Back until that page covers it, too late to press here.
+function dropTheResultPageAsItOpens() {
+  const pushRoute = router.push;
+  return jest
+    .spyOn(router, "push")
+    .mockImplementation((...pushed: Parameters<typeof router.push>) => {
+      const [href] = pushed;
+      if (
+        typeof href === "object" &&
+        href.pathname === "/transfer/result/[transferId]"
+      )
+        return;
+      pushRoute(...pushed);
+    });
+}
+
+function answerEveryApprovalWith(
+  status: number,
+  error: Record<string, unknown>,
+) {
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", () =>
+      HttpResponse.json({ error }, { status }),
+    ),
+  );
+}

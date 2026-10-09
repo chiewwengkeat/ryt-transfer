@@ -35,30 +35,6 @@ import {
   renderRoute,
 } from "@/test/render/render-route";
 
-const t = getFixedT(null, ["shared"]);
-const BANK_REFERENCE =
-  /^If you contact us, quote this reference: \d{8}[\dA-F]{8}$/;
-
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}
-
 it(
   "gives a receipt in Malaysia time with the note, offers only Done, and Home's balance and limit move with the money",
   scenarioTest("transfer.completed", async () => {
@@ -411,3 +387,27 @@ it("fades into a sent transfer's result and shows its outcome and tick at once w
     ReduceMotion.Always,
   ]);
 });
+
+const t = getFixedT(null, ["shared"]);
+const BANK_REFERENCE =
+  /^If you contact us, quote this reference: \d{8}[\dA-F]{8}$/;
+
+async function sendRm100FromHome() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await walkToTransferReview();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  return view;
+}
+
+// The page's only offers: anything more could be a way to send the money twice.
+function buttonsOnTheResultPage() {
+  return screen
+    .getAllByRole("button")
+    .map((button) => button.props.accessibilityLabel as unknown);
+}

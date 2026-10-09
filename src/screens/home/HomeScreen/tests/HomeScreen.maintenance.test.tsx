@@ -14,48 +14,6 @@ import {
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
-const t = getFixedT(null, ["shared"]);
-const LIMITS_OUTSIDE_MAINTENANCE = {
-  daily: {
-    limit: { minor: 500_000, currency: "MYR" },
-    usedToday: { minor: 0, currency: "MYR" },
-    remaining: { minor: 500_000, currency: "MYR" },
-  },
-  perTransferMax: { minor: 5_000_000, currency: "MYR" },
-} satisfies GetTransferLimitsResponse;
-
-async function returnToFrontHoldingTheLimitsRead() {
-  let limitsAskedAgain = false;
-  let answerLimitsAgain = () => {};
-  mswServer.use(
-    http.get(
-      "*/transfer-limits",
-      async () => {
-        limitsAskedAgain = true;
-        // Returning nothing passes the request on to the bank, which answers maintenance again.
-        await new Promise<void>((resolve) => {
-          answerLimitsAgain = resolve;
-        });
-      },
-      { once: true },
-    ),
-  );
-  moveAppTo("background");
-  moveAppTo("active");
-  await waitFor(() => {
-    expect(limitsAskedAgain).toBe(true);
-  });
-  await act(() => jest.advanceTimersByTimeAsync(100));
-  return () => answerLimitsAgain();
-}
-
-async function pressEveryRecentRecipientExpectingItDisabled() {
-  for (const recent of await screen.findAllByRole("button", { name: /••••/ })) {
-    expect(recent).toBeDisabled();
-    await fireEvent.press(recent);
-  }
-}
-
 it(
   "shows the balance during maintenance, says until when transfers are unavailable, and starts none from the recent recipients",
   scenarioTest("transfer.under_maintenance", async () => {
@@ -228,3 +186,45 @@ it(
     ).toBeOnTheScreen();
   }),
 );
+
+const t = getFixedT(null, ["shared"]);
+const LIMITS_OUTSIDE_MAINTENANCE = {
+  daily: {
+    limit: { minor: 500_000, currency: "MYR" },
+    usedToday: { minor: 0, currency: "MYR" },
+    remaining: { minor: 500_000, currency: "MYR" },
+  },
+  perTransferMax: { minor: 5_000_000, currency: "MYR" },
+} satisfies GetTransferLimitsResponse;
+
+async function returnToFrontHoldingTheLimitsRead() {
+  let limitsAskedAgain = false;
+  let answerLimitsAgain = () => {};
+  mswServer.use(
+    http.get(
+      "*/transfer-limits",
+      async () => {
+        limitsAskedAgain = true;
+        // Returning nothing passes the request on to the bank, which answers maintenance again.
+        await new Promise<void>((resolve) => {
+          answerLimitsAgain = resolve;
+        });
+      },
+      { once: true },
+    ),
+  );
+  moveAppTo("background");
+  moveAppTo("active");
+  await waitFor(() => {
+    expect(limitsAskedAgain).toBe(true);
+  });
+  await act(() => jest.advanceTimersByTimeAsync(100));
+  return () => answerLimitsAgain();
+}
+
+async function pressEveryRecentRecipientExpectingItDisabled() {
+  for (const recent of await screen.findAllByRole("button", { name: /••••/ })) {
+    expect(recent).toBeDisabled();
+    await fireEvent.press(recent);
+  }
+}

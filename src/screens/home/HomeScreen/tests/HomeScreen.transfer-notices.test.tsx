@@ -28,40 +28,6 @@ import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 import { scenarioTest } from "@/test/render/drive-app";
 
-const STILL_BEING_CHECKED =
-  "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
-
-async function launchWithATransferLastSeenProcessing(
-  statusNow: Partial<Transfer>,
-) {
-  const {
-    body: { customerId },
-  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
-  const { created, lookup } = await startTestTransfer(10_000);
-  await writePendingTransfer(customerId, {
-    transferId: created.transfer.transferId,
-    idempotencyKey: "approval-key",
-    createdAt: "2026-10-07T01:30:00.000Z",
-    stage: PendingTransferStage.Processing,
-  });
-  const bankAnswer = {
-    transfer: {
-      ...created.transfer,
-      reference: "20261007C0FFEE00",
-      ...statusNow,
-    },
-  };
-  mswServer.use(
-    http.get("*/transfers/:transferId", () => HttpResponse.json(bankAnswer)),
-  );
-  const view = await renderRoute("/");
-  return {
-    view,
-    bankAnswer,
-    recipientName: lookup.recipient.registeredName,
-  };
-}
-
 it.each([
   ["sent", { status: TransferStatus.Completed }, "was sent — money moved."],
   [
@@ -311,26 +277,6 @@ it("stops checking the transfer Home warns about while the session-ended view co
   expect(readsOfTheTransfer()).toBe(readsWhenTheSessionEnded);
 });
 
-async function sendHomesCheckWithItsAnswerThatTheTransferEndedStillOut(
-  bankAnswer: Awaited<
-    ReturnType<typeof launchWithATransferLastSeenProcessing>
-  >["bankAnswer"],
-) {
-  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
-  bankAnswer.transfer = {
-    ...bankAnswer.transfer,
-    status: TransferStatus.Completed,
-    version: bankAnswer.transfer.version + 1,
-  };
-  mswServer.use(
-    http.get("*/transfers/:transferId", async () => {
-      await delay(5_000);
-      return HttpResponse.json(bankAnswer);
-    }),
-  );
-  await act(() => jest.advanceTimersByTimeAsync(15_000));
-}
-
 it("sends nothing more under the session-ended view when Home's check that was out finds the transfer has ended", async () => {
   const { bankAnswer } = await launchWithATransferLastSeenProcessing({
     status: TransferStatus.Processing,
@@ -488,3 +434,57 @@ it("checks a pending transfer again once they sign back in, and tells Home how i
   ).toBeOnTheScreen();
   expect(screen.queryByText(STILL_BEING_CHECKED)).toBeNull();
 });
+
+const STILL_BEING_CHECKED =
+  "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
+
+async function launchWithATransferLastSeenProcessing(
+  statusNow: Partial<Transfer>,
+) {
+  const {
+    body: { customerId },
+  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+  const { created, lookup } = await startTestTransfer(10_000);
+  await writePendingTransfer(customerId, {
+    transferId: created.transfer.transferId,
+    idempotencyKey: "approval-key",
+    createdAt: "2026-10-07T01:30:00.000Z",
+    stage: PendingTransferStage.Processing,
+  });
+  const bankAnswer = {
+    transfer: {
+      ...created.transfer,
+      reference: "20261007C0FFEE00",
+      ...statusNow,
+    },
+  };
+  mswServer.use(
+    http.get("*/transfers/:transferId", () => HttpResponse.json(bankAnswer)),
+  );
+  const view = await renderRoute("/");
+  return {
+    view,
+    bankAnswer,
+    recipientName: lookup.recipient.registeredName,
+  };
+}
+
+async function sendHomesCheckWithItsAnswerThatTheTransferEndedStillOut(
+  bankAnswer: Awaited<
+    ReturnType<typeof launchWithATransferLastSeenProcessing>
+  >["bankAnswer"],
+) {
+  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+  bankAnswer.transfer = {
+    ...bankAnswer.transfer,
+    status: TransferStatus.Completed,
+    version: bankAnswer.transfer.version + 1,
+  };
+  mswServer.use(
+    http.get("*/transfers/:transferId", async () => {
+      await delay(5_000);
+      return HttpResponse.json(bankAnswer);
+    }),
+  );
+  await act(() => jest.advanceTimersByTimeAsync(15_000));
+}

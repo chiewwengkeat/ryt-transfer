@@ -12,41 +12,6 @@ import {
   scenarioSections,
 } from "./transfer.helper";
 
-// Jest defines it; the app's types deliberately leave out Node's globals.
-declare const __dirname: string;
-
-const { readFileSync, readdirSync } = jest.requireActual<{
-  readFileSync: (path: string, encoding: "utf8") => string;
-  readdirSync: (path: string, options: { recursive: true }) => string[];
-}>("node:fs");
-
-const SOURCE_ROOT = `${__dirname}/../../..`;
-
-const STEP_NAMES = [
-  "Start",
-  "Recipient",
-  "Amount",
-  "Review",
-  "Approval",
-  "Outcome",
-  "Recovery",
-];
-const MONEY_STATES = [
-  "no money moved",
-  "money moved",
-  "not confirmed yet",
-  "money returned",
-];
-const REQUIRED_LABELS = ["When", "Money", "Shown as", "Tell them", "They can"];
-const OPTIONAL_LABELS = ["Never", "Afterwards", "Why"];
-
-// Mirrors GitHub's heading anchors, which the index links must match.
-const anchorOf = (heading: string) =>
-  heading
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s_-]/gu, "")
-    .replace(/ /g, "-");
-
 it("lists the seven steps in order", () => {
   expect(parsedSteps.map((step) => step.name)).toEqual(STEP_NAMES);
 });
@@ -268,3 +233,38 @@ it("gives every scenario a route test that names it and asserts", () => {
       .filter((id) => !routeTestedIds.has(id)),
   ).toEqual([]);
 });
+
+// Jest defines it; the app's types deliberately leave out Node's globals.
+declare const __dirname: string;
+
+const { readFileSync, readdirSync } = jest.requireActual<{
+  readFileSync: (path: string, encoding: "utf8") => string;
+  readdirSync: (path: string, options: { recursive: true }) => string[];
+}>("node:fs");
+
+const SOURCE_ROOT = `${__dirname}/../../..`;
+
+const STEP_NAMES = [
+  "Start",
+  "Recipient",
+  "Amount",
+  "Review",
+  "Approval",
+  "Outcome",
+  "Recovery",
+];
+const MONEY_STATES = [
+  "no money moved",
+  "money moved",
+  "not confirmed yet",
+  "money returned",
+];
+const REQUIRED_LABELS = ["When", "Money", "Shown as", "Tell them", "They can"];
+const OPTIONAL_LABELS = ["Never", "Afterwards", "Why"];
+
+// Mirrors GitHub's heading anchors, which the index links must match.
+const anchorOf = (heading: string) =>
+  heading
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s_-]/gu, "")
+    .replace(/ /g, "-");

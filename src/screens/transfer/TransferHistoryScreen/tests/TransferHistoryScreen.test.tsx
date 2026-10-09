@@ -36,24 +36,8 @@ import {
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
 
-const WINDOW_AT_LAUNCH = Dimensions.get("window");
-const SCREEN_AT_LAUNCH = Dimensions.get("screen");
-
 afterEach(() => {
   Dimensions.set({ window: WINDOW_AT_LAUNCH, screen: SCREEN_AT_LAUNCH });
-});
-
-const LIM_ON_4_OCTOBER = buildHistoryTransfer({
-  registeredName: "Lim Wei Jie",
-  createdAt: "2026-10-04T13:05:00+08:00",
-});
-const TAN_ON_6_OCTOBER = buildHistoryTransfer({
-  registeredName: "Tan Mei Ling",
-  createdAt: "2026-10-06T09:00:00+08:00",
-});
-const LIM_AT_AN_UNREADABLE_TIME = buildHistoryTransfer({
-  registeredName: "Lim Wei Jie",
-  createdAt: "not a date",
 });
 
 it("goes back to Home from History's header", async () => {
@@ -420,18 +404,6 @@ it("turns a day's chevron at once when the phone reduces motion", async () => {
   ]);
 });
 
-function setPhoneTextSize(fontScale: number) {
-  Dimensions.set({
-    window: { ...WINDOW_AT_LAUNCH, fontScale },
-    screen: { ...SCREEN_AT_LAUNCH, fontScale },
-  });
-}
-
-function flexBasisOf(element: ReturnType<typeof screen.getByText> | null) {
-  return StyleSheet.flatten(element?.props.style as StyleProp<ViewStyle>)
-    .flexBasis;
-}
-
 // Jest lays nothing out: these pin the styles a device's wrap relies on, and only a device shows the wrap.
 it("keeps a transfer's name and a day's title in a column that widens with the text size, wrapping the amount below them instead of squeezing them", async () => {
   serveTransferHistoryPages([[buildHistoryTransfer()]]);
@@ -466,3 +438,31 @@ it("keeps a transfer's name and a day's title in a column that widens with the t
     flexShrink: 1,
   });
 });
+
+const WINDOW_AT_LAUNCH = Dimensions.get("window");
+const SCREEN_AT_LAUNCH = Dimensions.get("screen");
+
+const LIM_ON_4_OCTOBER = buildHistoryTransfer({
+  registeredName: "Lim Wei Jie",
+  createdAt: "2026-10-04T13:05:00+08:00",
+});
+const TAN_ON_6_OCTOBER = buildHistoryTransfer({
+  registeredName: "Tan Mei Ling",
+  createdAt: "2026-10-06T09:00:00+08:00",
+});
+const LIM_AT_AN_UNREADABLE_TIME = buildHistoryTransfer({
+  registeredName: "Lim Wei Jie",
+  createdAt: "not a date",
+});
+
+function setPhoneTextSize(fontScale: number) {
+  Dimensions.set({
+    window: { ...WINDOW_AT_LAUNCH, fontScale },
+    screen: { ...SCREEN_AT_LAUNCH, fontScale },
+  });
+}
+
+function flexBasisOf(element: ReturnType<typeof screen.getByText> | null) {
+  return StyleSheet.flatten(element?.props.style as StyleProp<ViewStyle>)
+    .flexBasis;
+}

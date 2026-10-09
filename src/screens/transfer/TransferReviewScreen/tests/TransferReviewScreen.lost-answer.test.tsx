@@ -32,40 +32,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
-const DEMO_PIN = "246810";
-
-async function confirmRm100ApprovedByPin() {
-  approvalSettingsStore.setState({ biometricApprovalOn: false });
-  return confirmRm100Transfer();
-}
-
-async function pairPhoneAndOpenReviewOfRm100() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function confirmRm100Transfer() {
-  const view = await pairPhoneAndOpenReviewOfRm100();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  return view;
-}
-
 it(
   "leaves only Home beneath the result once the approval's answer is lost, so review cannot send it again",
   scenarioTest("transfer.approval_unanswered", async () => {
@@ -321,3 +287,37 @@ it("closes the PIN sheet and checks the transfer on the result page, never sayin
   expect(dismissFailingOnce).toHaveBeenCalledTimes(2);
   dismissFailingOnce.mockRestore();
 });
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
+
+const DEMO_PIN = "246810";
+
+async function confirmRm100ApprovedByPin() {
+  approvalSettingsStore.setState({ biometricApprovalOn: false });
+  return confirmRm100Transfer();
+}
+
+async function pairPhoneAndOpenReviewOfRm100() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  await screen.findByRole("button", { name: "Transfer" });
+  return view;
+}
+
+async function confirmRm100Transfer() {
+  const view = await pairPhoneAndOpenReviewOfRm100();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  return view;
+}

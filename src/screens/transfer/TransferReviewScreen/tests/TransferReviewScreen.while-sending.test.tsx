@@ -29,31 +29,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
-// The swipe is native and never reaches JS, so this reads the setting the native transfer screen is handed.
-function readRootTransferScreenGestureEnabled() {
-  const transferScreen = screen.root?.queryAll(
-    (node) =>
-      node.type === "RNSScreen" &&
-      String(node.props.screenId).startsWith("transfer-"),
-  )[0];
-  if (transferScreen === undefined)
-    throw new Error("The root stack holds no transfer screen.");
-  return transferScreen.props.gestureEnabled as unknown;
-}
-
 it(
   "sends one transfer when Transfer is pressed twice before review can re-render",
   scenarioTest("transfer.double_tap_ignored", async () => {
@@ -330,3 +305,28 @@ it("ignores Android's Back while the transfer is being sent", async () => {
     await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 }),
   ).toBeOnTheScreen();
 });
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
+
+// The swipe is native and never reaches JS, so this reads the setting the native transfer screen is handed.
+function readRootTransferScreenGestureEnabled() {
+  const transferScreen = screen.root?.queryAll(
+    (node) =>
+      node.type === "RNSScreen" &&
+      String(node.props.screenId).startsWith("transfer-"),
+  )[0];
+  if (transferScreen === undefined)
+    throw new Error("The root stack holds no transfer screen.");
+  return transferScreen.props.gestureEnabled as unknown;
+}

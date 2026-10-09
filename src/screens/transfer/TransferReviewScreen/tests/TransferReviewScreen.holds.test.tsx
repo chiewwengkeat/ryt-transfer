@@ -19,24 +19,9 @@ import {
   waitForHomeToOfferTransfer,
 } from "./TransferReviewScreen.helper";
 
-const t = getFixedT(null, ["shared"]);
-
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
 
 it(
   "says from when money can be sent while a newly paired phone waits, announces it, and holds the transfer",
@@ -213,3 +198,18 @@ it(
     expect(view.getPathname()).toBe("/transfer/amount");
   }),
 );
+
+const t = getFixedT(null, ["shared"]);
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
