@@ -10,13 +10,12 @@ const { findEntriesOutsideTheSliceFolders } = require("./slice-layout");
 function findPlacedPiece(file) {
   const parts = file.split("/");
   if (!["screens", "domains", "shared", "root"].includes(parts[1])) return null;
-  for (let i = parts.length - 2; i >= 2; i -= 1) {
+  for (let i = parts.length - 3; i >= 2; i -= 1) {
     if (["components", "hooks", "lib"].includes(parts[i])) {
       return {
         path: parts.slice(0, i + 2).join("/"),
         container: parts.slice(0, i + 1).join("/"),
         kind: parts[i],
-        isFile: i + 2 === parts.length,
       };
     }
   }
@@ -27,7 +26,6 @@ function findPlacedPiece(file) {
       path: parts.slice(0, 4).join("/"),
       container: "src/shared/ui",
       kind: "components",
-      isFile: false,
       isBaseComponent: true,
     };
   return null;
@@ -105,9 +103,7 @@ function findAppUsersOf(placed, edgesByModule) {
 }
 
 function isInsidePiece(placed, file) {
-  return placed.isFile
-    ? file === placed.path
-    : file.startsWith(`${placed.path}/`);
+  return file.startsWith(`${placed.path}/`);
 }
 
 function isRootView(folder) {

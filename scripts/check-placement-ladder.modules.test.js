@@ -40,10 +40,12 @@ const ROOT_VIEW_FILE = "src/root/ViewRoot/ViewRoot.tsx";
 
 test("fails a screens-folder hook that one screen uses, naming that screen's hooks folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    "src/screens/transfer/hooks/use-transfer-limits.ts":
+    "src/screens/transfer/hooks/use-transfer-limits/use-transfer-limits.ts":
       "export function useTransferLimits() {\n  return null;\n}\n",
     "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.tsx":
-      moduleImporting("@/screens/transfer/hooks/use-transfer-limits"),
+      moduleImporting(
+        "@/screens/transfer/hooks/use-transfer-limits/use-transfer-limits",
+      ),
   });
   assert.equal(exitCode, 1);
   assert.match(
@@ -53,7 +55,9 @@ test("fails a screens-folder hook that one screen uses, naming that screen's hoo
 });
 
 const BUTTON_PRIMARY_FILE = "src/shared/ui/ButtonPrimary/ButtonPrimary.tsx";
-const SHARED_UI_HOOK_FILE = "src/shared/ui/hooks/use-press-scale.ts";
+const SHARED_UI_HOOK_FILE =
+  "src/shared/ui/hooks/use-press-scale/use-press-scale.ts";
+const SHARED_UI_HOOK_PATH = "@/shared/ui/hooks/use-press-scale/use-press-scale";
 const PRESS_SCALE_HOOK_SOURCE =
   "export function usePressScale() {\n  return 1;\n}\n";
 
@@ -70,13 +74,13 @@ test("fails a hook directly under shared/ui that nothing uses", () => {
     [SHARED_UI_HOOK_FILE]: PRESS_SCALE_HOOK_SOURCE,
   });
   assert.equal(exitCode, 1);
-  assert.match(errors, /use-press-scale\.ts: no app code uses it/);
+  assert.match(errors, /use-press-scale: no app code uses it/);
 });
 
 test("fails a shared/ui hook that one base component uses, naming that component's hooks folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     [SHARED_UI_HOOK_FILE]: PRESS_SCALE_HOOK_SOURCE,
-    [BUTTON_PRIMARY_FILE]: moduleImporting("@/shared/ui/hooks/use-press-scale"),
+    [BUTTON_PRIMARY_FILE]: moduleImporting(SHARED_UI_HOOK_PATH),
   });
   assert.equal(exitCode, 1);
   assert.match(errors, /belongs in src\/shared\/ui\/ButtonPrimary\/hooks\/$/m);
@@ -84,9 +88,11 @@ test("fails a shared/ui hook that one base component uses, naming that component
 
 test("passes a base component's own hook in its hooks folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    "src/shared/ui/ButtonPrimary/hooks/use-press-scale.ts":
+    "src/shared/ui/ButtonPrimary/hooks/use-press-scale/use-press-scale.ts":
       PRESS_SCALE_HOOK_SOURCE,
-    [BUTTON_PRIMARY_FILE]: moduleImporting("./hooks/use-press-scale"),
+    [BUTTON_PRIMARY_FILE]: moduleImporting(
+      "./hooks/use-press-scale/use-press-scale",
+    ),
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
@@ -95,16 +101,16 @@ test("passes a base component's own hook in its hooks folder", () => {
 test("passes a shared/ui hook that two base components use", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     [SHARED_UI_HOOK_FILE]: PRESS_SCALE_HOOK_SOURCE,
-    [BUTTON_PRIMARY_FILE]: moduleImporting("@/shared/ui/hooks/use-press-scale"),
-    "src/shared/ui/FieldText/FieldText.tsx": moduleImporting(
-      "@/shared/ui/hooks/use-press-scale",
-    ),
+    [BUTTON_PRIMARY_FILE]: moduleImporting(SHARED_UI_HOOK_PATH),
+    "src/shared/ui/FieldText/FieldText.tsx":
+      moduleImporting(SHARED_UI_HOOK_PATH),
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
 });
 
-const KEYBOARD_HOOK_FILE = "src/shared/hooks/use-keyboard-height.ts";
+const KEYBOARD_HOOK_FILE =
+  "src/shared/hooks/use-keyboard-height/use-keyboard-height.ts";
 const KEYBOARD_HOOK_SOURCE =
   "export function useKeyboardHeight() {\n  return 0;\n}\n";
 
@@ -113,13 +119,15 @@ test("fails a shared hook that nothing uses", () => {
     [KEYBOARD_HOOK_FILE]: KEYBOARD_HOOK_SOURCE,
   });
   assert.equal(exitCode, 1);
-  assert.match(errors, /use-keyboard-height\.ts: no app code uses it/);
+  assert.match(errors, /use-keyboard-height: no app code uses it/);
 });
 
 test("fails a shared hook that one screen uses, naming that screen's hooks folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     [KEYBOARD_HOOK_FILE]: KEYBOARD_HOOK_SOURCE,
-    [AMOUNT_SCREEN_FILE]: moduleImporting("@/shared/hooks/use-keyboard-height"),
+    [AMOUNT_SCREEN_FILE]: moduleImporting(
+      "@/shared/hooks/use-keyboard-height/use-keyboard-height",
+    ),
   });
   assert.equal(exitCode, 1);
   assert.match(
@@ -128,10 +136,12 @@ test("fails a shared hook that one screen uses, naming that screen's hooks folde
   );
 });
 
-const keyboardHookUser = moduleImporting("@/shared/hooks/use-keyboard-height");
+const keyboardHookUser = moduleImporting(
+  "@/shared/hooks/use-keyboard-height/use-keyboard-height",
+);
 const domainHooksUser = moduleImporting(
-  "@/domains/transfer/hooks/use-status-checker",
-  "@/domains/approval/hooks/use-resend-timer",
+  "@/domains/transfer/hooks/use-status-checker/use-status-checker",
+  "@/domains/approval/hooks/use-resend-timer/use-resend-timer",
 );
 
 for (const [users, tree] of [
@@ -152,8 +162,10 @@ for (const [users, tree] of [
   [
     "two domains, which cannot import each other",
     {
-      "src/domains/transfer/hooks/use-status-checker.ts": keyboardHookUser,
-      "src/domains/approval/hooks/use-resend-timer.ts": keyboardHookUser,
+      "src/domains/transfer/hooks/use-status-checker/use-status-checker.ts":
+        keyboardHookUser,
+      "src/domains/approval/hooks/use-resend-timer/use-resend-timer.ts":
+        keyboardHookUser,
       "src/screens/home/HomeScreen/HomeScreen.tsx": domainHooksUser,
       [ROOT_VIEW_FILE]: domainHooksUser,
     },
@@ -177,18 +189,17 @@ test("fails a shared hook that only the root view uses, naming the root view's h
   assert.equal(exitCode, 1);
   assert.match(
     errors,
-    /use-keyboard-height\.ts: every user sits in src\/root\/ViewRoot\/ .* - it belongs in src\/root\/ViewRoot\/hooks\/$/m,
+    /use-keyboard-height: every user sits in src\/root\/ViewRoot\/ .* - it belongs in src\/root\/ViewRoot\/hooks\/$/m,
   );
 });
 
 test("passes a domain hook that only the root uses, when its files import that domain", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    "src/domains/approval/hooks/use-resend-timer.ts": moduleImporting(
-      "@/domains/approval/api/approval.keys",
-    ),
+    "src/domains/approval/hooks/use-resend-timer/use-resend-timer.ts":
+      moduleImporting("@/domains/approval/api/approval.keys"),
     "src/domains/approval/api/approval.keys.ts": "export const keys = {};\n",
     [ROOT_VIEW_FILE]: moduleImporting(
-      "@/domains/approval/hooks/use-resend-timer",
+      "@/domains/approval/hooks/use-resend-timer/use-resend-timer",
     ),
   });
   assert.equal(errors, "");
@@ -197,10 +208,10 @@ test("passes a domain hook that only the root uses, when its files import that d
 
 test("fails a domain hook that only one domain component uses, naming that component's hooks folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    "src/domains/approval/hooks/use-pin-entry.ts":
+    "src/domains/approval/hooks/use-pin-entry/use-pin-entry.ts":
       "export function usePinEntry() {\n  return null;\n}\n",
     "src/domains/approval/components/BottomSheetPin/BottomSheetPin.tsx":
-      moduleImporting("@/domains/approval/hooks/use-pin-entry"),
+      moduleImporting("@/domains/approval/hooks/use-pin-entry/use-pin-entry"),
     [ROOT_VIEW_FILE]: moduleImporting(
       "@/domains/approval/components/BottomSheetPin/BottomSheetPin",
     ),

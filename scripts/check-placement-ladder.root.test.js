@@ -55,24 +55,27 @@ test("keeps a component whose files import two domains nested in the root view, 
 test("fails a hook only the root view uses whose files import one domain, naming that domain's hooks folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     ...domainKeys,
-    [ROOT_VIEW_FILE]: moduleImporting("./hooks/use-pending-launch"),
-    "src/root/ViewRoot/hooks/use-pending-launch.ts":
+    [ROOT_VIEW_FILE]: moduleImporting(
+      "./hooks/use-pending-launch/use-pending-launch",
+    ),
+    "src/root/ViewRoot/hooks/use-pending-launch/use-pending-launch.ts":
       moduleImporting(ACCOUNT_KEYS),
   });
   assert.equal(exitCode, 1);
   assert.match(
     errors,
-    /use-pending-launch\.ts: only src\/root uses it .* - it belongs in src\/domains\/account\/hooks\/$/m,
+    /use-pending-launch: only src\/root uses it .* - it belongs in src\/domains\/account\/hooks\/$/m,
   );
 });
 
 test("passes a hook only the root view uses whose files import no domain, nested in the root view", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     ...rootModules,
-    [ROOT_VIEW_FILE]: moduleImporting("./hooks/use-screen-capture-block"),
-    "src/root/ViewRoot/hooks/use-screen-capture-block.ts": moduleImporting(
-      "@/root/app-launch/app-launch",
+    [ROOT_VIEW_FILE]: moduleImporting(
+      "./hooks/use-screen-capture-block/use-screen-capture-block",
     ),
+    "src/root/ViewRoot/hooks/use-screen-capture-block/use-screen-capture-block.ts":
+      moduleImporting("@/root/app-launch/app-launch"),
   });
   assert.equal(errors, "");
   assert.equal(exitCode, 0);
@@ -95,15 +98,15 @@ test("fails a lib module only the root view uses whose files import one domain, 
 test("fails a domain hook only the root view uses whose files import no domain, naming the root view's hooks folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     [ROOT_VIEW_FILE]: moduleImporting(
-      "@/domains/approval/hooks/use-sheet-host",
+      "@/domains/approval/hooks/use-sheet-host/use-sheet-host",
     ),
-    "src/domains/approval/hooks/use-sheet-host.ts":
+    "src/domains/approval/hooks/use-sheet-host/use-sheet-host.ts":
       "export function useSheetHost() {\n  return null;\n}\n",
   });
   assert.equal(exitCode, 1);
   assert.match(
     errors,
-    /use-sheet-host\.ts: every user sits in src\/root\/ViewRoot\/ .* - it belongs in src\/root\/ViewRoot\/hooks\/$/m,
+    /use-sheet-host: every user sits in src\/root\/ViewRoot\/ .* - it belongs in src\/root\/ViewRoot\/hooks\/$/m,
   );
 });
 
