@@ -160,6 +160,9 @@ function readAgainEveryReadButAnsweredNameChecks({
               TransportErrorKind.Aborted,
             ].includes(error.kind) ||
               (error.kind === TransportErrorKind.Http &&
-                error.status === 401))))),
+                (error.status === 401 ||
+                  // A server error the bank put no code on is no answer from it.
+                  ((error.status ?? 0) >= 500 &&
+                    error.code === undefined))))))),
   });
 }

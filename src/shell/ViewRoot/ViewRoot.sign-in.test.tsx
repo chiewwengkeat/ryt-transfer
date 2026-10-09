@@ -144,6 +144,53 @@ it("asks a name check the network cut off again by itself once they sign back in
   expect(sentNameChecks()).toHaveLength(nameChecksBeforeSignIn + 1);
 });
 
+it("asks a name check a server error failed again by itself once they sign back in", async () => {
+  const { recipient } = await lookUpTestRecipient("012-345 6789");
+  let serverFailing = true;
+  mswServer.use(
+    http.post("*/recipients/lookup", () =>
+      serverFailing ? new HttpResponse(null, { status: 500 }) : undefined,
+    ),
+  );
+  await reviewRm100ToTheTestRecipient();
+  await screen.findByText(/Something unexpected stopped the transfer/);
+  await endSessionWithAnyRequest();
+  const nameChecksBeforeSignIn = sentNameChecks().length;
+  serverFailing = false;
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Sign in again" }),
+  );
+
+  expect(await screen.findByText(recipient.registeredName)).toBeOnTheScreen();
+  expect(sentNameChecks()).toHaveLength(nameChecksBeforeSignIn + 1);
+});
+
+it("keeps a name check the bank said it could not run when they sign back in, rather than asking it again", async () => {
+  mswServer.use(
+    http.post("*/recipients/lookup", () =>
+      HttpResponse.json(
+        { error: { code: "NAME_ENQUIRY_UNAVAILABLE", message: "Test." } },
+        { status: 503 },
+      ),
+    ),
+  );
+  await reviewRm100ToTheTestRecipient();
+  await screen.findByText("Recipient names can't be confirmed right now.");
+  await endSessionWithAnyRequest();
+  const nameChecksBeforeSignIn = sentNameChecks().length;
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Sign in again" }),
+  );
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+
+  expect(sentNameChecks()).toHaveLength(nameChecksBeforeSignIn);
+  expect(
+    screen.getByText("Recipient names can't be confirmed right now."),
+  ).toBeOnTheScreen();
+});
+
 it("keeps a name check the bank refused when they sign back in, rather than asking it again", async () => {
   mswServer.use(
     http.post(
