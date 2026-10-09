@@ -140,6 +140,9 @@ export async function settleApprovalAnswer({
   }).catch((error: unknown) => {
     reportError(error, { boundary: "pending_transfer" });
   });
+  // ⛔ Read after the wait: a session ended or a demo reset meanwhile leaves no transfer for a result page.
+  if (isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId))
+    return;
   openResultPageOfSentApproval({
     queryClient,
     transferId,
