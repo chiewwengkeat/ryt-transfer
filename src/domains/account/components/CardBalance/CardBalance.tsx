@@ -77,7 +77,7 @@ export default function CardBalance({
 
   if (failureScenario !== undefined) {
     return (
-      <Card>
+      <Card styles={{ main: styles.main }}>
         <BannerAction
           tone="negative"
           announce={!failureIsSessionEnd}
