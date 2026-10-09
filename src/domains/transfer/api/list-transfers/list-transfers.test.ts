@@ -33,8 +33,15 @@ const transferAt = (version: number, status: TransferStatus): Transfer => ({
   updatedAt: "2026-10-07T09:30:05+08:00",
 });
 
+// No gc timer: each query's 5-minute one runs on real time, outlives the test and holds Jest's worker open.
+function createQueryClientWithoutGcTimer() {
+  return new QueryClient({
+    defaultOptions: { queries: { gcTime: Infinity } },
+  });
+}
+
 function historyHolding(...pages: Transfer[][]) {
-  const queryClient = new QueryClient();
+  const queryClient = createQueryClientWithoutGcTimer();
   queryClient.setQueryData<InfiniteData<ListTransfersResponse>>(
     transferKeys.history(),
     {
@@ -84,7 +91,7 @@ it("keeps only the newest page of history after a transfer", async () => {
 });
 
 it("finds history cached only once a page of it has landed", () => {
-  const coldCache = new QueryClient();
+  const coldCache = createQueryClientWithoutGcTimer();
   coldCache
     .getQueryCache()
     .build(coldCache, { queryKey: transferKeys.history() });
@@ -116,5 +123,7 @@ it("counts a Malaysian day's loaded transfers across pages, one whose time canno
 
   expect(countLoadedTransfersOnDay(history.queryClient, "2026-10-07")).toBe(3);
   expect(countLoadedTransfersOnDay(history.queryClient, "2026-10-06")).toBe(1);
-  expect(countLoadedTransfersOnDay(new QueryClient(), "2026-10-07")).toBe(0);
+  expect(
+    countLoadedTransfersOnDay(createQueryClientWithoutGcTimer(), "2026-10-07"),
+  ).toBe(0);
 });
