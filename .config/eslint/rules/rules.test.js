@@ -5,9 +5,9 @@
 const { test } = require("node:test");
 const { RuleTester } = require("eslint");
 
-const ownFolder = require("../component-own-folder");
-const kebabCase = require("../hook-file-kebab-case");
-const typePrefix = require("../component-type-prefix");
+const ownFolder = require("./component-own-folder");
+const kebabCase = require("./hook-file-kebab-case");
+const typePrefix = require("./component-type-prefix");
 
 // node:test owns reporting and failure now. RuleTester's own describe/it shims
 // would catch the assertion throw and log it, leaving the node:test case green.
@@ -295,12 +295,16 @@ test("component-type-prefix: rejects Cardinal — Card is not a word-boundary ma
 test("every rule file is registered in index.js and resolves", () => {
   const assert = require("node:assert");
   const fs = require("node:fs");
-  const path = require("node:path");
-  const dir = path.join(__dirname, "..");
-  const index = require("../index.js");
+  const index = require("./index.js");
   const onDisk = fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".js") && !f.startsWith("_") && f !== "index.js")
+    .readdirSync(__dirname)
+    .filter(
+      (f) =>
+        f.endsWith(".js") &&
+        !f.endsWith(".test.js") &&
+        !f.startsWith("_") &&
+        f !== "index.js",
+    )
     .map((f) => f.replace(/\.js$/, ""))
     .sort();
   const registered = Object.keys(index.rules).sort();

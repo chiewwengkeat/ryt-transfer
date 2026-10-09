@@ -10,7 +10,7 @@ const {
   fetchHookCall,
   importedBindings,
   moduleSources,
-} = require("../_imports");
+} = require("./_imports");
 
 function program(code) {
   return parser.parseForESLint(code, {

@@ -6,11 +6,11 @@ const { test } = require("node:test");
 const { RuleTester } = require("eslint");
 const { parser } = require("typescript-eslint");
 
-const layout = require("../component-layout");
-const jsdocLength = require("../component-jsdoc-length");
+const layout = require("./component-layout");
+const jsdocLength = require("./component-jsdoc-length");
 // component-type-prefix's filename-only cases live in rules.test.js; the ones that
 // need the AST to find the exported component live here.
-const typePrefix = require("../component-type-prefix");
+const typePrefix = require("./component-type-prefix");
 
 // node:test owns reporting and failure now. RuleTester's own describe/it shims
 // would catch the assertion throw and log it, leaving the node:test case green.

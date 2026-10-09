@@ -9,7 +9,7 @@ const { mkdtempSync, mkdirSync, writeFileSync } = require("fs");
 const { tmpdir } = require("os");
 const { parser } = require("typescript-eslint");
 
-const rule = require("../no-cross-component-internals");
+const rule = require("./no-cross-component-internals");
 
 // node:test owns reporting and failure now. RuleTester's own describe/it shims
 // would catch the assertion throw and log it, leaving the node:test case green.

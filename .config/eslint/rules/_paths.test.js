@@ -15,7 +15,7 @@ const {
   parsePath,
   resolveModule,
   stripAffixes,
-} = require("../_paths");
+} = require("./_paths");
 
 /** A real directory tree. The disk-reading helpers return [] for a path that
  * does not exist, so a synthetic `/repo/src/...` filename makes them silently

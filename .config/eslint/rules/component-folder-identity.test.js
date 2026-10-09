@@ -5,7 +5,7 @@ const { RuleTester } = require("eslint");
 const { mkdtempSync, mkdirSync, writeFileSync } = require("fs");
 const { tmpdir } = require("os");
 
-const rule = require("../component-folder-identity");
+const rule = require("./component-folder-identity");
 
 // node:test owns reporting and failure now. RuleTester's own describe/it shims
 // would catch the assertion throw and log it, leaving the node:test case green.

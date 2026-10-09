@@ -16,7 +16,7 @@
     "lint": "eslint . --max-warnings 0 && node scripts/check-format.js && node scripts/check-placement-ladder.js && secretlint \"**/*\"",
     "prepare": "husky",
     "start": "EXPO_PUBLIC_APP_VARIANT=development expo start --dev-client",
-    "test": "jest && node --test \"scripts/**/*.test.js\" \"eslint-rules/__tests__/*.test.js\"",
+    "test": "jest && node --test \"scripts/*.test.js\" \".config/**/*.test.js\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

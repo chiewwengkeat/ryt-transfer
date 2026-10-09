@@ -7,7 +7,7 @@ const { test } = require("node:test");
 const { RuleTester } = require("eslint");
 const { parser } = require("typescript-eslint");
 
-const rule = require("../no-component-fetch-hooks");
+const rule = require("./no-component-fetch-hooks");
 
 // node:test owns reporting and failure now. RuleTester's own describe/it shims
 // would catch the assertion throw and log it, leaving the node:test case green.
