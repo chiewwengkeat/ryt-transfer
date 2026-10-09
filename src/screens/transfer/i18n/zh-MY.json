@@ -344,22 +344,11 @@
   "review": {
     "title": "核对",
     "recipient_name": "收款人",
-    "amount": "金额",
-    "note": "备注",
     "transfer": "转账",
     "prompt_title": "批准转账",
     "prompt_title_ios": "批准向 {{name}} 转账 {{amount}}",
     "prompt_subtitle": "{{amount}} 转给 {{name}}",
     "prompt_cancel": "取消"
-  },
-  "section_review_recipient": {
-    "bank": "银行",
-    "mobile": "手机号码",
-    "nric": "身份证号码",
-    "account_number": "账号",
-    "passport": "护照号码",
-    "brn": "商业注册号码",
-    "army_police": "军警证件号码"
   },
   "approval": {},
   "result": {

@@ -344,22 +344,11 @@
   "review": {
     "title": "Review",
     "recipient_name": "To",
-    "amount": "Amount",
-    "note": "Note",
     "transfer": "Transfer",
     "prompt_title": "Approve transfer",
     "prompt_title_ios": "Approve {{amount}} to {{name}}",
     "prompt_subtitle": "{{amount}} to {{name}}",
     "prompt_cancel": "Cancel"
-  },
-  "section_review_recipient": {
-    "bank": "Bank",
-    "mobile": "Mobile number",
-    "nric": "NRIC number",
-    "account_number": "Account number",
-    "passport": "Passport number",
-    "brn": "Business registration number",
-    "army_police": "Army or police number"
   },
   "approval": {},
   "result": {

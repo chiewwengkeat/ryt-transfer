@@ -14,12 +14,12 @@ export default function SectionReviewRecipient({ recipient }: Props) {
   return (
     <>
       <RowDetail
-        label={t("section_review_recipient.bank")}
+        label={t("common.section_transfer_details.bank")}
         value={recipient.bankName}
       />
       <RowDetail
         label={t(
-          `section_review_recipient.${recipient.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+          `common.section_transfer_details.${recipient.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
         )}
         value={recipient.idValueMasked}
       />

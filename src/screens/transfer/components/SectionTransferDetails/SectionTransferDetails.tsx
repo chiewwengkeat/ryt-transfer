@@ -6,7 +6,7 @@ import {
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import type { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { useTransferStatusWord } from "@/screens/transfer/hooks/use-transfer-status-word";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { formatMoney } from "@/shared/lib/money/money";
@@ -88,26 +88,9 @@ export default function SectionTransferDetails({ transfer }: Props) {
         value={transfer.counterparty.registeredName}
       />
       <RowDetail
-        label={
-          (
-            {
-              [RecipientIdType.Mobile]: t(
-                "common.section_transfer_details.mobile",
-              ),
-              [RecipientIdType.Nric]: t("common.section_transfer_details.nric"),
-              [RecipientIdType.AccountNumber]: t(
-                "common.section_transfer_details.account_number",
-              ),
-              [RecipientIdType.Passport]: t(
-                "common.section_transfer_details.passport",
-              ),
-              [RecipientIdType.Brn]: t("common.section_transfer_details.brn"),
-              [RecipientIdType.ArmyPolice]: t(
-                "common.section_transfer_details.army_police",
-              ),
-            } satisfies Record<RecipientIdType, string>
-          )[transfer.counterparty.idType]
-        }
+        label={t(
+          `common.section_transfer_details.${transfer.counterparty.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+        )}
         value={transfer.counterparty.idValueMasked}
       />
       <RowDetail

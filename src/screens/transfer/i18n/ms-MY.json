@@ -344,22 +344,11 @@
   "review": {
     "title": "Semak",
     "recipient_name": "Kepada",
-    "amount": "Jumlah",
-    "note": "Nota",
     "transfer": "Pindahkan",
     "prompt_title": "Luluskan pindahan",
     "prompt_title_ios": "Luluskan {{amount}} kepada {{name}}",
     "prompt_subtitle": "{{amount}} kepada {{name}}",
     "prompt_cancel": "Batal"
-  },
-  "section_review_recipient": {
-    "bank": "Bank",
-    "mobile": "Nombor telefon bimbit",
-    "nric": "Nombor NRIC",
-    "account_number": "Nombor akaun",
-    "passport": "Nombor pasport",
-    "brn": "Nombor pendaftaran perniagaan",
-    "army_police": "Nombor tentera atau polis"
   },
   "approval": {},
   "result": {

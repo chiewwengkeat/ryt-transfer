@@ -11,9 +11,15 @@ export default function SectionReviewAmount({ draft }: Props) {
   const { t } = useTranslation("transfer");
   return (
     <>
-      <RowDetail label={t("review.amount")} value={formatMoney(draft.amount)} />
+      <RowDetail
+        label={t("common.section_transfer_details.amount")}
+        value={formatMoney(draft.amount)}
+      />
       {draft.note !== undefined && (
-        <RowDetail label={t("review.note")} value={draft.note} />
+        <RowDetail
+          label={t("common.section_transfer_details.note")}
+          value={draft.note}
+        />
       )}
     </>
   );
