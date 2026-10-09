@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
@@ -44,6 +45,17 @@ async function sendRm100FromHome() {
     await screen.findByRole("button", { name: "Transfer" }),
   );
   return view;
+}
+
+function transferIdIn(pathname: string | undefined) {
+  return pathname?.replace("/transfer/result/", "") ?? "";
+}
+
+// The page's only offers: anything more could be a way to send the money twice.
+function buttonsOnTheResultPage() {
+  return screen
+    .getAllByRole("button")
+    .map((button) => button.props.accessibilityLabel as unknown);
 }
 
 // Jest has no screen reader: the focus request is the nearest thing it can see.
@@ -330,3 +342,116 @@ it(
     expect(relaunched.getPathname()).toBe("/");
   }),
 );
+
+it(
+  "checks a transfer whose approval went unanswered, quoting its id, then shows how it ended",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    const releaseStatusRead = holdTheNextTransferRead();
+    const view = await sendRm100FromHome();
+
+    expect(
+      await screen.findByRole(
+        "header",
+        { name: "Checking your transfer" },
+        { timeout: 10_000 },
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "This transfer is being checked, so don't send it again — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
+      ),
+    ).toBeOnTheScreen();
+    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    releaseStatusRead();
+
+    expect(
+      await screen.findByRole("header", { name: "Transfer sent" }),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it("moves Home's balance when a transfer whose answer was lost turns out sent while its result page is open", async () => {
+  let bankCommitsApprovals = false;
+  let lostApproval: Request | undefined;
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", ({ request }) => {
+      if (bankCommitsApprovals) return undefined;
+      lostApproval ??= request.clone();
+      return HttpResponse.error();
+    }),
+  );
+  await sendRm100FromHome();
+  await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 });
+  bankCommitsApprovals = true;
+
+  // The bank commits only now, after the refresh the approve call made on losing its answer.
+  await act(async () => {
+    const committed = fetch(lostApproval ?? "");
+    await jest.advanceTimersByTimeAsync(100);
+    await committed;
+  });
+  await act(() => jest.advanceTimersByTimeAsync(20_000));
+  await screen.findByRole("header", { name: "Transfer sent" });
+  await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+
+  expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
+});
+
+it(
+  "treats an approval answer the app does not know like no answer, checking it with its id to quote and only Done, then shows how it ended",
+  scenarioTest("transfer.approval_unknown_answer", async () => {
+    const releaseStatusRead = holdTheNextTransferRead();
+    const view = await sendRm100FromHome();
+
+    expect(
+      await screen.findByRole("header", { name: "Checking your transfer" }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "This transfer is being checked, so don't send it again — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
+      ),
+    ).toBeOnTheScreen();
+    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    releaseStatusRead();
+
+    expect(
+      await screen.findByRole("header", { name: "Transfer sent" }),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/not sent/)).toBeNull();
+  }),
+);
+
+it("checks a transfer whose approval drew an answer the app does not know, under that answer's own id", async () => {
+  const { created } = await startTestTransfer(10_000);
+
+  await renderRoute("/");
+  await act(() => {
+    router.push({
+      pathname: "/transfer/result/[transferId]",
+      params: {
+        transferId: created.transfer.transferId,
+        checking: "transfer.approval_unknown_answer",
+      },
+    });
+  });
+
+  expect(
+    await screen.findByRole("header", { name: "Checking your transfer" }),
+  ).toBeOnTheScreen();
+  expect(observedRecords).toContainEqual(
+    expect.objectContaining({
+      name: "transfer_outcome",
+      properties: { scenario: "transfer.approval_unknown_answer" },
+    }),
+  );
+});

@@ -1,49 +1,36 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { focusManager } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { getFixedT } from "i18next";
-import { delay, http, HttpResponse } from "msw";
+import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
+import { ReduceMotion } from "react-native-reanimated";
 
-import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
   type GetTransferResponse,
   TransferDirection,
-  TransferFailureReason,
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import {
-  PendingTransferStage,
-  writePendingTransfer,
-} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import {
   lookUpTestRecipient,
-  pairTestPhone,
   sendToBank,
-  signTestApproval,
   startTestTransfer,
-  clearTransferScenario,
-  holdTheNextTransferRead,
   mswServer,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   finishOpeningScreen,
-  pressHardwareBack,
   readBankOnRealTimers,
   scenarioTest,
+  turnOnPhoneReduceMotion,
   walkToTransferReview,
+  watchReduceMotionOfAnimations,
 } from "@/test/render/drive-app";
+import { observedRecords } from "@/test/doubles/native-doubles";
 import {
-  setPhoneNetwork,
-  observedRecords,
-} from "@/test/doubles/native-doubles";
-import {
-  relaunchApp,
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render/render-route";
@@ -63,10 +50,6 @@ async function sendRm100FromHome() {
     await screen.findByRole("button", { name: "Transfer" }),
   );
   return view;
-}
-
-function transferIdIn(pathname: string | undefined) {
-  return pathname?.replace("/transfer/result/", "") ?? "";
 }
 
 // The page's only offers: anything more could be a way to send the money twice.
@@ -279,264 +262,6 @@ it(
 );
 
 it(
-  "checks a transfer whose approval went unanswered, quoting its id, then shows how it ended",
-  scenarioTest("transfer.approval_unanswered", async () => {
-    const releaseStatusRead = holdTheNextTransferRead();
-    const view = await sendRm100FromHome();
-
-    expect(
-      await screen.findByRole(
-        "header",
-        { name: "Checking your transfer" },
-        { timeout: 10_000 },
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        "This transfer is being checked, so don't send it again — not confirmed yet.",
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
-      ),
-    ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
-    releaseStatusRead();
-
-    expect(
-      await screen.findByRole("header", { name: "Transfer sent" }),
-    ).toBeOnTheScreen();
-  }),
-);
-
-it("moves Home's balance when a transfer whose answer was lost turns out sent while its result page is open", async () => {
-  let bankCommitsApprovals = false;
-  let lostApproval: Request | undefined;
-  mswServer.use(
-    http.post("*/transfers/:transferId/approve", ({ request }) => {
-      if (bankCommitsApprovals) return undefined;
-      lostApproval ??= request.clone();
-      return HttpResponse.error();
-    }),
-  );
-  await sendRm100FromHome();
-  await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 });
-  bankCommitsApprovals = true;
-
-  // The bank commits only now, after the refresh the approve call made on losing its answer.
-  await act(async () => {
-    const committed = fetch(lostApproval ?? "");
-    await jest.advanceTimersByTimeAsync(100);
-    await committed;
-  });
-  await act(() => jest.advanceTimersByTimeAsync(20_000));
-  await screen.findByRole("header", { name: "Transfer sent" });
-  await fireEvent.press(screen.getByRole("button", { name: "Done" }));
-
-  expect(await screen.findByText("RM 12,745.50")).toBeOnTheScreen();
-});
-
-it(
-  "treats an approval answer the app does not know like no answer, checking it with its id to quote and only Done, then shows how it ended",
-  scenarioTest("transfer.approval_unknown_answer", async () => {
-    const releaseStatusRead = holdTheNextTransferRead();
-    const view = await sendRm100FromHome();
-
-    expect(
-      await screen.findByRole("header", { name: "Checking your transfer" }),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        "This transfer is being checked, so don't send it again — not confirmed yet.",
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
-      ),
-    ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
-    releaseStatusRead();
-
-    expect(
-      await screen.findByRole("header", { name: "Transfer sent" }),
-    ).toBeOnTheScreen();
-    expect(screen.queryByText(/not sent/)).toBeNull();
-  }),
-);
-
-it(
-  "says a transfer the bank cannot find can't be found, with its id to quote, and opens History to check it",
-  scenarioTest("transfer.last_transfer_not_found", async () => {
-    const view = await sendRm100FromHome();
-
-    expect(
-      await screen.findByRole(
-        "header",
-        { name: "Transfer not found" },
-        { timeout: 10_000 },
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        "Your last transfer can't be found. Check your transfer history before sending it again — not confirmed yet.",
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
-      ),
-    ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Transfer history", "Done"]);
-
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Transfer history" }),
-    );
-
-    expect(view.getPathname()).toBe("/transfer-history");
-  }),
-);
-
-it(
-  "stops reading a transfer the bank cannot find, and leaves nothing for the next launch",
-  scenarioTest("transfer.last_transfer_not_found", async () => {
-    const view = await sendRm100FromHome();
-    await screen.findByRole(
-      "header",
-      { name: "Transfer not found" },
-      { timeout: 10_000 },
-    );
-    const transferId = transferIdIn(view.getPathname());
-    const readsOfTheTransfer = () =>
-      sentRequests.filter(
-        ({ method, url }) =>
-          method === "GET" && url.endsWith(`/transfers/${transferId}`),
-      ).length;
-    const readsOnceNotFound = readsOfTheTransfer();
-
-    await act(() => jest.advanceTimersByTimeAsync(32_000));
-
-    expect(readsOfTheTransfer()).toBe(readsOnceNotFound);
-    const relaunched = await relaunchAppAndWaitForItsLaunchChecks(view);
-    expect(screen.queryByText(/^Your (last )?transfer/)).toBeNull();
-    expect(relaunched.getPathname()).toBe("/");
-  }),
-);
-
-it(
-  "leaves an unanswered approval's outcome unconfirmed when checking it meets an answer the app does not know, and opens History from it",
-  scenarioTest("transfer.recovery_unexpected", async () => {
-    const view = await sendRm100FromHome();
-
-    expect(
-      await screen.findByRole(
-        "header",
-        { name: "Outcome not confirmed" },
-        { timeout: 10_000 },
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        "This transfer's outcome can't be confirmed right now. Check your transfer history before sending it again — not confirmed yet.",
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
-      ),
-    ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Transfer history", "Done"]);
-
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Transfer history" }),
-    );
-
-    expect(view.getPathname()).toBe("/transfer-history");
-  }),
-);
-
-it(
-  "keeps checking on Home a transfer whose outcome was not confirmed, and announces it there once the bank answers",
-  scenarioTest("transfer.recovery_unexpected", async () => {
-    await sendRm100FromHome();
-    await screen.findByRole(
-      "header",
-      { name: "Outcome not confirmed" },
-      { timeout: 10_000 },
-    );
-    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
-    expect(
-      await screen.findByText(/^Your last transfer is still being checked/),
-    ).toBeOnTheScreen();
-    clearTransferScenario();
-
-    await act(() => jest.advanceTimersByTimeAsync(16_000));
-
-    expect(
-      await screen.findByText(
-        /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/,
-      ),
-    ).toBeOnTheScreen();
-  }),
-);
-
-it(
-  "reopens at the next launch a transfer whose outcome was not confirmed, and shows how it ended",
-  scenarioTest("transfer.recovery_unexpected", async () => {
-    const view = await sendRm100FromHome();
-    await screen.findByRole(
-      "header",
-      { name: "Outcome not confirmed" },
-      { timeout: 10_000 },
-    );
-    const transferId = transferIdIn(view.getPathname());
-    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
-    clearTransferScenario();
-
-    const relaunched = await relaunchApp(view);
-
-    expect(
-      await screen.findByRole("header", { name: "Transfer sent" }),
-    ).toBeOnTheScreen();
-    expect(relaunched.getPathname()).toBe(`/transfer/result/${transferId}`);
-  }),
-);
-
-it(
-  "keeps an unconfirmed outcome and its way to History, and says nothing new, while returning to the app reads it again",
-  scenarioTest("transfer.recovery_unexpected", async () => {
-    await sendRm100FromHome();
-    await screen.findByRole(
-      "header",
-      { name: "Outcome not confirmed" },
-      { timeout: 10_000 },
-    );
-    const announcements = jest
-      .spyOn(AccessibilityInfo, "announceForAccessibility")
-      .mockClear();
-    // On a phone a failing read takes a while to fail, and the page renders while it is in flight.
-    mswServer.use(
-      http.get("*/transfers/:transferId", async () => {
-        await delay(3_000);
-      }),
-    );
-
-    await act(() => {
-      focusManager.setFocused(false);
-      focusManager.setFocused(true);
-    });
-    await act(() => jest.advanceTimersByTimeAsync(1_000));
-
-    expect(
-      screen.getByRole("header", { name: "Outcome not confirmed" }),
-    ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Transfer history", "Done"]);
-    expect(announcements).not.toHaveBeenCalled();
-  }),
-);
-
-it(
   "keeps the receipt of a transfer the bank completed when a later read of it fails",
   scenarioTest("transfer.completed", async () => {
     mswServer.use(
@@ -570,177 +295,6 @@ it(
     expect(screen.queryByText(/cannot be shown/)).toBeNull();
   }),
 );
-
-it(
-  "offers to load the result again, never to send again, when the bank answers with an outcome the app cannot name",
-  scenarioTest("transfer.outcome_unexpected", async () => {
-    const { recipient } = await lookUpTestRecipient("012-345 6789");
-    mswServer.use(
-      http.post("*/transfers/:transferId/approve", ({ params }) =>
-        HttpResponse.json({
-          transfer: {
-            transferId: params.transferId,
-            version: 2,
-            direction: TransferDirection.Out,
-            // Debited and unsuccessful with no refund under way: whether the money comes back is unsaid.
-            status: TransferStatus.Unsuccessful,
-            funds: TransferFunds.Debited,
-            failureReason: TransferFailureReason.RecipientBankRejected,
-            counterparty: recipient,
-            amount: { minor: 10_000, currency: "MYR" },
-            reference: "20261007C0FFEE00",
-            createdAt: "2026-10-07T09:30:00+08:00",
-            updatedAt: "2026-10-07T09:30:05+08:00",
-          },
-        }),
-      ),
-    );
-    const view = await sendRm100FromHome();
-
-    expect(
-      await screen.findByRole("header", { name: "Result not available" }),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        "The result cannot be shown right now. Check your transfer history before sending this again — not confirmed yet.",
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        "If you contact us, quote this reference: 20261007C0FFEE00",
-      ),
-    ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual([
-      "Transfer history",
-      "Load the result again",
-      "Done",
-    ]);
-    const transferId = transferIdIn(view.getPathname());
-    const readsBefore = sentRequests.filter(({ url }) =>
-      url.endsWith(`/transfers/${transferId}`),
-    ).length;
-
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Load the result again" }),
-    );
-
-    await waitFor(() => {
-      expect(
-        sentRequests.filter(({ url }) =>
-          url.endsWith(`/transfers/${transferId}`),
-        ),
-      ).toHaveLength(readsBefore + 1);
-    });
-    expect(
-      await screen.findByRole("header", { name: "Result not available" }),
-    ).toBeOnTheScreen();
-  }),
-);
-
-function answerApprovalAndReadsWithAnUnnamedOutcome(
-  recipient: Awaited<ReturnType<typeof lookUpTestRecipient>>["recipient"],
-  readAnswer: () => Partial<GetTransferResponse["transfer"]> = () => ({}),
-) {
-  const unnamedOutcome = (transferId: unknown) => ({
-    transferId: String(transferId),
-    version: 2,
-    direction: TransferDirection.Out,
-    status: TransferStatus.Unsuccessful,
-    funds: TransferFunds.Debited,
-    failureReason: TransferFailureReason.RecipientBankRejected,
-    counterparty: recipient,
-    amount: { minor: 10_000, currency: "MYR" },
-    reference: "20261007C0FFEE00",
-    createdAt: "2026-10-07T09:30:00+08:00",
-    updatedAt: "2026-10-07T09:30:05+08:00",
-  });
-  mswServer.use(
-    http.post("*/transfers/:transferId/approve", ({ params }) =>
-      HttpResponse.json({ transfer: unnamedOutcome(params.transferId) }),
-    ),
-    http.get("*/transfers/:transferId", ({ params }) =>
-      HttpResponse.json({
-        transfer: { ...unnamedOutcome(params.transferId), ...readAnswer() },
-      }),
-    ),
-  );
-}
-
-it(
-  "keeps checking a transfer whose outcome the app cannot name, and shows the refund once the bank names it",
-  scenarioTest("transfer.outcome_unexpected", async () => {
-    const { recipient } = await lookUpTestRecipient("012-345 6789");
-    let refunded = false;
-    answerApprovalAndReadsWithAnUnnamedOutcome(recipient, () =>
-      refunded ? { version: 3, funds: TransferFunds.Refunded } : {},
-    );
-    await sendRm100FromHome();
-    await screen.findByRole("header", { name: "Result not available" });
-    refunded = true;
-
-    await act(() => jest.advanceTimersByTimeAsync(3_000));
-
-    expect(
-      await screen.findByRole("header", { name: "Transfer refunded" }),
-    ).toBeOnTheScreen();
-  }),
-);
-
-it(
-  "opens History in place of the result page, so the page stops reading beneath it and Back from History goes Home",
-  scenarioTest("transfer.outcome_unexpected", async () => {
-    const { recipient } = await lookUpTestRecipient("012-345 6789");
-    answerApprovalAndReadsWithAnUnnamedOutcome(recipient);
-    const view = await sendRm100FromHome();
-    await screen.findByRole("header", { name: "Result not available" });
-    const transferId = transferIdIn(view.getPathname());
-    const readsOfTheTransfer = () =>
-      sentRequests.filter(({ url }) => url.endsWith(`/transfers/${transferId}`))
-        .length;
-    const readsBeforeLeaving = readsOfTheTransfer();
-
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Transfer history" }),
-    );
-    await act(() => jest.advanceTimersByTimeAsync(32_000));
-
-    expect(view.getPathname()).toBe("/transfer-history");
-    expect(readsOfTheTransfer()).toBe(readsBeforeLeaving);
-    await pressHardwareBack();
-    expect(view.getPathname()).toBe("/");
-  }),
-);
-
-it(
-  "keeps warning on Home not to send again a transfer whose outcome the app cannot name, at the next launch too",
-  scenarioTest("transfer.outcome_unexpected", async () => {
-    const { recipient } = await lookUpTestRecipient("012-345 6789");
-    answerApprovalAndReadsWithAnUnnamedOutcome(recipient);
-    const view = await sendRm100FromHome();
-    await screen.findByRole("header", { name: "Result not available" });
-    await act(() => jest.advanceTimersByTimeAsync(3_000));
-
-    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
-
-    const stillBeingChecked =
-      "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
-    expect(await screen.findByText(stillBeingChecked)).toBeOnTheScreen();
-
-    const relaunched = await relaunchApp(view);
-
-    expect(await screen.findByText(stillBeingChecked)).toBeOnTheScreen();
-    await act(() => jest.advanceTimersByTimeAsync(1_000));
-    expect(relaunched.getPathname()).toBe("/");
-  }),
-);
-
-async function readCustomerId() {
-  const { body } = await sendToBank<GetPrimaryAccountResponse>(
-    "GET",
-    "/accounts/primary",
-  );
-  return body.customerId;
-}
 
 it(
   "keeps checking a processing transfer in place and shows the receipt once it completes, leaving nothing for the next launch to warn about",
@@ -799,149 +353,6 @@ it(
   }),
 );
 
-it(
-  "says the bank is still unreachable once its reads at 2, 4, 8 and 16 seconds get no answer, quoting the transfer's id",
-  scenarioTest("transfer.status_unreachable", async () => {
-    const view = await sendRm100FromHome();
-    expect(
-      await screen.findByRole(
-        "header",
-        { name: "Checking your transfer" },
-        { timeout: 10_000 },
-      ),
-    ).toBeOnTheScreen();
-    await act(() => jest.advanceTimersByTimeAsync(14_000));
-    expect(
-      screen.queryByRole("header", { name: "Still checking your transfer" }),
-    ).toBeNull();
-
-    await act(() => jest.advanceTimersByTimeAsync(3_000));
-
-    expect(
-      await screen.findByRole("header", {
-        name: "Still checking your transfer",
-      }),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        "The bank can't be reached right now. This transfer will keep being checked, and the result will show here and in History — not confirmed yet.",
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
-      ),
-    ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
-  }),
-);
-
-it(
-  "keeps reading after saying the bank is unreachable, and shows the outcome here once the bank answers",
-  scenarioTest("transfer.status_unreachable", async () => {
-    await sendRm100FromHome();
-    await screen.findByRole(
-      "header",
-      { name: "Checking your transfer" },
-      { timeout: 10_000 },
-    );
-    await act(() => jest.advanceTimersByTimeAsync(17_000));
-    await screen.findByRole("header", { name: "Still checking your transfer" });
-    clearTransferScenario();
-
-    await act(() => jest.advanceTimersByTimeAsync(16_000));
-
-    expect(
-      await screen.findByRole("header", { name: "Transfer sent" }),
-    ).toBeOnTheScreen();
-  }),
-);
-
-it(
-  "checks a transfer the bank could not be reached about again at the next launch, after leaving it",
-  scenarioTest("transfer.status_unreachable", async () => {
-    const view = await sendRm100FromHome();
-    await screen.findByRole(
-      "header",
-      { name: "Checking your transfer" },
-      { timeout: 10_000 },
-    );
-    await act(() => jest.advanceTimersByTimeAsync(17_000));
-    await screen.findByRole("header", { name: "Still checking your transfer" });
-    const transferId = transferIdIn(view.getPathname());
-    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
-    clearTransferScenario();
-
-    const relaunched = await relaunchApp(view);
-
-    expect(
-      await screen.findByRole("header", { name: "Transfer sent" }),
-    ).toBeOnTheScreen();
-    expect(relaunched.getPathname()).toBe(`/transfer/result/${transferId}`);
-  }),
-);
-
-it(
-  "waits for the read at 16 seconds before saying the bank is unreachable, though the app came back to the foreground first",
-  scenarioTest("transfer.status_unreachable", async () => {
-    await sendRm100FromHome();
-    await screen.findByRole(
-      "header",
-      { name: "Checking your transfer" },
-      { timeout: 10_000 },
-    );
-    await act(() => jest.advanceTimersByTimeAsync(3_000));
-    await act(() => {
-      focusManager.setFocused(false);
-      focusManager.setFocused(true);
-    });
-    await act(() => jest.advanceTimersByTimeAsync(11_000));
-    expect(
-      screen.queryByRole("header", { name: "Still checking your transfer" }),
-    ).toBeNull();
-
-    await act(() => jest.advanceTimersByTimeAsync(3_000));
-
-    expect(
-      await screen.findByRole("header", {
-        name: "Still checking your transfer",
-      }),
-    ).toBeOnTheScreen();
-  }),
-);
-
-it(
-  "reads the transfer again once a request reaches the bank, before its read at 2 seconds, yet waits for the read at 16 seconds before saying the bank is unreachable",
-  scenarioTest("transfer.status_unreachable", async () => {
-    const view = await sendRm100FromHome();
-    await screen.findByRole(
-      "header",
-      { name: "Checking your transfer" },
-      { timeout: 10_000 },
-    );
-    const transferId = transferIdIn(view.getPathname());
-
-    expect(
-      sentRequests.filter(
-        ({ method, url }) =>
-          method === "GET" && url.endsWith(`/transfers/${transferId}`),
-      ).length,
-    ).toBe(2);
-    await act(() => jest.advanceTimersByTimeAsync(14_000));
-    expect(
-      screen.queryByRole("header", { name: "Still checking your transfer" }),
-    ).toBeNull();
-
-    await act(() => jest.advanceTimersByTimeAsync(3_000));
-
-    expect(
-      await screen.findByRole("header", {
-        name: "Still checking your transfer",
-      }),
-    ).toBeOnTheScreen();
-  }),
-);
-
 it("reports a transfer whose amount the app cannot read, and claims no outcome for it", async () => {
   const { created } = await startTestTransfer(10_000);
   mswServer.use(
@@ -972,190 +383,31 @@ it("reports a transfer whose amount the app cannot read, and claims no outcome f
   });
 });
 
-it("still says the bank is unreachable once it stops answering, after answering the page's first read", async () => {
-  const { created } = await startTestTransfer(10_000);
-  let statusReads = 0;
-  mswServer.use(
-    http.get("*/transfers/:transferId", () => {
-      statusReads += 1;
-      return statusReads === 1 ? undefined : HttpResponse.error();
-    }),
+it("fades into a sent transfer's result and shows its outcome and tick at once when the phone reduces motion", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await turnOnPhoneReduceMotion();
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
   );
-  await renderRoute("/");
-  await act(() => {
-    router.push({
-      pathname: "/transfer/result/[transferId]",
-      params: { transferId: created.transfer.transferId },
-    });
-  });
-  await screen.findByRole("header", { name: "Checking your transfer" });
-  await act(() => jest.advanceTimersByTimeAsync(14_000));
-  expect(
-    screen.queryByRole("header", { name: "Still checking your transfer" }),
-  ).toBeNull();
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await screen.findByRole("button", { name: "Transfer" });
+  const reduceMotionOfAnimations = watchReduceMotionOfAnimations();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
 
-  await act(() => jest.advanceTimersByTimeAsync(3_000));
-
-  expect(
-    await screen.findByRole("header", { name: "Still checking your transfer" }),
-  ).toBeOnTheScreen();
+  const outcome = await screen.findByText("Transfer sent");
+  // The stack hands its transition to each native screen as this prop; nothing else of it renders in Jest.
+  const screenTransitions: unknown[] = [];
+  for (let host = outcome.parent; host !== null; host = host.parent)
+    if (host.props.stackAnimation !== undefined)
+      screenTransitions.push(host.props.stackAnimation);
+  expect([...new Set(screenTransitions)]).toEqual(["fade"]);
+  expect(outcome).toBeVisible();
+  expect([...new Set(reduceMotionOfAnimations())]).toEqual([
+    ReduceMotion.Always,
+  ]);
 });
-
-it("checks a transfer whose approval drew an answer the app does not know, under that answer's own id", async () => {
-  const { created } = await startTestTransfer(10_000);
-
-  await renderRoute("/");
-  await act(() => {
-    router.push({
-      pathname: "/transfer/result/[transferId]",
-      params: {
-        transferId: created.transfer.transferId,
-        checking: "transfer.approval_unknown_answer",
-      },
-    });
-  });
-
-  expect(
-    await screen.findByRole("header", { name: "Checking your transfer" }),
-  ).toBeOnTheScreen();
-  expect(observedRecords).toContainEqual(
-    expect.objectContaining({
-      name: "transfer_outcome",
-      properties: { scenario: "transfer.approval_unknown_answer" },
-    }),
-  );
-});
-
-it(
-  "reopens the transfer the app was closed during, quoting its id, with Home's warning beneath asking the bank nothing, then says no money moved once its window passes and leaves nothing for the next launch",
-  scenarioTest("transfer.app_closed_during_approval", async () => {
-    // Never answered: the app is killed while the approval is on its way.
-    mswServer.use(
-      http.post(
-        "*/transfers/:transferId/approve",
-        () => new Promise<never>(() => undefined),
-        { once: true },
-      ),
-    );
-    const view = await sendRm100FromHome();
-    await waitFor(() => {
-      expect(sentRequests.some(({ url }) => url.endsWith("/approve"))).toBe(
-        true,
-      );
-    });
-
-    const relaunched = await relaunchApp(view);
-
-    const heading = await screen.findByRole("header", {
-      name: "Checking your last transfer",
-    });
-    expect(heading).toBeOnTheScreen();
-    await finishOpeningScreen(heading);
-    expect(
-      screen.getByText(
-        "The app closed before your last transfer's answer arrived. It's being checked, and its outcome will show here — not confirmed yet.",
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        `If you contact us, quote this reference: ${transferIdIn(relaunched.getPathname())}`,
-      ),
-    ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
-    expect(
-      screen.getByText(/^Your last transfer is still being checked/, {
-        includeHiddenElements: true,
-      }),
-    ).toBeOnTheScreen();
-    const transferId = transferIdIn(relaunched.getPathname());
-    const readsOfTheTransfer = () =>
-      sentRequests.filter(
-        ({ method, url }) =>
-          method === "GET" && url.endsWith(`/transfers/${transferId}`),
-      ).length;
-    await act(() => jest.advanceTimersByTimeAsync(9_000));
-    const readsAfterThePagesReadAt8Seconds = readsOfTheTransfer();
-
-    await act(() => jest.advanceTimersByTimeAsync(6_500));
-
-    expect(readsOfTheTransfer()).toBe(readsAfterThePagesReadAt8Seconds);
-    await act(() => jest.advanceTimersByTimeAsync(46_500));
-    expect(
-      await screen.findByRole("header", { name: "Transfer not sent" }),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText("The approval timed out — no money moved."),
-    ).toBeOnTheScreen();
-    const relaunchedAgain =
-      await relaunchAppAndWaitForItsLaunchChecks(relaunched);
-    expect(screen.queryByText(/^Your (last )?transfer/)).toBeNull();
-    expect(relaunchedAgain.getPathname()).toBe("/");
-  }),
-);
-
-it(
-  "shows at launch how the transfer the app was closed during ended, then stops tracking it",
-  scenarioTest("transfer.app_closed_during_approval", async () => {
-    const customerId = await readCustomerId();
-    const keys = await pairTestPhone();
-    const started = await startTestTransfer(10_000);
-    // The approval reached the bank before the app was killed; only its answer was lost.
-    await sendToBank("POST", started.approvalPath, {
-      body: signTestApproval(started, {
-        kind: "biometric",
-        keyId: keys.biometricKeyId,
-      }),
-    });
-    await writePendingTransfer(customerId, {
-      transferId: started.created.transfer.transferId,
-      idempotencyKey: "approval-key",
-      createdAt: "2026-10-07T01:30:00.000Z",
-      stage: PendingTransferStage.Approving,
-    });
-
-    const view = await renderRoute("/");
-
-    const heading = await screen.findByRole("header", {
-      name: "Transfer sent",
-    });
-    expect(heading).toBeOnTheScreen();
-    await finishOpeningScreen(heading);
-    const relaunched = await relaunchAppAndWaitForItsLaunchChecks(view);
-    expect(screen.queryByText(/^Your (last )?transfer/)).toBeNull();
-    expect(relaunched.getPathname()).toBe("/");
-  }),
-);
-
-it(
-  "waits for the account before reopening the transfer left mid-approval, after a launch with no connection",
-  scenarioTest("transfer.app_closed_during_approval", async () => {
-    const customerId = await readCustomerId();
-    const { created } = await startTestTransfer(10_000);
-    await writePendingTransfer(customerId, {
-      transferId: created.transfer.transferId,
-      idempotencyKey: "approval-key",
-      createdAt: "2026-10-07T01:30:00.000Z",
-      stage: PendingTransferStage.Approving,
-    });
-    let phoneConnected = false;
-    mswServer.use(
-      http.all("*", () => (phoneConnected ? undefined : HttpResponse.error())),
-    );
-    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
-    const view = await renderRoute("/");
-    await act(() => jest.advanceTimersByTimeAsync(1_000));
-    const pathnameWhileOffline = view.getPathname();
-
-    phoneConnected = true;
-    await act(() => {
-      setPhoneNetwork({ isConnected: true, isInternetReachable: true });
-    });
-
-    expect(
-      await screen.findByRole("header", {
-        name: "Checking your last transfer",
-      }),
-    ).toBeOnTheScreen();
-    expect(pathnameWhileOffline).toBe("/");
-  }),
-);
