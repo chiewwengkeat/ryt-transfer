@@ -1,13 +1,20 @@
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import Animated, {
+  ReduceMotion,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
 
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 import { formatMalaysianDayHeader } from "@/shared/lib/dates/dates";
 import { formatMoney, parseWireAmount } from "@/shared/lib/money/money";
+import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
 import {
   traceFormatCalls,
   useRenderTrace,
 } from "@/shared/observability/render-trace";
+import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion";
 import {
   colors,
   minTouchTarget,
@@ -15,8 +22,6 @@ import {
   typography,
 } from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
-
-import IconChevron from "./components/IconChevron/IconChevron";
 
 interface Props {
   summary: ListTransfersResponse["days"][number];
@@ -109,4 +114,38 @@ const styles = StyleSheet.create({
     rowGap: spacing.xs,
   },
   title: { flexGrow: 1, flexShrink: 1 },
+});
+
+interface IconChevronProps {
+  expanded: boolean;
+}
+function IconChevron({ expanded }: IconChevronProps) {
+  const phoneReducesMotion = usePhoneReducesMotion();
+  const turnStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        rotate: withTiming(expanded ? "45deg" : "-45deg", {
+          duration: motionDurations.chevronTurn,
+          easing: standardEasing,
+          reduceMotion: phoneReducesMotion
+            ? ReduceMotion.Always
+            : ReduceMotion.Never,
+        }),
+      },
+    ],
+  }));
+
+  return (
+    <Animated.View aria-hidden style={[iconChevronStyles.chevron, turnStyle]} />
+  );
+}
+
+const iconChevronStyles = StyleSheet.create({
+  chevron: {
+    width: 8,
+    height: 8,
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: colors.textSecondary,
+  },
 });
