@@ -1567,7 +1567,7 @@ it(
 );
 
 it(
-  "asks to try again in a minute after too many name checks",
+  "asks to try again in a minute after too many name checks, and offers Try again only once that minute has passed",
   scenarioTest("transfer.too_many_name_checks", async () => {
     await openReviewOfRm100();
 
@@ -1576,9 +1576,19 @@ it(
         "Too many name checks in a short time. Try again in a minute.",
       ),
     ).toBeOnTheScreen();
-    expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
     expect(reportedScenarios()).toContain("transfer.too_many_name_checks");
+    await act(() => jest.advanceTimersByTimeAsync(59_000));
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    await act(() => jest.advanceTimersByTimeAsync(1_000));
+    const nameChecksBeforeTryingAgain = countSent("POST", "/recipients/lookup");
+    await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => {
+      expect(countSent("POST", "/recipients/lookup")).toBe(
+        nameChecksBeforeTryingAgain + 1,
+      );
+    });
   }),
 );
 

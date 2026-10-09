@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
@@ -50,6 +51,21 @@ export default function SectionReviewDetails({ draft }: Props) {
       ? TransferFlowScenario.FirstTransferToRecipient
       : undefined,
   );
+  const refusedAt = lookup.errorUpdatedAt;
+  const [waitedOutRefusalAt, setWaitedOutRefusalAt] = useState<number>();
+  // Try again only after the minute the words ask for: the bank limits name checks on purpose.
+  useEffect(() => {
+    if (nameCheckFailure !== "too_many_name_checks") return;
+    const timer = setTimeout(
+      () => {
+        setWaitedOutRefusalAt(refusedAt);
+      },
+      refusedAt + 60_000 - Date.now(),
+    );
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [nameCheckFailure, refusedAt]);
   if (lookup.isPending) return <Loader />;
   if (nameCheckFailure === "recipient_not_found")
     return (
@@ -62,6 +78,16 @@ export default function SectionReviewDetails({ draft }: Props) {
             router.dismissTo("/transfer");
           },
         }}
+      />
+    );
+  if (
+    nameCheckFailure === "too_many_name_checks" &&
+    waitedOutRefusalAt !== refusedAt
+  )
+    return (
+      <BannerNotice
+        tone="negative"
+        message={t("common.too_many_name_checks.body")}
       />
     );
   if (nameCheckFailure !== undefined)
