@@ -1,54 +1,110 @@
 # Write-up
 
-This is my account of building the transfer module: what pushed back while it was built, the decisions that shaped it, and what I have not been able to prove. Each decision's full argument, with the options it beat, is in its record under [`decisions/`](decisions/); this page links to them rather than repeating them.
+In short: a transfer is created, then approved; only the signed approval moves money. Every write carries an `Idempotency-Key`, so a lost answer is resent safely, since the bank returns its first answer, and then checked, never guessed. The signature, made on the phone behind Face ID, a fingerprint or a PIN the bank checks, proves to the bank who approved exactly what. Every scenario lives in one file that the tests, the mock bank and the app's words all follow.
 
-## What pushed back
+```mermaid
+sequenceDiagram
+    participant App
+    participant Bank
+    App->>Bank: create the transfer, Idempotency-Key k1
+    Note right of Bank: checks the balance, the limits,<br/>any cooling-off and the account lock
+    Bank-->>App: the transfer and a 60-second challenge
+    Note left of App: behind Face ID, a fingerprint or the PIN,<br/>a key on the phone signs review and challenge
+    App->>Bank: approve, Idempotency-Key k2, the signature
+    Bank--xApp: the answer is lost
+    App->>Bank: the identical request, after 2 s and again after 4 s
+    Bank-->>App: its first answer, never a second run
+    Note over App,Bank: if no answer arrives at all
+    App->>Bank: read the status at 2, 4, 8 and 16 s, then every 15 s
+    Bank-->>App: what happened to the money
+```
 
-### The app crashed at every launch on Android 14 and newer
+## Approval signs exactly what you saw
 
-I had refused every Android permission the app does not use, the one for detecting screenshots included, since the app blocks screenshots and never listens for them. The demo build closed about 0.3 seconds after opening on the Android emulator. expo-screen-capture registers Android's screenshot callback at every launch, used or not, and Android 14 refuses that registration without the permission. I allowed that one permission in every variant: it is granted at install with no prompt, and it only reports captures of the app's own screen. The photo permission the same library adds stays refused, because the library checks for it before using it on older Android.
+A yes-or-no biometric prompt proves nothing to the bank. Here, Face ID or a fingerprint unlocks a key in the phone's secure hardware that signs what review showed: the recipient, the amount, the note and the bank's 60-second challenge. The bank checks the signature, so nothing can be swapped between screen and server. Without biometrics, a six-digit PIN the bank checks goes with a second hardware key's signature; the phone's passcode approves nothing ([003](decisions/003-biometric-approval.md)).
 
-### A production bundle could carry the fake bank
+**Rejected:** a fallback key the phone's passcode unlocks, since family often knows it.
 
-The fake bank drops out of a production build only because the build inlines the variant and strips the branch that loads it. Metro's transform cache left the variant out of its key, so a production bundle built straight after a demo one reused the demo's transformed files and read the variant as `demo`, which would have shipped the fake bank. Replayed on full bundles, the leak showed in both orders and between two copies of the repository; with the variant in the cache key, every order came out right, and a build with no variant still came out as production ([007](decisions/007-production-guard.md)).
+**At scale:** the bank's signature check is the trust boundary, so every client is held to the same rule.
 
-### The bottom sheet, reversed on evidence
+## A transfer can never be sent twice
 
-The PIN sheet, the bank picker, the contacts chooser and the Demo menu all sit on one bottom sheet. I first picked @gorhom/bottom-sheet, the common React Native library, on its stated support for Reanimated 4. A read of its issue tracker and source then found open reports, on this exact stack of React Native 0.86 and Reanimated 4.5, of an Android sheet that intermittently turns invisible with every tap dead and of a sheet that never opens again after an interrupted close, all closed by a bot rather than fixed. Its Jest stand-in also shows every sheet's content at all times, so no test could see the PIN sheet open or close. A sheet on React Native's `Modal` would open in a separate window, outside the PIN pad's touch guard. So the app draws its own sheet, about 200 lines on the Reanimated it already had, inside its main window. It costs drag-to-dismiss, and screen-reader focus is kept inside the sheet by hand.
+The bank creates a transfer first; only a separate approval moves money. Every write carries an idempotency key, reused by every repeat of the same act, and the bank returns its first answer to a repeated key for 24 hours, so a lost answer is resent safely; a refusal never is. If the approval's answer stays lost, the app asks the bank for its status, even across a restart, and offers no resend until it knows ([006](decisions/006-never-sent-twice.md)).
 
-### The touch guard had to cover the whole screen
+**Rejected:** one call that checks and moves money, whose refusals would arrive only after approving.
 
-On Android, the PIN pad must ignore touches while another app draws over the screen, so that an overlay cannot trick someone into typing their PIN. React Native has no switch for Android's touch filter, so this takes a small native module. React Native's Android source showed its root view handing every touch to JavaScript before any inner view sees it, so a filter on the keypad's own view would act too late; only the root view can filter a touch first. The guard therefore filters the whole screen while the PIN sheet is open. A dropped touch gives no feedback, and with a harmless overlay such as a screen dimmer the keypad would simply look dead, so the sheet says to close the app drawing over the screen.
+**At scale:** the guarantee is the bank's API contract, so a website or a lite app gets it by following that contract.
 
-### A check that would have removed the warnings it guards
+## Every scenario is written down once
 
-Malay and Chinese ship as machine translations, so I decided on a check that fails any money message leaving out its money state's phrase, and anything that offers to send the money again where a scenario forbids it. The banned words were to cover "send it again" as well as "try again", in all three languages. But six scenarios must warn against resending: three tell the person they shouldn't send it again, and three to check History before sending again. Banning the words anywhere in a message would have failed all six, and rewording them to pass would have removed the very warnings the check exists to protect. So, as decided, the check's retry-word half reads only what a person can press, buttons and action labels, and messages keep their warnings; the phrase half is the one that reads messages, each for its state's phrase ([002](decisions/002-scenario-matrix.md)). The cost is that the check does not catch a message urging a resend in words.
+Each of the 58 situations a transfer can meet is one short section of [the scenario matrix](../src/screens/transfer/scenarios/transfer.md): what happened to the money, what to tell the person, what never to offer them. Tests, the mock bank, translations and the Demo menu all use its permanent ids. The money is always one of four states; where the person must be told it, every language carries that state's fixed phrase, and where a resend is forbidden, nothing pressable may carry any of nine retry words. [A test](../src/test/scenarios/transfer-matrix.test.ts) fails a scenario's words that break either rule, and ids that drift apart ([002](decisions/002-scenario-matrix.md)).
 
-### A press that outlived leaving review
+**Rejected:** the exact sentences in the matrix, which would bind every client to one wording.
 
-Every approval waits for a fresh check that the phone is not rooted or hooked, and on a slow phone that check takes a moment. An audit found that if someone pressed Transfer and went Back during that moment, the press still went through: the transfer was created, and the approval prompt rose over the amount screen they had gone back to. Locking Back and the swipe while the check ran would have closed that, at the cost of a screen that ignores someone trying to leave it. Instead, leaving review while the check runs cancels the press: nothing is created, no prompt appears, and they press again if they come back ([008](decisions/008-hardening.md)). A second audit found the same gap one wait later: once the bank has locked the PIN, the press also asks the phone whether its sensor can be used, and Back during that question still created and approved the transfer. So the press now looks again after every wait before a prompt or the PIN sheet appears, and stops if review was left: nothing is created, and a transfer already created is never approved. When that question finds the sensor locked after too many attempts, the press now stops there too and creates nothing, since only the locked PIN could approve. A changed fingerprint or face still gets through, and on Android so does a locked sensor, since Android's answer to that question never says locked: the phone learns of either only when it tries to sign, so with the PIN locked that transfer is created and then lapses unapproved, with no money moved.
+**At scale:** every client, and any rebuild, implements from the same file, which product owners can edit themselves.
 
-### The capture block lifted a moment too soon
+## Fast with a long history
 
-The block lifts only on the two receipts, and the first version lifted it the moment a receipt's route opened. But a screen transition is still running then, and its first frames show the screen being left: the review, with the recipient and the amount. The shell is not told when a transition ends, so the block now stays on for 600 milliseconds after a receipt opens, an allowance meant to outlast the transition, and goes back on before the next screen is drawn when a receipt is left.
+The demo bank seeds 5,000 transfers. Pages of 30 come by cursor, and each day's count and net come from the bank, so a split day never reads short. FlashList recycles the rows. I [counted re-renders](history-re-render-counts.md) rather than trust an emulator's frame rate: a new page or a folded day redraws no row already on screen, a status change redraws one ([009](decisions/009-history-at-scale.md)). Bank data lives in TanStack Query's cache ([010](decisions/010-query-cache-only.md)), the flow in a typed zustand reducer ([005](decisions/005-state.md)), and the React Compiler memoizes, with three hand-written memos where a reference must stay stable.
 
-### A block that never reached a new window
+**Rejected:** offset paging, where a transfer made mid-scroll repeats a row on the next page.
 
-On the emulator, production's block failed open after someone left the app with Back and opened it again, or changed the text size: Android gives the app a new window then, and the block is a flag on one window. The app did ask for the block again, but the screen-capture library skips a request under a key it already holds, and the key taken at launch was still held, so the new window was never flagged. The demo build's "Screenshots blocked" pick hid the fault, since it starts unblocked and so lets the key go. Each request now also passes through a key that is let go at once, so it always reaches the current window, and on Android the block is asked for again each time the app becomes active. On the production build it held through every way of getting a new window that was tried.
+**At scale:** the cursor and day totals are the bank's contract, so every client pages and totals alike.
 
-## The decisions
+## Every component and hook has one place
 
-- [001 Vertical slices](decisions/001-vertical-slices.md): screens folders and business domains as plain folders, imports that run one way, and a placement rule a script enforces.
-- [002 Scenario matrix](decisions/002-scenario-matrix.md): one file describes every situation a transfer can meet, with permanent ids that tests, mocks, translations and the Demo menu all use.
-- [003 Biometric approval](decisions/003-biometric-approval.md): each transfer is approved by a signature over exactly what the person saw, never by a yes-or-no prompt.
-- [004 Mock backend](decisions/004-mock-backend.md): one fake bank with state, answering through the same msw handlers in tests and on a phone.
-- [005 State](decisions/005-state.md): the flow is a typed reducer in a zustand store, and the transfer itself stays in the query cache.
-- [006 Never sent twice](decisions/006-never-sent-twice.md): create, then approve; an idempotency key on every write; a lost answer resent briefly, then checked.
-- [007 The fake bank cannot ship](decisions/007-production-guard.md): one build variant, one literally gated way in, and a decided CI check on what the production bundle holds.
-- [008 Hardening](decisions/008-hardening.md): capture blocked everywhere but the receipts, the switcher blur, the rooted-phone refusal, and what only the bank's servers can do.
-- [009 History at scale](decisions/009-history-at-scale.md): cursor pages, day totals from the bank, a recycling list, and re-render counts in place of timing claims.
-- [010 Query cache only](decisions/010-query-cache-only.md): the bank's data lives in TanStack Query's cache, with no normalized store beside it.
+The app is cut into vertical slices, a screens folder per flow and a domain per business area. A component or hook stays inside the one screen that uses it until a second screen, then a second flow, needs it. Each layer imports only those below it: the placement check fails a component or hook placed higher than its users need, and the boundary lint an import running sideways or up ([001](decisions/001-vertical-slices.md)).
 
-## What I could not prove
+```mermaid
+flowchart TD
+    app["src/app: routes, thin re-exports"] --> shell["src/shell: the app's root"]
+    shell --> screens["src/screens: one folder per flow"]
+    screens --> domains["src/domains: one folder per business area"]
+    domains --> shared["src/shared: knows nothing about banking"]
+    shell -.->|one gated require| mocks["src/mocks: the fake bank"]
+```
 
-What no device has proved, what the bank and the host app own, and what the languages and text sizes leave open are now on a page of their own: [limitations](limitations.md).
+**Rejected:** Feature-Sliced Design, whose six layers split each feature, so "which layer?" becomes a recurring call.
+
+**At scale:** where new code goes reads off the tree, so a growing team files each piece in the same place.
+
+## One fake bank for tests and the demo
+
+The app carries a stateful mock bank: it moves balances, uses up limits, returns a repeated key's first answer and verifies signatures for real. One set of msw handlers answers for it in Jest and on a phone, where the app's own transport hands each request to msw. Development and demo builds keep it across restarts, and a Demo menu switches it into any scenario the bank or the connection can cause ([004](decisions/004-mock-backend.md)).
+
+**Rejected:** a local mock server: the most production-like, but an installed APK has no server to reach.
+
+**At scale:** a contract changes once for tests and demo alike, and QA can walk any scenario on an installed build.
+
+## The fake bank can't reach production
+
+An unset variant means production, so an unconfigured build fails closed. Mock code is reached only by one `require` in the shell, gated on a literal comparison of `EXPO_PUBLIC_APP_VARIANT`, the one form the bundler strips from a release build; lint bans every other way in. On every push, CI exports each variant and fails if a production or unset bundle's source map lists a mock or msw file, while the demo export must carry them ([007](decisions/007-production-guard.md)).
+
+**Rejected:** one build with a demo mode to unlock: the fake bank would ship one unlock away from a customer.
+
+**At scale:** the check reads what was built, not what was meant, so it holds as the team grows.
+
+## Security beyond the fingerprint
+
+In production, capture is blocked on every screen but the two receipts, kept as proof of payment, and a new screen is blocked unless named a receipt; iOS blurs the app in the switcher. Each approval refuses on a phone that clearly reports root, a jailbreak or hooks, while an unclear check, or none within 5 seconds, lets it through, logged. On Android, the PIN pad ignores touches through another app's overlay ([008](decisions/008-hardening.md)).
+
+**Rejected:** blocking capture on the transfer steps only, which would leave History's names and amounts capturable.
+
+**At scale:** on-phone checks are a second layer a rooted phone can fool; the real control is the bank verifying the phone.
+
+## Challenges
+
+**Back during the phone check didn't stop the transfer.** Every approval waits for a fresh rooted-phone check. An audit found that pressing Transfer, then Back during that wait, still created the transfer and raised the prompt over the screen they'd gone back to. The press now re-checks that review is still open after every wait.
+
+**A bottom-sheet library, reversed on evidence.** I first picked the common library. Its issue tracker held unfixed reports, on this exact React Native and Reanimated stack, of sheets that go invisible or never reopen. The app now draws its own sheet, about 250 lines.
+
+**A production bundle could carry the fake bank.** The bundler's cache key left out the build variant, so a production build made right after a demo one reused the demo's files. The variant is now in the key, and CI fails any production bundle it exports that carries mock code.
+
+## Limits, and what I'd do next
+
+- Nothing ran on a physical phone. Next: prove the hardware keys, the Secure Enclave and the screenshot block on real devices.
+- The phone's integrity is checked on the phone. Next: the bank verifies it server-side, with Play Integrity and App Attest.
+- Malay and Chinese are machine translations no one reviewed. Next: a native speaker's review.
+- The API is a proposed contract. Next: agree it with the bank's backend.
+
+Full list: [limitations.md](limitations.md).
