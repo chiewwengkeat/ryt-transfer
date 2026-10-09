@@ -2,6 +2,7 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
+import { moveAppTo } from "@/test/harness/app-state";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
@@ -94,6 +95,36 @@ it("asks the bank for its list on a Try again pressed while the phone has no con
   expect(
     await screen.findByRole("button", { name: "Public Bank" }),
   ).toBeOnTheScreen();
+});
+
+it("neither asks for the banks again nor says it is offline again when the app returns to the front with the bank sheet open and no connection", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  const timesSaid = () =>
+    announce.mock.calls.filter(([words]) => words === OFFLINE_NOTICE).length;
+  const bankListReads = () =>
+    sentRequests.filter(({ url }) => new URL(url).pathname.endsWith("/banks"))
+      .length;
+  await renderRoute("/transfer");
+  const accountNumber = await screen.findByRole("radio", {
+    name: "Account number",
+  });
+  await act(() => {
+    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+  });
+  mswServer.use(http.all("*", () => HttpResponse.error()));
+  await fireEvent.press(accountNumber);
+  await fireEvent.press(screen.getByRole("button", { name: "Bank" }));
+  await screen.findByRole("button", { name: "Try again" });
+  await act(() => jest.advanceTimersByTimeAsync(5_000));
+  const readsBeforeTheReturn = bankListReads();
+  const saidBeforeTheReturn = timesSaid();
+
+  moveAppTo("background");
+  moveAppTo("active");
+  await act(() => jest.advanceTimersByTimeAsync(5_000));
+
+  expect(bankListReads()).toBe(readsBeforeTheReturn);
+  expect(timesSaid()).toBe(saidBeforeTheReturn);
 });
 
 it(
