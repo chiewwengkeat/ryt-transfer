@@ -14,7 +14,6 @@ import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type"
 import { TransportError } from "@/shared/http/transport-error";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
 import RowDetail from "@/shared/ui/RowDetail/RowDetail";
@@ -84,21 +83,21 @@ export default function SectionReviewDetails({ draft }: Props) {
   // One banner whether or not Try again shows: a remounted one announces its words again.
   if (nameCheckFailure !== undefined)
     return (
-      <>
-        <BannerNotice
-          tone="negative"
-          message={t(`common.${nameCheckFailure}.body`)}
-        />
-        {(nameCheckFailure !== "too_many_name_checks" ||
-          waitedOutRefusalAt === refusedAt) && (
-          <ButtonSecondary
-            label={t(`common.${nameCheckFailure}.retry`)}
-            onPress={() => {
-              void lookup.refetch();
-            }}
-          />
-        )}
-      </>
+      <BannerAction
+        tone="negative"
+        message={t(`common.${nameCheckFailure}.body`)}
+        action={
+          nameCheckFailure !== "too_many_name_checks" ||
+          waitedOutRefusalAt === refusedAt
+            ? {
+                label: t(`common.${nameCheckFailure}.retry`),
+                onPress: () => {
+                  void lookup.refetch();
+                },
+              }
+            : undefined
+        }
+      />
     );
   if (!lookup.data) return null;
 
