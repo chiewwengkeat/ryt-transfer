@@ -11,7 +11,10 @@ import {
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
-import { TransportError } from "@/shared/http/transport-error";
+import {
+  isSessionEndFailure,
+  TransportError,
+} from "@/shared/http/transport-error";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import Card from "@/shared/ui/Card/Card";
@@ -31,8 +34,9 @@ export default function SectionReviewDetails({ draft }: Props) {
   const code =
     lookup.error instanceof TransportError ? lookup.error.code : undefined;
   // Never while sending: "no money moved" can be false by then, and a retry mints a new recipient reference.
+  // Never for the session's end either: sign-in asks the name check again.
   const nameCheckFailure =
-    !lookup.isError || sending
+    !lookup.isError || sending || isSessionEndFailure(lookup.error)
       ? undefined
       : code === LookupRecipientErrorCode.RecipientNotFound
         ? "recipient_not_found"

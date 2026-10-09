@@ -14,7 +14,7 @@ import {
   observedRecords,
   reportedScenarios,
 } from "@/test/harness/recording-sink";
-import { mswServer } from "@/test/msw-server";
+import { mswServer, sentRequests } from "@/test/msw-server";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
@@ -225,6 +225,60 @@ it("reports only the session's end for a transfer the bank would not create beca
       "Something unexpected stopped the transfer — no money moved.",
     ),
   ).toBeNull();
+});
+
+it("shows, says and reports no failure of the name check an expired recipient check asks again when the session's end cuts it off, and answers it once signed in", async () => {
+  const unexpectedStop =
+    "Something unexpected stopped the transfer — no money moved.";
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  const countNameChecks = () =>
+    sentRequests.filter(({ url }) => url.endsWith("/recipients/lookup")).length;
+  const { recipient } = await lookUpTestRecipient("012-345 6789");
+  await openReviewOfRm100();
+  mswServer.use(
+    http.post(
+      "*/transfers",
+      () =>
+        HttpResponse.json(
+          { error: { code: "RECIPIENT_REF_EXPIRED", message: "Test." } },
+          { status: 422 },
+        ),
+      { once: true },
+    ),
+    http.post(
+      "*/recipients/lookup",
+      () =>
+        HttpResponse.json(
+          { error: { code: "SESSION_ENDED", message: "Test." } },
+          { status: 401 },
+        ),
+      { once: true },
+    ),
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  const shownUnderTheView = screen.queryByText(unexpectedStop, {
+    includeHiddenElements: true,
+  });
+  const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
+  const nameChecksBeforeSignIn = countNameChecks();
+
+  await fireEvent.press(signInAgain);
+  const shownRightAfterSignIn = screen.queryByText(unexpectedStop);
+  await waitFor(() => {
+    expect(countNameChecks()).toBe(nameChecksBeforeSignIn + 1);
+  });
+  await screen.findByRole("button", { name: "Transfer", disabled: false });
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+
+  expect(shownUnderTheView).toBeNull();
+  expect(shownRightAfterSignIn).toBeNull();
+  expect(announce).not.toHaveBeenCalledWith(unexpectedStop);
+  expect(scenariosReportedSinceTheView()).toEqual([]);
+  expect(screen.getByText(recipient.registeredName)).toBeOnTheScreen();
 });
 
 it("reports only the session's end for a PIN sheet it closes, which they find closed as not sent once signed in again", async () => {
