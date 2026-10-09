@@ -1,5 +1,3 @@
-import type { Money, Sen, WireMoney } from "./money.type";
-
 /** Brands a number that is already an integer count of sen, and throws on anything else. It never converts ringgit. */
 export function asSen(value: number) {
   if (!Number.isSafeInteger(value)) {
@@ -41,3 +39,11 @@ export function parseTypedAmount(text: string): Money | null {
   if (ringgit + sen === "" || !Number.isSafeInteger(minor)) return null;
   return { minor: asSen(minor), currency: "MYR" };
 }
+
+declare const senBrand: unique symbol;
+
+export type Sen = number & { readonly [senBrand]: true };
+
+export type Money = { minor: Sen; currency: "MYR" };
+
+export type WireMoney = { minor: number; currency: "MYR" };

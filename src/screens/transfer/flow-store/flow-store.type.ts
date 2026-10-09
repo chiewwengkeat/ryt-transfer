@@ -8,7 +8,7 @@ import type {
   RecipientIdType,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import type { Money } from "@/shared/lib/money/money.type";
+import type { Money } from "@/shared/lib/money/money";
 
 export enum TransferFlowStep {
   Editing = "editing",

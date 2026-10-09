@@ -5,7 +5,7 @@ import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
-import type { WireMoney } from "@/shared/lib/money/money.type";
+import type { WireMoney } from "@/shared/lib/money/money";
 
 import {
   PendingTransferStage,

@@ -1,4 +1,4 @@
-import type { WireMoney } from "@/shared/lib/money/money.type";
+import type { WireMoney } from "@/shared/lib/money/money";
 
 import type { Transfer } from "../get-transfer/get-transfer.type";
 

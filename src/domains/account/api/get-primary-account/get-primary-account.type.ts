@@ -1,4 +1,4 @@
-import type { WireMoney } from "@/shared/lib/money/money.type";
+import type { WireMoney } from "@/shared/lib/money/money";
 
 export interface GetPrimaryAccountResponse {
   customerId: string;

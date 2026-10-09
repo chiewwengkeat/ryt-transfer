@@ -1,5 +1,5 @@
 import { formatMoney, parseTypedAmount, parseWireAmount, asSen } from "./money";
-import type { WireMoney } from "./money.type";
+import type { WireMoney } from "./money";
 
 describe("asSen", () => {
   it.each([0, 1, -500, 123450, Number.MAX_SAFE_INTEGER])(
