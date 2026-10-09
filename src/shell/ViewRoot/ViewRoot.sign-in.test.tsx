@@ -1,5 +1,5 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 
 import { requestJson } from "@/shared/http/transport";
 import { lookUpTestRecipient } from "@/test/bank-client";
@@ -135,6 +135,30 @@ it("asks a name check the network cut off again by itself once they sign back in
   await endSessionWithAnyRequest();
   const nameChecksBeforeSignIn = sentNameChecks().length;
   networkDown = false;
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Sign in again" }),
+  );
+
+  expect(await screen.findByText(recipient.registeredName)).toBeOnTheScreen();
+  expect(sentNameChecks()).toHaveLength(nameChecksBeforeSignIn + 1);
+});
+
+it("asks a name check that ran out of time again by itself once they sign back in", async () => {
+  const { recipient } = await lookUpTestRecipient("012-345 6789");
+  let bankSlow = true;
+  mswServer.use(
+    http.post("*/recipients/lookup", async () => {
+      if (bankSlow) await delay("infinite");
+    }),
+  );
+  await reviewRm100ToTheTestRecipient();
+  // Three tries of 10 seconds each, the retries 1 and 2 seconds apart.
+  await act(() => jest.advanceTimersByTimeAsync(33_000));
+  await screen.findByText(/Something unexpected stopped the transfer/);
+  await endSessionWithAnyRequest();
+  const nameChecksBeforeSignIn = sentNameChecks().length;
+  bankSlow = false;
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Sign in again" }),
