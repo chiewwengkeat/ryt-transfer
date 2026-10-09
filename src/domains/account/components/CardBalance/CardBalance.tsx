@@ -48,8 +48,14 @@ export default function CardBalance({
               (failure.status ?? 0) >= 500))
         ? "balance_unavailable"
         : unexpectedScenario;
-  const shownScenario =
-    failureScenario !== undefined
+  // The session's end, which its own view reports: after sign-in this stays shown until the card's reads answer again.
+  const failureIsSessionEnd =
+    failure instanceof TransportError &&
+    failure.kind === TransportErrorKind.Http &&
+    failure.status === 401;
+  const shownScenario = failureIsSessionEnd
+    ? undefined
+    : failureScenario !== undefined
       ? `transfer.${failureScenario}`
       : limitsPausedForMaintenance
         ? "transfer.under_maintenance"

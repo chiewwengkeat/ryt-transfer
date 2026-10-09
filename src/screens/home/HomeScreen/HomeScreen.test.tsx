@@ -214,6 +214,23 @@ it("reports only the session's end when Home's own reads answer that it has ende
   expect(reportedScenarios()).toEqual(["transfer.session_ended"]);
 });
 
+it("reports no failure of a balance that loaded and then answered that the session had ended, once they sign in again", async () => {
+  await renderRoute("/");
+  expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
+  mswServer.use(http.all("*", () => new HttpResponse(null, { status: 401 })));
+
+  moveAppTo("background");
+  moveAppTo("active");
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  mswServer.resetHandlers();
+  await fireEvent.press(signInAgain);
+
+  expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
+  expect(reportedScenarios()).not.toContain("transfer.start_unexpected");
+});
+
 it.each([
   ["balance", "/accounts/primary", "primary_account"],
   ["limit", "/transfer-limits", "transfer_limits"],
