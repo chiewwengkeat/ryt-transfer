@@ -7,21 +7,21 @@ import type {
 import {
   TRANSFER_SCENARIOS,
   type TransferScenario,
-} from "@/mocks/scenarios/transfer-scenarios";
+} from "@/mocks/scenarios/transfer-scenarios/transfer-scenarios";
 import {
   NO_SCENARIO_PICK,
   switcherStore,
-} from "@/mocks/switcher/switcher-store";
+} from "@/mocks/switcher/switcher-store/switcher-store";
 
-import type { BankAnswer } from "./answers";
-import { toMalaysiaIso } from "./malaysia-time";
-import { bankPorts } from "./ports";
+import type { BankAnswer } from "@/mocks/bank/answers/answers";
+import { toMalaysiaIso } from "@/mocks/bank/malaysia-time/malaysia-time";
+import { bankPorts } from "@/mocks/bank/ports/ports";
 import {
   DEMO_PIN_ATTEMPTS,
   SEED_BALANCE_MINOR,
   seedTransferHistory,
-} from "./seed";
-import type { PendingTransferChange } from "./settlement";
+} from "@/mocks/bank/seed/seed";
+import type { PendingTransferChange } from "@/mocks/bank/settlement/settlement";
 
 const SNAPSHOT_FORMAT_VERSION = 1;
 

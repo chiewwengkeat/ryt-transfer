@@ -9,10 +9,10 @@ import {
   saveApprovalKeyIds,
 } from "@/domains/approval/hooks/approval-keys";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { bankState } from "@/mocks/bank/state";
-import { handlersForActiveScenario } from "@/mocks/demo-bank";
+import { bankState } from "@/mocks/bank/state/state";
+import { handlersForActiveScenario } from "@/mocks/bank/bank";
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
-import { switcherStore } from "@/mocks/switcher/switcher-store";
+import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
 import type { Send } from "@/shared/http/transport/transport";
 
 export default {

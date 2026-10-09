@@ -1,5 +1,5 @@
-import { bindBankPorts } from "@/mocks/bank/ports";
-import { resetDemoBank } from "@/mocks/demo-bank";
+import { bindBankPorts } from "@/mocks/bank/ports/ports";
+import { resetDemoBank } from "@/mocks/bank/bank";
 
 import { createJestBankPorts } from "./jest-bank-ports";
 

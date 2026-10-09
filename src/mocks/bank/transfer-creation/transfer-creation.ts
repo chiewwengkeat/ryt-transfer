@@ -15,11 +15,11 @@ import {
   lockOrCoolingOffRefusal,
   PER_TRANSFER_MAX_MINOR,
   transferLimitsAt,
-} from "./account";
-import { bankError, type BankAnswer } from "./answers";
-import { toMalaysiaIso } from "./malaysia-time";
-import { bankPorts, randomHex } from "./ports";
-import { bankState } from "./state";
+} from "@/mocks/bank/account/account";
+import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
+import { toMalaysiaIso } from "@/mocks/bank/malaysia-time/malaysia-time";
+import { bankPorts, randomHex } from "@/mocks/bank/ports/ports";
+import { bankState } from "@/mocks/bank/state/state";
 
 const APPROVAL_WINDOW_SECONDS = 60;
 // No wider: DuitNow carries the note onto the recipient's statement as it is.

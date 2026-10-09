@@ -11,20 +11,30 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 
-import { lockOrCoolingOffRefusal, transferLimitsAt } from "./account";
-import { tryDemoPin } from "./approval-keys";
-import { bankError, type BankAnswer } from "./answers";
-import { ApprovalOutcome } from "./conditions";
-import { malaysianIsoDate, toMalaysiaIso } from "./malaysia-time";
-import { randomHex } from "./ports";
+import {
+  lockOrCoolingOffRefusal,
+  transferLimitsAt,
+} from "@/mocks/bank/account/account";
+import { tryDemoPin } from "@/mocks/bank/approval-keys/approval-keys";
+import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
+import { ApprovalOutcome } from "@/mocks/bank/conditions/conditions";
+import {
+  malaysianIsoDate,
+  toMalaysiaIso,
+} from "@/mocks/bank/malaysia-time/malaysia-time";
+import { randomHex } from "@/mocks/bank/ports/ports";
 import {
   expireTransfer,
   notifyTransferSent,
   PendingTransferChange,
   SETTLES_AFTER_MS,
-} from "./settlement";
-import { activeBankConditions, bankState, notifyCustomer } from "./state";
-import { verifyApprovalSignature } from "./verification";
+} from "@/mocks/bank/settlement/settlement";
+import {
+  activeBankConditions,
+  bankState,
+  notifyCustomer,
+} from "@/mocks/bank/state/state";
+import { verifyApprovalSignature } from "@/mocks/bank/verification/verification";
 
 export function approveBankTransfer(
   transferId: string,

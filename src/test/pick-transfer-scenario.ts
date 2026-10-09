@@ -1,1 +1,1 @@
-export { pickTransferScenario } from "@/mocks/demo-bank";
+export { pickTransferScenario } from "@/mocks/bank/bank";

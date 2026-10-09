@@ -9,8 +9,11 @@ import {
 import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { LookupRecipientErrorCode } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { ApprovalOutcome, type BankConditions } from "@/mocks/bank/conditions";
-import { BANK_PATHS } from "@/mocks/handlers/bank-paths";
+import {
+  ApprovalOutcome,
+  type BankConditions,
+} from "@/mocks/bank/conditions/conditions";
+import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
 
 import {
   commitThenAnswer,
@@ -19,7 +22,7 @@ import {
   maintenanceAnswer,
   serverErrorAnswer,
   unknownCodeAnswer,
-} from "./overlay-answers";
+} from "@/mocks/scenarios/overlay-answers/overlay-answers";
 
 export enum TransferStep {
   Start = "Start",

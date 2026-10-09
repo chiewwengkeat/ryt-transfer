@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw";
 
-import { clearTransferScenario, pickTransferScenario } from "@/mocks/demo-bank";
+import { clearTransferScenario, pickTransferScenario } from "@/mocks/bank/bank";
 
 import { BANK_ORIGIN } from "./bank-client";
 import { mswServer, sentRequests, unhandledRequests } from "./msw-server";

@@ -7,28 +7,31 @@ import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenari
 import {
   getBankPrimaryAccount,
   getBankTransferLimits,
-} from "@/mocks/bank/account";
-import { registerBankApprovalKeys } from "@/mocks/bank/approval-keys";
-import { getBankTransfer, listBankTransfers } from "@/mocks/bank/history";
+} from "./account/account";
+import { registerBankApprovalKeys } from "./approval-keys/approval-keys";
+import { getBankTransfer, listBankTransfers } from "./history/history";
 import {
   listBankRecentRecipients,
   listDuitNowBanks,
   lookupBankRecipient,
-} from "@/mocks/bank/recipients";
-import { approveBankTransfer } from "@/mocks/bank/transfer-approval";
-import { createBankTransfer } from "@/mocks/bank/transfer-creation";
+} from "./recipients/recipients";
+import { approveBankTransfer } from "./transfer-approval/transfer-approval";
+import { createBankTransfer } from "./transfer-creation/transfer-creation";
 
-import { DEMO_PIN_ATTEMPTS } from "./bank/seed";
+import { DEMO_PIN_ATTEMPTS } from "./seed/seed";
 import {
   activeTransferScenario,
   bankState,
   persistBankState,
   resetBankState,
   saveScenarioPick,
-} from "./bank/state";
-import { answerBankRead, answerBankWrite } from "./handlers/answer-from-bank";
-import { BANK_PATHS } from "./handlers/bank-paths";
-import { NO_SCENARIO_PICK } from "./switcher/switcher-store";
+} from "./state/state";
+import {
+  answerBankRead,
+  answerBankWrite,
+} from "@/mocks/handlers/answer-from-bank/answer-from-bank";
+import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
+import { NO_SCENARIO_PICK } from "@/mocks/switcher/switcher-store/switcher-store";
 
 const accountHandlers = [
   http.get(BANK_PATHS.primaryAccount, ({ request }) =>

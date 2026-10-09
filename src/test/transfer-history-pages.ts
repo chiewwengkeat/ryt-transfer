@@ -9,7 +9,7 @@ import {
 import { MONEY_MOVED_SIGN } from "@/domains/transfer/api/list-transfers/list-transfers";
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import { BANK_PATHS } from "@/mocks/handlers/bank-paths";
+import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
 
 import { mswServer } from "./msw-server";
 

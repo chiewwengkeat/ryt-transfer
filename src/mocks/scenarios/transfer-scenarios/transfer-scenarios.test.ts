@@ -12,13 +12,13 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import type { RegisterApprovalKeysResponse } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
-import { toMalaysiaIso } from "@/mocks/bank/malaysia-time";
-import { DEMO_PIN } from "@/mocks/bank/seed";
+import { toMalaysiaIso } from "@/mocks/bank/malaysia-time/malaysia-time";
+import { DEMO_PIN } from "@/mocks/bank/seed/seed";
 import {
   clearTransferScenario,
   demoBankNotifications,
   pickTransferScenario,
-} from "@/mocks/demo-bank";
+} from "@/mocks/bank/bank";
 import {
   BANK_ORIGIN,
   lookUpTestRecipient,

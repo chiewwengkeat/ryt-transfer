@@ -15,11 +15,11 @@ import {
   type BankErrorBody,
 } from "@/test/bank-client";
 
-import { bankPorts } from "./bank/ports";
-import type * as BankPorts from "./bank/ports";
-import { pickTransferScenario } from "./demo-bank";
-import type * as DemoBank from "./demo-bank";
-import type * as SwitcherStore from "./switcher/switcher-store";
+import { bankPorts } from "./ports/ports";
+import type * as BankPorts from "./ports/ports";
+import { pickTransferScenario } from "./bank";
+import type * as DemoBank from "./bank";
+import type * as SwitcherStore from "@/mocks/switcher/switcher-store/switcher-store";
 
 // A fresh module registry is a fresh app: nothing survives it but what the bank saved.
 function restartTheApp() {
@@ -32,15 +32,17 @@ function restartTheApp() {
     | undefined;
   jest.isolateModules(() => {
     jest
-      .requireActual<typeof BankPorts>("./bank/ports")
+      .requireActual<typeof BankPorts>("./ports/ports")
       .bindBankPorts(bankPorts());
     restarted = {
       handlers: jest
-        .requireActual<typeof DemoBank>("./demo-bank")
+        .requireActual<typeof DemoBank>("./bank")
         .handlersForActiveScenario(),
       getResponse: jest.requireActual<typeof Msw>("msw").getResponse,
       restoredScenarioId: jest
-        .requireActual<typeof SwitcherStore>("./switcher/switcher-store")
+        .requireActual<typeof SwitcherStore>(
+          "@/mocks/switcher/switcher-store/switcher-store",
+        )
         .switcherStore.getState().scenarioId,
     };
   });

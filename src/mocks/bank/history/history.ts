@@ -12,8 +12,8 @@ import {
   type ListTransfersResponse,
 } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 
-import { bankError, type BankAnswer } from "./answers";
-import { bankTransfersWithSeededHistory } from "./state";
+import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
+import { bankTransfersWithSeededHistory } from "@/mocks/bank/state/state";
 
 const PAGE_SIZE = 30;
 const MAX_PAGE_SIZE = 100;

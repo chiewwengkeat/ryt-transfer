@@ -1,4 +1,4 @@
-import { createSeededRandom } from "@/mocks/bank/seed";
+import { createSeededRandom } from "@/mocks/bank/seed/seed";
 
 export const JEST_BANK_ANCHOR_MS = Date.parse("2026-10-07T09:30:00+08:00");
 

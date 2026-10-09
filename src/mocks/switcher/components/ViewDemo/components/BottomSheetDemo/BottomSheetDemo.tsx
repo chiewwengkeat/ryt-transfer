@@ -11,14 +11,14 @@ import {
   pickTransferScenario,
   resetDemoBank,
   unlockDemoPin,
-} from "@/mocks/demo-bank";
+} from "@/mocks/bank/bank";
 import {
   TRANSFER_SCENARIOS,
   TransferStep,
   type TransferScenario,
-} from "@/mocks/scenarios/transfer-scenarios";
-import { useDemoTranslation } from "@/mocks/switcher/components/ViewDemo/hooks/use-demo-translation";
-import { switcherStore } from "@/mocks/switcher/switcher-store";
+} from "@/mocks/scenarios/transfer-scenarios/transfer-scenarios";
+import { useDemoTranslation } from "@/mocks/switcher/components/ViewDemo/hooks/use-demo-translation/use-demo-translation";
+import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
 import {
   colors,
   minTouchTarget,

@@ -10,7 +10,7 @@ import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenari
 import {
   TRANSFER_SCENARIOS,
   type TransferScenario,
-} from "@/mocks/scenarios/transfer-scenarios";
+} from "@/mocks/scenarios/transfer-scenarios/transfer-scenarios";
 import { AppLanguage } from "@/shared/i18n/i18n";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";

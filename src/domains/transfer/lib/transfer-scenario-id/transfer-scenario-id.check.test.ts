@@ -1,4 +1,4 @@
-import { TRANSFER_SCENARIOS } from "@/mocks/scenarios/transfer-scenarios";
+import { TRANSFER_SCENARIOS } from "@/mocks/scenarios/transfer-scenarios/transfer-scenarios";
 
 import { TransferScenarioId } from "./transfer-scenario-id";
 

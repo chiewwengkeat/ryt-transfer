@@ -5,10 +5,13 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 
-import { bankError, type BankAnswer } from "./answers";
-import { malaysianIsoDate, toMalaysiaIso } from "./malaysia-time";
-import { DEMO_CUSTOMER } from "./seed";
-import { activeBankConditions, bankState } from "./state";
+import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
+import {
+  malaysianIsoDate,
+  toMalaysiaIso,
+} from "@/mocks/bank/malaysia-time/malaysia-time";
+import { DEMO_CUSTOMER } from "@/mocks/bank/seed/seed";
+import { activeBankConditions, bankState } from "@/mocks/bank/state/state";
 
 const DEFAULT_DAILY_LIMIT_MINOR = 500_000;
 export const PER_TRANSFER_MAX_MINOR = 5_000_000;

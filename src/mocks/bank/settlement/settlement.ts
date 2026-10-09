@@ -4,8 +4,12 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 
-import { toMalaysiaIso } from "./malaysia-time";
-import { bankState, notifyCustomer, type BankTransferRecord } from "./state";
+import { toMalaysiaIso } from "@/mocks/bank/malaysia-time/malaysia-time";
+import {
+  bankState,
+  notifyCustomer,
+  type BankTransferRecord,
+} from "@/mocks/bank/state/state";
 
 export const SETTLES_AFTER_MS = 20_000;
 const REFUND_PENDING_MS = 10_000;

@@ -4,9 +4,9 @@ import {
   bankError,
   httpResponseFrom,
   type BankAnswer,
-} from "@/mocks/bank/answers";
-import { advanceBankTransfers } from "@/mocks/bank/settlement";
-import { bankState, persistBankState } from "@/mocks/bank/state";
+} from "@/mocks/bank/answers/answers";
+import { advanceBankTransfers } from "@/mocks/bank/settlement/settlement";
+import { bankState, persistBankState } from "@/mocks/bank/state/state";
 
 async function answerFromBank(
   request: Request,

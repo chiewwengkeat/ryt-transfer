@@ -7,9 +7,9 @@ import {
 } from "react-native-safe-area-context";
 import { useStore } from "zustand";
 
-import { clearTransferScenario } from "@/mocks/demo-bank";
+import { clearTransferScenario } from "@/mocks/bank/bank";
 import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
-import { switcherStore } from "@/mocks/switcher/switcher-store";
+import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
 import {
   colors,
   minTouchTarget,
@@ -19,7 +19,7 @@ import {
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 
 import BottomSheetDemo from "./components/BottomSheetDemo/BottomSheetDemo";
-import { useDemoTranslation } from "./hooks/use-demo-translation";
+import { useDemoTranslation } from "./hooks/use-demo-translation/use-demo-translation";
 
 type Props = ComponentProps<DemoLayer["ViewDemo"]>;
 export default function ViewDemo({

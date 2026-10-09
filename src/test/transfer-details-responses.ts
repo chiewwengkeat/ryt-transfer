@@ -4,7 +4,7 @@ import type {
   GetTransferResponse,
   Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import { BANK_PATHS } from "@/mocks/handlers/bank-paths";
+import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
 
 import { mswServer } from "./msw-server";
 

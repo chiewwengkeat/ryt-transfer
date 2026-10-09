@@ -6,9 +6,15 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 
-import { directoryEntryFor, DUITNOW_BANKS } from "./directory";
-import { malaysianIsoDate, toMalaysiaIso } from "./malaysia-time";
-import type { BankTransferRecord } from "./state";
+import {
+  directoryEntryFor,
+  DUITNOW_BANKS,
+} from "@/mocks/bank/directory/directory";
+import {
+  malaysianIsoDate,
+  toMalaysiaIso,
+} from "@/mocks/bank/malaysia-time/malaysia-time";
+import type { BankTransferRecord } from "@/mocks/bank/state/state";
 
 export const DEMO_PIN = "246810";
 export const DEMO_PIN_ATTEMPTS = 3;

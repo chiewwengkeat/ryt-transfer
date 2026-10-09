@@ -13,11 +13,15 @@ import {
   type LookupRecipientResponse,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 
-import { bankError, type BankAnswer } from "./answers";
-import { directoryEntryFor, DUITNOW_BANKS, stableHash } from "./directory";
-import { bankTransfersNewestFirst } from "./history";
-import { randomHex } from "./ports";
-import { bankState, type BankTransferRecord } from "./state";
+import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
+import {
+  directoryEntryFor,
+  DUITNOW_BANKS,
+  stableHash,
+} from "@/mocks/bank/directory/directory";
+import { bankTransfersNewestFirst } from "@/mocks/bank/history/history";
+import { randomHex } from "@/mocks/bank/ports/ports";
+import { bankState, type BankTransferRecord } from "@/mocks/bank/state/state";
 
 const RECIPIENT_REF_LIFETIME_SECONDS = 600;
 const RECENT_RECIPIENT_COUNT = 10;

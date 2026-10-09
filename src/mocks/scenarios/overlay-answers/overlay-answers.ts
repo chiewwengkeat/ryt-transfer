@@ -1,9 +1,9 @@
 import { getResponse, http, HttpResponse } from "msw";
 import type { RequestHandler } from "msw";
 
-import { bankError, httpResponseFrom } from "@/mocks/bank/answers";
-import { toMalaysiaIso } from "@/mocks/bank/malaysia-time";
-import { switcherStore } from "@/mocks/switcher/switcher-store";
+import { bankError, httpResponseFrom } from "@/mocks/bank/answers/answers";
+import { toMalaysiaIso } from "@/mocks/bank/malaysia-time/malaysia-time";
+import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
 
 const HOUR_MS = 60 * 60 * 1000;
 

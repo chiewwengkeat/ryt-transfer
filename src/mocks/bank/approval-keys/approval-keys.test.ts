@@ -1,6 +1,6 @@
 import type { RegisterApprovalKeysResponse } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
-import { DEMO_PIN } from "@/mocks/bank/seed";
-import { demoBankNotifications } from "@/mocks/demo-bank";
+import { DEMO_PIN } from "@/mocks/bank/seed/seed";
+import { demoBankNotifications } from "@/mocks/bank/bank";
 import {
   pairTestPhone,
   phonePublicKeySpki,

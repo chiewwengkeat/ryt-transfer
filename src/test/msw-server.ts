@@ -1,7 +1,7 @@
 import { getResponse, http } from "msw";
 import { setupServer } from "msw/node";
 
-import { handlersForActiveScenario } from "@/mocks/demo-bank";
+import { handlersForActiveScenario } from "@/mocks/bank/bank";
 
 // Resolved per request, as a phone's demo layer does, so a mid-test scenario switch applies.
 // Matching every request, it reports the unmatched ones itself: msw would pass them through.

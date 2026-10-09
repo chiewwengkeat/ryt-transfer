@@ -1,9 +1,9 @@
 import { delay, http, HttpResponse } from "msw";
 import type { RequestHandler } from "msw";
 
-import { bankPorts } from "@/mocks/bank/ports";
-import type * as BankPorts from "@/mocks/bank/ports";
-import { clearTransferScenario, pickTransferScenario } from "@/mocks/demo-bank";
+import { bankPorts } from "@/mocks/bank/ports/ports";
+import type * as BankPorts from "@/mocks/bank/ports/ports";
+import { clearTransferScenario, pickTransferScenario } from "@/mocks/bank/bank";
 import { API_BASE_URL } from "@/shared/config/config";
 import {
   configureTransport,
@@ -123,7 +123,7 @@ it("answers that biometrics are off at once when the app restarts with No biomet
   // A fresh module registry is a fresh app: nothing survives it but what the bank saved.
   jest.isolateModules(() => {
     jest
-      .requireActual<typeof BankPorts>("@/mocks/bank/ports")
+      .requireActual<typeof BankPorts>("@/mocks/bank/ports/ports")
       .bindBankPorts(bankPorts());
     jest
       .requireActual<typeof DemoLayerModule>("./demo-layer")

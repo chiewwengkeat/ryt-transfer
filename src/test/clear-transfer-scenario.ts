@@ -1,1 +1,1 @@
-export { clearTransferScenario } from "@/mocks/demo-bank";
+export { clearTransferScenario } from "@/mocks/bank/bank";

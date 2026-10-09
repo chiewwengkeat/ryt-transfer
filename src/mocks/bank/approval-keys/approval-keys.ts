@@ -5,11 +5,11 @@ import {
   type RegisterApprovalKeysResponse,
 } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
 
-import { bankError, type BankAnswer } from "./answers";
-import { randomHex } from "./ports";
-import { DEMO_PIN, DEMO_PIN_ATTEMPTS } from "./seed";
-import { bankState, notifyCustomer } from "./state";
-import { isP256PublicKey } from "./verification";
+import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
+import { randomHex } from "@/mocks/bank/ports/ports";
+import { DEMO_PIN, DEMO_PIN_ATTEMPTS } from "@/mocks/bank/seed/seed";
+import { bankState, notifyCustomer } from "@/mocks/bank/state/state";
+import { isP256PublicKey } from "@/mocks/bank/verification/verification";
 
 // One PIN, one attempt count, one lock.
 export function tryDemoPin<
