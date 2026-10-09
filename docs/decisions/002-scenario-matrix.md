@@ -33,4 +33,4 @@ The ids join five kinds of consumer to the file, so the check that pins them is 
 - **Only "try again", in each language.** The **Never** lines forbid offering to send it again, and a translation could say exactly that without tripping a list of "try again" alone.
 - **Checking messages too, with a retry word allowed after "don't".** It would also catch a message that urges a resend in words, but the three warnings to check History before sending again would still fail in Malay and Chinese.
 - **A `scenarios/` folder at the root.** In plain view at the top of the repository, and able to move whole to a shared repository when a second client arrives. Chosen instead: the transfer slice, beside the code that implements it.
-- **`docs/scenarios/`.** With the project's other documents, one level deeper, it would have sat among engineering documents a product owner seldom opens.
+- **docs/scenarios/.** With the project's other documents, one level deeper, it would have sat among engineering documents a product owner seldom opens.
