@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -37,8 +37,17 @@ export default function CardBalance({
   // Maintenance pauses transfers, not the balance: the balance still shows, and Transfer says why it waits.
   const limitsPausedForMaintenance =
     getTransferLimitsMaintenance(limits.error) !== undefined;
+  const [failureBeforeReRead, setFailureBeforeReRead] = useState<Error | null>(
+    null,
+  );
+  // A re-read of a read that never answered clears its error until it lands: kept, the failure stays one showing.
   const failure =
-    account.error ?? (limitsPausedForMaintenance ? null : limits.error);
+    account.error ??
+    (limitsPausedForMaintenance ? null : limits.error) ??
+    (account.fetchStatus !== "idle" || limits.fetchStatus !== "idle"
+      ? failureBeforeReRead
+      : null);
+  if (failure !== failureBeforeReRead) setFailureBeforeReRead(failure);
   const failureScenario =
     failure === null
       ? undefined
@@ -81,6 +90,8 @@ export default function CardBalance({
           action={{
             label: t(`common.${failureScenario}.retry`),
             onPress: () => {
+              // Pressed, the answer is a new showing: said and reported even when it fails the same way.
+              setFailureBeforeReRead(null);
               void account.refetch();
               void limits.refetch();
             },

@@ -5,6 +5,7 @@ import {
   userEvent,
 } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
+import { AccessibilityInfo } from "react-native";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
@@ -264,6 +265,22 @@ it(
     ).toBeOnTheScreen();
   }),
 );
+
+it("says the balance failing on the amount step once while offline, keeping it shown as each re-read fails the same way", async () => {
+  const balanceFailure = "Your balance couldn't be loaded.";
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  mswServer.use(http.all("*", () => HttpResponse.error()));
+  await openAmountStep();
+  await screen.findByText(balanceFailure);
+
+  await act(() => jest.advanceTimersByTimeAsync(40_000));
+
+  expect(screen.getByText(balanceFailure)).toBeOnTheScreen();
+  expect(
+    announce.mock.calls.filter(([words]) => words === balanceFailure),
+  ).toHaveLength(1);
+});
 
 it(
   "holds Review until today's limit loads when maintenance began before it ever did, and asks the bank again at the time it gave",
