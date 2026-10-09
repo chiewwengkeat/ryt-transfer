@@ -96,6 +96,50 @@ it("goes on warning about the earlier transfer while this one's approval is in f
   ).toEqual([]);
 });
 
+it("keeps warning about the earlier transfer, never this one, when a check of the earlier one is still out as they confirm", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const earlier = await reviewANewTransferWhileAnEarlierOneIsProcessing();
+  expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+  mswServer.use(
+    http.get("*/transfers/:transferId", async ({ params }) => {
+      if (params.transferId !== earlier.transfer.transferId) return undefined;
+      await new Promise((resolve) => {
+        setTimeout(resolve, 10_000);
+      });
+      return HttpResponse.json(earlier);
+    }),
+    http.post("*/transfers/:transferId/approve", async () => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 20_000);
+      });
+      return HttpResponse.json(
+        { error: { code: "APPROVAL_INVALID", message: "Test." } },
+        { status: 422 },
+      );
+    }),
+  );
+  await act(() => jest.advanceTimersByTimeAsync(15_000));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  await act(() => jest.advanceTimersByTimeAsync(11_000));
+  const warningsWhileApproving = screen
+    .queryAllByText(/^Your last transfer is still being checked/)
+    .map((warning) => String(warning.props.children));
+  await act(() => jest.advanceTimersByTimeAsync(10_000));
+
+  expect(warningsWhileApproving).toEqual([STILL_BEING_CHECKED]);
+  expect(
+    await screen.findByText(/The approval couldn't be verified/),
+  ).toBeOnTheScreen();
+  expect(
+    screen
+      .queryAllByText(/^Your last transfer is still being checked/)
+      .map((warning) => String(warning.props.children)),
+  ).toEqual([STILL_BEING_CHECKED]);
+});
+
 it(
   "quotes the bank's reference that the result page quoted, after a relaunch whose read of the transfer fails",
   scenarioTest("transfer.processing", async () => {

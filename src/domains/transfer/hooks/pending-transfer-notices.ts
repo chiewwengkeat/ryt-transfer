@@ -49,10 +49,13 @@ const getPendingTransferNoticesOptions = () =>
 export async function refreshPendingTransferNotices(
   queryClient: QueryClient,
   customerId: string,
+  listingOutdated = () => false,
 ) {
+  const records = await listPendingTransfers(customerId);
+  if (listingOutdated()) return;
   queryClient.setQueryData(getPendingTransferNoticesOptions().queryKey, {
     customerId,
-    records: await listPendingTransfers(customerId),
+    records,
   });
 }
 

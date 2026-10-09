@@ -20,17 +20,40 @@ export function useRecheckEarlierTransferWhileOnTop({
   useEffect(() => {
     if (!screenOnTop || customerId === undefined || transferId === undefined)
       return;
+    let stopped = false;
     const timer = setInterval(() => {
       // Not during a write: an approval in flight has a record too, and only its own answer may read or list it.
       if (!focusManager.isFocused() || queryClient.isMutating() > 0) return;
+      // Nor once one starts while this tick is out, or the session's end clears the cache, which shows only as removals.
+      let overtaken = false;
+      const stopWatchingWrites = queryClient
+        .getMutationCache()
+        .subscribe(({ type }) => {
+          overtaken ||= type === "added";
+        });
+      const stopWatchingClears = queryClient
+        .getQueryCache()
+        .subscribe(({ type }) => {
+          overtaken ||= type === "removed";
+        });
       void (async () => {
         await checkPendingTransferOnce(queryClient, customerId, transferId);
-        await refreshPendingTransferNotices(queryClient, customerId);
-      })().catch((error: unknown) => {
-        reportError(error, { boundary: "pending_transfer" });
-      });
+        await refreshPendingTransferNotices(
+          queryClient,
+          customerId,
+          () => stopped || overtaken,
+        );
+      })()
+        .catch((error: unknown) => {
+          reportError(error, { boundary: "pending_transfer" });
+        })
+        .finally(() => {
+          stopWatchingWrites();
+          stopWatchingClears();
+        });
     }, RECHECK_INTERVAL_MS);
     return () => {
+      stopped = true;
       clearInterval(timer);
     };
   }, [screenOnTop, customerId, transferId, queryClient]);
