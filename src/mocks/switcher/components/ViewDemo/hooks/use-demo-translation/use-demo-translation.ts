@@ -10,7 +10,7 @@ import demoZhMY from "@/mocks/switcher/i18n/zh-MY.json";
 import { AppLanguage } from "@/shared/i18n/i18n";
 
 export function useDemoTranslation() {
-  // Not one of the app's typed namespaces, so this t takes any key and the wrappers below type them.
+  // Not one of the app's typed namespaces, so the cast below types its keys against the English bundle.
   const { t, i18n } = useTranslation("demo" as never);
   // Added on first use: initialising the app's translations drops every bundle added before it.
   if (!i18n.hasResourceBundle(AppLanguage.English, "demo")) {
@@ -19,14 +19,13 @@ export function useDemoTranslation() {
     i18n.addResourceBundle(AppLanguage.Chinese, "demo", demoZhMY);
   }
   const translate = t as unknown as (
-    key: string,
+    key: KeyPaths<typeof demoEnMY>,
     values?: Record<string, string>,
   ) => string;
   return {
-    t: (key: KeyPaths<typeof demoEnMY>, values?: Record<string, string>) =>
-      translate(key, values),
+    t: translate,
     scenarioTitle: (scenarioId: `${TransferScenarioId}`) =>
-      translate(`transfer:common.${scenarioWordsKey(scenarioId)}.title`),
+      translate(`common.${scenarioWordsKey(scenarioId)}.title`),
   };
 }
 

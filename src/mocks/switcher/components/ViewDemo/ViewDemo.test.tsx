@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import i18next, { changeLanguage } from "i18next";
+import { changeLanguage } from "i18next";
 import { Text } from "react-native";
 import {
   SafeAreaProvider,
@@ -34,12 +34,8 @@ const MATRIX_SECTIONS = [
   ...readFileSync(
     `${__dirname}/../../../../screens/transfer/scenarios/transfer.md`,
     "utf8",
-  ).matchAll(/^### (.+)\n`(transfer\.([a-z0-9_]+))`$/gm),
-].map(([, heading = "", scenarioId = "", name = ""]) => ({
-  heading,
-  scenarioId,
-  name,
-}));
+  ).matchAll(/^### (.+)\n`(transfer\.[a-z0-9_]+)`$/gm),
+].map(([, heading = "", scenarioId = ""]) => ({ heading, scenarioId }));
 const BANK_DECIDED_HEADINGS = MATRIX_SECTIONS.filter(({ scenarioId }) => {
   const scenario: TransferScenario | undefined =
     TRANSFER_SCENARIOS[scenarioId as TransferScenarioId];
@@ -49,21 +45,6 @@ const PHONE_METRICS = {
   frame: { x: 0, y: 0, width: 390, height: 844 },
   insets: { top: 47, right: 0, bottom: 34, left: 0 },
 };
-
-beforeAll(() => {
-  // Titles resolve before the app's own transfer bundle exists, and never override it once it does.
-  i18next.addResourceBundle(
-    "en-MY",
-    "transfer",
-    {
-      common: Object.fromEntries(
-        MATRIX_SECTIONS.map(({ name, heading }) => [name, { title: heading }]),
-      ),
-    },
-    true,
-    false,
-  );
-});
 
 function ScreenShowingItsTopInset() {
   const { top } = useSafeAreaInsets();

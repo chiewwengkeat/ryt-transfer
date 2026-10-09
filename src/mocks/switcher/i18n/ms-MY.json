@@ -1,4 +1,180 @@
 {
+  "common": {
+    "balance_and_limit_shown": {
+      "title": "Baki dan had hari ini dipaparkan"
+    },
+    "new_customer_daily_limit": {
+      "title": "Had harian lebih rendah untuk pelanggan baharu"
+    },
+    "balance_unavailable": {
+      "title": "Baki atau had tidak dapat dimuatkan"
+    },
+    "under_maintenance": {
+      "title": "Pindahan dalam penyelenggaraan"
+    },
+    "offline": {
+      "title": "Luar talian"
+    },
+    "earlier_transfer_unconfirmed": {
+      "title": "Pindahan terdahulu masih disemak"
+    },
+    "screen_capture_blocked": {
+      "title": "Tangkapan skrin disekat"
+    },
+    "start_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa bermula"
+    },
+    "badly_formed_input": {
+      "title": "ID, jumlah atau nota tidak sah"
+    },
+    "contacts_access_refused": {
+      "title": "Akses kenalan ditolak"
+    },
+    "contact_without_mobile": {
+      "title": "Kenalan yang dipilih tiada nombor telefon bimbit Malaysia"
+    },
+    "recent_recipient_chosen": {
+      "title": "Penerima terkini dipilih"
+    },
+    "recipient_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa memilih penerima"
+    },
+    "amount_too_high": {
+      "title": "Jumlah melebihi baki atau had"
+    },
+    "amount_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa memasukkan jumlah"
+    },
+    "recipient_found": {
+      "title": "Penerima ditemui"
+    },
+    "first_transfer_to_recipient": {
+      "title": "Pindahan pertama kepada penerima ini"
+    },
+    "recipient_not_found": {
+      "title": "Penerima tidak ditemui"
+    },
+    "name_check_unavailable": {
+      "title": "Semakan nama tidak tersedia"
+    },
+    "too_many_name_checks": {
+      "title": "Terlalu banyak semakan nama"
+    },
+    "balance_or_limit_short_at_confirmation": {
+      "title": "Baki atau had tidak mencukupi semasa pengesahan"
+    },
+    "cooling_off_new_phone": {
+      "title": "Telefon dipasangkan kurang daripada 12 jam yang lalu"
+    },
+    "cooling_off_new_account": {
+      "title": "Akaun dibuka kurang daripada sejam yang lalu"
+    },
+    "account_locked": {
+      "title": "Akaun dikunci"
+    },
+    "name_check_expired": {
+      "title": "Semakan nama telah tamat tempoh"
+    },
+    "confirmation_unanswered": {
+      "title": "Tiada jawapan semasa pengesahan"
+    },
+    "details_changed_after_no_answer": {
+      "title": "Butiran berubah selepas tiada jawapan"
+    },
+    "double_tap_ignored": {
+      "title": "Ketik dua kali pada Pindahkan"
+    },
+    "review_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa menyemak"
+    },
+    "biometrics_recognised": {
+      "title": "Wajah atau cap jari dikenal pasti"
+    },
+    "approval_cancelled": {
+      "title": "Kelulusan dibatalkan"
+    },
+    "biometrics_not_recognised": {
+      "title": "Wajah atau cap jari tidak dikenal pasti"
+    },
+    "biometrics_locked_out": {
+      "title": "Terlalu banyak cubaan wajah atau cap jari"
+    },
+    "biometrics_unavailable": {
+      "title": "Wajah atau cap jari tidak tersedia"
+    },
+    "biometrics_changed": {
+      "title": "Cap jari atau wajah telah berubah"
+    },
+    "pin_chosen": {
+      "title": "PIN dipilih sebagai ganti"
+    },
+    "pin_incorrect": {
+      "title": "PIN salah"
+    },
+    "pin_locked": {
+      "title": "PIN dikunci"
+    },
+    "approval_key_unknown": {
+      "title": "Kunci kelulusan tidak dikenali oleh bank"
+    },
+    "approval_expired": {
+      "title": "Tempoh kelulusan telah tamat"
+    },
+    "approval_not_verified": {
+      "title": "Kelulusan tidak dapat disahkan"
+    },
+    "balance_or_limit_short_at_approval": {
+      "title": "Baki atau had tidak mencukupi semasa kelulusan"
+    },
+    "fraud_blocked": {
+      "title": "Dihentikan oleh semakan penipuan bank"
+    },
+    "held_for_review": {
+      "title": "Ditahan untuk semakan keselamatan"
+    },
+    "recipient_account_inactive": {
+      "title": "Akaun penerima tidak aktif"
+    },
+    "rooted_phone": {
+      "title": "Telefon di-root, di-jailbreak atau diubah suai"
+    },
+    "approval_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa meluluskan"
+    },
+    "completed": {
+      "title": "Pindahan dihantar"
+    },
+    "processing": {
+      "title": "Pindahan sedang diproses"
+    },
+    "refunded_after_processing": {
+      "title": "Dipulangkan selepas diproses"
+    },
+    "outcome_unexpected": {
+      "title": "Sesuatu yang tidak dijangka selepas menghantar"
+    },
+    "approval_unanswered": {
+      "title": "Tiada jawapan kepada kelulusan"
+    },
+    "status_unreachable": {
+      "title": "Bank masih tidak dapat dihubungi"
+    },
+    "app_closed_during_approval": {
+      "title": "Aplikasi ditutup semasa kelulusan"
+    },
+    "last_transfer_not_found": {
+      "title": "Pindahan terakhir tidak ditemui"
+    },
+    "session_ended": {
+      "title": "Sesi tamat"
+    },
+    "approval_unknown_answer": {
+      "title": "Jawapan kelulusan tidak diketahui"
+    },
+    "recovery_unexpected": {
+      "title": "Sesuatu yang tidak dijangka semasa memeriksa"
+    }
+  },
   "header_demo": {
     "pill": {
       "label": "Demo",

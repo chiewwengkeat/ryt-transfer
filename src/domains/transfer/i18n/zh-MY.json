@@ -1,41 +1,26 @@
 {
   "common": {
-    "balance_and_limit_shown": {
-      "title": "显示余额和今日限额"
-    },
-    "new_customer_daily_limit": {
-      "title": "新客户的较低每日限额"
-    },
     "balance_unavailable": {
-      "title": "无法加载余额或限额",
       "disabled_reason": "余额和今日限额加载完成后，您即可转账。",
       "body": "无法加载您的余额。",
       "retry": "重试"
     },
     "under_maintenance": {
-      "title": "转账系统维护中",
       "body": "转账服务暂时无法使用。请稍后再试。",
       "until": "转账服务暂时无法使用，直至 {{time}}。"
     },
     "offline": {
-      "title": "离线",
       "disabled_reason": "您已离线，转账已暂停。",
       "notice": "您已离线。在能够连接 Ryt 之前，转账已暂停。"
     },
     "earlier_transfer_unconfirmed": {
-      "title": "之前的转账仍在核查中",
       "body": "您的上一笔转账仍在核查中，请勿再次转账——尚未确认。如需联系我们，请提供此参考编号：{{reference}}"
     },
-    "screen_capture_blocked": {
-      "title": "已禁止截屏"
-    },
     "start_unexpected": {
-      "title": "开始时出现意外问题",
       "body": "出现了意外问题。",
       "retry": "重试"
     },
     "badly_formed_input": {
-      "title": "ID、金额或备注格式有误",
       "body": "银行无法接受您输入的金额或备注。请检查后再核对一次。",
       "note": "只能使用字母 A 至 Z、数字和空格。",
       "amount_refused": "银行无法接受此金额。",
@@ -49,218 +34,165 @@
       "amount": "请输入以令吉为单位的金额，最多两位小数。"
     },
     "contacts_access_refused": {
-      "title": "通讯录访问被拒绝",
       "body": "如需从通讯录中选择，请在“设置”中允许访问通讯录。或者直接输入号码。",
       "open_settings": "打开设置"
     },
     "contact_without_mobile": {
-      "title": "所选联系人没有马来西亚手机号码",
       "body": "该联系人没有马来西亚手机号码。请选择其他联系人，或输入号码。"
     },
     "recent_recipient_chosen": {
-      "title": "已选择最近的收款人",
       "body": "核对页面将显示银行目前登记的该收款人姓名。"
     },
     "recipient_unexpected": {
-      "title": "选择收款人时出现意外问题",
       "body": "出现了意外问题。",
       "retry": "重试"
     },
     "amount_too_high": {
-      "title": "金额超过余额或限额",
       "over_balance": "该金额超过您的余额 {{amount}}。",
       "over_remaining_today": "该金额超过您今天仍可转账的 {{amount}}。",
       "over_per_transfer_max": "该金额超过 {{amount}}，即单笔转账的最高金额。"
     },
     "amount_unexpected": {
-      "title": "输入金额时出现意外问题",
       "body": "出现了意外问题。",
       "retry": "重试"
     },
-    "recipient_found": {
-      "title": "已找到收款人"
-    },
     "first_transfer_to_recipient": {
-      "title": "首次转账给此收款人",
       "body": "这是您首次转账给此收款人。请确认姓名是您要转账的对象。"
     },
     "recipient_not_found": {
-      "title": "找不到收款人",
       "body": "找不到此 ID 的 DuitNow 账户。",
       "change_recipient": "更改收款人"
     },
     "name_check_unavailable": {
-      "title": "无法核实姓名",
       "body": "目前无法核实收款人姓名。",
       "retry": "重试"
     },
     "too_many_name_checks": {
-      "title": "姓名核实次数过多",
       "body": "短时间内姓名核实次数过多。请一分钟后再试。",
       "retry": "重试"
     },
     "balance_or_limit_short_at_confirmation": {
-      "title": "确认时余额或限额不足",
       "body": "您的余额或限额已不足以支付此金额。请返回进行更改。",
       "over_balance": "您的余额已不足以支付此金额。请返回进行更改。",
       "over_limit": "此金额现已超过您的其中一项转账限额。请返回进行更改。",
       "change_amount": "更改金额"
     },
     "cooling_off_new_phone": {
-      "title": "手机配对不足 12 小时",
       "disabled_reason": "您可从 {{time}} 起转账——这是配对此手机后的安全等待期。",
       "disabled_reason_without_time": "您稍后即可转账——这是配对此手机后的安全等待期。"
     },
     "cooling_off_new_account": {
-      "title": "账户开立不足一小时",
       "disabled_reason": "您可从 {{time}} 起转账——这是开立账户后的安全等待期。",
       "disabled_reason_without_time": "您稍后即可转账——这是开立账户后的安全等待期。"
     },
     "account_locked": {
-      "title": "账户已锁定",
       "disabled_reason": "您的账户已锁定。请联系 Ryt 解锁。"
     },
     "name_check_expired": {
-      "title": "姓名核实已过期",
       "body": "收款人核实已过期。请再次确认收款人。"
     },
     "confirmation_unanswered": {
-      "title": "确认时无响应",
       "body": "无法连接 Ryt——款项未转出。"
     },
     "details_changed_after_no_answer": {
-      "title": "无响应后详情已更改",
       "body": "Ryt 未响应后，您的详情已更改。请检查后，将此确认为一笔新的转账。"
     },
-    "double_tap_ignored": {
-      "title": "双击“转账”"
-    },
     "review_unexpected": {
-      "title": "核对时出现意外问题",
       "body": "意外问题中止了转账——款项未转出。",
       "retry": "重试"
     },
     "biometrics_recognised": {
-      "title": "已识别面容或指纹",
       "body": "正在发送您的转账，银行的答复随后就到。"
     },
     "approval_cancelled": {
-      "title": "已取消批准",
       "body": "转账未发送——款项未转出。"
     },
     "biometrics_not_recognised": {
-      "title": "无法识别面容或指纹",
       "body": "无法识别您的面容或指纹。您可以再试一次，或使用 PIN。"
     },
     "biometrics_locked_out": {
-      "title": "面容或指纹尝试次数过多",
       "body": "尝试次数过多，请使用 PIN 批准。"
     },
     "biometrics_unavailable": {
-      "title": "面容或指纹不可用",
       "body": "面容或指纹批准不可用，请使用 PIN 批准。",
       "turned_off": "已在此应用的设置中关闭。",
       "not_set_up": "此手机上未设置面容或指纹。",
       "no_sensor": "此手机没有可供应用使用的面容或指纹传感器。"
     },
     "biometrics_changed": {
-      "title": "指纹或面容已更改",
       "body": "您的指纹或面容已更改。使用 PIN 批准此转账后，将重新开启面容或指纹批准。"
     },
     "pin_chosen": {
-      "title": "改用 PIN",
       "body": "请输入您的银行 PIN 以批准此转账。",
       "choose": "改用 PIN"
     },
     "pin_incorrect": {
-      "title": "PIN 不正确",
       "body_one": "PIN 不正确。您还剩 {{count}} 次尝试机会。",
       "body_other": "PIN 不正确。您还剩 {{count}} 次尝试机会。"
     },
     "pin_locked": {
-      "title": "PIN 已锁定",
       "body": "您的 PIN 已锁定。请在应用的安全设置中重置。"
     },
     "approval_key_unknown": {
-      "title": "银行无法识别批准密钥",
       "body": "需要在此手机上重新设置批准。",
       "pin": "请输入您的 PIN，以完成设置并批准此转账。"
     },
     "approval_expired": {
-      "title": "批准时限已过",
       "body": "批准已超时——款项未转出。"
     },
     "approval_not_verified": {
-      "title": "无法验证批准",
       "body": "无法验证此批准——款项未转出。"
     },
     "balance_or_limit_short_at_approval": {
-      "title": "批准时余额或限额不足",
       "body": "由于您的余额或限额已变动，转账未发送——款项未转出。"
     },
     "fraud_blocked": {
-      "title": "被银行的反欺诈检查拦截",
       "body": "银行为保护您而拦截了此转账，并会就此与您联系——款项未转出。"
     },
     "held_for_review": {
-      "title": "因安全检查而暂缓",
       "body": "银行正在暂缓此转账以进行安全检查。转账将会完成或被退款——尚未确认。"
     },
     "recipient_account_inactive": {
-      "title": "收款账户不活跃",
       "body": "转账被拒绝——款项未转出。"
     },
     "rooted_phone": {
-      "title": "手机已 root、越狱或被篡改",
       "body": "无法确认此手机的安全性，因此已在此手机上关闭转账。"
     },
     "approval_unexpected": {
-      "title": "批准时出现意外问题",
       "body": "意外问题中止了批准——款项未转出。"
     },
     "completed": {
-      "title": "转账已发送",
       "body": "已向 {{name}} 转账 {{amount}}——款项已转出。"
     },
     "processing": {
-      "title": "转账处理中",
       "body": "通常即时到账，但最长可能需要一个工作日。结果将显示在此处和历史记录中——尚未确认。"
     },
     "refunded_after_processing": {
-      "title": "处理后已退款",
       "body": "此转账未成功。款项正在或已经自动退回给您。"
     },
     "outcome_unexpected": {
-      "title": "发送后出现意外问题",
       "body": "目前无法显示结果。再次转账前，请先查看您的转账记录——尚未确认。",
       "load_again": "重新加载结果"
     },
     "approval_unanswered": {
-      "title": "批准无响应",
       "body": "此转账正在核查中，请勿再次转账——尚未确认。"
     },
     "status_unreachable": {
-      "title": "仍无法连接银行",
       "body": "目前无法连接银行。此转账将继续接受核查，结果将显示在此处和历史记录中——尚未确认。"
     },
     "app_closed_during_approval": {
-      "title": "批准期间应用已关闭",
       "body": "您上一笔转账的答复送达前，应用已关闭。转账正在核查中，结果将显示在此处——尚未确认。"
     },
     "last_transfer_not_found": {
-      "title": "找不到上一笔转账",
       "body": "找不到您的上一笔转账。再次转账前，请先查看您的转账记录——尚未确认。"
     },
     "session_ended": {
-      "title": "会话已结束",
       "reference": "您的上一笔转账仍在核查中。如需联系我们，请提供此参考编号：{{reference}}"
     },
     "approval_unknown_answer": {
-      "title": "批准答复未知",
       "body": "此转账正在核查中，请勿再次转账——尚未确认。"
     },
     "recovery_unexpected": {
-      "title": "核查时出现意外问题",
       "body": "目前无法确认此转账的结果。再次转账前，请先查看您的转账记录——尚未确认。"
     },
     "section_transfer_details": {

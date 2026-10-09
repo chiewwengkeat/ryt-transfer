@@ -16,6 +16,7 @@ const MATRIX_IDS = [
     "utf8",
   ).matchAll(/^### .+\n`(transfer\.[a-z0-9_]+)`$/gm),
 ].map(([, id = ""]) => id);
+const WORDS_TWO_MODULES_SHARE = ["section_transfer_details", "close_sheet"];
 
 // Raw text, never parsed: JSON.parse keeps only the last of a repeated key, so no parsed check sees one.
 function findKeysRepeatedInOneObject(bundleText: string) {
@@ -45,14 +46,24 @@ function findKeysRepeatedInOneObject(bundleText: string) {
   return repeated;
 }
 
-function findMatrixIdsWithoutStrings(transferBundle: {
+function findMatrixIdsWithoutTitle(demoBundle: {
+  common?: Record<string, { title?: unknown }>;
+}) {
+  return MATRIX_IDS.filter(
+    (id) =>
+      typeof demoBundle.common?.[id.replace(/^transfer\./, "")]?.title !==
+      "string",
+  );
+}
+
+function findScenarioGroupsNamingNoMatrixId(transferBundle: {
   common?: Record<string, unknown>;
 }) {
-  return MATRIX_IDS.filter((id) => {
-    const scenarioStrings =
-      transferBundle.common?.[id.replace(/^transfer\./, "")];
-    return typeof scenarioStrings !== "object" || scenarioStrings === null;
-  });
+  return Object.keys(transferBundle.common ?? {}).filter(
+    (key) =>
+      !WORDS_TWO_MODULES_SHARE.includes(key) &&
+      !MATRIX_IDS.includes(`transfer.${key}`),
+  );
 }
 
 it("finds a key repeated inside one object, at any depth", () => {
@@ -87,24 +98,45 @@ it("repeats no key inside one object in any bundle", () => {
   expect(repeatedByFile).toEqual([]);
 });
 
-it("finds a matrix id with no strings under the transfer bundle's common, whatever else common holds", () => {
-  const missingId = "transfer.offline";
-  const common = {
-    ...Object.fromEntries(
-      MATRIX_IDS.filter((id) => id !== missingId).map(
-        (id) => [id.replace(/^transfer\./, ""), { title: id }] as const,
-      ),
-    ),
-    section_transfer_details: { title: "Transfer details" },
-  };
+it("finds a matrix id with no title in the Demo menu's bundle, whether its group is missing or holds no title", () => {
+  const [missingId = "", untitledId = ""] = MATRIX_IDS;
+  const common = Object.fromEntries(
+    MATRIX_IDS.filter((id) => id !== missingId).map((id) => [
+      id.replace(/^transfer\./, ""),
+      id === untitledId ? {} : { title: id },
+    ]),
+  );
 
-  expect(findMatrixIdsWithoutStrings({ common })).toEqual([missingId]);
+  expect(findMatrixIdsWithoutTitle({ common })).toEqual([
+    missingId,
+    untitledId,
+  ]);
 });
 
-it("gives every matrix id its strings under the transfer bundle's common", () => {
+it("gives every matrix id a title in the Demo menu's bundle", () => {
+  const demoBundle = JSON.parse(
+    readFileSync(`${SOURCE_ROOT}/mocks/switcher/i18n/en-MY.json`, "utf8"),
+  ) as Parameters<typeof findMatrixIdsWithoutTitle>[0];
+
+  expect(findMatrixIdsWithoutTitle(demoBundle)).toEqual([]);
+});
+
+it("finds a group under the transfer bundle's common that names no matrix id and holds no words two modules share", () => {
+  expect(
+    findScenarioGroupsNamingNoMatrixId({
+      common: {
+        offline: { body: "You're offline." },
+        section_transfer_details: { status: "Status" },
+        offline_before_rename: { body: "You're offline." },
+      },
+    }),
+  ).toEqual(["offline_before_rename"]);
+});
+
+it("names a matrix id with every scenario group under the transfer bundle's common", () => {
   const transferBundle = JSON.parse(
     readFileSync(`${SOURCE_ROOT}/domains/transfer/i18n/en-MY.json`, "utf8"),
-  ) as Parameters<typeof findMatrixIdsWithoutStrings>[0];
+  ) as Parameters<typeof findScenarioGroupsNamingNoMatrixId>[0];
 
-  expect(findMatrixIdsWithoutStrings(transferBundle)).toEqual([]);
+  expect(findScenarioGroupsNamingNoMatrixId(transferBundle)).toEqual([]);
 });
