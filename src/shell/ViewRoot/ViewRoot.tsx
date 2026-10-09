@@ -9,6 +9,10 @@ import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integr
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top";
 import { addUnauthorizedListener } from "@/shared/http/transport";
+import {
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport-error";
 import { screenTransitionOptions } from "@/shared/lib/motion/motion";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
@@ -134,10 +138,19 @@ const styles = StyleSheet.create({
   layer: { ...StyleSheet.absoluteFill, pointerEvents: "box-none" },
 });
 
-// A name check that answered keeps the reference it showed: asking again would mint another.
+// A name check the bank answered, a refusal included, stays: asking again mints another reference or meets the check limit.
 function readAgainEveryReadButAnAnsweredNameCheck() {
   void queryClient.invalidateQueries({
-    predicate: ({ queryKey, state }) =>
-      queryKey[0] !== transferKeys.lookupAll[0] || state.status !== "success",
+    predicate: ({ queryKey, state: { status, error } }) =>
+      queryKey[0] !== transferKeys.lookupAll[0] ||
+      status === "pending" ||
+      (status === "error" &&
+        error instanceof TransportError &&
+        ([
+          TransportErrorKind.Network,
+          TransportErrorKind.Timeout,
+          TransportErrorKind.Aborted,
+        ].includes(error.kind) ||
+          (error.kind === TransportErrorKind.Http && error.status === 401))),
   });
 }
