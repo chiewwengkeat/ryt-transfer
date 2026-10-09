@@ -23,6 +23,8 @@ import {
 const UNKNOWN_BANK_CODE = {
   error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
 };
+const OFFLINE_NOTICE =
+  "You're offline. Sending is paused until Ryt can be reached.";
 
 it.each(["012-345 6789", "60123456789", "+60 12 345 6789"])(
   "takes %s as a DuitNow mobile number and moves on to the amount",
@@ -272,6 +274,24 @@ it("hides the bank sheet's something-unexpected message while the phone has no c
 
   expect(banksUnexpected).not.toBeOnTheScreen();
   expect(screen.getByLabelText("Search banks")).toBeOnTheScreen();
+});
+
+it("reports being offline again when the connection drops a second time on the recipient step", async () => {
+  await renderRoute("/transfer");
+  await screen.findByLabelText("DuitNow mobile number");
+
+  for (const connected of [false, true, false])
+    await act(() => {
+      setPhoneNetwork({
+        isConnected: connected,
+        isInternetReachable: connected,
+      });
+    });
+
+  expect(screen.getByText(OFFLINE_NOTICE)).toBeOnTheScreen();
+  expect(
+    reportedScenarios().filter((scenario) => scenario === "transfer.offline"),
+  ).toHaveLength(2);
 });
 
 it("asks for the account's bank before moving on", async () => {

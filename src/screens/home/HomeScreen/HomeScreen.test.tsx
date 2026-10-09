@@ -10,6 +10,7 @@ import {
 } from "@/test/bank-client";
 import { clearTransferScenario } from "@/test/clear-transfer-scenario";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { pressHardwareBack } from "@/test/hardware-back";
 import { moveAppTo } from "@/test/harness/app-state";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import {
@@ -43,6 +44,25 @@ it(
   }),
 );
 
+it("reports the balance shown once while Home stays open, not again each time Home is back on top", async () => {
+  const view = await renderRoute("/");
+  await screen.findByText("RM 12,845.50");
+
+  for (let visit = 0; visit < 2; visit++) {
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Transfer history" }),
+    );
+    await pressHardwareBack();
+  }
+
+  expect(view.getPathname()).toBe("/");
+  expect(
+    reportedScenarios().filter(
+      (scenario) => scenario === "transfer.balance_and_limit_shown",
+    ),
+  ).toHaveLength(1);
+});
+
 it("keeps Transfer unavailable, saying why, until the balance and today's limit have loaded", async () => {
   const loadingReason =
     "You can send once your balance and today's limit have loaded.";
@@ -73,6 +93,28 @@ it(
     expect(reportedScenarios()).toContain("transfer.balance_unavailable");
     await pressEveryRecentRecipientExpectingItDisabled();
     expect(view.getPathname()).toBe("/");
+  }),
+);
+
+it(
+  "reports the balance failing again when Try again brings the failure back",
+  scenarioTest("transfer.balance_unavailable", async () => {
+    await renderRoute("/");
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Try again" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        reportedScenarios().filter(
+          (scenario) => scenario === "transfer.balance_unavailable",
+        ),
+      ).toHaveLength(2);
+    });
+    expect(
+      screen.getByText("Your balance couldn't be loaded."),
+    ).toBeOnTheScreen();
   }),
 );
 
