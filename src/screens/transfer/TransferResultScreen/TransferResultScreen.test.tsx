@@ -867,7 +867,7 @@ it("checks a transfer whose approval drew an answer the app does not know, under
 });
 
 it(
-  "reopens the transfer the app was closed during, quoting its id, and says no money moved once its window passes",
+  "reopens the transfer the app was closed during, quoting its id, with Home's warning beneath asking the bank nothing, and says no money moved once its window passes",
   scenarioTest("transfer.app_closed_during_approval", async () => {
     const customerId = await readCustomerId();
     // Never answered: the app is killed while the approval is on its way.
@@ -903,9 +903,24 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    expect(
+      screen.getByText(/^Your last transfer is still being checked/, {
+        includeHiddenElements: true,
+      }),
+    ).toBeOnTheScreen();
+    const transferId = transferIdIn(relaunched.getPathname());
+    const readsOfTheTransfer = () =>
+      sentRequests.filter(
+        ({ method, url }) =>
+          method === "GET" && url.endsWith(`/transfers/${transferId}`),
+      ).length;
+    await act(() => jest.advanceTimersByTimeAsync(9_000));
+    const readsAfterThePagesReadAt8Seconds = readsOfTheTransfer();
 
-    await act(() => jest.advanceTimersByTimeAsync(62_000));
+    await act(() => jest.advanceTimersByTimeAsync(6_500));
 
+    expect(readsOfTheTransfer()).toBe(readsAfterThePagesReadAt8Seconds);
+    await act(() => jest.advanceTimersByTimeAsync(46_500));
     expect(
       await screen.findByRole("header", { name: "Transfer not sent" }),
     ).toBeOnTheScreen();
