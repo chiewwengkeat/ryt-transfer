@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { createElement, type ReactNode } from "react";
@@ -16,6 +16,7 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { mswServer } from "@/test/msw-server";
+import { createQueryClientWithoutGcTimers } from "@/test/query-client-without-gc-timers";
 
 const REVIEWED_TRANSFER = {
   transferId: "trf_8c1f3a",
@@ -45,13 +46,7 @@ const transferAt = (version: number, status: TransferStatus): Transfer => ({
 });
 
 async function approveWithTheBankAnswering(answer: Transfer, held?: Transfer) {
-  // No gc timers: a cache entry's 5-minute timer holds a single-file run open.
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { gcTime: Infinity },
-      mutations: { gcTime: Infinity },
-    },
-  });
+  const queryClient = createQueryClientWithoutGcTimers();
   if (held)
     queryClient.setQueryData(
       getTransferOptions(held.transferId).queryKey,

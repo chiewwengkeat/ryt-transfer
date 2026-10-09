@@ -1,8 +1,4 @@
-import {
-  type InfiniteData,
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
+import { type InfiniteData, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { createElement, type ReactNode } from "react";
@@ -20,6 +16,7 @@ import {
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { startTestTransfer } from "@/test/bank-client";
 import { mswServer } from "@/test/msw-server";
+import { createQueryClientWithoutGcTimers } from "@/test/query-client-without-gc-timers";
 
 import type { ListTransfersResponse } from "../list-transfers/list-transfers.type";
 import { transferKeys } from "../transfer.keys";
@@ -71,10 +68,7 @@ it.each([
         }),
       ),
     );
-    // No gc timers: a cache entry's 5-minute timer holds a single-file run open.
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { gcTime: Infinity } },
-    });
+    const queryClient = createQueryClientWithoutGcTimers();
     await queryClient.fetchQuery(getTransferOptions("trf_2"));
     const { result, rerender } = await renderHook(
       ({ transferId }: { transferId: string }) => useGetTransfer(transferId),
@@ -103,7 +97,7 @@ it("brings history's older copy of a transfer up to date when the transfer is re
   const {
     created: { transfer },
   } = await startTestTransfer(10_000);
-  const queryClient = new QueryClient();
+  const queryClient = createQueryClientWithoutGcTimers();
   queryClient.setQueryData<InfiniteData<ListTransfersResponse>>(
     transferKeys.history(),
     {
@@ -132,7 +126,7 @@ it("leaves a history load running when history holds no copy of the transfer rea
   const {
     created: { transfer },
   } = await startTestTransfer(10_000);
-  const queryClient = new QueryClient();
+  const queryClient = createQueryClientWithoutGcTimers();
   let finishHistoryLoad: (page: ListTransfersResponse) => void = () =>
     undefined;
   const historyLoad = queryClient.fetchInfiniteQuery({

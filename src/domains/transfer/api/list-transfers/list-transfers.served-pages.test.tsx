@@ -1,8 +1,9 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 
 import { sentRequests } from "@/test/msw-server";
+import { createQueryClientWithoutGcTimers } from "@/test/query-client-without-gc-timers";
 import {
   buildHistoryTransfer,
   serveTransferHistoryPages,
@@ -29,10 +30,7 @@ it("asks for the next page alone when the list asks once at rest", async () => {
       }),
     ],
   ]);
-  // No gc timer: an unobserved query's 5-minute timer holds a single-file run open.
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { gcTime: Infinity } },
-  });
+  const queryClient = createQueryClientWithoutGcTimers();
   const { result } = await renderHook(() => useListTransfers(), {
     wrapper: ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

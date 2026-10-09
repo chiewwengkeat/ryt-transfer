@@ -1,6 +1,6 @@
 import {
   onlineManager,
-  QueryClient,
+  type QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
@@ -14,6 +14,7 @@ import {
 import { API_BASE_URL } from "@/shared/config/config";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
+import { createQueryClientWithoutGcTimers } from "@/test/query-client-without-gc-timers";
 
 import {
   askForNextTransferHistoryPage,
@@ -26,10 +27,6 @@ import type { ListTransfersResponse } from "./list-transfers.type";
 
 // The query run against the Jest bank, its cache writes included; list-transfers.test.ts seeds the cache by hand. A
 // new suite is named for what fills its cache.
-
-// No gc timer: an unobserved query's 5-minute timer holds a single-file run open.
-const createTestQueryClient = () =>
-  new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } });
 
 function renderTransferHistory(queryClient: QueryClient) {
   return renderHook(() => useListTransfers(), {
@@ -76,7 +73,7 @@ async function askForNextPageWhileARefreshWaitsOffline(
 }
 
 it("asks for 30 transfers at a time, and for each later page by the cursor the bank last returned", async () => {
-  const history = await createTestQueryClient().fetchInfiniteQuery({
+  const history = await createQueryClientWithoutGcTimers().fetchInfiniteQuery({
     ...getListTransfersOptions(),
     pages: 2,
   });
@@ -92,7 +89,7 @@ it("asks for 30 transfers at a time, and for each later page by the cursor the b
 });
 
 it("keeps each page exactly as the bank sent it, amounts still on the wire", async () => {
-  const history = await createTestQueryClient().fetchInfiniteQuery(
+  const history = await createQueryClientWithoutGcTimers().fetchInfiniteQuery(
     getListTransfersOptions(),
   );
   const response = await fetch(`${API_BASE_URL}/transfers?limit=30`);
@@ -119,7 +116,9 @@ it("reports a page's unreadable amounts, a row's and a day's alike, as one unrea
     ),
   );
 
-  await createTestQueryClient().fetchInfiniteQuery(getListTransfersOptions());
+  await createQueryClientWithoutGcTimers().fetchInfiniteQuery(
+    getListTransfersOptions(),
+  );
 
   expect(
     observedRecords.filter(({ name }) => name === "unreadable_amount"),
@@ -133,7 +132,9 @@ it("reports a page's unreadable amounts, a row's and a day's alike, as one unrea
 });
 
 it("keeps every transfer and day summary it already had when the next page lands", async () => {
-  const { firstPage, bothPages } = await loadBothPages(createTestQueryClient());
+  const { firstPage, bothPages } = await loadBothPages(
+    createQueryClientWithoutGcTimers(),
+  );
 
   expect(bothPages?.transfers).toHaveLength(45);
   bothPages?.transfers.slice(0, 30).forEach((transfer, index) => {
@@ -148,7 +149,7 @@ it("keeps every transfer and day summary it already had when the next page lands
 });
 
 it("files each transfer under its Malaysian date, beside that whole day's summary", async () => {
-  const { bothPages } = await loadBothPages(createTestQueryClient());
+  const { bothPages } = await loadBothPages(createQueryClientWithoutGcTimers());
 
   expect(
     bothPages?.transfers.filter(
@@ -166,7 +167,7 @@ it("files each transfer under its Malaysian date, beside that whole day's summar
 });
 
 it("asks for the next page once a refresh held offline lands unchanged, never cancelling the refresh", async () => {
-  const queryClient = createTestQueryClient();
+  const queryClient = createQueryClientWithoutGcTimers();
   const { result } = await askForNextPageWhileARefreshWaitsOffline(queryClient);
   const secondPageCursor = queryClient.getQueryData(
     getListTransfersOptions().queryKey,
@@ -183,7 +184,7 @@ it("asks for the next page once a refresh held offline lands unchanged, never ca
 });
 
 it("asks for no page once the list it was asked for is gone", async () => {
-  const queryClient = createTestQueryClient();
+  const queryClient = createQueryClientWithoutGcTimers();
   const { unmount } =
     await askForNextPageWhileARefreshWaitsOffline(queryClient);
 
@@ -198,7 +199,7 @@ it("asks for no page once the list it was asked for is gone", async () => {
 });
 
 it("drops a page still loading when it resets, so the page never lands", async () => {
-  const queryClient = createTestQueryClient();
+  const queryClient = createQueryClientWithoutGcTimers();
   const { result } = await renderTransferHistory(queryClient);
   await waitFor(() => {
     expect(result.current.data?.transfers).toHaveLength(30);
@@ -216,7 +217,7 @@ it("drops a page still loading when it resets, so the page never lands", async (
 });
 
 it("patches a transfer with its newer version and moves its day's net by the money that moved", async () => {
-  const queryClient = createTestQueryClient();
+  const queryClient = createQueryClientWithoutGcTimers();
   const { cachedPages: before } = await loadBothPages(queryClient);
   const [listed, untouched] = before.pages[0]?.items ?? [];
   if (!listed || !untouched) throw new Error("The bank listed no transfers.");
@@ -242,7 +243,7 @@ it("patches a transfer with its newer version and moves its day's net by the mon
 });
 
 it("moves a split day's net in both pages that carry it", async () => {
-  const queryClient = createTestQueryClient();
+  const queryClient = createQueryClientWithoutGcTimers();
   const { cachedPages: before } = await loadBothPages(queryClient);
   const splitDayTransfer = before.pages[1]?.items[0];
   if (splitDayTransfer?.createdAt.slice(0, 10) !== "2026-09-26")
@@ -267,7 +268,7 @@ it("moves a split day's net in both pages that carry it", async () => {
 });
 
 it("ignores a copy of the same version as the one listed", async () => {
-  const queryClient = createTestQueryClient();
+  const queryClient = createQueryClientWithoutGcTimers();
   const { cachedPages: before } = await loadBothPages(queryClient);
   const listed = before.pages[0]?.items[0];
   if (!listed) throw new Error("The bank listed no transfers.");
