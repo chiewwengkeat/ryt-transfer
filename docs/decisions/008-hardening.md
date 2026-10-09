@@ -31,7 +31,7 @@ A production build protects what is on screen, the phone it runs on and what it 
 - **No cover in the switcher.** A balance or a recipient's name would show to anyone glancing at the switcher.
 - **expo-device's or jail-monkey's root check.** Either adds a library for a check the signing library already makes.
 - **Locking review's exits while the phone check runs.** No press could outlive the person leaving review, but while the check ran, Back and the swipe would do nothing, and someone who wanted out would find the screen stuck. Chosen instead: leaving cancels the press, and they press again if they come back.
-- **No on-phone root check, only a note in the write-up.** No genuine customer would ever be refused on a phone that misreports; the check refuses only on a clear signal instead, and the write-up names what it cannot do.
+- **No on-phone root check, only a note in the write-up.** No genuine customer would ever be refused on a phone that misreports; the check refuses only on a clear signal instead, and [the limitations](../limitations.md#what-the-bank-and-the-host-app-own) name what it cannot do.
 - **Hiding other apps' overlays while the PIN sheet is open.** It would remove an overlay rather than ignore touches through it; the guard filters the touches instead, and the sheet says why.
 - **Leaving overlays as a written gap.** No native code, at the cost of a PIN pad an overlay app could steer; a small native guard closes it instead.
 - **Dropping blocked touches silently.** With a harmless overlay such as a screen dimmer, the keypad would simply look dead.
