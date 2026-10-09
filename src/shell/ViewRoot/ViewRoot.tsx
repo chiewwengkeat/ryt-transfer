@@ -7,6 +7,11 @@ import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
+import { transferFlowStore } from "@/screens/transfer/state/transfer-flow";
+import {
+  holdTransferScenarioReports,
+  releaseTransferScenarioReports,
+} from "@/screens/transfer/state/transfer-funnel";
 import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top";
 import { addUnauthorizedListener } from "@/shared/http/transport";
 import {
@@ -34,13 +39,17 @@ export default function ViewRoot() {
   const [sessionEnded, setSessionEnded] = useState(false);
   const [appSheetOpen, setAppSheetOpen] = useState(false);
   const [navigatorMounts, setNavigatorMounts] = useState(0);
-  useEffect(
-    () =>
-      addUnauthorizedListener(() => {
-        setSessionEnded(true);
-      }),
-    [],
-  );
+  useEffect(() => {
+    const removeUnauthorizedListener = addUnauthorizedListener(() => {
+      setSessionEnded(true);
+      // Here, not on the render: an answer settled in this same moment would report beneath the view.
+      holdTransferScenarioReports();
+    });
+    return () => {
+      removeUnauthorizedListener();
+      releaseTransferScenarioReports();
+    };
+  }, []);
   useEffect(
     () =>
       demoLayer?.subscribeToBiometricsOff((biometricsOff) => {
@@ -98,6 +107,7 @@ export default function ViewRoot() {
             // Stands in for the host app's sign-in: the session is the host's, so a standalone build only resumes.
             onSignIn={() => {
               setSessionEnded(false);
+              releaseTransferScenarioReports(transferFlowStore.getState());
               readAgainEveryReadButAnsweredNameChecks({
                 refusalsAreAnswers: true,
               });

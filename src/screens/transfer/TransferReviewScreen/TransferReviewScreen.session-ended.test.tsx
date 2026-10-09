@@ -96,7 +96,7 @@ async function pairPhoneBeforeTheBankForgetsItsKeys() {
 }
 
 it(
-  "announces a hold the bank answers with under the session-ended view only once signed in again",
+  "announces and reports a hold the bank answers with under the session-ended view only once signed in again",
   scenarioTest("transfer.account_locked", async () => {
     const holdReason = "Your account is locked. Contact Ryt to unlock it.";
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
@@ -105,19 +105,95 @@ it(
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await create.waitUntilSent();
     const signInButton = await endTheSessionThroughAnotherRead();
+    const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
     announce.mockClear();
 
     create.release();
     await screen.findByText(holdReason, { includeHiddenElements: true });
     const spokenUnderTheView = [...announce.mock.calls];
+    const reportedUnderTheView = scenariosReportedSinceTheView();
     await fireEvent.press(signInButton);
 
     expect(spokenUnderTheView).not.toContainEqual([holdReason]);
+    expect(reportedUnderTheView).toEqual([]);
     await waitFor(() => {
       expect(announce).toHaveBeenCalledWith(holdReason);
     });
+    expect(scenariosReportedSinceTheView()).toEqual([
+      "transfer.account_locked",
+    ]);
   }),
 );
+
+it("reports a PIN the bank locks as it answers under the session-ended view only once signed in again, its sheet still showing", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  approvalSettingsStore.setState({ biometricApprovalOn: false });
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", () =>
+      HttpResponse.json(
+        { error: { code: "PIN_LOCKED", message: "Test." } },
+        { status: 423 },
+      ),
+    ),
+  );
+  await openReviewOfRm100();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  const approval = holdTheNextPost("*/transfers/:transferId/approve");
+  await enterPin("111111");
+  await approval.waitUntilSent();
+  const signInButton = await endTheSessionThroughAnotherRead();
+  const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
+  const lockedWords =
+    "Your PIN is locked. Reset it in the app's security settings.";
+
+  approval.release();
+  await screen.findAllByText(lockedWords, { includeHiddenElements: true });
+  const reportedUnderTheView = scenariosReportedSinceTheView();
+  await fireEvent.press(signInButton);
+
+  expect(reportedUnderTheView).toEqual([]);
+  expect(await screen.findAllByText(lockedWords)).not.toHaveLength(0);
+  await waitFor(() => {
+    expect(scenariosReportedSinceTheView()).toEqual(["transfer.pin_locked"]);
+  });
+});
+
+it("reports once, after signing in again, a notice the approval leaves review with under the session-ended view", async () => {
+  await pairPhoneBeforeTheBankForgetsItsKeys();
+  await scenarioTest("transfer.approval_key_unknown", async () => {
+    mswServer.use(
+      http.post(
+        "*/approval-keys",
+        () => new HttpResponse(null, { status: 500 }),
+      ),
+    );
+    await openReviewOfRm100();
+    const approval = holdTheNextPost("*/transfers/:transferId/approve");
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    await approval.waitUntilSent();
+    const signInButton = await endTheSessionThroughAnotherRead();
+    const scenariosReportedSinceTheView = scenariosReportedFromNowOn();
+    const noticeWords = "Approval needs setting up again on this phone.";
+
+    approval.release();
+    await screen.findByText(noticeWords, { includeHiddenElements: true });
+    const reportedUnderTheView = scenariosReportedSinceTheView();
+    await fireEvent.press(signInButton);
+
+    expect(reportedUnderTheView).toEqual([]);
+    expect(await screen.findByText(noticeWords)).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+    await waitFor(() => {
+      expect(scenariosReportedSinceTheView()).toEqual([
+        "transfer.approval_key_unknown",
+      ]);
+    });
+    await act(() => jest.advanceTimersByTimeAsync(1_000));
+    expect(scenariosReportedSinceTheView()).toEqual([
+      "transfer.approval_key_unknown",
+    ]);
+  })();
+});
 
 it("reports a PIN approval that opens under the session-ended view only once signed in again, its sheet still showing", async () => {
   await pairPhoneAsTheDemoLaunchDoes();

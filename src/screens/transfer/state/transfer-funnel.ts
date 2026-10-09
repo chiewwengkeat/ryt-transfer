@@ -7,6 +7,9 @@ import {
   TransferHoldKind,
 } from "./transfer-flow.type";
 
+let scenarioReportsHeld = false;
+let flowReachedWhileReportsHeld: TransferFlowState | undefined;
+
 export function trackTransferStepOrScenarioChange(
   flow: TransferFlowState,
   nextFlow: TransferFlowState,
@@ -17,13 +20,39 @@ export function trackTransferStepOrScenarioChange(
     (scenario === undefined || scenario === findScenarioTheFlowShows(flow))
   )
     return;
+  if (scenarioReportsHeld && scenario !== undefined) {
+    flowReachedWhileReportsHeld = nextFlow;
+    return;
+  }
+  trackTransferStep(nextFlow, scenario);
+}
+
+export function holdTransferScenarioReports() {
+  scenarioReportsHeld = true;
+}
+
+// Reports the held scenario only if the flow still shows it; with no flow, as the root goes away, nothing shows.
+export function releaseTransferScenarioReports(
+  flowShownNow?: TransferFlowState,
+) {
+  const flowReached = flowReachedWhileReportsHeld;
+  scenarioReportsHeld = false;
+  flowReachedWhileReportsHeld = undefined;
+  if (flowReached !== undefined && flowReached === flowShownNow)
+    trackTransferStep(flowReached, findScenarioTheFlowShows(flowReached));
+}
+
+function trackTransferStep(
+  flow: TransferFlowState,
+  scenario: TransferFlowScenario | undefined,
+) {
   trackEvent("transfer_step", {
-    step: nextFlow.step,
-    ...("draft" in nextFlow && {
-      amountMinor: nextFlow.draft.amount?.minor,
-      currency: nextFlow.draft.amount?.currency,
+    step: flow.step,
+    ...("draft" in flow && {
+      amountMinor: flow.draft.amount?.minor,
+      currency: flow.draft.amount?.currency,
     }),
-    ...("path" in nextFlow && { path: nextFlow.path }),
+    ...("path" in flow && { path: flow.path }),
     scenario,
   });
 }
