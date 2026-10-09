@@ -54,11 +54,11 @@ export default function HeaderTransferDay({
       accessibilityState={{ expanded }}
       accessibilityLabel={
         netText === null
-          ? t("history.day.label_without_net", {
+          ? t("header_transfer_day.label_without_net", {
               day: dayLabel,
               count: summary.count,
             })
-          : t("history.day.label", {
+          : t("header_transfer_day.label", {
               day: dayLabel,
               count: summary.count,
               net: netText,
@@ -78,7 +78,10 @@ export default function HeaderTransferDay({
           ]}
         >
           <TextBody strong tone="secondary">
-            {t("history.day.title", { day: dayLabel, count: summary.count })}
+            {t("header_transfer_day.title", {
+              day: dayLabel,
+              count: summary.count,
+            })}
           </TextBody>
         </View>
         {netText !== null && (

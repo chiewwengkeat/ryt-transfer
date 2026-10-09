@@ -34,7 +34,7 @@ export default function TextOutcome({
   // While the money is not confirmed yet, support needs something to look the transfer up by.
   const moneyNotConfirmedYet =
     MONEY_STATE_BY_OUTCOME[scenario] === MoneyState.NotConfirmedYet;
-  const outcomeHeading = t(`result.heading.${scenarioName}`);
+  const outcomeHeading = t(`text_outcome.heading.${scenarioName}`);
   const outcomeBody = t(`common.${scenarioName}.body`, {
     amount: transfer && formatMoney(transfer.amount),
     name: transfer?.counterparty.registeredName,
@@ -47,7 +47,7 @@ export default function TextOutcome({
     if (!screenOnTop || spokenScenarioRef.current === scenario) return;
     spokenScenarioRef.current = scenario;
     AccessibilityInfo.announceForAccessibility(
-      t("result.outcome_announcement", {
+      t("text_outcome.announcement", {
         heading: outcomeHeading,
         body: outcomeBody,
       }),
@@ -60,7 +60,7 @@ export default function TextOutcome({
       <TextBody>{outcomeBody}</TextBody>
       {moneyNotConfirmedYet && (
         <TextBody tone="secondary">
-          {t("result.reference_to_quote", {
+          {t("text_outcome.reference_to_quote", {
             reference: transfer?.reference ?? transferId,
           })}
         </TextBody>

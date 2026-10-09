@@ -1,11 +1,13 @@
 {
-  "pill_demo": {
-    "label": "Demo",
-    "open_menu": "Menu demo"
-  },
-  "banner_demo": {
-    "message": "Demo · {{title}}",
-    "clear": "Kembali normal"
+  "header_demo": {
+    "pill": {
+      "label": "Demo",
+      "open_menu": "Menu demo"
+    },
+    "banner": {
+      "message": "Demo · {{title}}",
+      "clear": "Kembali normal"
+    }
   },
   "bottom_sheet_demo": {
     "title": "Demo",

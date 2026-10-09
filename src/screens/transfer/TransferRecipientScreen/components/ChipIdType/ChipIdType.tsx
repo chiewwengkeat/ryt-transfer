@@ -19,7 +19,7 @@ export default function ChipIdType({ idType, onIdTypeChange }: Props) {
   return (
     <View
       accessibilityRole="radiogroup"
-      accessibilityLabel={t("recipient.id_type_label")}
+      accessibilityLabel={t("chip_id_type.label")}
       style={styles.chips}
     >
       {[
@@ -47,7 +47,7 @@ export default function ChipIdType({ idType, onIdTypeChange }: Props) {
             ]}
           >
             {t(
-              `recipient.id_type.${chipIdType.toLowerCase() as Lowercase<RecipientIdType>}`,
+              `chip_id_type.id_type.${chipIdType.toLowerCase() as Lowercase<RecipientIdType>}`,
             )}
           </Text>
         </Pressable>

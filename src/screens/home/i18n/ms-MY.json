@@ -9,12 +9,16 @@
   },
 
   "home": {
-    "title": "Laman Utama",
-    "transfer": "Pindahan",
-    "transfer_history": "Sejarah pindahan"
+    "title": "Laman Utama"
+  },
+  "button_start_transfer": {
+    "label": "Pindahan"
+  },
+  "button_transfer_history": {
+    "label": "Sejarah pindahan"
   },
 
-  "next_launch_notices": {
+  "section_transfer_notices": {
     "completed": "Pindahan {{amount}} anda kepada {{name}} telah dihantar — wang telah dipindahkan.",
     "refunded": "Pindahan {{amount}} anda kepada {{name}} tidak berjaya. Wang sedang, atau telah, dipulangkan kepada anda secara automatik.",
     "declined": "Pindahan {{amount}} anda kepada {{name}} tidak dihantar — tiada wang dipindahkan.",

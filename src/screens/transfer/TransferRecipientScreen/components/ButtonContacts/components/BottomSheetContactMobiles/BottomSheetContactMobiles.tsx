@@ -22,8 +22,8 @@ export default function BottomSheetContactMobiles({
   const { t, i18n } = useTranslation("transfer");
   return (
     <BottomSheetFrame
-      title={t("recipient.contact_mobiles_title")}
-      closeLabel={t("recipient.close_sheet")}
+      title={t("bottom_sheet_contact_mobiles.title")}
+      closeLabel={t("common.close_sheet")}
       onClose={onClose}
     >
       {contactMobiles.map((contactMobile) => (

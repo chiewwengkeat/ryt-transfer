@@ -146,7 +146,7 @@ export default function SectionReviewDetails({ draft }: Props) {
   return (
     <Card>
       <RowDetail
-        label={t("review.recipient_name")}
+        label={t("section_review_details.recipient_name")}
         value={recipient.registeredName}
       />
       {firstTransfer && (

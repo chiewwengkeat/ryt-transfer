@@ -25,7 +25,7 @@ export default function FieldRecipientId({ idType, ...fieldProps }: Props) {
         keyboardType: "phone-pad",
         textContentType: "telephoneNumber",
         autoComplete: "tel",
-        placeholder: t("recipient.mobile_placeholder"),
+        placeholder: t("field_recipient_id.mobile_placeholder"),
       },
       [RecipientIdCharacters.Digits]: { keyboardType: "number-pad" },
       [RecipientIdCharacters.LettersAndDigits]: {
@@ -50,7 +50,7 @@ export default function FieldRecipientId({ idType, ...fieldProps }: Props) {
       // A separator may sit between any two characters, so no typed ID the bank's rule takes is cut.
       maxLength={2 * longestIdLength - 1}
       label={t(
-        `recipient.id_label.${idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+        `field_recipient_id.label.${idType.toLowerCase() as Lowercase<RecipientIdType>}`,
       )}
       autoCorrect={false}
     />

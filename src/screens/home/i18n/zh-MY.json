@@ -9,12 +9,16 @@
   },
 
   "home": {
-    "title": "首页",
-    "transfer": "转账",
-    "transfer_history": "转账记录"
+    "title": "首页"
+  },
+  "button_start_transfer": {
+    "label": "转账"
+  },
+  "button_transfer_history": {
+    "label": "转账记录"
   },
 
-  "next_launch_notices": {
+  "section_transfer_notices": {
     "completed": "您向 {{name}} 转账 {{amount}} 已发送——款项已转出。",
     "refunded": "您向 {{name}} 转账 {{amount}} 未成功。款项正在或已经自动退回给您。",
     "declined": "您向 {{name}} 转账 {{amount}} 未发送——款项未转出。",

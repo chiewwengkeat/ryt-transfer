@@ -22,7 +22,7 @@ export default function CardRecentRecipientChosen({ recent, onChange }: Props) {
       </TextBody>
       <TextBody>{t("common.recent_recipient_chosen.body")}</TextBody>
       <ButtonSecondary
-        label={t("recipient.change_recent")}
+        label={t("card_recent_recipient_chosen.change")}
         onPress={onChange}
       />
     </Card>

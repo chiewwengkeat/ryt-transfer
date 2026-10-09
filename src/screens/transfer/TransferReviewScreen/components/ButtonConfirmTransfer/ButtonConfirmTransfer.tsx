@@ -160,7 +160,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   return (
     <>
       <ButtonPrimary
-        label={t("review.transfer")}
+        label={t("button_confirm_transfer.label")}
         loading={transferSentOrBeingSent || lookup.isFetching || checkingPhone}
         disabledReason={transferDisabledReason}
         onPress={() => {

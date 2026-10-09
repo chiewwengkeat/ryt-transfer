@@ -44,11 +44,11 @@ export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
   return (
     <View style={styles.container}>
       <View aria-hidden>
-        <TextBody strong>{t("recipient.bank_label")}</TextBody>
+        <TextBody strong>{t("field_bank.label")}</TextBody>
       </View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={t("recipient.bank_label")}
+        accessibilityLabel={t("field_bank.label")}
         accessibilityLanguage={i18n.language}
         accessibilityValue={{ text: bankName }}
         accessibilityHint={error}
@@ -60,7 +60,7 @@ export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
         style={[styles.field, error !== undefined && styles.fieldInvalid]}
       >
         <Text style={bankName === undefined ? styles.placeholder : styles.bank}>
-          {bankName ?? t("recipient.bank_placeholder")}
+          {bankName ?? t("field_bank.placeholder")}
         </Text>
       </Pressable>
       {error !== undefined && <TextBody tone="negative">{error}</TextBody>}
@@ -114,11 +114,11 @@ function BottomSheetBank({ onBankChosen, onClose }: BottomSheetBankProps) {
 
   return (
     <BottomSheetFrame
-      title={t("recipient.bank_sheet_title")}
-      closeLabel={t("recipient.close_sheet")}
+      title={t("bottom_sheet_bank.title")}
+      closeLabel={t("common.close_sheet")}
       onClose={onClose}
       searchField={{
-        label: t("recipient.bank_search_label"),
+        label: t("bottom_sheet_bank.search_label"),
         value: bankSearch,
         onChangeText: setBankSearch,
       }}
@@ -145,7 +145,7 @@ function BottomSheetBank({ onBankChosen, onClose }: BottomSheetBankProps) {
           <Loader />
         )
       ) : matchingBanks.length === 0 ? (
-        <BannerNotice message={t("recipient.bank_no_match")} />
+        <BannerNotice message={t("bottom_sheet_bank.no_match")} />
       ) : (
         matchingBanks.map((bank) => (
           <Pressable

@@ -11,7 +11,7 @@ export default function ButtonHeaderHome(
     <HeaderBackButton
       {...props}
       displayMode="minimal"
-      accessibilityLabel={t("common.back_to_home")}
+      accessibilityLabel={t("button_header_home.label")}
       onPress={() => {
         router.dismissTo("/");
       }}

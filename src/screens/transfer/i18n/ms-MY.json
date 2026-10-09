@@ -263,15 +263,6 @@
       "title": "Sesuatu yang tidak dijangka semasa memeriksa",
       "body": "Keputusan pindahan ini tidak dapat disahkan buat masa ini. Semak sejarah pindahan anda sebelum menghantarnya sekali lagi — belum disahkan."
     },
-    "transfer_status": {
-      "sent": "Berjaya",
-      "received": "Diterima",
-      "processing": "Sedang diproses",
-      "held": "Ditahan untuk semakan keselamatan",
-      "unsuccessful": "Tidak berjaya",
-      "awaiting_approval": "Menunggu kelulusan",
-      "expired": "Tamat tempoh"
-    },
     "section_transfer_details": {
       "status": "Status",
       "status_and_money": "{{status}} — {{money}}",
@@ -298,11 +289,14 @@
       "completed_at": "Selesai pada",
       "refunded_at": "Dipulangkan pada"
     },
-    "back_to_home": "Kembali ke Laman Utama"
+    "close_sheet": "Tutup"
   },
   "recipient": {
     "title": "Pindahan",
-    "id_type_label": "Hantar kepada",
+    "bank_missing": "Pilih bank bagi akaun ini.",
+    "continue": "Teruskan"
+  },
+  "chip_id_type": {
     "id_type": {
       "mobile": "Telefon bimbit",
       "nric": "NRIC",
@@ -311,7 +305,10 @@
       "brn": "Pendaftaran perniagaan",
       "army_police": "Tentera/Polis"
     },
-    "id_label": {
+    "label": "Hantar kepada"
+  },
+  "field_recipient_id": {
+    "label": {
       "mobile": "Nombor telefon bimbit DuitNow",
       "nric": "Nombor NRIC",
       "account_number": "Nombor akaun",
@@ -319,18 +316,25 @@
       "brn": "Nombor pendaftaran perniagaan",
       "army_police": "Nombor tentera atau polis"
     },
-    "mobile_placeholder": "012-345 6789",
-    "contacts": "Pilih daripada kenalan",
-    "contact_mobiles_title": "Pilih nombor",
-    "change_recent": "Tukar",
-    "bank_label": "Bank",
-    "bank_placeholder": "Pilih bank",
-    "bank_missing": "Pilih bank bagi akaun ini.",
-    "bank_sheet_title": "Pilih bank",
-    "bank_search_label": "Cari bank",
-    "bank_no_match": "Tiada bank yang sepadan dengan carian anda.",
-    "close_sheet": "Tutup",
-    "continue": "Teruskan"
+    "mobile_placeholder": "012-345 6789"
+  },
+  "button_contacts": {
+    "label": "Pilih daripada kenalan"
+  },
+  "bottom_sheet_contact_mobiles": {
+    "title": "Pilih nombor"
+  },
+  "card_recent_recipient_chosen": {
+    "change": "Tukar"
+  },
+  "field_bank": {
+    "label": "Bank",
+    "placeholder": "Pilih bank"
+  },
+  "bottom_sheet_bank": {
+    "title": "Pilih bank",
+    "search_label": "Cari bank",
+    "no_match": "Tiada bank yang sepadan dengan carian anda."
   },
   "amount": {
     "title": "Jumlah",
@@ -340,20 +344,27 @@
     "amount_missing": "Masukkan jumlah untuk dihantar.",
     "review": "Semak"
   },
-  "review": {
-    "title": "Semak",
-    "recipient_name": "Kepada",
-    "transfer": "Pindahkan",
+  "header_review": {
+    "title": "Semak"
+  },
+  "section_review_details": {
+    "recipient_name": "Kepada"
+  },
+  "button_confirm_transfer": {
+    "label": "Pindahkan"
+  },
+  "approve_with_biometric_key": {
     "prompt_title": "Luluskan pindahan",
     "prompt_title_ios": "Luluskan {{amount}} kepada {{name}}",
     "prompt_subtitle": "{{amount}} kepada {{name}}",
     "prompt_cancel": "Batal"
   },
-  "approval": {},
   "result": {
     "title": "Resit",
     "done": "Selesai",
-    "transfer_history": "Sejarah pindahan",
+    "transfer_history": "Sejarah pindahan"
+  },
+  "text_outcome": {
     "heading": {
       "completed": "Pindahan dihantar",
       "processing": "Pindahan sedang diproses",
@@ -372,7 +383,7 @@
       "recovery_unexpected": "Keputusan tidak disahkan"
     },
     "reference_to_quote": "Jika anda menghubungi kami, nyatakan rujukan ini: {{reference}}",
-    "outcome_announcement": "{{heading}}. {{body}}"
+    "announcement": "{{heading}}. {{body}}"
   },
   "history": {
     "title": "Sejarah pindahan",
@@ -382,23 +393,23 @@
     },
     "first_page_failed": "Pindahan anda tidak dapat dimuatkan.",
     "out_of_date": "Tidak dapat dimuat semula — senarai ini mungkin sudah lapuk",
-    "retry": "Cuba lagi",
-    "day": {
-      "title": "{{day}} ({{count}})",
-      "label_one": "{{day}}, {{count}} pindahan, {{net}}",
-      "label_other": "{{day}}, {{count}} pindahan, {{net}}",
-      "label_without_net_one": "{{day}}, {{count}} pindahan",
-      "label_without_net_other": "{{day}}, {{count}} pindahan"
-    },
-    "transfer": {
-      "time_and_status": "{{time}} · {{status}}"
-    },
-    "footer": {
-      "loading": "Memuatkan lebih banyak pindahan",
-      "failed": "Tidak dapat memuatkan lagi.",
-      "retry": "Cuba semula",
-      "end": "Itu sahaja"
-    }
+    "retry": "Cuba lagi"
+  },
+  "header_transfer_day": {
+    "title": "{{day}} ({{count}})",
+    "label_one": "{{day}}, {{count}} pindahan, {{net}}",
+    "label_other": "{{day}}, {{count}} pindahan, {{net}}",
+    "label_without_net_one": "{{day}}, {{count}} pindahan",
+    "label_without_net_other": "{{day}}, {{count}} pindahan"
+  },
+  "item_transfer": {
+    "time_and_status": "{{time}} · {{status}}"
+  },
+  "view_transfer_history_footer": {
+    "loading": "Memuatkan lebih banyak pindahan",
+    "failed": "Tidak dapat memuatkan lagi.",
+    "retry": "Cuba semula",
+    "end": "Itu sahaja"
   },
   "details": {
     "title": "Butiran pindahan",
@@ -407,5 +418,17 @@
     "failed": "Pindahan ini tidak dapat dimuatkan.",
     "retry": "Cuba lagi",
     "out_of_date": "Tidak dapat dimuat semula — butiran ini mungkin sudah lapuk"
+  },
+  "transfer_status_word": {
+    "sent": "Berjaya",
+    "received": "Diterima",
+    "processing": "Sedang diproses",
+    "held": "Ditahan untuk semakan keselamatan",
+    "unsuccessful": "Tidak berjaya",
+    "awaiting_approval": "Menunggu kelulusan",
+    "expired": "Tamat tempoh"
+  },
+  "button_header_home": {
+    "label": "Kembali ke Laman Utama"
   }
 }

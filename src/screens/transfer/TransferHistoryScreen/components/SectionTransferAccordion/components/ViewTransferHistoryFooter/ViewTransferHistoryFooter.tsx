@@ -33,21 +33,23 @@ export default function ViewTransferHistoryFooter({
           <BannerNotice
             tone="negative"
             announce={!isSessionEndFailure(fetchNextPageFailure)}
-            message={t("history.footer.failed")}
+            message={t("view_transfer_history_footer.failed")}
           />
           {phoneReportsConnection && (
             <ButtonSecondary
-              label={t("history.footer.retry")}
+              label={t("view_transfer_history_footer.retry")}
               onPress={onRetry}
             />
           )}
         </>
       ) : !hasNextPage ? (
-        <TextBody tone="secondary">{t("history.footer.end")}</TextBody>
+        <TextBody tone="secondary">
+          {t("view_transfer_history_footer.end")}
+        </TextBody>
       ) : (
         isFetchingNextPage && (
           <ActivityIndicator
-            accessibilityLabel={t("history.footer.loading")}
+            accessibilityLabel={t("view_transfer_history_footer.loading")}
             accessibilityLanguage={i18n.language}
             color={colors.accent}
           />

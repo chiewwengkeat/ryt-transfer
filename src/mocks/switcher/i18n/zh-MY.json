@@ -1,11 +1,13 @@
 {
-  "pill_demo": {
-    "label": "演示",
-    "open_menu": "演示菜单"
-  },
-  "banner_demo": {
-    "message": "演示 · {{title}}",
-    "clear": "恢复正常"
+  "header_demo": {
+    "pill": {
+      "label": "演示",
+      "open_menu": "演示菜单"
+    },
+    "banner": {
+      "message": "演示 · {{title}}",
+      "clear": "恢复正常"
+    }
   },
   "bottom_sheet_demo": {
     "title": "演示",

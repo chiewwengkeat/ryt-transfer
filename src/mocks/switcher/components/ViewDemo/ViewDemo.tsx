@@ -86,11 +86,13 @@ function HeaderDemo({ appSheetOpen, onOpenMenu }: HeaderDemoProps) {
             numberOfLines={3}
             style={headerDemoStyles.scenarioMessage}
           >
-            {t("banner_demo.message", { title: scenarioTitle(scenarioId) })}
+            {t("header_demo.banner.message", {
+              title: scenarioTitle(scenarioId),
+            })}
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t("banner_demo.clear")}
+            accessibilityLabel={t("header_demo.banner.clear")}
             accessibilityLanguage={i18n.language}
             onPress={clearTransferScenario}
             style={headerDemoStyles.clearButton}
@@ -107,13 +109,13 @@ function HeaderDemo({ appSheetOpen, onOpenMenu }: HeaderDemoProps) {
       )}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={t("pill_demo.open_menu")}
+        accessibilityLabel={t("header_demo.pill.open_menu")}
         accessibilityLanguage={i18n.language}
         onPress={onOpenMenu}
         style={headerDemoStyles.menuButton}
       >
         <Text maxFontSizeMultiplier={1.5} style={headerDemoStyles.menuLabel}>
-          {t("pill_demo.label")} ▾
+          {t("header_demo.pill.label")} ▾
         </Text>
       </Pressable>
     </View>

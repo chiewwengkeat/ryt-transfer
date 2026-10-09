@@ -111,7 +111,7 @@ function ButtonStartTransfer() {
 
   return (
     <ButtonPrimary
-      label={t("home.transfer")}
+      label={t("button_start_transfer.label")}
       disabledReason={disabledReason}
       onPress={() => {
         router.push("/transfer");
@@ -124,7 +124,7 @@ function ButtonTransferHistory() {
   const { t } = useTranslation("home");
   return (
     <ButtonSecondary
-      label={t("home.transfer_history")}
+      label={t("button_transfer_history.label")}
       onPress={() => {
         router.push("/transfer-history");
       }}

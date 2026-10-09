@@ -81,7 +81,7 @@ export default function ButtonContacts({ onMobilePicked }: Props) {
   return (
     <>
       <ButtonSecondary
-        label={t("recipient.contacts")}
+        label={t("button_contacts.label")}
         onPress={() => {
           void pickMobileFromContacts();
         }}

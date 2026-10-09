@@ -14,12 +14,12 @@ it("tells a screen reader that the recipient step's recent recipients, ID types,
   const [firstRecent] = await screen.findAllByRole("button", { name: /••••/ });
   expect(firstRecent).toHaveProp("accessibilityLanguage", "ms-MY");
   const accountNumberChip = screen.getByRole("radio", {
-    name: malayTransferT("recipient.id_type.account_number"),
+    name: malayTransferT("chip_id_type.id_type.account_number"),
   });
   expect(accountNumberChip).toHaveProp("accessibilityLanguage", "ms-MY");
   await fireEvent.press(accountNumberChip);
   const bankField = screen.getByRole("button", {
-    name: malayTransferT("recipient.bank_label"),
+    name: malayTransferT("field_bank.label"),
   });
   expect(bankField).toHaveProp("accessibilityLanguage", "ms-MY");
   await fireEvent.press(bankField);
@@ -39,7 +39,7 @@ it("tells a screen reader that a contact's numbers are in Bahasa Malaysia when t
   await renderRoute("/transfer");
   await fireEvent.press(
     await screen.findByRole("button", {
-      name: malayTransferT("recipient.contacts"),
+      name: malayTransferT("button_contacts.label"),
     }),
   );
 

@@ -13,17 +13,17 @@ export function useTransferStatusWord(
   return (
     {
       [TransferStatus.AwaitingApproval]: t(
-        "common.transfer_status.awaiting_approval",
+        "transfer_status_word.awaiting_approval",
       ),
       [TransferStatus.Processing]: transfer.underReview
-        ? t("common.transfer_status.held")
-        : t("common.transfer_status.processing"),
+        ? t("transfer_status_word.held")
+        : t("transfer_status_word.processing"),
       [TransferStatus.Completed]:
         transfer.direction === TransferDirection.In
-          ? t("common.transfer_status.received")
-          : t("common.transfer_status.sent"),
-      [TransferStatus.Unsuccessful]: t("common.transfer_status.unsuccessful"),
-      [TransferStatus.Expired]: t("common.transfer_status.expired"),
+          ? t("transfer_status_word.received")
+          : t("transfer_status_word.sent"),
+      [TransferStatus.Unsuccessful]: t("transfer_status_word.unsuccessful"),
+      [TransferStatus.Expired]: t("transfer_status_word.expired"),
     } satisfies Record<TransferStatus, string>
   )[transfer.status];
 }

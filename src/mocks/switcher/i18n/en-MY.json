@@ -1,11 +1,13 @@
 {
-  "pill_demo": {
-    "label": "Demo",
-    "open_menu": "Demo menu"
-  },
-  "banner_demo": {
-    "message": "Demo · {{title}}",
-    "clear": "Back to normal"
+  "header_demo": {
+    "pill": {
+      "label": "Demo",
+      "open_menu": "Demo menu"
+    },
+    "banner": {
+      "message": "Demo · {{title}}",
+      "clear": "Back to normal"
+    }
   },
   "bottom_sheet_demo": {
     "title": "Demo",

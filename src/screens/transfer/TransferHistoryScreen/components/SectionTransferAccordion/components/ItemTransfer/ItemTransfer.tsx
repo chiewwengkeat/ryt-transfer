@@ -57,7 +57,7 @@ export default function ItemTransfer({ transfer }: Props) {
             <TextBody tone="secondary">
               {transferTime === null
                 ? statusWord
-                : t("history.transfer.time_and_status", {
+                : t("item_transfer.time_and_status", {
                     time: transferTime,
                     status: statusWord,
                   })}

@@ -263,15 +263,6 @@
       "title": "核查时出现意外问题",
       "body": "目前无法确认此转账的结果。再次转账前，请先查看您的转账记录——尚未确认。"
     },
-    "transfer_status": {
-      "sent": "成功",
-      "received": "已收款",
-      "processing": "处理中",
-      "held": "因安全检查而暂缓",
-      "unsuccessful": "不成功",
-      "awaiting_approval": "等待批准",
-      "expired": "已过期"
-    },
     "section_transfer_details": {
       "status": "状态",
       "status_and_money": "{{status}}——{{money}}",
@@ -298,11 +289,14 @@
       "completed_at": "完成时间",
       "refunded_at": "退款时间"
     },
-    "back_to_home": "返回首页"
+    "close_sheet": "关闭"
   },
   "recipient": {
     "title": "转账",
-    "id_type_label": "转账至",
+    "bank_missing": "请选择该账户所属的银行。",
+    "continue": "继续"
+  },
+  "chip_id_type": {
     "id_type": {
       "mobile": "手机",
       "nric": "身份证",
@@ -311,7 +305,10 @@
       "brn": "商业注册",
       "army_police": "军警"
     },
-    "id_label": {
+    "label": "转账至"
+  },
+  "field_recipient_id": {
+    "label": {
       "mobile": "DuitNow 手机号码",
       "nric": "身份证号码",
       "account_number": "账号",
@@ -319,18 +316,25 @@
       "brn": "商业注册号码",
       "army_police": "军警证件号码"
     },
-    "mobile_placeholder": "012-345 6789",
-    "contacts": "从通讯录中选择",
-    "contact_mobiles_title": "选择号码",
-    "change_recent": "更改",
-    "bank_label": "银行",
-    "bank_placeholder": "选择银行",
-    "bank_missing": "请选择该账户所属的银行。",
-    "bank_sheet_title": "选择银行",
-    "bank_search_label": "搜索银行",
-    "bank_no_match": "没有与您的搜索匹配的银行。",
-    "close_sheet": "关闭",
-    "continue": "继续"
+    "mobile_placeholder": "012-345 6789"
+  },
+  "button_contacts": {
+    "label": "从通讯录中选择"
+  },
+  "bottom_sheet_contact_mobiles": {
+    "title": "选择号码"
+  },
+  "card_recent_recipient_chosen": {
+    "change": "更改"
+  },
+  "field_bank": {
+    "label": "银行",
+    "placeholder": "选择银行"
+  },
+  "bottom_sheet_bank": {
+    "title": "选择银行",
+    "search_label": "搜索银行",
+    "no_match": "没有与您的搜索匹配的银行。"
   },
   "amount": {
     "title": "金额",
@@ -340,20 +344,27 @@
     "amount_missing": "请输入转账金额。",
     "review": "核对"
   },
-  "review": {
-    "title": "核对",
-    "recipient_name": "收款人",
-    "transfer": "转账",
+  "header_review": {
+    "title": "核对"
+  },
+  "section_review_details": {
+    "recipient_name": "收款人"
+  },
+  "button_confirm_transfer": {
+    "label": "转账"
+  },
+  "approve_with_biometric_key": {
     "prompt_title": "批准转账",
     "prompt_title_ios": "批准向 {{name}} 转账 {{amount}}",
     "prompt_subtitle": "{{amount}} 转给 {{name}}",
     "prompt_cancel": "取消"
   },
-  "approval": {},
   "result": {
     "title": "收据",
     "done": "完成",
-    "transfer_history": "转账记录",
+    "transfer_history": "转账记录"
+  },
+  "text_outcome": {
     "heading": {
       "completed": "转账已发送",
       "processing": "转账处理中",
@@ -372,7 +383,7 @@
       "recovery_unexpected": "结果未确认"
     },
     "reference_to_quote": "如需联系我们，请提供此参考编号：{{reference}}",
-    "outcome_announcement": "{{heading}}。{{body}}"
+    "announcement": "{{heading}}。{{body}}"
   },
   "history": {
     "title": "转账记录",
@@ -382,23 +393,23 @@
     },
     "first_page_failed": "无法加载您的转账。",
     "out_of_date": "无法刷新——此列表可能不是最新的",
+    "retry": "重试"
+  },
+  "header_transfer_day": {
+    "title": "{{day}}（{{count}}）",
+    "label_one": "{{day}}，{{count}} 笔转账，{{net}}",
+    "label_other": "{{day}}，{{count}} 笔转账，{{net}}",
+    "label_without_net_one": "{{day}}，{{count}} 笔转账",
+    "label_without_net_other": "{{day}}，{{count}} 笔转账"
+  },
+  "item_transfer": {
+    "time_and_status": "{{time}} · {{status}}"
+  },
+  "view_transfer_history_footer": {
+    "loading": "正在加载更多转账",
+    "failed": "无法加载更多。",
     "retry": "重试",
-    "day": {
-      "title": "{{day}}（{{count}}）",
-      "label_one": "{{day}}，{{count}} 笔转账，{{net}}",
-      "label_other": "{{day}}，{{count}} 笔转账，{{net}}",
-      "label_without_net_one": "{{day}}，{{count}} 笔转账",
-      "label_without_net_other": "{{day}}，{{count}} 笔转账"
-    },
-    "transfer": {
-      "time_and_status": "{{time}} · {{status}}"
-    },
-    "footer": {
-      "loading": "正在加载更多转账",
-      "failed": "无法加载更多。",
-      "retry": "重试",
-      "end": "已全部加载"
-    }
+    "end": "已全部加载"
   },
   "details": {
     "title": "转账详情",
@@ -407,5 +418,17 @@
     "failed": "无法加载此转账。",
     "retry": "重试",
     "out_of_date": "无法刷新——这些详情可能不是最新的"
+  },
+  "transfer_status_word": {
+    "sent": "成功",
+    "received": "已收款",
+    "processing": "处理中",
+    "held": "因安全检查而暂缓",
+    "unsuccessful": "不成功",
+    "awaiting_approval": "等待批准",
+    "expired": "已过期"
+  },
+  "button_header_home": {
+    "label": "返回首页"
   }
 }

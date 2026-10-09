@@ -40,11 +40,11 @@ export default function SectionTransferNotices() {
         return (
           <BannerAction
             key={transferId}
-            message={t(`next_launch_notices.${notice}`, amountAndName)}
+            message={t(`section_transfer_notices.${notice}`, amountAndName)}
             action={{
-              label: t("next_launch_notices.dismiss"),
+              label: t("section_transfer_notices.dismiss"),
               accessibilityLabel: t(
-                "next_launch_notices.dismiss_notice_about",
+                "section_transfer_notices.dismiss_notice_about",
                 amountAndName,
               ),
               onPress: () => {

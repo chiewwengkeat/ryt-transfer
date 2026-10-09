@@ -90,7 +90,7 @@ function HeaderReview() {
   return (
     <Stack.Screen
       options={{
-        title: t("review.title"),
+        title: t("header_review.title"),
         headerBackVisible: !sending,
         gestureEnabled: !sending,
       }}

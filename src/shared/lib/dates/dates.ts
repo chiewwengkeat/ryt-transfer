@@ -24,7 +24,7 @@ export function formatMalaysianDateTime(
   instant: string,
   t: TFunction<Namespace>,
 ) {
-  return t("shared:date.date_time", {
+  return t("shared:dates.date_time", {
     date: formatDayMonthYear(
       new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS),
       t,
@@ -40,12 +40,12 @@ export function formatMalaysianDayHeader(
 ) {
   const nowInMalaysia = new Date(now.getTime() + MALAYSIA_OFFSET_MS);
   if (malaysianIsoDate === nowInMalaysia.toISOString().slice(0, 10))
-    return t("shared:date.today");
+    return t("shared:dates.today");
   if (
     malaysianIsoDate ===
     new Date(nowInMalaysia.getTime() - DAY_MS).toISOString().slice(0, 10)
   )
-    return t("shared:date.yesterday");
+    return t("shared:dates.yesterday");
   return formatDayMonthYear(new Date(`${malaysianIsoDate}T00:00:00Z`), t);
 }
 
@@ -54,10 +54,10 @@ export function formatMalaysianTime(instant: string, t: TFunction<Namespace>) {
   const wallClock = new Date(Date.parse(instant) + MALAYSIA_OFFSET_MS);
   if (Number.isNaN(wallClock.getTime())) return null;
   const hour = wallClock.getUTCHours();
-  return t("shared:date.time", {
+  return t("shared:dates.time", {
     hour: hour % 12 || 12,
     minute: String(wallClock.getUTCMinutes()).padStart(2, "0"),
-    period: hour < 12 ? t("shared:date.am") : t("shared:date.pm"),
+    period: hour < 12 ? t("shared:dates.am") : t("shared:dates.pm"),
   });
 }
 
@@ -71,9 +71,9 @@ export function toMalaysianDateKey(instant: string) {
 function formatDayMonthYear(wallClock: Date, t: TFunction<Namespace>) {
   const monthKey = MONTH_KEYS[wallClock.getUTCMonth()];
   if (monthKey === undefined) throw new RangeError("Invalid time value");
-  return t("shared:date.day_month_year", {
+  return t("shared:dates.day_month_year", {
     day: wallClock.getUTCDate(),
-    month: t(`shared:date.month_short.${monthKey}`),
+    month: t(`shared:dates.month_short.${monthKey}`),
     year: wallClock.getUTCFullYear(),
   });
 }

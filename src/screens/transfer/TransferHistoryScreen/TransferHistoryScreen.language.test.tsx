@@ -33,7 +33,10 @@ it("tells a screen reader that History's days, transfers and loading footer are 
   );
   expect(
     await screen.findByLabelText(
-      getFixedT(AppLanguage.Malay, "transfer")("history.footer.loading"),
+      getFixedT(
+        AppLanguage.Malay,
+        "transfer",
+      )("view_transfer_history_footer.loading"),
     ),
   ).toHaveProp("accessibilityLanguage", "ms-MY");
   releaseLaterPages();

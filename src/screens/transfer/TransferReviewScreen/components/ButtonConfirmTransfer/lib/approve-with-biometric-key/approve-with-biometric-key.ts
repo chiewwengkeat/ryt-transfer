@@ -21,10 +21,10 @@ export async function approveWithBiometricKey(
   const signing = await signWithBiometricKey(approval.signedText, {
     title:
       Platform.OS === "ios"
-        ? t("review.prompt_title_ios", amountAndName)
-        : t("review.prompt_title"),
-    subtitle: t("review.prompt_subtitle", amountAndName),
-    cancel: t("review.prompt_cancel"),
+        ? t("approve_with_biometric_key.prompt_title_ios", amountAndName)
+        : t("approve_with_biometric_key.prompt_title"),
+    subtitle: t("approve_with_biometric_key.prompt_subtitle", amountAndName),
+    cancel: t("approve_with_biometric_key.prompt_cancel"),
   });
   switch (signing.outcome) {
     case BiometricSignOutcome.Signed: {

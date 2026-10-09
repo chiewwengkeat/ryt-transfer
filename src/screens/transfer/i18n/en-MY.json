@@ -263,15 +263,6 @@
       "title": "Something unexpected while checking",
       "body": "This transfer's outcome can't be confirmed right now. Check your transfer history before sending it again — not confirmed yet."
     },
-    "transfer_status": {
-      "sent": "Successful",
-      "received": "Received",
-      "processing": "Processing",
-      "held": "Held for a security check",
-      "unsuccessful": "Unsuccessful",
-      "awaiting_approval": "Awaiting approval",
-      "expired": "Expired"
-    },
     "section_transfer_details": {
       "status": "Status",
       "status_and_money": "{{status}} — {{money}}",
@@ -298,11 +289,14 @@
       "completed_at": "Completed",
       "refunded_at": "Refunded"
     },
-    "back_to_home": "Back to Home"
+    "close_sheet": "Close"
   },
   "recipient": {
     "title": "Transfer",
-    "id_type_label": "Send to",
+    "bank_missing": "Choose the bank the account is with.",
+    "continue": "Continue"
+  },
+  "chip_id_type": {
     "id_type": {
       "mobile": "Mobile",
       "nric": "NRIC",
@@ -311,7 +305,10 @@
       "brn": "Business registration",
       "army_police": "Army/Police"
     },
-    "id_label": {
+    "label": "Send to"
+  },
+  "field_recipient_id": {
+    "label": {
       "mobile": "DuitNow mobile number",
       "nric": "NRIC number",
       "account_number": "Account number",
@@ -319,18 +316,25 @@
       "brn": "Business registration number",
       "army_police": "Army or police number"
     },
-    "mobile_placeholder": "012-345 6789",
-    "contacts": "Choose from contacts",
-    "contact_mobiles_title": "Choose a number",
-    "change_recent": "Change",
-    "bank_label": "Bank",
-    "bank_placeholder": "Choose a bank",
-    "bank_missing": "Choose the bank the account is with.",
-    "bank_sheet_title": "Choose a bank",
-    "bank_search_label": "Search banks",
-    "bank_no_match": "No bank matches your search.",
-    "close_sheet": "Close",
-    "continue": "Continue"
+    "mobile_placeholder": "012-345 6789"
+  },
+  "button_contacts": {
+    "label": "Choose from contacts"
+  },
+  "bottom_sheet_contact_mobiles": {
+    "title": "Choose a number"
+  },
+  "card_recent_recipient_chosen": {
+    "change": "Change"
+  },
+  "field_bank": {
+    "label": "Bank",
+    "placeholder": "Choose a bank"
+  },
+  "bottom_sheet_bank": {
+    "title": "Choose a bank",
+    "search_label": "Search banks",
+    "no_match": "No bank matches your search."
   },
   "amount": {
     "title": "Amount",
@@ -340,20 +344,27 @@
     "amount_missing": "Enter the amount to send.",
     "review": "Review"
   },
-  "review": {
-    "title": "Review",
-    "recipient_name": "To",
-    "transfer": "Transfer",
+  "header_review": {
+    "title": "Review"
+  },
+  "section_review_details": {
+    "recipient_name": "To"
+  },
+  "button_confirm_transfer": {
+    "label": "Transfer"
+  },
+  "approve_with_biometric_key": {
     "prompt_title": "Approve transfer",
     "prompt_title_ios": "Approve {{amount}} to {{name}}",
     "prompt_subtitle": "{{amount}} to {{name}}",
     "prompt_cancel": "Cancel"
   },
-  "approval": {},
   "result": {
     "title": "Receipt",
     "done": "Done",
-    "transfer_history": "Transfer history",
+    "transfer_history": "Transfer history"
+  },
+  "text_outcome": {
     "heading": {
       "completed": "Transfer sent",
       "processing": "Transfer processing",
@@ -372,7 +383,7 @@
       "recovery_unexpected": "Outcome not confirmed"
     },
     "reference_to_quote": "If you contact us, quote this reference: {{reference}}",
-    "outcome_announcement": "{{heading}}. {{body}}"
+    "announcement": "{{heading}}. {{body}}"
   },
   "history": {
     "title": "Transfer history",
@@ -382,23 +393,23 @@
     },
     "first_page_failed": "Couldn't load your transfers.",
     "out_of_date": "Couldn't refresh — this list may be out of date",
-    "retry": "Try again",
-    "day": {
-      "title": "{{day}} ({{count}})",
-      "label_one": "{{day}}, {{count}} transfer, {{net}}",
-      "label_other": "{{day}}, {{count}} transfers, {{net}}",
-      "label_without_net_one": "{{day}}, {{count}} transfer",
-      "label_without_net_other": "{{day}}, {{count}} transfers"
-    },
-    "transfer": {
-      "time_and_status": "{{time}} · {{status}}"
-    },
-    "footer": {
-      "loading": "Loading more transfers",
-      "failed": "Couldn't load more.",
-      "retry": "Retry",
-      "end": "That's everything"
-    }
+    "retry": "Try again"
+  },
+  "header_transfer_day": {
+    "title": "{{day}} ({{count}})",
+    "label_one": "{{day}}, {{count}} transfer, {{net}}",
+    "label_other": "{{day}}, {{count}} transfers, {{net}}",
+    "label_without_net_one": "{{day}}, {{count}} transfer",
+    "label_without_net_other": "{{day}}, {{count}} transfers"
+  },
+  "item_transfer": {
+    "time_and_status": "{{time}} · {{status}}"
+  },
+  "view_transfer_history_footer": {
+    "loading": "Loading more transfers",
+    "failed": "Couldn't load more.",
+    "retry": "Retry",
+    "end": "That's everything"
   },
   "details": {
     "title": "Transfer details",
@@ -407,5 +418,17 @@
     "failed": "Couldn't load this transfer.",
     "retry": "Try again",
     "out_of_date": "Couldn't refresh — these details may be out of date"
+  },
+  "transfer_status_word": {
+    "sent": "Successful",
+    "received": "Received",
+    "processing": "Processing",
+    "held": "Held for a security check",
+    "unsuccessful": "Unsuccessful",
+    "awaiting_approval": "Awaiting approval",
+    "expired": "Expired"
+  },
+  "button_header_home": {
+    "label": "Back to Home"
   }
 }

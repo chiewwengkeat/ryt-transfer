@@ -22,7 +22,7 @@ export default function SectionRecentRecipients({
 
   return (
     <View style={styles.main}>
-      <TextHeading>{t("recents.title")}</TextHeading>
+      <TextHeading>{t("section_recent_recipients.title")}</TextHeading>
       <View style={styles.sectionList}>
         {recents.data.map((recent) => (
           <CardPressable
