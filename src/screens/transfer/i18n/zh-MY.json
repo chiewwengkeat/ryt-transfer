@@ -1,14 +1,17 @@
 {
   "common": {
     "balance_and_limit_shown": {
-      "title": "显示余额和今日限额"
+      "title": "显示余额和今日限额",
+      "remaining_today": "今天还可转账 {{amount}}"
     },
     "new_customer_daily_limit": {
       "title": "新客户的较低每日限额"
     },
     "balance_unavailable": {
       "title": "无法加载余额或限额",
-      "disabled_reason": "余额和今日限额加载完成后，您即可转账。"
+      "disabled_reason": "余额和今日限额加载完成后，您即可转账。",
+      "body": "无法加载您的余额。",
+      "retry": "重试"
     },
     "under_maintenance": {
       "title": "转账系统维护中",
@@ -71,7 +74,9 @@
       "over_per_transfer_max": "该金额超过 {{amount}}，即单笔转账的最高金额。"
     },
     "amount_unexpected": {
-      "title": "输入金额时出现意外问题"
+      "title": "输入金额时出现意外问题",
+      "body": "出现了意外问题。",
+      "retry": "重试"
     },
     "recipient_found": {
       "title": "已找到收款人"

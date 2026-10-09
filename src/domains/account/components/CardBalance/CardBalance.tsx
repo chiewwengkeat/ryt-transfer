@@ -28,7 +28,7 @@ export default function CardBalance({
   unexpectedScenario,
   onScenarioShown,
 }: Props) {
-  const { t, i18n } = useTranslation("account");
+  const { t, i18n } = useTranslation(["account", "transfer"]);
   // Only a request that reaches the bank ends offline, so the card keeps asking while it lasts.
   const refetchInterval = useIsOffline() ? 10_000 : false;
   const account = useGetPrimaryAccount({ refetchInterval });
@@ -81,9 +81,9 @@ export default function CardBalance({
         <BannerAction
           tone="negative"
           announce={!failureIsSessionEnd}
-          message={t(`common.${failureScenario}.body`)}
+          message={t(`transfer:common.${failureScenario}.body`)}
           action={{
-            label: t(`common.${failureScenario}.retry`),
+            label: t(`transfer:common.${failureScenario}.retry`),
             onPress: () => {
               // Pressed, the answer is a new showing: said and reported even when it fails the same way.
               setFailureBeforeReRead(null);
@@ -109,7 +109,7 @@ export default function CardBalance({
       </View>
       {limits.isSuccess && (
         <TextBody>
-          {t("common.balance_and_limit_shown.remaining_today", {
+          {t("transfer:common.balance_and_limit_shown.remaining_today", {
             amount: formatMoney(limits.data.remainingToday),
           })}
         </TextBody>

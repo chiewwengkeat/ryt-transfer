@@ -1,14 +1,17 @@
 {
   "common": {
     "balance_and_limit_shown": {
-      "title": "Baki dan had hari ini dipaparkan"
+      "title": "Baki dan had hari ini dipaparkan",
+      "remaining_today": "Anda masih boleh menghantar {{amount}} hari ini"
     },
     "new_customer_daily_limit": {
       "title": "Had harian lebih rendah untuk pelanggan baharu"
     },
     "balance_unavailable": {
       "title": "Baki atau had tidak dapat dimuatkan",
-      "disabled_reason": "Anda boleh menghantar setelah baki dan had hari ini dimuatkan."
+      "disabled_reason": "Anda boleh menghantar setelah baki dan had hari ini dimuatkan.",
+      "body": "Baki anda tidak dapat dimuatkan.",
+      "retry": "Cuba lagi"
     },
     "under_maintenance": {
       "title": "Pindahan dalam penyelenggaraan",
@@ -71,7 +74,9 @@
       "over_per_transfer_max": "Jumlah itu melebihi {{amount}}, jumlah maksimum bagi satu pindahan."
     },
     "amount_unexpected": {
-      "title": "Sesuatu yang tidak dijangka semasa memasukkan jumlah"
+      "title": "Sesuatu yang tidak dijangka semasa memasukkan jumlah",
+      "body": "Berlaku masalah yang tidak dijangka.",
+      "retry": "Cuba lagi"
     },
     "recipient_found": {
       "title": "Penerima ditemui"
