@@ -19,10 +19,9 @@ import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
-import { screenTransitionOptions } from "@/shared/lib/motion/motion";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
-import { demoLayer } from "@/shell/app-launch";
+import { demoLayer, stackScreenOptions } from "@/shell/app-launch";
 import { queryClient } from "@/shell/query-client";
 import { endSession } from "@/shell/end-session";
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
@@ -81,20 +80,7 @@ export default function ViewRoot() {
             // Production has no Demo header to hide, so its root need not re-render as sheets open.
             onSheetOpenChange={demoLayer === null ? undefined : setAppSheetOpen}
           >
-            <Stack
-              key={navigatorMounts}
-              // Android's header pads for the status bar itself, a place the Demo header has already taken.
-              screenOptions={
-                demoLayer === null
-                  ? screenTransitionOptions
-                  : () => ({
-                      ...screenTransitionOptions(),
-                      unstable_nativeProps: {
-                        headerConfig: { disableTopInsetApplication: true },
-                      },
-                    })
-              }
-            >
+            <Stack key={navigatorMounts} screenOptions={stackScreenOptions}>
               <Stack.Screen name="transfer" options={{ headerShown: false }} />
             </Stack>
             <BannerOffline />

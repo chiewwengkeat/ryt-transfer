@@ -3,6 +3,7 @@ import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { warmUpDeviceIntegrityCheck } from "@/domains/approval/hooks/device-integrity-verdict";
 import { isProductionBuild } from "@/shared/config/config";
 import { configureTransport } from "@/shared/http/transport";
+import { screenTransitionOptions } from "@/shared/lib/motion/motion";
 import { reportError } from "@/shared/observability/observability";
 import { enableAppSwitcherBlur } from "@/shared/platform/app-switcher-blur";
 import { kvStorage } from "@/shared/platform/kv-storage";
@@ -44,3 +45,14 @@ if (demoLayer !== null) {
       reportError(error, { boundary: "demo_pairing" });
     });
 }
+
+// Android's header pads for the status bar itself, a place the Demo header has already taken.
+export const stackScreenOptions =
+  demoLayer === null
+    ? screenTransitionOptions
+    : () => ({
+        ...screenTransitionOptions(),
+        unstable_nativeProps: {
+          headerConfig: { disableTopInsetApplication: true },
+        },
+      });
