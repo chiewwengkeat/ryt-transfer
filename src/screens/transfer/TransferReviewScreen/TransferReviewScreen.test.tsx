@@ -46,6 +46,7 @@ import {
   observedRecords,
   reportedScenarios,
 } from "@/test/harness/recording-sink";
+import { holdTheNextTransferRead } from "@/test/hold-the-next-transfer-read";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { pressHandlerOf } from "@/test/press-handler-of";
 import {
@@ -1235,10 +1236,11 @@ it("never says the transfer was not sent when the session ends as the bank answe
 });
 
 it(
-  "never says no money moved after a lost answer, even after signing in again while the name check is down",
+  "checks a lost answer on the result page, and never says no money moved, even after signing in again while the name check is down",
   scenarioTest("transfer.approval_unanswered", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
+    const releaseTransferRead = holdTheNextTransferRead();
     const view = await openReviewOfRm100("/");
     const transferButton = await screen.findByRole("button", {
       name: "Transfer",
@@ -1261,6 +1263,25 @@ it(
       { name: "Sign in again" },
       { timeout: 10_000 },
     );
+    expect(
+      await screen.findByRole("header", {
+        name: "Checking your transfer",
+        includeHiddenElements: true,
+      }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "This transfer is being checked, so don't send it again — not confirmed yet.",
+        { includeHiddenElements: true },
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        `If you contact us, quote this reference: ${view.getPathname()?.replace("/transfer/result/", "")}`,
+        { includeHiddenElements: true },
+      ),
+    ).toBeOnTheScreen();
+    releaseTransferRead();
     mswServer.use(
       http.post("*/recipients/lookup", () =>
         HttpResponse.json(
@@ -1485,6 +1506,15 @@ it.each([
       reason: "DEVICE_PAIRED",
     },
     /^You can send money from .+ — a security wait after pairing this phone\.$/,
+  ],
+  [
+    403,
+    ApproveTransferErrorCode.CoolingOff,
+    {
+      until: new Date(Date.now() + 60 * 60_000).toISOString(),
+      reason: "NEW_ACCOUNT",
+    },
+    /^You can send money from .+ — a security wait after opening your account\.$/,
   ],
   [
     403,
@@ -1813,7 +1843,7 @@ function countSent(method: string, pathEnd: string) {
 }
 
 it(
-  "says the balance no longer covers the amount, reads it and the limits again, and leads back to the amount instead of offering Transfer",
+  "says on review that the balance no longer covers the amount, reads it and the limits again, and leads back to the amount instead of offering Transfer",
   scenarioTest("transfer.balance_or_limit_short_at_confirmation", async () => {
     const view = await openReviewOfRm100();
     const transferButton = await screen.findByRole("button", {
@@ -1828,6 +1858,7 @@ it(
         "Your balance no longer covers this amount. Go back to change it.",
       ),
     ).toBeOnTheScreen();
+    expect(view.getPathname()).toBe("/transfer/review");
     await waitFor(() => {
       expect(countSent("GET", "/accounts/primary")).toBeGreaterThan(
         balanceReadsBefore,
@@ -2049,7 +2080,7 @@ it(
 );
 
 it(
-  "says from when money can be sent in a new account's first hour, announces it, and holds the transfer",
+  "says from when money can be sent in a new account's first hour, announces it, and holds the transfer with no PIN way around it",
   scenarioTest("transfer.cooling_off_new_account", async () => {
     const { body } = await askBankToCreateRm100();
     const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "", t)} — a security wait after opening your account.`;
@@ -2063,6 +2094,9 @@ it(
     expect(await screen.findByText(holdReason)).toBeOnTheScreen();
     expect(announce).toHaveBeenCalledWith(holdReason);
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Use PIN instead" }),
+    ).toBeNull();
     expect(countSent("POST", "/approve")).toBe(0);
     expect(reportedScenarios()).toContain("transfer.cooling_off_new_account");
   }),
@@ -2171,10 +2205,10 @@ it("words a cooling-off whose reason the app does not know as a newly paired pho
 });
 
 it(
-  "says the account is locked and to contact Ryt, announces it, and offers no way around it",
+  "says the account is locked and to contact Ryt, announces it, offers no way around it, and lets Back leave",
   scenarioTest("transfer.account_locked", async () => {
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
-    await openReviewOfRm100();
+    const view = await openReviewOfRm100();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -2191,6 +2225,10 @@ it(
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
     expect(countSent("POST", "/approve")).toBe(0);
     expect(reportedScenarios()).toContain("transfer.account_locked");
+
+    await pressHardwareBack();
+
+    expect(view.getPathname()).toBe("/transfer/amount");
   }),
 );
 

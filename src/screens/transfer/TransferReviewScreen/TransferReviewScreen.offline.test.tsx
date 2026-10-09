@@ -3,8 +3,11 @@ import { http, HttpResponse } from "msw";
 
 import { requestJson } from "@/shared/http/transport";
 import { lookUpTestRecipient } from "@/test/bank-client";
+import { clearTransferScenario } from "@/test/clear-transfer-scenario";
 import { mswServer, sentRequests } from "@/test/msw-server";
+import { pickTransferScenario } from "@/test/pick-transfer-scenario";
 import { renderRoute } from "@/test/render-route";
+import { scenarioTest } from "@/test/scenario-test";
 
 const RECIPIENT_MOBILE = "012-345 6789";
 const OFFLINE_NOTICE =
@@ -23,6 +26,34 @@ async function openReviewWhileNoRequestReachesTheBank() {
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   await screen.findByRole("button", { name: "Try again" });
 }
+
+it(
+  "says sending is paused on review too, and lets the transfer go ahead once a request reaches the bank",
+  scenarioTest("transfer.offline", async () => {
+    // Offline from the start, no balance loads and review is never reached: the phone goes offline at the amount step.
+    clearTransferScenario();
+    const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
+    await renderRoute("/transfer");
+    await fireEvent.changeText(
+      await screen.findByLabelText("DuitNow mobile number"),
+      RECIPIENT_MOBILE,
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByText("RM 12,845.50");
+    await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+    pickTransferScenario("transfer.offline");
+
+    await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+
+    expect(await screen.findByText(OFFLINE_NOTICE)).toBeOnTheScreen();
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    clearTransferScenario();
+    await act(() => jest.advanceTimersByTimeAsync(10_000));
+    expect(await screen.findByText(recipient.registeredName)).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+    expect(screen.queryByText(OFFLINE_NOTICE)).toBeNull();
+  }),
+);
 
 it("checks the name again by itself once a request reaches the bank, after review opened while none could", async () => {
   const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
