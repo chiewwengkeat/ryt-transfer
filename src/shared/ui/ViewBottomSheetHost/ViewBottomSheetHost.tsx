@@ -51,7 +51,12 @@ export default function ViewBottomSheetHost({
 
   return (
     <BottomSheetHostContext value={sheetHost}>
-      <View aria-hidden={sheetOpen} style={styles.layer}>
+      <View
+        aria-hidden={sheetOpen}
+        // Never flattened: aria-hidden alone would add and remove this view with each sheet, re-parenting the screens beneath.
+        collapsable={false}
+        style={styles.layer}
+      >
         {children}
       </View>
       {openSheets.map(({ sheetId, sheet }) => (
