@@ -8,6 +8,7 @@ import {
 } from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { sentRequests } from "@/test/msw-server";
+import { pickDemoScenario } from "@/test/pick-demo-scenario";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 import { walkToTransferReview } from "@/test/walk-to-transfer-review";
@@ -20,11 +21,6 @@ const PIN_OFFER =
 async function openReviewOfRm100() {
   await renderRoute("/transfer");
   await walkToTransferReview();
-}
-
-async function pickDemoScenario(title: string) {
-  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
-  await fireEvent.press(screen.getByRole("radio", { name: title }));
 }
 
 it(

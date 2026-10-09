@@ -9,32 +9,19 @@ import {
   biometricsLibraryDouble,
   holdDeviceIntegrityChecks,
 } from "@/test/harness/biometrics-double";
+import { approveFromReviewOpenedAgain } from "@/test/approve-from-review-opened-again";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
-import { mswServer, sentRequests } from "@/test/msw-server";
+import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
+import { transferWritesSent } from "@/test/sent-request-filters";
 import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 async function openReviewOfRm100() {
   const view = await renderRoute("/transfer");
   await walkToTransferReview();
   return view;
-}
-
-function transferWritesSent() {
-  return sentRequests
-    .filter(({ method }) => method === "POST")
-    .map(({ url }) => new URL(url).pathname)
-    .filter((path) => path.startsWith("/transfers"));
-}
-
-async function approveFromReviewOpenedAgain() {
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  await screen.findByText("Transfer sent");
 }
 
 it("creates and approves nothing when review is left while Transfer reads the sensor under the bank's PIN lock, and approves from review opened again", async () => {

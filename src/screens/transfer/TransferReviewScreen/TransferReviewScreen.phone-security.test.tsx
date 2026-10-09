@@ -11,6 +11,7 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
+import { approveFromReviewOpenedAgain } from "@/test/approve-from-review-opened-again";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import {
   biometricPromptsShown,
@@ -24,8 +25,9 @@ import {
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { observedRecords } from "@/test/harness/recording-sink";
-import { mswServer, sentRequests } from "@/test/msw-server";
+import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
+import { transferWritesSent } from "@/test/sent-request-filters";
 import { walkToTransferReview } from "@/test/walk-to-transfer-review";
 
 const PHONE_REFUSAL =
@@ -42,26 +44,11 @@ async function openReviewOfRm100() {
   return view;
 }
 
-function transferWritesSent() {
-  return sentRequests
-    .filter(({ method }) => method === "POST")
-    .map(({ url }) => new URL(url).pathname)
-    .filter((path) => path.startsWith("/transfers"));
-}
-
 async function approveWithPinFromTheSheet() {
   await screen.findByText(PIN_SHEET);
   for (const digit of "246810")
     await fireEvent.press(screen.getByRole("button", { name: digit }));
   await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
-  await screen.findByText("Transfer sent");
-}
-
-async function approveFromReviewOpenedAgain() {
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
   await screen.findByText("Transfer sent");
 }
 

@@ -21,7 +21,11 @@ import {
   holdNextBiometricPrompt,
   reportBiometricSensorUnavailable,
 } from "@/test/harness/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import {
+  pairPhoneAsTheDemoLaunchDoes,
+  pairPhoneBeforeTheBankForgetsItsKeys,
+} from "@/test/demo-pairing";
+import { enterPinAndApprove } from "@/test/enter-pin-and-approve";
 import { moveAppTo } from "@/test/harness/app-state";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
 import {
@@ -54,12 +58,6 @@ async function confirmRm100Transfer() {
   return view;
 }
 
-async function approveWithPin(pin: string) {
-  for (const digit of pin)
-    await fireEvent.press(await screen.findByRole("button", { name: digit }));
-  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
-}
-
 function approveRequests() {
   return sentRequests.filter((request) =>
     new URL(request.url).pathname.endsWith("/approve"),
@@ -86,25 +84,13 @@ async function sendAnotherRm100TransferFromResult() {
   );
 }
 
-// The scenario forgets only keys registered in an earlier millisecond than it began, and a 1 ms
-// timer can fire within the same one, so this waits for the clock itself to move on.
-async function pairPhoneBeforeTheBankForgetsItsKeys() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const pairedAtMs = Date.now();
-  while (Date.now() <= pairedAtMs) {
-    await new Promise((resolve) => {
-      setTimeout(resolve, 1);
-    });
-  }
-}
-
 it(
   "approves with the bank PIN beside the phone's own key, and the bank moves the money",
   scenarioTest("transfer.biometrics_unavailable", async () => {
     const balanceBeforeMinor = await readBankBalanceMinor();
     await confirmRm100ApprovedByPin();
 
-    await approveWithPin(DEMO_PIN);
+    await enterPinAndApprove(DEMO_PIN);
 
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
     expect(biometricPromptsShown()).toEqual([]);
@@ -123,12 +109,12 @@ it(
   scenarioTest("transfer.pin_incorrect", async () => {
     await confirmRm100ApprovedByPin();
 
-    await approveWithPin("111111");
+    await enterPinAndApprove("111111");
 
     expect(
       await screen.findByText("That PIN is incorrect. You have 2 tries left."),
     ).toBeOnTheScreen();
-    await approveWithPin(DEMO_PIN);
+    await enterPinAndApprove(DEMO_PIN);
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
     const attemptKeys = approveRequests().map((request) =>
       request.headers.get("Idempotency-Key"),
@@ -144,11 +130,11 @@ it(
     const balanceBeforeMinor = await readBankBalanceMinor();
     await confirmRm100ApprovedByPin();
 
-    await approveWithPin("111111");
+    await enterPinAndApprove("111111");
     await screen.findByText("That PIN is incorrect. You have 2 tries left.");
-    await approveWithPin("111111");
+    await enterPinAndApprove("111111");
     await screen.findByText("That PIN is incorrect. You have 1 try left.");
-    await approveWithPin("111111");
+    await enterPinAndApprove("111111");
 
     const lockedMessage =
       "Your PIN is locked. Reset it in the app's security settings.";
@@ -171,11 +157,11 @@ it("offers no PIN instead once the bank has locked the PIN, and leaves face or f
   await fireEvent.press(
     screen.getByRole("button", { name: "Use PIN instead" }),
   );
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 2 tries left.");
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 1 try left.");
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
 
   expect(await screen.findByRole("button", { name: "Transfer" })).toBeEnabled();
@@ -214,11 +200,11 @@ it.each([
     await fireEvent.press(
       screen.getByRole("button", { name: "Use PIN instead" }),
     );
-    await approveWithPin("111111");
+    await enterPinAndApprove("111111");
     await screen.findByText("That PIN is incorrect. You have 2 tries left.");
-    await approveWithPin("111111");
+    await enterPinAndApprove("111111");
     await screen.findByText("That PIN is incorrect. You have 1 try left.");
-    await approveWithPin("111111");
+    await enterPinAndApprove("111111");
     await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
     await act(leaveOnlyThePinToApprove);
     const countCreatesSent = () =>
@@ -248,7 +234,7 @@ it("keeps no record to recheck while the sheet shows the bank refusing a wrong P
   } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
   await confirmRm100ApprovedByPin();
 
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 2 tries left.");
 
   // ⛔ Read directly: only a phone that kills the app with this sheet open meets the record at the next launch, and
@@ -271,11 +257,11 @@ it("reopens nothing and warns of nothing at the next launch once the bank locks 
 });
 
 async function lockThePinWithThreeWrongTries() {
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 2 tries left.");
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 1 try left.");
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
   await screen.findByRole("button", { name: "Transfer" });
 }
@@ -354,7 +340,7 @@ it.each([
       await fireEvent.press(
         screen.getByRole("button", { name: "Use PIN instead" }),
       );
-      await approveWithPin(DEMO_PIN);
+      await enterPinAndApprove(DEMO_PIN);
     },
   ],
   [
@@ -432,7 +418,7 @@ it("opens the keypad again once the host app reports the PIN reset", async () =>
     ),
   );
   await confirmRm100ApprovedByPin();
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
   await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
   await screen.findByText(
     "Your PIN is locked. Reset it in the app's security settings.",
@@ -440,7 +426,7 @@ it("opens the keypad again once the host app reports the PIN reset", async () =>
 
   await act(() => notifyApprovalPinReset());
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
 
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
 });
@@ -467,7 +453,7 @@ async function readWhatTheAppStillHolds() {
 it("keeps the PIN nowhere once its approval is answered", async () => {
   await confirmRm100ApprovedByPin();
 
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
   await screen.findByText("Transfer sent");
 
   expect(await approveRequests().at(-1)?.text()).toContain(DEMO_PIN);
@@ -477,7 +463,7 @@ it("keeps the PIN nowhere once its approval is answered", async () => {
 it("keeps a refused PIN nowhere once the sheet is closed on review", async () => {
   await confirmRm100ApprovedByPin();
 
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 2 tries left.");
   await fireEvent.press(screen.getByRole("button", { name: "Close" }));
   await screen.findByRole("button", { name: "Transfer" });
@@ -495,7 +481,7 @@ it("closes the PIN sheet and checks the transfer on the result page, never sayin
       throw new Error("Test.");
     });
 
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
 
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
@@ -682,7 +668,7 @@ it("keeps the tries left that a wrong PIN was told when its refusal answers a re
   deliverFirstApprovalButLoseItsAnswer();
   await confirmRm100ApprovedByPin();
 
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
 
   expect(
     await screen.findByText(
@@ -691,7 +677,7 @@ it("keeps the tries left that a wrong PIN was told when its refusal answers a re
       { timeout: 10_000 },
     ),
   ).toBeOnTheScreen();
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   const attemptKeys = approveRequests().map((request) =>
     request.headers.get("Idempotency-Key"),
@@ -717,7 +703,7 @@ it(
     await fireEvent.press(
       screen.getByRole("button", { name: "Use PIN instead" }),
     );
-    await approveWithPin(DEMO_PIN);
+    await enterPinAndApprove(DEMO_PIN);
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   }),
 );
@@ -802,7 +788,7 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(reportedScenarios()).toContain("transfer.biometrics_locked_out");
-    await approveWithPin(DEMO_PIN);
+    await enterPinAndApprove(DEMO_PIN);
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   }),
 );
@@ -835,7 +821,7 @@ it(
         "There were too many attempts, so approve with your PIN.",
       ),
     ).toBeOnTheScreen();
-    await approveWithPin(DEMO_PIN);
+    await enterPinAndApprove(DEMO_PIN);
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   }),
 );
@@ -914,7 +900,7 @@ it(
     ).toBeOnTheScreen();
     expect(biometricPromptsShown()).toEqual([]);
     expect(reportedScenarios()).toContain("transfer.biometrics_changed");
-    await approveWithPin(DEMO_PIN);
+    await enterPinAndApprove(DEMO_PIN);
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   }),
 );
@@ -1150,7 +1136,7 @@ it.each([
       releasePrompt();
       await jest.advanceTimersByTimeAsync(1_000);
     });
-    await approveWithPin(DEMO_PIN);
+    await enterPinAndApprove(DEMO_PIN);
 
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
     expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
@@ -1199,7 +1185,7 @@ it("leaves a newer transfer alone when the refusal of one the person left is set
     releaseRecordDelete();
     await jest.advanceTimersByTimeAsync(1_000);
   });
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
 
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
@@ -1243,7 +1229,7 @@ it("leaves a newer transfer's PIN sheet alone when the bank asks for a PIN to se
     releaseKeyRegistration();
     await jest.advanceTimersByTimeAsync(1_000);
   });
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
 
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
@@ -1300,7 +1286,7 @@ it("still reports setting approval up again failing unexpectedly for a transfer 
   expect(
     screen.getByText("Enter your bank PIN to approve this transfer."),
   ).toBeOnTheScreen();
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
 });
@@ -1364,7 +1350,7 @@ it(
     await pairPhoneAsTheDemoLaunchDoes();
     changeEnrolledBiometrics();
     await confirmRm100Transfer();
-    await approveWithPin(DEMO_PIN);
+    await enterPinAndApprove(DEMO_PIN);
     await screen.findByText("Transfer sent");
 
     await sendAnotherRm100TransferFromResult();
@@ -1396,7 +1382,7 @@ it("offers the PIN again on the next transfer when face or fingerprint approval 
     ),
   );
   await confirmRm100Transfer();
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
   await screen.findByText("Transfer sent");
 
   await sendAnotherRm100TransferFromResult();
@@ -1417,7 +1403,7 @@ it("asks for the PIN again, not for a face or fingerprint the bank cannot verify
     }),
   );
   await confirmRm100Transfer();
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
   await screen.findByText("Transfer sent");
 
   await sendAnotherRm100TransferFromResult();
@@ -1427,7 +1413,7 @@ it("asks for the PIN again, not for a face or fingerprint the bank cannot verify
       "Your fingerprints or face changed. Your PIN approves this transfer and turns face or fingerprint approval back on.",
     ),
   ).toBeOnTheScreen();
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
   await screen.findByText("Transfer sent");
   await sendAnotherRm100TransferFromResult();
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
@@ -1438,7 +1424,7 @@ it("still approves with face or fingerprint set up again on its own once setting
   await pairPhoneAsTheDemoLaunchDoes();
   changeEnrolledBiometrics();
   await confirmRm100Transfer();
-  await approveWithPin(DEMO_PIN);
+  await enterPinAndApprove(DEMO_PIN);
   await screen.findByText("Transfer sent");
   mswServer.use(
     http.post(
@@ -1478,12 +1464,12 @@ it("sets approval up again with the PIN when the bank no longer knows the phone'
       ),
     ).toBeOnTheScreen();
     expect(reportedScenarios()).toContain("transfer.approval_key_unknown");
-    await approveWithPin("111111");
+    await enterPinAndApprove("111111");
     expect(
       await screen.findByText("That PIN is incorrect. You have 2 tries left."),
     ).toBeOnTheScreen();
     expect(reportedScenarios()).toContain("transfer.pin_incorrect");
-    await approveWithPin(DEMO_PIN);
+    await enterPinAndApprove(DEMO_PIN);
 
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
     jest.useRealTimers();
@@ -1512,7 +1498,7 @@ it("sets approval up again with the PIN already entered, the sheet still only se
     await confirmRm100ApprovedByPin();
     const requestsBeforeApproving = sentRequests.length;
 
-    await approveWithPin(DEMO_PIN);
+    await enterPinAndApprove(DEMO_PIN);
     await waitFor(() => {
       expect(
         sentRequests
@@ -1543,7 +1529,7 @@ it("sets approval up again with the PIN already entered, the sheet still only se
 
 it.each([
   ["face or fingerprint", "Transfer", () => Promise.resolve()],
-  ["the PIN", "Use PIN instead", () => approveWithPin(DEMO_PIN)],
+  ["the PIN", "Use PIN instead", () => enterPinAndApprove(DEMO_PIN)],
 ])(
   "sets approval up again only once with %s when the bank still does not know the new keys, then says so on review",
   async (_, approveButtonName, finishApproving) => {
@@ -1586,7 +1572,7 @@ it.each([
 
 it.each([
   ["face or fingerprint", "Transfer", () => Promise.resolve()],
-  ["the PIN", "Use PIN instead", () => approveWithPin(DEMO_PIN)],
+  ["the PIN", "Use PIN instead", () => enterPinAndApprove(DEMO_PIN)],
 ])(
   "still approves with %s once setting approval up again was left unfinished, the bank still holding the phone's keys",
   async (_, approveButtonName, finishApproving) => {
@@ -1641,7 +1627,7 @@ it.each([
       screen.getByRole("button", { name: "Use PIN instead" }),
     );
     for (const refusal of earlierRefusals) {
-      await approveWithPin("111111");
+      await enterPinAndApprove("111111");
       await screen.findByText(refusal);
     }
     const deleteRecordForReal = secureStoreNativeDouble.deleteValueWithKeyAsync;
@@ -1654,7 +1640,7 @@ it.each([
         });
         return deleteRecordForReal(key);
       });
-    await approveWithPin("111111");
+    await enterPinAndApprove("111111");
     // ⛔ Wait on the hold, never the spy's calls: an earlier test's spy can still be in place, having seen this test's earlier deletes.
     await waitFor(() => {
       expect(recordDeleteHeld).toBe(true);

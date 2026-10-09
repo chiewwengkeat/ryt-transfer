@@ -14,6 +14,7 @@ import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { biometricPromptsShown } from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { enterPinAndApprove } from "@/test/enter-pin-and-approve";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 
@@ -67,12 +68,6 @@ async function startRm100TransferFromHomeUnderNoBiometrics() {
   );
 }
 
-async function approveWithPin(pin: string) {
-  for (const digit of pin)
-    await fireEvent.press(await screen.findByRole("button", { name: digit }));
-  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
-}
-
 it("puts Home back to the demo's opening balance and limit, and a transfer after the reset still goes through", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/");
@@ -97,11 +92,11 @@ it("keeps no PIN lock past Reset demo, so the next transfer gets its keypad", as
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/");
   await startRm100TransferFromHomeUnderNoBiometrics();
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 2 tries left.");
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 1 try left.");
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
   await act(() => {
     router.dismissTo("/");

@@ -1,17 +1,13 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 
 import "@/test/demo-build";
 import { crashTheScreenOfASettledReceipt } from "@/test/harness/crash-on-press";
 import { isScreenCaptureBlocked } from "@/test/harness/native-doubles";
 import { waitPastReceiptSettle } from "@/test/harness/receipt-settle";
+import { pickDemoScenario } from "@/test/pick-demo-scenario";
 import { renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
-
-async function pickDemoScenario(title: string) {
-  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
-  await fireEvent.press(screen.getByRole("radio", { name: title }));
-}
 
 it(
   "blocks capture on Home in a demo build while Screenshots blocked is picked, and allows it on a receipt",

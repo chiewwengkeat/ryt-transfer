@@ -1,15 +1,13 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { delay, http, HttpResponse } from "msw";
 
-import { requestJson } from "@/shared/http/transport";
 import { lookUpTestRecipient } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { endSessionWithAnyRequest } from "@/test/end-the-session";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
+import { sentNameChecks } from "@/test/sent-request-filters";
 import { walkToTransferReview } from "@/test/walk-to-transfer-review";
-
-const sentNameChecks = () =>
-  sentRequests.filter(({ url }) => url.endsWith("/recipients/lookup"));
 
 const TOO_MANY_NAME_CHECKS =
   "Too many name checks in a short time. Try again in a minute.";
@@ -17,15 +15,6 @@ const TOO_MANY_NAME_CHECKS =
 async function reviewRm100ToTheTestRecipient() {
   await renderRoute("/transfer");
   await walkToTransferReview();
-}
-
-async function endSessionWithAnyRequest() {
-  mswServer.use(
-    http.get("*/any-request", () => new HttpResponse(null, { status: 401 })),
-  );
-  await act(async () => {
-    await requestJson("/any-request").catch(() => undefined);
-  });
 }
 
 it("asks a name check the ended session interrupted again by itself once they sign back in", async () => {

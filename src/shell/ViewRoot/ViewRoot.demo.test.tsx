@@ -9,8 +9,10 @@ import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import { lookUpTestRecipient } from "@/test/bank-client";
 import { biometricPromptsShown } from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { mswServer, sentRequests } from "@/test/msw-server";
+import { mswServer } from "@/test/msw-server";
+import { pickDemoScenario } from "@/test/pick-demo-scenario";
 import { renderRoute } from "@/test/render-route";
+import { sentNameChecks } from "@/test/sent-request-filters";
 
 // The demo build's root: Jest runs as production, whose launch loads no demo layer.
 jest.mock("@/shell/app-launch", () => ({
@@ -52,14 +54,6 @@ async function renderDemoRoot() {
     overrides: { index: ScreenWithASheet },
   });
 }
-
-async function pickDemoScenario(title: string) {
-  await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
-  await fireEvent.press(screen.getByRole("radio", { name: title }));
-}
-
-const sentNameChecks = () =>
-  sentRequests.filter(({ url }) => url.endsWith("/recipients/lookup"));
 
 async function readTheAccountAsAScreenWould() {
   // The bank answers after a delay, which the route's fake timers would hold forever.

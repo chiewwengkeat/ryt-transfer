@@ -18,6 +18,7 @@ import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
+import { readsOfTheBalance } from "@/test/sent-request-filters";
 
 const STILL_BEING_CHECKED =
   "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
@@ -289,11 +290,6 @@ it("checks the earlier transfer again once they sign back in on review, and stop
 it("reads the balance again once on review, not at every later check, when the bank says the earlier transfer ended at the version the app holds", async () => {
   const bankAnswer = await reviewANewTransferWhileAnEarlierOneIsProcessing();
   expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
-  const readsOfTheBalance = () =>
-    sentRequests.filter(
-      ({ method, url }) =>
-        method === "GET" && url.endsWith("/accounts/primary"),
-    ).length;
   const readsBeforeTheTransferEnded = readsOfTheBalance();
   bankAnswer.transfer = {
     ...bankAnswer.transfer,

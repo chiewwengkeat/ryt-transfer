@@ -2,6 +2,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 
 import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { enterPinAndApprove } from "@/test/enter-pin-and-approve";
 import { renderRoute } from "@/test/render-route";
 
 // The demo build's root: Jest runs as production, whose launch loads no demo layer.
@@ -13,12 +14,6 @@ jest.mock("@/shell/app-launch", () => ({
 
 // Real time, not fake: locking the PIN and sending again outlasts Jest's 5 s under a loaded parallel run.
 jest.setTimeout(15_000);
-
-async function approveWithPin(pin: string) {
-  for (const digit of pin)
-    await fireEvent.press(await screen.findByRole("button", { name: digit }));
-  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
-}
 
 async function lockThePinOnAnRm100TransferUnderNoBiometrics() {
   await pairPhoneAsTheDemoLaunchDoes();
@@ -36,11 +31,11 @@ async function lockThePinOnAnRm100TransferUnderNoBiometrics() {
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 2 tries left.");
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 1 try left.");
-  await approveWithPin("111111");
+  await enterPinAndApprove("111111");
   await fireEvent.press(await screen.findByRole("button", { name: "Close" }));
 }
 
@@ -73,7 +68,7 @@ it("gives the next transfer its PIN keypad back once Unlock PIN has unlocked the
   await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
   await fireEvent.press(screen.getByRole("button", { name: "Unlock PIN" }));
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  await approveWithPin("246810");
+  await enterPinAndApprove("246810");
 
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
 });
