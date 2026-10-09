@@ -1,10 +1,11 @@
+import "@/test/demo-build";
+
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { hasApprovalKeysOnFile } from "@/domains/approval/hooks/approval-keys";
-import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { TransferStatus } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import {
   PendingTransferStage,
@@ -17,13 +18,6 @@ import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { enterPinAndApprove } from "@/test/enter-pin-and-approve";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
-
-// The demo build's root: Jest runs as production, whose launch loads no demo layer.
-jest.mock("@/shell/app-launch", () => ({
-  __esModule: true,
-  demoLayer: jest.requireActual<{ default: DemoLayer }>("@/mocks/demo-layer")
-    .default,
-}));
 
 async function sendRm100FromHomeAndReturn() {
   await fireEvent.press(

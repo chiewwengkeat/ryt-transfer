@@ -1,9 +1,10 @@
+import "@/test/demo-build";
+
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { useState } from "react";
 import { Pressable, Text } from "react-native";
 
-import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { requestJson } from "@/shared/http/transport";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import { lookUpTestRecipient } from "@/test/bank-client";
@@ -13,13 +14,6 @@ import { mswServer } from "@/test/msw-server";
 import { pickDemoScenario } from "@/test/pick-demo-scenario";
 import { renderRoute } from "@/test/render-route";
 import { sentNameChecks } from "@/test/sent-request-filters";
-
-// The demo build's root: Jest runs as production, whose launch loads no demo layer.
-jest.mock("@/shell/app-launch", () => ({
-  __esModule: true,
-  demoLayer: jest.requireActual<{ default: DemoLayer }>("@/mocks/demo-layer")
-    .default,
-}));
 
 function ScreenWithASheet() {
   const [sheetOpen, setSheetOpen] = useState(false);
