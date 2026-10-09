@@ -194,6 +194,48 @@ it("shows the balance and today's limit read again once Home's check finds the t
   ).toBeOnTheScreen();
 });
 
+it.each([
+  [
+    "at the version the app already holds",
+    (transfer: Transfer) => ({
+      status: TransferStatus.Completed,
+      version: transfer.version,
+    }),
+  ],
+  [
+    "with an amount the app cannot read",
+    (transfer: Transfer) => ({
+      status: TransferStatus.Completed,
+      version: transfer.version + 1,
+      amount: { ...transfer.amount, minor: 0.5 },
+    }),
+  ],
+])(
+  "reads the balance again once, not at every later check, when the bank says the transfer Home warns about ended %s",
+  async (_, endTheTransfer) => {
+    const { bankAnswer } = await launchWithATransferLastSeenProcessing({
+      status: TransferStatus.Processing,
+      funds: TransferFunds.Debited,
+    });
+    expect(await screen.findByText(STILL_BEING_CHECKED)).toBeOnTheScreen();
+    const readsOfTheBalance = () =>
+      sentRequests.filter(
+        ({ method, url }) =>
+          method === "GET" && url.endsWith("/accounts/primary"),
+      ).length;
+    const readsBeforeTheTransferEnded = readsOfTheBalance();
+    bankAnswer.transfer = {
+      ...bankAnswer.transfer,
+      ...endTheTransfer(bankAnswer.transfer),
+    };
+
+    for (let check = 0; check < 4; check++)
+      await act(() => jest.advanceTimersByTimeAsync(15_000));
+
+    expect(readsOfTheBalance() - readsBeforeTheTransferEnded).toBe(1);
+  },
+);
+
 it("stops checking the transfer Home warns about while the session-ended view covers Home", async () => {
   const { bankAnswer } = await launchWithATransferLastSeenProcessing({
     status: TransferStatus.Processing,
