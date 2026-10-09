@@ -276,6 +276,24 @@ it("hides the bank sheet's something-unexpected message while the phone has no c
   expect(screen.getByLabelText("Search banks")).toBeOnTheScreen();
 });
 
+it(
+  "says sending is paused on the recipient step too, where typing an ID and moving on stay open",
+  scenarioTest("transfer.offline", async () => {
+    const view = await renderRoute("/transfer");
+
+    expect(await screen.findByText(OFFLINE_NOTICE)).toBeOnTheScreen();
+    await fireEvent.changeText(
+      screen.getByLabelText("DuitNow mobile number"),
+      "012-345 6789",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+
+    expect(view.getPathname()).toBe("/transfer/amount");
+    expect(screen.getByText(OFFLINE_NOTICE)).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.offline");
+  }),
+);
+
 it("reports being offline again when the connection drops a second time on the recipient step", async () => {
   await renderRoute("/transfer");
   await screen.findByLabelText("DuitNow mobile number");
