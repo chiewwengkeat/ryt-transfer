@@ -1,9 +1,8 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { t } from "i18next";
 import { http, HttpResponse } from "msw";
 
-import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
   ApprovalPinSheetStep,
   approvalPinSheetStore,
@@ -15,7 +14,6 @@ import {
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import { listPendingTransfers } from "@/domains/transfer/hooks/pending-transfers";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
@@ -44,12 +42,16 @@ async function approveRm100Transfer() {
   return view;
 }
 
-async function readPendingTransfersAfterTheRoute() {
-  jest.useRealTimers();
-  const {
-    body: { customerId },
-  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
-  return listPendingTransfers(customerId);
+async function expectNothingToRecheckAtTheNextLaunch(
+  view: Awaited<ReturnType<typeof renderRoute>>,
+) {
+  const relaunched = await relaunchApp(view);
+  expect(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  ).toBeOnTheScreen();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  expect(relaunched.getPathname()).toBe("/");
+  expect(screen.queryByText(/still being checked/)).toBeNull();
 }
 
 // ⛔ Stands in for Back skipping the result page: review holds Back until the flow is done, and Jest mounts
@@ -195,13 +197,14 @@ it(
   "says on review that the approval timed out once the bank's window has passed, and keeps no record to recheck",
   scenarioTest("transfer.approval_expired", async () => {
     const balanceBeforeMinor = await readBankBalanceMinor();
-    await approveRm100Transfer();
+    const view = await approveRm100Transfer();
 
     expect(
       await screen.findByText("The approval timed out — no money moved."),
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
-    expect(await readPendingTransfersAfterTheRoute()).toEqual([]);
+    await expectNothingToRecheckAtTheNextLaunch(view);
+    jest.useRealTimers();
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
   }),
 );
@@ -209,7 +212,7 @@ it(
 it(
   "says on review that the approval couldn't be verified when the bank rejects its signature",
   scenarioTest("transfer.approval_not_verified", async () => {
-    await approveRm100Transfer();
+    const view = await approveRm100Transfer();
 
     expect(
       await screen.findByText(
@@ -217,7 +220,7 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
-    expect(await readPendingTransfersAfterTheRoute()).toEqual([]);
+    await expectNothingToRecheckAtTheNextLaunch(view);
   }),
 );
 
@@ -236,7 +239,8 @@ it(
     expect(view.getPathname()).toBe("/transfer/review");
     await pressHardwareBack();
     expect(view.getPathname()).toBe("/transfer/amount");
-    expect(await readPendingTransfersAfterTheRoute()).toEqual([]);
+    await expectNothingToRecheckAtTheNextLaunch(view);
+    jest.useRealTimers();
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
   }),
 );
@@ -323,7 +327,7 @@ it.each([
     expect(
       screen.queryByText("The transfer was not sent — no money moved."),
     ).toBeNull();
-    expect(await readPendingTransfersAfterTheRoute()).toEqual([]);
+    await expectNothingToRecheckAtTheNextLaunch(view);
   },
 );
 

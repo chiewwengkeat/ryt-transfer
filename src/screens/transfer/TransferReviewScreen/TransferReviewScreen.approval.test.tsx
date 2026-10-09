@@ -29,19 +29,19 @@ import {
   reportedScenarios,
 } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { relaunchApp, renderRoute } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 const DEMO_PIN = "246810";
 
 async function confirmRm100ApprovedByPin() {
   approvalSettingsStore.setState({ biometricApprovalOn: false });
-  await confirmRm100Transfer();
+  return confirmRm100Transfer();
 }
 
 async function openReviewOfRm100() {
   await pairPhoneAsTheDemoLaunchDoes();
-  await renderRoute("/transfer");
+  const view = await renderRoute("/transfer");
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
     "012-345 6789",
@@ -51,11 +51,13 @@ async function openReviewOfRm100() {
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   await screen.findByRole("button", { name: "Transfer" });
+  return view;
 }
 
 async function confirmRm100Transfer() {
-  await openReviewOfRm100();
+  const view = await openReviewOfRm100();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  return view;
 }
 
 async function approveWithPin(pin: string) {
@@ -245,7 +247,7 @@ it.each([
   },
 );
 
-it("keeps no record to recheck once the bank refuses the PIN, as wrong or as locked", async () => {
+it("keeps no record to recheck while the sheet shows the bank refusing a wrong PIN", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const {
     body: { customerId },
@@ -254,15 +256,24 @@ it("keeps no record to recheck once the bank refuses the PIN, as wrong or as loc
 
   await approveWithPin("111111");
   await screen.findByText("That PIN is incorrect. You have 2 tries left.");
-  expect(await listPendingTransfers(customerId)).toEqual([]);
-  await approveWithPin("111111");
-  await screen.findByText("That PIN is incorrect. You have 1 try left.");
-  await approveWithPin("111111");
-  await screen.findByText(
-    "Your PIN is locked. Reset it in the app's security settings.",
-  );
 
+  // ⛔ Read directly: only a phone that kills the app with this sheet open meets the record at the next launch, and
+  // a relaunch here unmounts the root first, which answers the sheet as closed and forgets the record anyway.
   expect(await listPendingTransfers(customerId)).toEqual([]);
+});
+
+it("reopens nothing and warns of nothing at the next launch once the bank locks the PIN", async () => {
+  const view = await confirmRm100ApprovedByPin();
+  await lockThePinWithThreeWrongTries();
+
+  const relaunched = await relaunchApp(view);
+
+  expect(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  ).toBeOnTheScreen();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  expect(relaunched.getPathname()).toBe("/");
+  expect(screen.queryByText(/still being checked/)).toBeNull();
 });
 
 async function lockThePinWithThreeWrongTries() {
@@ -966,7 +977,7 @@ it("lets an approval's answer change nothing once the person has left it and sta
       { once: true },
     ),
   );
-  await confirmRm100Transfer();
+  const view = await confirmRm100Transfer();
   await screen.findByText(
     "Sending your transfer. The bank's answer comes next.",
   );
@@ -1000,13 +1011,12 @@ it("lets an approval's answer change nothing once the person has left it and sta
   );
   expect(secondTransferId).not.toBe(firstTransferId);
   expect(screen.getByText("RM 50.00")).toBeOnTheScreen();
-  jest.useRealTimers();
-  const {
-    body: { customerId },
-  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
-  expect(await listPendingTransfers(customerId)).toContainEqual(
-    expect.objectContaining({ transferId: firstTransferId }),
-  );
+  const relaunched = await relaunchApp(view);
+  expect(
+    await screen.findByRole("header", { name: "Transfer sent" }),
+  ).toBeOnTheScreen();
+  expect(screen.getByText("RM 100.00")).toBeOnTheScreen();
+  expect(relaunched.getPathname()).toBe(`/transfer/result/${firstTransferId}`);
 });
 
 it("lets a lost approval answer change nothing once the person has left it, though it is sent twice more and answered while another transfer is being sent", async () => {
@@ -1041,7 +1051,7 @@ it("lets a lost approval answer change nothing once the person has left it, thou
       },
     ),
   );
-  await confirmRm100Transfer();
+  const view = await confirmRm100Transfer();
   await screen.findByText(
     "Sending your transfer. The bank's answer comes next.",
   );
@@ -1092,13 +1102,12 @@ it("lets a lost approval answer change nothing once the person has left it, thou
     .map((request) => request.headers.get("Idempotency-Key"));
   expect(firstTransferKeys).toHaveLength(3);
   expect(new Set(firstTransferKeys).size).toBe(1);
-  jest.useRealTimers();
-  const {
-    body: { customerId },
-  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
-  expect(await listPendingTransfers(customerId)).toContainEqual(
-    expect.objectContaining({ transferId: firstTransferId }),
-  );
+  const relaunched = await relaunchApp(view);
+  expect(
+    await screen.findByRole("header", { name: "Transfer sent" }),
+  ).toBeOnTheScreen();
+  expect(screen.getByText("RM 100.00")).toBeOnTheScreen();
+  expect(relaunched.getPathname()).toBe(`/transfer/result/${firstTransferId}`);
 });
 
 async function startRm50TransferFromHomeToItsPinSheet() {
