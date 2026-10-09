@@ -6,7 +6,7 @@ const { after, before, test } = require("node:test");
 
 const { ESLint } = require("eslint");
 
-const REPO_ROOT = path.join(__dirname, "..");
+const REPO_ROOT = path.join(__dirname, "..", "..");
 // The type-aware parser lints only files on disk, so the cases go to a copy of the lint setup.
 const LINT_SETUP = [
   ".config",

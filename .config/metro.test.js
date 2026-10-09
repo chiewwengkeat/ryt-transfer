@@ -3,7 +3,7 @@ const { execFileSync } = require("node:child_process");
 const path = require("node:path");
 const { test } = require("node:test");
 
-const METRO_CONFIG_PATH = path.join(__dirname, "..", ".config", "metro.js");
+const METRO_CONFIG_PATH = path.join(__dirname, "metro.js");
 
 // Metro hashes cacheVersion into every transform key. A child process, since require caches the load.
 function loadCacheVersionUnder(variant) {
