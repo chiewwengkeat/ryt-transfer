@@ -18,7 +18,7 @@ Download `ryt-transfer-demo.apk` from the [latest release](https://github.com/ch
 
 ### Build from source
 
-You need Node 22.13 or later on the 22 line (see `.nvmrc`) and pnpm 12. Install pnpm 12 from <https://pnpm.io/installation>, or prefix each `pnpm` command below with `npx pnpm@12.9.1`. Then, for the platform you build:
+You need Node 22.13 or later on the 22 line (see `.nvmrc`) and pnpm, which the repo pins at 10.33.0. Node ships Corepack: run `corepack enable pnpm` once and `pnpm` starts the pinned version. A pnpm 10 or later installed another way (<https://pnpm.io/installation>) switches itself to the pin. Then, for the platform you build:
 
 - iOS: Xcode 16.1 or later with an iOS simulator, and CocoaPods (`brew install cocoapods`).
 - Android: JDK 17, and Android Studio with an emulator, with `ANDROID_HOME` set to its Android SDK (on a Mac, `export ANDROID_HOME=$HOME/Library/Android/sdk`).

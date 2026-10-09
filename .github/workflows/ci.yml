@@ -8,6 +8,8 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    env:
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -16,10 +18,11 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
-      - run: npx --yes pnpm@12.9.1 install --frozen-lockfile
-      - run: npx --yes pnpm@12.9.1 typecheck
-      - run: npx --yes pnpm@12.9.1 lint
-      - run: npx --yes pnpm@12.9.1 test
+      - run: corepack enable pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
       - name: Lint the pushed commit messages
         env:
           PUSHED_FROM: ${{ github.event.before }}
@@ -36,6 +39,8 @@ jobs:
   production-bundle:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -43,5 +48,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
-      - run: npx --yes pnpm@12.9.1 install --frozen-lockfile
+      - run: corepack enable pnpm
+      - run: pnpm install --frozen-lockfile
       - run: node scripts/check-production-bundle.js
