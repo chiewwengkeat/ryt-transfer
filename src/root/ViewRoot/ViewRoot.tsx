@@ -31,8 +31,8 @@ import "@/root/translations/translations";
 import BannerOffline from "@/domains/transfer/components/BannerOffline/BannerOffline";
 import ViewPinSheetHost from "@/domains/approval/components/ViewPinSheetHost/ViewPinSheetHost";
 import ViewSessionEnded from "./components/ViewSessionEnded/ViewSessionEnded";
-import { usePendingTransfersAtLaunch } from "./hooks/use-pending-transfers-at-launch";
-import { useScreenCaptureBlock } from "./hooks/use-screen-capture-block";
+import { usePendingTransfersAtLaunch } from "./hooks/use-pending-transfers-at-launch/use-pending-transfers-at-launch";
+import { useScreenCaptureBlock } from "./hooks/use-screen-capture-block/use-screen-capture-block";
 
 export default function ViewRoot() {
   usePendingTransfersAtLaunch();
