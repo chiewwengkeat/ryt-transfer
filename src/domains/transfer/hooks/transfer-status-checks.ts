@@ -15,7 +15,6 @@ import {
   getTransferOptions,
   isSettledTransferOutcome,
   outcomeOfTransfer,
-  type TransferOutcomeScenario,
   useGetTransfer,
 } from "../api/get-transfer/get-transfer";
 import { GetTransferErrorCode } from "../api/get-transfer/get-transfer.type";
@@ -156,7 +155,7 @@ export async function settlePendingTransfer({
   queryClient: QueryClient;
   customerId: string;
   transferId: string;
-  outcome?: TransferOutcomeScenario | null;
+  outcome?: ReturnType<typeof outcomeOfTransfer>;
   reference?: string;
   keepSettled?: boolean;
 }) {
@@ -175,7 +174,7 @@ export async function settlePendingTransfer({
 function recordPendingTransferAnswer(
   customerId: string,
   transferId: string,
-  outcome: TransferOutcomeScenario | null | undefined,
+  outcome: ReturnType<typeof outcomeOfTransfer> | undefined,
   reference: string | undefined,
 ) {
   return updatePendingTransfer(customerId, transferId, {

@@ -110,7 +110,12 @@ export function selectTransferWithOutcome(transfer: Transfer) {
     trackEvent("unreadable_amount", { boundary: "transfer" });
     throw new TypeError("The transfer's amount is unreadable.");
   }
-  return { ...transfer, amount, outcome: outcomeOfTransfer(transfer) };
+  // Extract, not the return type alone: its members widen back to the whole enum once inside an object.
+  const outcome: Extract<
+    TransferOutcomeScenario | null,
+    ReturnType<typeof outcomeOfTransfer>
+  > = outcomeOfTransfer(transfer);
+  return { ...transfer, amount, outcome };
 }
 
 // Null while the bank still awaits the approval: it has no outcome to give yet.
