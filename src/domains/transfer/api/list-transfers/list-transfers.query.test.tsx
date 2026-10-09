@@ -25,8 +25,7 @@ import {
 } from "./list-transfers";
 import type { ListTransfersResponse } from "./list-transfers.type";
 
-// The query run against the Jest bank, its cache writes included; list-transfers.test.ts seeds the cache by hand. A
-// new suite is named for what fills its cache.
+// Not merged into list-transfers.test.tsx: its fixtures replace the Jest bank's history before every test.
 
 function renderTransferHistory(queryClient: QueryClient) {
   return renderHook(() => useListTransfers(), {
