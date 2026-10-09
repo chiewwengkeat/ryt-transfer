@@ -37,7 +37,7 @@ The bank creates a transfer first; only a separate approval moves money. Every w
 
 ## Every scenario is written down once
 
-Each of the 58 situations a transfer can meet is one short section of [the scenario matrix](../src/screens/transfer/scenarios/transfer.md): what happened to the money, what to tell the person and, where it matters, what never to offer them. Tests, the mock bank, translations and the Demo menu share its permanent ids. The money is always one of four states; where the person must be told it, every language carries that state's fixed phrase, and where a resend is forbidden, nothing pressable may carry one of nine retry words. [A test](../src/test/scenarios/transfer-matrix.test.ts) fails a scenario's words that break either rule, and ids that drift apart ([002](decisions/002-scenario-matrix.md)).
+Each of the 58 situations a transfer can meet is one short section of [the scenario matrix](../src/screens/transfer/scenarios/transfer.md): what happened to the money, what to tell the person and, where it matters, what never to offer them. Tests, the mock bank, translations and the Demo menu share its permanent ids. The money is always one of four states; where the person must be told it, every language carries that state's fixed phrase, and where a resend is forbidden, nothing pressable may carry one of nine retry words. [A check](../src/screens/transfer/scenarios/transfer.strings.check.test.ts) fails a scenario's words that break either rule, and [another](../src/screens/transfer/scenarios/transfer.check.test.ts) ids that drift apart ([002](decisions/002-scenario-matrix.md)).
 
 **Rejected:** the exact sentences in the matrix, which would bind every client to one wording.
 
@@ -53,15 +53,15 @@ The demo bank seeds 5,000 transfers. Pages of 30 come by cursor, and each day's 
 
 ## Every component and hook has one place
 
-The app is cut into vertical slices: a screens folder per flow, a domain per business area. A component or hook stays in the one screen using it until a second screen, then a second flow, needs it. Each layer imports only those below it: the placement check fails a component or hook placed higher than its users need, and the boundary lint an import running sideways or up ([001](decisions/001-vertical-slices.md)).
+The app is cut into vertical slices: a screens folder per flow, a domain per business area. A component, hook or module stays in the one screen using it until a second screen, then a second flow, needs it, and a small one with a single user folds into that user's file. Each layer imports only those below it: the placement check fails a piece placed higher than its users need, and the boundary lint an import running sideways or up ([001](decisions/001-vertical-slices.md), [011](decisions/011-low-mental-load.md)).
 
 ```mermaid
 flowchart TD
-    app["src/app: routes, thin re-exports"] --> shell["src/shell: the app's root"]
-    shell --> screens["src/screens: one folder per flow"]
+    app["src/app: routes, thin re-exports"] --> root["src/root: the app's root"]
+    root --> screens["src/screens: one folder per flow"]
     screens --> domains["src/domains: one folder per business area"]
     domains --> shared["src/shared: knows nothing about banking"]
-    shell -.->|one gated require| mocks["src/mocks: the fake bank"]
+    root -.->|one gated require| mocks["src/mocks: the fake bank"]
 ```
 
 **Rejected:** Feature-Sliced Design, whose six layers split each feature, so "which layer?" becomes a recurring call.
@@ -78,7 +78,7 @@ Development and demo builds carry a stateful mock bank that moves balances, uses
 
 ## The fake bank can't reach production
 
-An unset variant means production, so an unconfigured build fails closed. Mock code is reached only by one `require` in the shell, gated on a literal comparison of `EXPO_PUBLIC_APP_VARIANT`, the one form the bundler strips from a release build; lint lets only the shell `require` it, and no app code import it. On every push, CI exports each variant and fails a production or unset bundle whose source map lists a mock or msw file; the demo export must carry them ([007](decisions/007-production-guard.md)).
+An unset variant means production, so an unconfigured build fails closed. Mock code is reached only by one `require` in the app's root, gated on a literal comparison of `EXPO_PUBLIC_APP_VARIANT`, the one form the bundler strips from a release build; lint lets only the root `require` it, and no app code import it. On every push, CI exports each variant and fails a production or unset bundle whose source map lists a mock or msw file; the demo export must carry them ([007](decisions/007-production-guard.md)).
 
 **Rejected:** one build with a demo mode to unlock: the fake bank would ship one unlock away from a customer.
 

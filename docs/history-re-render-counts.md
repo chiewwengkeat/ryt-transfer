@@ -110,5 +110,7 @@ The first line of a run reads:
 ryt-render-trace {"operation":"pageAppend","before":{"pagesLoaded":1},"after":{"pagesLoaded":2},"cells":{"header":{"mounted":3,"rerenderedCells":0,"rerenders":0,"firstRenders":0},"row":{"mounted":18,"rerenderedCells":0,"rerenders":0,"firstRenders":0}},"formatCalls":0}
 ```
 
-The trace is `src/shared/observability/render-trace.ts`; the row and the day header each call it once, and the list's
-development-only hook `SectionTransferAccordion/hooks/use-transfer-history-render-measurement.ts` drives the operations.
+The trace is `src/shared/observability/render-trace/render-trace.ts`; the row and the day header each call it once,
+and the list's development-only hook
+`SectionTransferAccordion/hooks/use-transfer-history-render-measurement/use-transfer-history-render-measurement.ts`
+drives the operations.
