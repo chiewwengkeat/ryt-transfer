@@ -6,8 +6,8 @@ import {
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
 import { reportRequestOutcome } from "@/shared/platform/offline/offline";
-import { moveAppTo } from "@/test/harness/app-state";
-import { setPhoneNetwork } from "@/test/harness/native-doubles";
+import { moveAppTo } from "@/test/render/app-state";
+import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 
 import { createQueryClient } from "./query-client";
 

@@ -1,17 +1,17 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 
-import "@/test/demo-build";
+import "@/test/setup/demo-build";
 import {
   biometricPromptsShown,
   deviceIntegrityChecksAsked,
   failNextBiometricPrompt,
-} from "@/test/harness/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { sentRequests } from "@/test/msw-server";
-import { pickDemoScenario } from "@/test/pick-demo-scenario";
-import { renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
-import { walkToTransferReview } from "@/test/walk-to-transfer-review";
+} from "@/test/doubles/biometrics-double";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { sentRequests } from "@/test/mock-bank/msw-server";
+import { pickDemoScenario } from "@/test/render/pick-demo-scenario";
+import { renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
+import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 const PHONE_REFUSAL =
   "This phone's security can't be confirmed, so transfers are off on it.";

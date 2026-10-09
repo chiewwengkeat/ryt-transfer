@@ -1,7 +1,7 @@
 import {
   failDeviceIntegrityChecks,
   reportDeviceIntegrity,
-} from "@/test/harness/biometrics-double";
+} from "@/test/doubles/biometrics-double";
 
 import { checkDeviceIntegrity, DeviceIntegrity } from "./device-integrity";
 

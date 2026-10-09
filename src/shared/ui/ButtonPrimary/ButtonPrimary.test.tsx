@@ -2,8 +2,8 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http } from "msw";
 
-import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
 
 function holdTheRequest(path: string) {
   let answer: () => void = () => undefined;

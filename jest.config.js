@@ -15,8 +15,8 @@ module.exports = {
   // Route tests that walk a whole transfer, signing included, outran Jest's 5 s default in a parallel run under load.
   testTimeout: 15_000,
   setupFilesAfterEnv: [
-    "<rootDir>/src/test/jest-setup.ts",
-    "<rootDir>/src/test/demo-bank-setup.ts",
+    "<rootDir>/src/test/setup/jest-setup.ts",
+    "<rootDir>/src/test/setup/demo-bank-setup.ts",
   ],
   // msw/node maps the react-native condition to null, so `node` must follow it.
   testEnvironmentOptions: {

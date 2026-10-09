@@ -1,13 +1,13 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { delay, http, HttpResponse } from "msw";
 
-import { lookUpTestRecipient } from "@/test/bank-client";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { endSessionWithAnyRequest } from "@/test/end-the-session";
-import { mswServer, sentRequests } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
-import { sentNameChecks } from "@/test/sent-request-filters";
-import { walkToTransferReview } from "@/test/walk-to-transfer-review";
+import { lookUpTestRecipient } from "@/test/mock-bank/bank-client";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { endSessionWithAnyRequest } from "@/test/render/end-the-session";
+import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
+import { sentNameChecks } from "@/test/mock-bank/sent-request-filters";
+import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 const TOO_MANY_NAME_CHECKS =
   "Too many name checks in a short time. Try again in a minute.";

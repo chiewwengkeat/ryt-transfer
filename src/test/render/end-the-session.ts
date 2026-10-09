@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw";
 import { accountKeys } from "@/domains/account/api/account.keys";
 import { requestJson } from "@/shared/http/transport/transport";
 
-import { mswServer } from "./msw-server";
+import { mswServer } from "@/test/mock-bank/msw-server";
 import { askOpenAppToReadAgain } from "./render-route";
 
 export async function endSessionWithAnyRequest() {

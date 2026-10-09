@@ -2,12 +2,12 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
-import { moveAppTo } from "@/test/harness/app-state";
-import { setPhoneNetwork } from "@/test/harness/native-doubles";
-import { reportedScenarios } from "@/test/harness/recording-sink";
-import { mswServer, sentRequests } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
+import { moveAppTo } from "@/test/render/app-state";
+import { setPhoneNetwork } from "@/test/doubles/native-doubles";
+import { reportedScenarios } from "@/test/doubles/recording-sink";
+import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
 
 const UNKNOWN_BANK_CODE = {
   error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },

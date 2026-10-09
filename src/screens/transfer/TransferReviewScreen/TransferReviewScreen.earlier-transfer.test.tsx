@@ -11,11 +11,11 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
-import { sendToBank, startTestTransfer } from "@/test/bank-client";
-import { pressHardwareBack } from "@/test/hardware-back";
-import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
+import { sendToBank, startTestTransfer } from "@/test/mock-bank/bank-client";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
 
 const STILL_BEING_CHECKED =
   "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";

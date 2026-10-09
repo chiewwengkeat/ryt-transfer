@@ -12,9 +12,9 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { API_BASE_URL } from "@/shared/config/config";
-import { observedRecords } from "@/test/harness/recording-sink";
-import { mswServer, sentRequests } from "@/test/msw-server";
-import { createQueryClientWithoutGcTimers } from "@/test/query-client-without-gc-timers";
+import { observedRecords } from "@/test/doubles/recording-sink";
+import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { createQueryClientWithoutGcTimers } from "@/test/render/query-client-without-gc-timers";
 
 import {
   askForNextTransferHistoryPage,

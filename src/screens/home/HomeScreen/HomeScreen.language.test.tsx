@@ -3,9 +3,9 @@ import * as Localization from "expo-localization";
 import { http, HttpResponse } from "msw";
 
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
-import { findAccessibleGroupAround } from "@/test/accessible-group";
-import { mswServer } from "@/test/msw-server";
-import { relaunchApp, renderRoute } from "@/test/render-route";
+import { findAccessibleGroupAround } from "@/test/render/accessible-group";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 afterEach(() => {
   jest.restoreAllMocks();

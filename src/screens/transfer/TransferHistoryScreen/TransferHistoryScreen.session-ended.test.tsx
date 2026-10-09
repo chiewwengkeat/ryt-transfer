@@ -1,12 +1,12 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
 
-import { renderRoute } from "@/test/render-route";
+import { renderRoute } from "@/test/render/render-route";
 import {
   buildHistoryTransfer,
   failTransferHistoryPages,
   serveTransferHistoryPages,
-} from "@/test/transfer-history-pages";
+} from "@/test/fixtures/transfer-history-pages";
 
 const LIM_ON_4_OCTOBER = buildHistoryTransfer({
   registeredName: "Lim Wei Jie",

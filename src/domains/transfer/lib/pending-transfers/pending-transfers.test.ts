@@ -3,7 +3,7 @@ import {
   readSecureRecord,
   writeSecureRecord,
 } from "@/shared/platform/secure-storage/secure-storage";
-import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
+import { secureStoreNativeDouble } from "@/test/doubles/native-doubles";
 
 import {
   clearPendingTransfer,

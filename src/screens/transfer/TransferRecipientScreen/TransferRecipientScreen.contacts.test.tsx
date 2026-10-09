@@ -6,16 +6,16 @@ import {
 import { PermissionStatus } from "expo";
 import { Linking } from "react-native";
 
-import { moveAppTo } from "@/test/harness/app-state";
+import { moveAppTo } from "@/test/render/app-state";
 import {
   setContactsPermission,
   setContactsPickerFailingOnce,
   setPickedContactPhones,
   setPickedContactUnreadable,
-} from "@/test/harness/contacts-native-double";
-import { reportedScenarios } from "@/test/harness/recording-sink";
-import { renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
+} from "@/test/doubles/contacts-native-double";
+import { reportedScenarios } from "@/test/doubles/recording-sink";
+import { renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
 
 afterEach(() => {
   jest.restoreAllMocks();

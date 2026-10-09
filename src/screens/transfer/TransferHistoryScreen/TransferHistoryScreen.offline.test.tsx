@@ -1,15 +1,15 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 
-import { moveAppTo } from "@/test/harness/app-state";
-import { setPhoneNetwork } from "@/test/harness/native-doubles";
-import { sentRequests } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { moveAppTo } from "@/test/render/app-state";
+import { setPhoneNetwork } from "@/test/doubles/native-doubles";
+import { sentRequests } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
 import {
   buildHistoryTransfer,
   failTransferHistoryPages,
   serveTransferHistoryPages,
-} from "@/test/transfer-history-pages";
+} from "@/test/fixtures/transfer-history-pages";
 
 const sentTransferHistoryCursors = () =>
   sentRequests

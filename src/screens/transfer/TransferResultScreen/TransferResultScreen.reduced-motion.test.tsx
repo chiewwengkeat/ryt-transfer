@@ -1,12 +1,12 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import { ReduceMotion } from "react-native-reanimated";
 
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   turnOnPhoneReduceMotion,
   watchReduceMotionOfAnimations,
-} from "@/test/harness/reduced-motion";
-import { renderRoute } from "@/test/render-route";
+} from "@/test/render/reduced-motion";
+import { renderRoute } from "@/test/render/render-route";
 
 it("fades into a sent transfer's result and shows its outcome and tick at once when the phone reduces motion", async () => {
   await pairPhoneAsTheDemoLaunchDoes();

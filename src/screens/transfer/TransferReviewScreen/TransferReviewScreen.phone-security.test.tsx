@@ -11,8 +11,8 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
-import { approveFromReviewOpenedAgain } from "@/test/approve-from-review-opened-again";
-import { sendToBank, startTestTransfer } from "@/test/bank-client";
+import { approveFromReviewOpenedAgain } from "@/test/render/approve-from-review-opened-again";
+import { sendToBank, startTestTransfer } from "@/test/mock-bank/bank-client";
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
@@ -21,14 +21,14 @@ import {
   failNextBiometricPrompt,
   holdDeviceIntegrityChecks,
   reportDeviceIntegrity,
-} from "@/test/harness/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { pressHardwareBack } from "@/test/hardware-back";
-import { observedRecords } from "@/test/harness/recording-sink";
-import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
-import { transferWritesSent } from "@/test/sent-request-filters";
-import { walkToTransferReview } from "@/test/walk-to-transfer-review";
+} from "@/test/doubles/biometrics-double";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { observedRecords } from "@/test/doubles/recording-sink";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
+import { transferWritesSent } from "@/test/mock-bank/sent-request-filters";
+import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 const PHONE_REFUSAL =
   "This phone's security can't be confirmed, so transfers are off on it.";

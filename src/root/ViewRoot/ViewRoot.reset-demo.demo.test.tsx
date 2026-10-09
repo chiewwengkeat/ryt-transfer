@@ -1,4 +1,4 @@
-import "@/test/demo-build";
+import "@/test/setup/demo-build";
 
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
@@ -12,12 +12,12 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { requestJson } from "@/shared/http/transport/transport";
-import { sendToBank, startTestTransfer } from "@/test/bank-client";
-import { biometricPromptsShown } from "@/test/harness/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { enterPinAndApprove } from "@/test/enter-pin-and-approve";
-import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { sendToBank, startTestTransfer } from "@/test/mock-bank/bank-client";
+import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { enterPinAndApprove } from "@/test/render/enter-pin-and-approve";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
 
 async function sendRm100FromHomeAndReturn() {
   await fireEvent.press(

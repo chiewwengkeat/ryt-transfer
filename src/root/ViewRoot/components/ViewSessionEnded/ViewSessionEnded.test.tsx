@@ -11,13 +11,13 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { requestJson } from "@/shared/http/transport/transport";
-import { sendToBank, startTestTransfer } from "@/test/bank-client";
-import { clearTransferScenario } from "@/test/clear-transfer-scenario";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { reportedScenarios } from "@/test/harness/recording-sink";
-import { mswServer } from "@/test/msw-server";
-import { relaunchApp, renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
+import { sendToBank, startTestTransfer } from "@/test/mock-bank/bank-client";
+import { clearTransferScenario } from "@/test/mock-bank/clear-transfer-scenario";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { reportedScenarios } from "@/test/doubles/recording-sink";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { relaunchApp, renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
 
 const STILL_CHECKED =
   "Your last transfer is still being checked. If you contact us, quote this reference:";

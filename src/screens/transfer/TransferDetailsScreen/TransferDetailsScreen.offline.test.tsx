@@ -1,17 +1,17 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 
-import { pressHardwareBack } from "@/test/hardware-back";
-import { setPhoneNetwork } from "@/test/harness/native-doubles";
-import { renderRoute } from "@/test/render-route";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { setPhoneNetwork } from "@/test/doubles/native-doubles";
+import { renderRoute } from "@/test/render/render-route";
 import {
   failTransferDetails,
   serveTransferDetails,
-} from "@/test/transfer-details-responses";
+} from "@/test/fixtures/transfer-details-responses";
 import {
   buildHistoryTransfer,
   serveTransferHistoryPages,
-} from "@/test/transfer-history-pages";
+} from "@/test/fixtures/transfer-history-pages";
 
 const AISYAH = buildHistoryTransfer();
 const OFFLINE = { isConnected: false, isInternetReachable: false };

@@ -1,10 +1,10 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
 
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { setPhoneNetwork } from "@/test/harness/native-doubles";
-import { renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { setPhoneNetwork } from "@/test/doubles/native-doubles";
+import { renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
 
 const OFFLINE_NOTICE =
   "You're offline. Sending is paused until Ryt can be reached.";

@@ -2,13 +2,13 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
 import { requestJson } from "@/shared/http/transport/transport";
-import { lookUpTestRecipient } from "@/test/bank-client";
-import { clearTransferScenario } from "@/test/clear-transfer-scenario";
-import { mswServer, sentRequests } from "@/test/msw-server";
-import { pickTransferScenario } from "@/test/pick-transfer-scenario";
-import { renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
-import { enterTransferRecipientAndAmount } from "@/test/walk-to-transfer-review";
+import { lookUpTestRecipient } from "@/test/mock-bank/bank-client";
+import { clearTransferScenario } from "@/test/mock-bank/clear-transfer-scenario";
+import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { pickTransferScenario } from "@/test/mock-bank/pick-transfer-scenario";
+import { renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
+import { enterTransferRecipientAndAmount } from "@/test/render/walk-to-transfer-review";
 
 const RECIPIENT_MOBILE = "012-345 6789";
 const OFFLINE_NOTICE =

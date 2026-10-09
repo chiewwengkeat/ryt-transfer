@@ -2,23 +2,23 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { Platform } from "react-native";
 
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { moveAppTo } from "@/test/harness/app-state";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { moveAppTo } from "@/test/render/app-state";
 import {
   ButtonCrashScreen,
   crashTheScreenOfASettledReceipt,
-} from "@/test/harness/crash-on-press";
+} from "@/test/render/crash-on-press";
 import {
   isScreenCaptureBlocked,
   screenCaptureNativeDouble,
-} from "@/test/harness/native-doubles";
-import { waitPastReceiptSettle } from "@/test/harness/receipt-settle";
-import { renderRoute } from "@/test/render-route";
-import { serveTransferDetails } from "@/test/transfer-details-responses";
+} from "@/test/doubles/native-doubles";
+import { waitPastReceiptSettle } from "@/test/render/receipt-settle";
+import { renderRoute } from "@/test/render/render-route";
+import { serveTransferDetails } from "@/test/fixtures/transfer-details-responses";
 import {
   buildHistoryTransfer,
   serveTransferHistoryPages,
-} from "@/test/transfer-history-pages";
+} from "@/test/fixtures/transfer-history-pages";
 
 it("blocks capture on Home, lifts it on a receipt only once the screen before it has gone, and blocks it again on leaving", async () => {
   await renderRoute("/");

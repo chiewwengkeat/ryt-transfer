@@ -1,7 +1,7 @@
 import {
   setPhoneNetwork,
   setPhoneNetworkWithoutAnEvent,
-} from "@/test/harness/native-doubles";
+} from "@/test/doubles/native-doubles";
 
 import { subscribeToPhoneConnection } from "./network";
 

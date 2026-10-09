@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
 
-import { renderRoute } from "@/test/render-route";
+import { renderRoute } from "@/test/render/render-route";
 
 const OVER_TODAYS_LIMIT =
   "That is more than the RM 5,000.00 you can still send today.";

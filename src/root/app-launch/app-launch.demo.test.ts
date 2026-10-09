@@ -1,11 +1,11 @@
-import "@/test/demo-build";
+import "@/test/setup/demo-build";
 import { checkDeviceIntegrity } from "@/shared/platform/device-integrity/device-integrity";
 import { blockScreenCapture } from "@/shared/platform/screen-capture/screen-capture";
-import { deviceIntegrityChecksAsked } from "@/test/harness/biometrics-double";
+import { deviceIntegrityChecksAsked } from "@/test/doubles/biometrics-double";
 import {
   appSwitcherBlurIntensity,
   isScreenCaptureBlocked,
-} from "@/test/harness/native-doubles";
+} from "@/test/doubles/native-doubles";
 
 // ⛔ One test only: a second would read the shared reset after the first, not what the launch did.
 it("leaves capture allowed and the phone unchecked at a demo build's launch, and still blurs the iPhone's app switcher", async () => {

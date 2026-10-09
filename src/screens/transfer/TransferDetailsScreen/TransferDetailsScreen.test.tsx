@@ -9,18 +9,18 @@ import {
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import { pressHardwareBack } from "@/test/hardware-back";
-import { sentRequests } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { sentRequests } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
 import {
   failTransferDetails,
   holdTransferDetails,
   serveTransferDetails,
-} from "@/test/transfer-details-responses";
+} from "@/test/fixtures/transfer-details-responses";
 import {
   buildHistoryTransfer,
   serveTransferHistoryPages,
-} from "@/test/transfer-history-pages";
+} from "@/test/fixtures/transfer-history-pages";
 
 const sentPathnames = () =>
   sentRequests.map(({ url }) => new URL(url).pathname);

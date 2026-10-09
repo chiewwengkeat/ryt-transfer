@@ -3,9 +3,9 @@ import { getFixedT } from "i18next";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
-import { findAccessibleGroupAround } from "@/test/accessible-group";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { renderRoute } from "@/test/render-route";
+import { findAccessibleGroupAround } from "@/test/render/accessible-group";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { renderRoute } from "@/test/render/render-route";
 
 it("tells a screen reader that a transfer's fields and review rows are in Bahasa Malaysia once it is picked", async () => {
   await renderRoute("/");

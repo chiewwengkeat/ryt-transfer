@@ -6,11 +6,11 @@ import {
   type ViewStyle,
 } from "react-native";
 
-import { renderRoute } from "@/test/render-route";
+import { renderRoute } from "@/test/render/render-route";
 import {
   buildHistoryTransfer,
   serveTransferHistoryPages,
-} from "@/test/transfer-history-pages";
+} from "@/test/fixtures/transfer-history-pages";
 
 const WINDOW_AT_LAUNCH = Dimensions.get("window");
 const SCREEN_AT_LAUNCH = Dimensions.get("screen");

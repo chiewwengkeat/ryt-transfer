@@ -10,7 +10,7 @@ import {
   requestJson,
 } from "@/shared/http/transport/transport";
 import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
-import { mswServer } from "@/test/msw-server";
+import { mswServer } from "@/test/mock-bank/msw-server";
 
 import demoLayer, { createDemoSend } from "./demo-layer";
 import type * as DemoLayerModule from "./demo-layer";

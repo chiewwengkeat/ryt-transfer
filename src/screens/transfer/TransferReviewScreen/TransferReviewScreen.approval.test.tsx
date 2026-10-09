@@ -12,7 +12,7 @@ import {
 } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { listPendingTransfers } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
-import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
+import { readBankBalanceMinor, sendToBank } from "@/test/mock-bank/bank-client";
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
@@ -20,22 +20,22 @@ import {
   failNextBiometricPrompt,
   holdNextBiometricPrompt,
   reportBiometricSensorUnavailable,
-} from "@/test/harness/biometrics-double";
+} from "@/test/doubles/biometrics-double";
 import {
   pairPhoneAsTheDemoLaunchDoes,
   pairPhoneBeforeTheBankForgetsItsKeys,
-} from "@/test/demo-pairing";
-import { enterPinAndApprove } from "@/test/enter-pin-and-approve";
-import { moveAppTo } from "@/test/harness/app-state";
-import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
+} from "@/test/mock-bank/demo-pairing";
+import { enterPinAndApprove } from "@/test/render/enter-pin-and-approve";
+import { moveAppTo } from "@/test/render/app-state";
+import { secureStoreNativeDouble } from "@/test/doubles/native-doubles";
 import {
   observedRecords,
   reportedScenarios,
-} from "@/test/harness/recording-sink";
-import { mswServer, sentRequests } from "@/test/msw-server";
-import { relaunchApp, renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
-import { walkToTransferReview } from "@/test/walk-to-transfer-review";
+} from "@/test/doubles/recording-sink";
+import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { relaunchApp, renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
+import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 const DEMO_PIN = "246810";
 

@@ -2,9 +2,9 @@ import { act, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
-import { reportedScenarios } from "@/test/harness/recording-sink";
-import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { reportedScenarios } from "@/test/doubles/recording-sink";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
 
 it("says the balance couldn't be loaded when the bank never answers it, and never counts the app offline for that", async () => {
   mswServer.use(

@@ -2,17 +2,17 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http } from "msw";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
-import { biometricPromptsShown } from "@/test/harness/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { pressHardwareBack } from "@/test/hardware-back";
-import { setPhoneNetwork } from "@/test/harness/native-doubles";
+import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import {
   isObscuredTouchGuardOn,
   touchThroughOverlay,
-} from "@/test/harness/obscured-touch-guard-double";
-import { mswServer, sentRequests } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
+} from "@/test/doubles/obscured-touch-guard-double";
+import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
 
 async function openPinSheetWithBiometricsOff() {
   await pairPhoneAsTheDemoLaunchDoes();

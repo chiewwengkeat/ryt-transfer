@@ -28,35 +28,35 @@ import {
   readBankBalanceMinor,
   sendToBank,
   startTestTransfer,
-} from "@/test/bank-client";
+} from "@/test/mock-bank/bank-client";
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
   holdNextBiometricPrompt,
   phoneKeyOptions,
-} from "@/test/harness/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { finishOpeningScreen } from "@/test/finish-opening-screen";
-import { pressHardwareBack } from "@/test/hardware-back";
-import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
+} from "@/test/doubles/biometrics-double";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { finishOpeningScreen } from "@/test/render/finish-opening-screen";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { readBankOnRealTimers } from "@/test/render/read-bank-on-real-timers";
 import {
   secureStoreNativeDouble,
   setPhoneNetwork,
-} from "@/test/harness/native-doubles";
+} from "@/test/doubles/native-doubles";
 import {
   observedRecords,
   reportedScenarios,
-} from "@/test/harness/recording-sink";
-import { holdTheNextTransferRead } from "@/test/hold-the-next-transfer-read";
-import { mswServer, sentRequests } from "@/test/msw-server";
-import { pressHandlerOf } from "@/test/press-handler-of";
+} from "@/test/doubles/recording-sink";
+import { holdTheNextTransferRead } from "@/test/mock-bank/hold-the-next-transfer-read";
+import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { pressHandlerOf } from "@/test/render/press-handler-of";
 import {
   askOpenAppToReadAgain,
   relaunchApp,
   renderRoute,
-} from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
-import { walkToTransferReview } from "@/test/walk-to-transfer-review";
+} from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
+import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 import { TransferFlowStep } from "@/screens/transfer/flow-store/flow-store";
 

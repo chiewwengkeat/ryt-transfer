@@ -1,12 +1,12 @@
 import { act, screen } from "@testing-library/react-native";
 
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
-import { renderRoute } from "@/test/render-route";
-import { serveTransferDetails } from "@/test/transfer-details-responses";
+import { renderRoute } from "@/test/render/render-route";
+import { serveTransferDetails } from "@/test/fixtures/transfer-details-responses";
 import {
   buildHistoryTransfer,
   serveTransferHistoryPages,
-} from "@/test/transfer-history-pages";
+} from "@/test/fixtures/transfer-history-pages";
 
 it("shows when a transfer was sent in Bahasa Malaysia, and in Chinese once the language is switched", async () => {
   const transfer = buildHistoryTransfer({

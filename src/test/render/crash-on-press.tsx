@@ -2,9 +2,9 @@ import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { useState } from "react";
 import { Pressable, Text } from "react-native";
 
-import { isScreenCaptureBlocked } from "@/test/harness/native-doubles";
-import { waitPastReceiptSettle } from "@/test/harness/receipt-settle";
-import { renderRoute } from "@/test/render-route";
+import { isScreenCaptureBlocked } from "@/test/doubles/native-doubles";
+import { waitPastReceiptSettle } from "./receipt-settle";
+import { renderRoute } from "./render-route";
 
 export function ButtonCrashScreen() {
   const [crashed, setCrashed] = useState(false);

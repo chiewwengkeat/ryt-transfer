@@ -3,11 +3,11 @@ import { focusManager } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { delay, http, HttpResponse } from "msw";
 
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { mswServer, sentRequests } from "@/test/msw-server";
-import { relaunchApp, renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
-import { walkToTransferReview } from "@/test/walk-to-transfer-review";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { relaunchApp, renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
+import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 const notificationHaptics = jest.spyOn(Haptics, "notificationAsync");
 const impactHaptics = jest.spyOn(Haptics, "impactAsync");

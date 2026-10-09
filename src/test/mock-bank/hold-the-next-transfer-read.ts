@@ -1,6 +1,6 @@
 import { http } from "msw";
 
-import { mswServer } from "@/test/msw-server";
+import { mswServer } from "./msw-server";
 
 // A resolver that answers nothing hands the read on to the bank, once released.
 export function holdTheNextTransferRead() {

@@ -14,16 +14,16 @@ import {
   type BankErrorBody,
   readBankBalanceMinor,
   sendToBank,
-} from "@/test/bank-client";
-import { clearTransferScenario } from "@/test/clear-transfer-scenario";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { pressHardwareBack } from "@/test/hardware-back";
-import { reportedScenarios } from "@/test/harness/recording-sink";
-import { mswServer } from "@/test/msw-server";
-import { pressHandlerOf } from "@/test/press-handler-of";
-import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
-import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
+} from "@/test/mock-bank/bank-client";
+import { clearTransferScenario } from "@/test/mock-bank/clear-transfer-scenario";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { reportedScenarios } from "@/test/doubles/recording-sink";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { pressHandlerOf } from "@/test/render/press-handler-of";
+import { readBankOnRealTimers } from "@/test/render/read-bank-on-real-timers";
+import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
 
 async function openAmountStep() {
   const view = await renderRoute("/transfer");

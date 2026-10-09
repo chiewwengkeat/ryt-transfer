@@ -2,9 +2,9 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { getFixedT } from "i18next";
 
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
-import { findAccessibleGroupAround } from "@/test/accessible-group";
-import { setPickedContactPhones } from "@/test/harness/contacts-native-double";
-import { renderRoute } from "@/test/render-route";
+import { findAccessibleGroupAround } from "@/test/render/accessible-group";
+import { setPickedContactPhones } from "@/test/doubles/contacts-native-double";
+import { renderRoute } from "@/test/render/render-route";
 
 const malayTransferT = getFixedT(AppLanguage.Malay, "transfer");
 

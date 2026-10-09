@@ -1,7 +1,7 @@
 import {
   isObscuredTouchGuardOn,
   touchThroughOverlay,
-} from "@/test/harness/obscured-touch-guard-double";
+} from "@/test/doubles/obscured-touch-guard-double";
 
 import { enableObscuredTouchGuard } from "./obscured-touch-guard";
 

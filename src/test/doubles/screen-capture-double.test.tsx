@@ -1,10 +1,10 @@
 import { act, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 
-import { renderRoute } from "@/test/render-route";
+import { renderRoute } from "@/test/render/render-route";
 
 import { isScreenCaptureBlocked } from "./native-doubles";
-import { waitPastReceiptSettle } from "./receipt-settle";
+import { waitPastReceiptSettle } from "@/test/render/receipt-settle";
 
 // ⛔ Keep these two alone in this file, in this order: the first sees the app's own launch, the second
 // what the first leaves behind.

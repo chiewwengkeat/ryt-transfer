@@ -2,12 +2,12 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 
-import { sentRequests } from "@/test/msw-server";
-import { createQueryClientWithoutGcTimers } from "@/test/query-client-without-gc-timers";
+import { sentRequests } from "@/test/mock-bank/msw-server";
+import { createQueryClientWithoutGcTimers } from "@/test/render/query-client-without-gc-timers";
 import {
   buildHistoryTransfer,
   serveTransferHistoryPages,
-} from "@/test/transfer-history-pages";
+} from "@/test/fixtures/transfer-history-pages";
 
 import {
   askForNextTransferHistoryPage,

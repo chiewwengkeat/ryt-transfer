@@ -8,7 +8,7 @@ import {
   signTestApproval,
   startTestTransfer,
   type BankErrorBody,
-} from "@/test/bank-client";
+} from "@/test/mock-bank/bank-client";
 
 it("asks for the PIN before replacing keys on file, then tells the customer", async () => {
   const paired = await pairTestPhone();

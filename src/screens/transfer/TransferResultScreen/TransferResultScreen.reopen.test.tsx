@@ -1,10 +1,10 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { Platform } from "react-native";
 
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { moveAppTo } from "@/test/harness/app-state";
-import { renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { moveAppTo } from "@/test/render/app-state";
+import { renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
 
 it(
   "keeps checking a processing transfer until it shows sent, after Android reopens the app from Back",

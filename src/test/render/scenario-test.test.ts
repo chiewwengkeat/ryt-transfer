@@ -1,4 +1,4 @@
-import { BANK_ORIGIN } from "./bank-client";
+import { BANK_ORIGIN } from "@/test/mock-bank/bank-client";
 import { scenarioTest } from "./scenario-test";
 
 it(

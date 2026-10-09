@@ -3,8 +3,8 @@ import { http, HttpResponse } from "msw";
 import { StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 
 import { spacing } from "@/shared/theme/theme";
-import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
 
 const OFFLINE_NOTICE =
   "You're offline. Sending is paused until Ryt can be reached.";

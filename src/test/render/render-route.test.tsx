@@ -11,8 +11,8 @@ import {
 } from "@/shared/http/transport-error/transport-error";
 import { queryClient } from "@/root/query-client/query-client";
 
-import { setPhoneNetwork } from "./harness/native-doubles";
-import { mswServer, sentRequests } from "./msw-server";
+import { setPhoneNetwork } from "@/test/doubles/native-doubles";
+import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
 import { renderRoute } from "./render-route";
 
 function ScreenThatSendsAWrite() {

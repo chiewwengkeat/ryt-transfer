@@ -14,12 +14,12 @@ import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenar
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { requestJson } from "@/shared/http/transport/transport";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import { sendToBank, startTestTransfer } from "@/test/bank-client";
-import { endSessionWithAnyRequest } from "@/test/end-the-session";
-import { pressHardwareBack } from "@/test/hardware-back";
-import { reportedScenarios } from "@/test/harness/recording-sink";
-import { mswServer } from "@/test/msw-server";
-import { relaunchApp, renderRoute } from "@/test/render-route";
+import { sendToBank, startTestTransfer } from "@/test/mock-bank/bank-client";
+import { endSessionWithAnyRequest } from "@/test/render/end-the-session";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { reportedScenarios } from "@/test/doubles/recording-sink";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 function HomeBalance() {
   const { data } = useQuery({

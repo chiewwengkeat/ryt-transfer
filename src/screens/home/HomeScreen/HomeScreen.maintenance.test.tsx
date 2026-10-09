@@ -4,12 +4,12 @@ import { http, HttpResponse } from "msw";
 
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
-import { type BankErrorBody, sendToBank } from "@/test/bank-client";
-import { pressHardwareBack } from "@/test/hardware-back";
-import { moveAppTo } from "@/test/harness/app-state";
-import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
+import { type BankErrorBody, sendToBank } from "@/test/mock-bank/bank-client";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { moveAppTo } from "@/test/render/app-state";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
 
 const t = getFixedT(null, ["shared"]);
 const LIMITS_OUTSIDE_MAINTENANCE = {

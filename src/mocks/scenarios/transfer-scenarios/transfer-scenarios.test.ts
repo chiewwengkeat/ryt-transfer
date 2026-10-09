@@ -29,7 +29,7 @@ import {
   signTestApproval,
   startTestTransfer,
   type BankErrorBody,
-} from "@/test/bank-client";
+} from "@/test/mock-bank/bank-client";
 
 const TEST_START_MS = Date.parse("2026-10-08T10:00:00+08:00");
 const HOUR_MS = 60 * 60 * 1000;

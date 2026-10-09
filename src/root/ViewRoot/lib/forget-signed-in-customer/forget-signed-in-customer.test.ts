@@ -6,11 +6,11 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
-import { sendToBank, startTestTransfer } from "@/test/bank-client";
-import { biometricPromptsShown } from "@/test/harness/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { pressHardwareBack } from "@/test/hardware-back";
-import { relaunchApp, renderRoute } from "@/test/render-route";
+import { sendToBank, startTestTransfer } from "@/test/mock-bank/bank-client";
+import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 import { forgetSignedInCustomer } from "./forget-signed-in-customer";
 

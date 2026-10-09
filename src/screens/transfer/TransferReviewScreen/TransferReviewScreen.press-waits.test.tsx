@@ -8,15 +8,15 @@ import {
   biometricPromptsShown,
   biometricsLibraryDouble,
   holdDeviceIntegrityChecks,
-} from "@/test/harness/biometrics-double";
-import { approveFromReviewOpenedAgain } from "@/test/approve-from-review-opened-again";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { pressHardwareBack } from "@/test/hardware-back";
-import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
-import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
-import { transferWritesSent } from "@/test/sent-request-filters";
-import { walkToTransferReview } from "@/test/walk-to-transfer-review";
+} from "@/test/doubles/biometrics-double";
+import { approveFromReviewOpenedAgain } from "@/test/render/approve-from-review-opened-again";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { secureStoreNativeDouble } from "@/test/doubles/native-doubles";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
+import { transferWritesSent } from "@/test/mock-bank/sent-request-filters";
+import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 async function openReviewOfRm100() {
   const view = await renderRoute("/transfer");

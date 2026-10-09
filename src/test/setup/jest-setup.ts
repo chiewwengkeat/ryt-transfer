@@ -21,27 +21,30 @@ import { forgetRequestOutcomes } from "@/shared/platform/offline/offline";
 import type * as ShellQueryClient from "@/root/query-client/query-client";
 import "@/root/translations/translations";
 
-import type * as BiometricsDouble from "./harness/biometrics-double";
-import { resetBiometricsDouble } from "./harness/biometrics-double";
+import type * as BiometricsDouble from "@/test/doubles/biometrics-double";
+import { resetBiometricsDouble } from "@/test/doubles/biometrics-double";
 import {
   contactsNativeDouble,
   resetContactsNativeDouble,
-} from "./harness/contacts-native-double";
-import type * as NativeDoubles from "./harness/native-doubles";
-import { resetNativeDoubles } from "./harness/native-doubles";
+} from "@/test/doubles/contacts-native-double";
+import type * as NativeDoubles from "@/test/doubles/native-doubles";
+import { resetNativeDoubles } from "@/test/doubles/native-doubles";
 import {
   obscuredTouchGuardNativeDouble,
   resetObscuredTouchGuardDouble,
-} from "./harness/obscured-touch-guard-double";
-import { observedRecords, recordObservation } from "./harness/recording-sink";
-import type * as ScreenStackDouble from "./harness/screen-stack-double";
-import { resetScreenStackDouble } from "./harness/screen-stack-double";
+} from "@/test/doubles/obscured-touch-guard-double";
+import {
+  observedRecords,
+  recordObservation,
+} from "@/test/doubles/recording-sink";
+import type * as ScreenStackDouble from "@/test/doubles/screen-stack-double";
+import { resetScreenStackDouble } from "@/test/doubles/screen-stack-double";
 import {
   mswServer,
   recordUnhandledRequest,
   sentRequests,
   unhandledRequests,
-} from "./msw-server";
+} from "@/test/mock-bank/msw-server";
 
 // expo-contacts binds its native module as it loads, so no import above may load it before this line runs.
 globalThis.expo.modules.ExpoContactsNext = contactsNativeDouble;
@@ -53,7 +56,7 @@ performance.now = () => Date.now();
 // jest-expo leaves these native modules inert: the kv-store throws, the rest answer undefined.
 jest.mock("expo-sqlite/kv-store", () => {
   const { kvStoreDouble } = jest.requireActual<typeof NativeDoubles>(
-    "./harness/native-doubles",
+    "@/test/doubles/native-doubles",
   );
   return {
     __esModule: true,
@@ -65,25 +68,28 @@ jest.mock("expo-sqlite/kv-store", () => {
 // Doubled beneath the library, so its own key checks still throw as they would on a phone.
 jest.mock("expo-secure-store/build/ExpoSecureStore", () => ({
   __esModule: true,
-  default: jest.requireActual<typeof NativeDoubles>("./harness/native-doubles")
-    .secureStoreNativeDouble,
+  default: jest.requireActual<typeof NativeDoubles>(
+    "@/test/doubles/native-doubles",
+  ).secureStoreNativeDouble,
 }));
 // Doubled beneath the library, so its own useNetworkState runs over the double.
 jest.mock("expo-network/build/ExpoNetwork", () => ({
   __esModule: true,
-  default: jest.requireActual<typeof NativeDoubles>("./harness/native-doubles")
-    .networkNativeDouble,
+  default: jest.requireActual<typeof NativeDoubles>(
+    "@/test/doubles/native-doubles",
+  ).networkNativeDouble,
 }));
 // Doubled beneath the library, so its own count of keys decides when the phone is told.
 jest.mock("expo-screen-capture/build/ExpoScreenCapture", () => ({
   __esModule: true,
-  default: jest.requireActual<typeof NativeDoubles>("./harness/native-doubles")
-    .screenCaptureNativeDouble,
+  default: jest.requireActual<typeof NativeDoubles>(
+    "@/test/doubles/native-doubles",
+  ).screenCaptureNativeDouble,
 }));
 jest.mock("expo-crypto", () => ({
   ...jest.requireActual<object>("expo-crypto"),
   randomUUID: jest.requireActual<typeof NativeDoubles>(
-    "./harness/native-doubles",
+    "@/test/doubles/native-doubles",
   ).randomUUIDDouble,
 }));
 // With overrides, expo-router's test context strips "./" and the extension from its keys, so its ignore rule for
@@ -115,12 +121,15 @@ jest.mock("react-native/Libraries/Utilities/BackHandler", () =>
 jest.mock(
   "@sbaiahmed1/react-native-biometrics",
   () =>
-    jest.requireActual<typeof BiometricsDouble>("./harness/biometrics-double")
-      .biometricsLibraryDouble,
+    jest.requireActual<typeof BiometricsDouble>(
+      "@/test/doubles/biometrics-double",
+    ).biometricsLibraryDouble,
 );
 jest.mock("react-native-screens", () =>
   jest
-    .requireActual<typeof ScreenStackDouble>("./harness/screen-stack-double")
+    .requireActual<typeof ScreenStackDouble>(
+      "@/test/doubles/screen-stack-double",
+    )
     .reactNativeScreensRecordingTopRoutes(),
 );
 

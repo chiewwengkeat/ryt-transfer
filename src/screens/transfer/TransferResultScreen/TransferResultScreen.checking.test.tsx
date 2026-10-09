@@ -13,23 +13,23 @@ import {
   sendToBank,
   signTestApproval,
   startTestTransfer,
-} from "@/test/bank-client";
+} from "@/test/mock-bank/bank-client";
 import {
   biometricPromptsShown,
   holdNextBiometricPrompt,
-} from "@/test/harness/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { endTheSessionThroughAnotherRead } from "@/test/end-the-session";
-import { finishOpeningScreen } from "@/test/finish-opening-screen";
-import { observedRecords } from "@/test/harness/recording-sink";
-import { holdTheNextTransferRead } from "@/test/hold-the-next-transfer-read";
-import { mswServer } from "@/test/msw-server";
+} from "@/test/doubles/biometrics-double";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { endTheSessionThroughAnotherRead } from "@/test/render/end-the-session";
+import { finishOpeningScreen } from "@/test/render/finish-opening-screen";
+import { observedRecords } from "@/test/doubles/recording-sink";
+import { holdTheNextTransferRead } from "@/test/mock-bank/hold-the-next-transfer-read";
+import { mswServer } from "@/test/mock-bank/msw-server";
 import {
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
-} from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
-import { walkToTransferReview } from "@/test/walk-to-transfer-review";
+} from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
+import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 async function sendRm100FromHome() {
   await pairPhoneAsTheDemoLaunchDoes();

@@ -3,25 +3,25 @@ import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
-import { lookUpTestRecipient } from "@/test/bank-client";
+import { lookUpTestRecipient } from "@/test/mock-bank/bank-client";
 import {
   biometricPromptsShown,
   holdNextBiometricPrompt,
-} from "@/test/harness/biometrics-double";
+} from "@/test/doubles/biometrics-double";
 import {
   pairPhoneAsTheDemoLaunchDoes,
   pairPhoneBeforeTheBankForgetsItsKeys,
-} from "@/test/demo-pairing";
-import { endTheSessionThroughAnotherRead } from "@/test/end-the-session";
-import { enterPinAndApprove } from "@/test/enter-pin-and-approve";
+} from "@/test/mock-bank/demo-pairing";
+import { endTheSessionThroughAnotherRead } from "@/test/render/end-the-session";
+import { enterPinAndApprove } from "@/test/render/enter-pin-and-approve";
 import {
   observedRecords,
   reportedScenarios,
-} from "@/test/harness/recording-sink";
-import { mswServer, sentRequests } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
-import { walkToTransferReview } from "@/test/walk-to-transfer-review";
+} from "@/test/doubles/recording-sink";
+import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { renderRoute } from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
+import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 async function openReviewOfRm100() {
   await renderRoute("/transfer");

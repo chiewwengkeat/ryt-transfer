@@ -6,7 +6,7 @@ import type {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
 
-import { mswServer } from "./msw-server";
+import { mswServer } from "@/test/mock-bank/msw-server";
 
 // Any other transfer goes on to the bank, which knows none of these fixtures and answers 404.
 export function serveTransferDetails(transfer: Transfer) {

@@ -25,23 +25,23 @@ import {
   sendToBank,
   signTestApproval,
   startTestTransfer,
-} from "@/test/bank-client";
-import { clearTransferScenario } from "@/test/clear-transfer-scenario";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { finishOpeningScreen } from "@/test/finish-opening-screen";
-import { pressHardwareBack } from "@/test/hardware-back";
-import { setPhoneNetwork } from "@/test/harness/native-doubles";
-import { observedRecords } from "@/test/harness/recording-sink";
-import { holdTheNextTransferRead } from "@/test/hold-the-next-transfer-read";
-import { mswServer, sentRequests } from "@/test/msw-server";
-import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
+} from "@/test/mock-bank/bank-client";
+import { clearTransferScenario } from "@/test/mock-bank/clear-transfer-scenario";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { finishOpeningScreen } from "@/test/render/finish-opening-screen";
+import { pressHardwareBack } from "@/test/render/hardware-back";
+import { setPhoneNetwork } from "@/test/doubles/native-doubles";
+import { observedRecords } from "@/test/doubles/recording-sink";
+import { holdTheNextTransferRead } from "@/test/mock-bank/hold-the-next-transfer-read";
+import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { readBankOnRealTimers } from "@/test/render/read-bank-on-real-timers";
 import {
   relaunchApp,
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
-} from "@/test/render-route";
-import { scenarioTest } from "@/test/scenario-test";
-import { walkToTransferReview } from "@/test/walk-to-transfer-review";
+} from "@/test/render/render-route";
+import { scenarioTest } from "@/test/render/scenario-test";
+import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 const t = getFixedT(null, ["shared"]);
 const BANK_REFERENCE =

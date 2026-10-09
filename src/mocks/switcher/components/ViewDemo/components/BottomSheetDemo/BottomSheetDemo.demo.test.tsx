@@ -1,10 +1,10 @@
-import "@/test/demo-build";
+import "@/test/setup/demo-build";
 
 import { fireEvent, screen } from "@testing-library/react-native";
 
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
-import { enterPinAndApprove } from "@/test/enter-pin-and-approve";
-import { renderRoute } from "@/test/render-route";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { enterPinAndApprove } from "@/test/render/enter-pin-and-approve";
+import { renderRoute } from "@/test/render/render-route";
 
 // Real time, not fake: locking the PIN and sending again outlasts Jest's 5 s under a loaded parallel run.
 jest.setTimeout(15_000);

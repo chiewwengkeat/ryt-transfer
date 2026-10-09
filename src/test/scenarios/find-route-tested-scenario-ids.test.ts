@@ -35,16 +35,19 @@ it("credits a route test inside a describe block that runs", () => {
 
 it("credits nothing from the harness's own self-test, which renders no route", () => {
   const selfTest = readFileSync(
-    `${__dirname}/../scenario-test.test.ts`,
+    `${__dirname}/../render/scenario-test.test.ts`,
     "utf8",
   );
 
   expect(
-    findRouteTestedScenarioIds("src/test/scenario-test.test.ts", selfTest),
+    findRouteTestedScenarioIds(
+      "src/test/render/scenario-test.test.ts",
+      selfTest,
+    ),
   ).toEqual([]);
   expect(
     findRouteTestedScenarioIds(
-      "src/test/scenario-test.test.ts",
+      "src/test/render/scenario-test.test.ts",
       `${selfTest}\nrenderRoute("/");\n`,
     ),
   ).toEqual(["transfer.offline"]);

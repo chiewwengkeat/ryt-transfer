@@ -14,9 +14,9 @@ import {
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import { startTestTransfer } from "@/test/bank-client";
-import { mswServer } from "@/test/msw-server";
-import { createQueryClientWithoutGcTimers } from "@/test/query-client-without-gc-timers";
+import { startTestTransfer } from "@/test/mock-bank/bank-client";
+import { mswServer } from "@/test/mock-bank/msw-server";
+import { createQueryClientWithoutGcTimers } from "@/test/render/query-client-without-gc-timers";
 
 import type { ListTransfersResponse } from "../list-transfers/list-transfers.type";
 import { transferKeys } from "../transfer.keys";

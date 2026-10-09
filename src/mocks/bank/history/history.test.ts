@@ -10,7 +10,7 @@ import {
   signTestApproval,
   startTestTransfer,
   type BankErrorBody,
-} from "@/test/bank-client";
+} from "@/test/mock-bank/bank-client";
 
 afterEach(() => {
   jest.restoreAllMocks();
