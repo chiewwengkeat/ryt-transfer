@@ -1,6 +1,6 @@
 # Demo guide
 
-The [scenario matrix](../src/screens/transfer/scenarios/transfer.md) is the one description of what can happen while someone sends money, and the Demo menu itself is the live list of the scenarios a demo build can cause. This page only shows how to reach each scenario in the demo build.
+The [scenario matrix](../src/screens/transfer/scenarios/transfer.md) is the one description of what can happen while someone sends money, and the Demo menu itself is the live list of the scenarios the bank or the connection can cause. This page only shows how to reach each scenario in the demo build.
 
 ## The Demo menu
 
