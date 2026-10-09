@@ -6,6 +6,7 @@ import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-r
 import type { LookupRecipientResponse } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { requestJson } from "@/shared/http/transport";
 import { pressHardwareBack } from "@/test/hardware-back";
+import { moveAppTo } from "@/test/harness/app-state";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
@@ -189,6 +190,27 @@ it("lists the recent recipients on Try again after they could not load", async (
     await screen.findAllByRole("button", { name: /••••/ }),
   ).not.toHaveLength(0);
   expect(recentsUnexpected).not.toBeOnTheScreen();
+});
+
+it("reports only the session's end for recents that failed into it, whose message goes once signing in again reads them", async () => {
+  await renderRoute("/transfer");
+  await screen.findAllByRole("button", { name: /••••/ });
+  const reportsBeforeTheSessionEnded = reportedScenarios().length;
+  mswServer.use(http.all("*", () => new HttpResponse(null, { status: 401 })));
+
+  moveAppTo("background");
+  moveAppTo("active");
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  mswServer.resetHandlers();
+  await fireEvent.press(signInAgain);
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+
+  expect(reportedScenarios().slice(reportsBeforeTheSessionEnded)).toEqual([
+    "transfer.session_ended",
+  ]);
+  expect(screen.queryByText("Something unexpected went wrong.")).toBeNull();
 });
 
 it("hides the recipient step's something-unexpected message while the phone has no connection", async () => {

@@ -40,6 +40,7 @@ export default function BottomSheetBank({ onBankChosen, onClose }: Props) {
       {banks.isError ? (
         !offline && (
           <BannerRecipientUnexpected
+            failure={banks.error}
             onRetry={() => {
               void banks.refetch();
             }}

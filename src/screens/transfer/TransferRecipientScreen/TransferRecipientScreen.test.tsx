@@ -271,6 +271,40 @@ it("says something unexpected went wrong in the bank sheet when the banks cannot
   expect(banksUnexpected).not.toBeOnTheScreen();
 });
 
+it("reports only the session's end for banks that failed into it with the bank sheet open, listing them once signed in again", async () => {
+  let answerBanks: (response: Response) => void = () => undefined;
+  mswServer.use(
+    http.get(
+      "*/banks",
+      () =>
+        new Promise<Response>((resolve) => {
+          answerBanks = resolve;
+        }),
+      { once: true },
+    ),
+  );
+  await renderRoute("/transfer");
+  await fireEvent.press(
+    await screen.findByRole("radio", { name: "Account number" }),
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Bank" }));
+  await screen.findByLabelText("Search banks");
+  const reportsBeforeTheSessionEnded = reportedScenarios().length;
+
+  answerBanks(new HttpResponse(null, { status: 401 }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Sign in again" }),
+  );
+
+  expect(
+    await screen.findByRole("button", { name: "Public Bank" }),
+  ).toBeOnTheScreen();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  expect(reportedScenarios().slice(reportsBeforeTheSessionEnded)).toEqual([
+    "transfer.session_ended",
+  ]);
+});
+
 it("hides the bank sheet's something-unexpected message while the phone has no connection", async () => {
   mswServer.use(
     http.get("*/banks", () =>
