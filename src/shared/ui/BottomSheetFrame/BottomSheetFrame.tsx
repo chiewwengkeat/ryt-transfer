@@ -13,7 +13,6 @@ import {
   BackHandler,
   Keyboard,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -81,7 +80,7 @@ export default function BottomSheetFrame({
   useEffect(() => {
     const titleFocusTimer = setTimeout(() => {
       setSheetOpened(true);
-    }, SHEET_OPENING_MS + TITLE_FOCUS_DELAY_MS);
+    }, SHEET_OPENING_MS);
     return () => {
       clearTimeout(titleFocusTimer);
     };
@@ -244,5 +243,3 @@ const styles = StyleSheet.create({
 
 // Reanimated's default, stated so the title's focus can wait the opening out.
 const SHEET_OPENING_MS = 300;
-// VoiceOver places its own focus a moment after a view appears, and a request made before then loses to it.
-const TITLE_FOCUS_DELAY_MS = Platform.select({ ios: 1_000, default: 0 });

@@ -15,6 +15,10 @@ import {
   signTestApproval,
   startTestTransfer,
 } from "@/test/bank-client";
+import {
+  biometricPromptsShown,
+  holdNextBiometricPrompt,
+} from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { observedRecords } from "@/test/harness/recording-sink";
@@ -49,7 +53,7 @@ async function sendRm100FromHome() {
   return view;
 }
 
-async function endTheSessionOverTheResultPage() {
+async function endTheSessionThroughAnotherRead() {
   mswServer.use(
     http.get(
       "*/accounts/primary",
@@ -63,6 +67,37 @@ async function endTheSessionOverTheResultPage() {
   );
   askOpenAppToReadAgain(accountKeys.primaryAccount);
   return screen.findByRole("button", { name: "Sign in again" });
+}
+
+// Jest has no screen reader: the focus request is the nearest thing it can see.
+function countOutcomeFocusRequestsFromNowOn() {
+  const focusRequests = jest.spyOn(AccessibilityInfo, "sendAccessibilityEvent");
+  focusRequests.mockClear();
+  return () =>
+    focusRequests.mock.calls.filter(
+      ([target, eventType]) =>
+        eventType === "focus" &&
+        (target as { props?: { children?: unknown } }).props?.children ===
+          "Transfer sent",
+    ).length;
+}
+
+async function signInAgainAndCountOutcomeFocusRequestsEachHalfSecond(
+  signInButton: Parameters<typeof fireEvent.press>[0],
+  outcomeFocusRequests: () => number,
+) {
+  const requestsBeforeSignIn = outcomeFocusRequests();
+  await fireEvent.press(signInButton);
+  const requestsAtSignIn = outcomeFocusRequests() - requestsBeforeSignIn;
+  await act(() => jest.advanceTimersByTimeAsync(500));
+  const requestsHalfASecondLater =
+    outcomeFocusRequests() - requestsBeforeSignIn;
+  await act(() => jest.advanceTimersByTimeAsync(500));
+  return [
+    requestsAtSignIn,
+    requestsHalfASecondLater,
+    outcomeFocusRequests() - requestsBeforeSignIn,
+  ];
 }
 
 it(
@@ -110,7 +145,7 @@ it(
       { name: "Checking your transfer" },
       { timeout: 10_000 },
     );
-    const signInButton = await endTheSessionOverTheResultPage();
+    const signInButton = await endTheSessionThroughAnotherRead();
     announce.mockClear();
 
     releaseStatusRead();
@@ -184,7 +219,7 @@ it(
         { timeout: 10_000 },
       ),
     );
-    await endTheSessionOverTheResultPage();
+    await endTheSessionThroughAnotherRead();
     releaseStatusRead();
     await screen.findByRole("header", {
       name: "Transfer sent",
@@ -206,7 +241,7 @@ it("reports the outcome shown once, not again when the page is back on top after
   await finishOpeningScreen(
     await screen.findByRole("header", { name: "Transfer sent" }),
   );
-  const signInButton = await endTheSessionOverTheResultPage();
+  const signInButton = await endTheSessionThroughAnotherRead();
 
   await fireEvent.press(signInButton);
 
@@ -221,6 +256,56 @@ it("reports the outcome shown once, not again when the page is back on top after
       properties: { scenario: "transfer.completed" },
     }),
   ]);
+});
+
+it("moves a screen reader back to the outcome once signed in again, after the reader has placed its own focus", async () => {
+  const outcomeFocusRequests = countOutcomeFocusRequestsFromNowOn();
+  await sendRm100FromHome();
+  await finishOpeningScreen(
+    await screen.findByRole("header", { name: "Transfer sent" }),
+  );
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  const signInButton = await endTheSessionThroughAnotherRead();
+  const requestsBeforeTheView = outcomeFocusRequests();
+  await act(() => jest.advanceTimersByTimeAsync(2_000));
+  const requestsUnderTheView = outcomeFocusRequests() - requestsBeforeTheView;
+
+  const requestsAfterSignIn =
+    await signInAgainAndCountOutcomeFocusRequestsEachHalfSecond(
+      signInButton,
+      outcomeFocusRequests,
+    );
+
+  expect(requestsUnderTheView).toBe(0);
+  expect(requestsAfterSignIn).toEqual([0, 0, 1]);
+});
+
+it("moves a screen reader to the outcome of a page that opened under the session-ended view only once signed in again, after the reader has placed its own focus", async () => {
+  const outcomeFocusRequests = countOutcomeFocusRequestsFromNowOn();
+  const releasePrompt = holdNextBiometricPrompt();
+  await sendRm100FromHome();
+  await waitFor(() => {
+    expect(biometricPromptsShown()).toHaveLength(1);
+  });
+  const signInButton = await endTheSessionThroughAnotherRead();
+  releasePrompt();
+  await finishOpeningScreen(
+    await screen.findByRole("header", {
+      name: "Transfer sent",
+      includeHiddenElements: true,
+    }),
+  );
+  await act(() => jest.advanceTimersByTimeAsync(2_000));
+  const requestsUnderTheView = outcomeFocusRequests();
+
+  const requestsAfterSignIn =
+    await signInAgainAndCountOutcomeFocusRequestsEachHalfSecond(
+      signInButton,
+      outcomeFocusRequests,
+    );
+
+  expect(requestsUnderTheView).toBe(0);
+  expect(requestsAfterSignIn).toEqual([0, 0, 1]);
 });
 
 it(

@@ -149,7 +149,7 @@ it("leaves a screen reader no unlabelled stop in an open sheet, its title the fi
   for (const stop of laterStops) expect(stop).toHaveAccessibleName();
 });
 
-it("moves a screen reader to its title once it has opened, not as it starts to open", async () => {
+it("moves a screen reader to its title a moment after it has opened, once VoiceOver has placed its own focus", async () => {
   jest.useFakeTimers();
   // Jest has no screen reader: the focus request is the nearest thing it can see.
   const focusRequests = jest.spyOn(AccessibilityInfo, "sendAccessibilityEvent");
@@ -164,9 +164,13 @@ it("moves a screen reader to its title once it has opened, not as it starts to o
 
   await openBankSheet();
   const focusRequestsAsItOpens = titleFocusRequests().length;
-  await act(() => jest.advanceTimersByTimeAsync(1_300));
+  await act(() => jest.advanceTimersByTimeAsync(300));
+  await act(() => jest.advanceTimersByTimeAsync(500));
+  const focusRequestsHalfASecondAfterOpening = titleFocusRequests().length;
+  await act(() => jest.advanceTimersByTimeAsync(500));
 
   expect(focusRequestsAsItOpens).toBe(0);
+  expect(focusRequestsHalfASecondAfterOpening).toBe(0);
   expect(titleFocusRequests()).toHaveLength(1);
 });
 

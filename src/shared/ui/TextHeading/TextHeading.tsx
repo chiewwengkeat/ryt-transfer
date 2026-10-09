@@ -1,6 +1,6 @@
 import { use, useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { AccessibilityInfo, StyleSheet, Text } from "react-native";
+import { AccessibilityInfo, Platform, StyleSheet, Text } from "react-native";
 
 import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top";
 import { colors, typography } from "@/shared/theme/theme";
@@ -14,10 +14,28 @@ export default function TextHeading({ children, autoFocus = false }: Props) {
   const headingRef = useRef<Text>(null);
   // The covered signal alone, not the screen's focus: a sheet or a shell view draws this outside any screen.
   const screensCovered = use(ScreensCoveredContext);
-  // Asked beneath the session-ended view, the focus is lost, and nothing reads the heading after sign-in.
+  const screensCoveredBeforeRef = useRef<boolean>(undefined);
   useEffect(() => {
-    if (autoFocus && !screensCovered && headingRef.current !== null)
-      AccessibilityInfo.sendAccessibilityEvent(headingRef.current, "focus");
+    const screensCoveredBefore = screensCoveredBeforeRef.current;
+    screensCoveredBeforeRef.current = screensCovered;
+    const heading = headingRef.current;
+    // Asked beneath the session-ended view, the focus is lost, and nothing reads the heading after sign-in.
+    if (!autoFocus || screensCovered || heading === null) return;
+    if (screensCoveredBefore === undefined) {
+      AccessibilityInfo.sendAccessibilityEvent(heading, "focus");
+      return;
+    }
+    const headingFocusTimer = setTimeout(
+      () => {
+        AccessibilityInfo.sendAccessibilityEvent(heading, "focus");
+      },
+      screensCoveredBefore || Platform.OS === "ios"
+        ? READERS_OWN_FOCUS_WAIT_MS
+        : 0,
+    );
+    return () => {
+      clearTimeout(headingFocusTimer);
+    };
   }, [autoFocus, screensCovered]);
 
   return (
@@ -35,3 +53,7 @@ export default function TextHeading({ children, autoFocus = false }: Props) {
 const styles = StyleSheet.create({
   heading: { ...typography.heading, color: colors.textPrimary },
 });
+
+// A screen reader places its own focus up to half a second after what it reads changes, and the later request wins:
+// VoiceOver after a page or sheet opens, both readers after the session-ended view lifts.
+const READERS_OWN_FOCUS_WAIT_MS = 1_000;

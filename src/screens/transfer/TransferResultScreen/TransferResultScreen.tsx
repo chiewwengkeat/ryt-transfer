@@ -157,6 +157,7 @@ export default function TransferResultScreen() {
             scenario={scenario}
             transfer={transfer.data}
             transferId={transferId}
+            pageOpened={pageOpened}
           />
           {scenario === TransferOutcomeScenario.Completed && transfer.data && (
             <SectionTransferDetails transfer={transfer.data} />
