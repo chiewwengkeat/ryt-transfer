@@ -23,16 +23,11 @@ import {
 } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
+import { waitForHomeToOfferTransfer } from "./TransferReviewScreen.helper";
+
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
-async function waitForHomeToOfferTransfer() {
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
-  });
-}
 
 async function openReviewOfRm100(
   startPath: "/" | "/transfer" = "/transfer",

@@ -7,7 +7,6 @@ import {
   readBankBalanceMinor,
   sendToBank,
   mswServer,
-  sentRequests,
 } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
@@ -15,6 +14,8 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
+
+import { approveRequests } from "./TransferReviewScreen.helper";
 
 const DEMO_PIN = "246810";
 
@@ -35,12 +36,6 @@ async function confirmRm100Transfer() {
   const view = await pairPhoneAndOpenReviewOfRm100();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   return view;
-}
-
-function approveRequests() {
-  return sentRequests.filter((request) =>
-    new URL(request.url).pathname.endsWith("/approve"),
-  );
 }
 
 it("sends an approval whose answer was lost twice more, 2 and then 4 seconds on, as the same bytes under the same key", async () => {

@@ -2,11 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
-import {
-  readBankBalanceMinor,
-  mswServer,
-  sentRequests,
-} from "@/test/mock-bank/mock-bank";
+import { readBankBalanceMinor, mswServer } from "@/test/mock-bank/mock-bank";
 import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
@@ -24,16 +20,14 @@ import { renderRoute } from "@/test/render/render-route";
 
 import { TransferFlowStep } from "@/screens/transfer/flow-store/flow-store";
 
+import {
+  countSent,
+  waitForHomeToOfferTransfer,
+} from "./TransferReviewScreen.helper";
+
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
-async function waitForHomeToOfferTransfer() {
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
-  });
-}
 
 async function openReviewOfRm100(
   startPath: "/" | "/transfer" = "/transfer",
@@ -58,14 +52,6 @@ function readRootTransferScreenGestureEnabled() {
   if (transferScreen === undefined)
     throw new Error("The root stack holds no transfer screen.");
   return transferScreen.props.gestureEnabled as unknown;
-}
-
-function countSent(method: string, pathEnd: string) {
-  return sentRequests.filter(
-    (request) =>
-      request.method === method &&
-      new URL(request.url).pathname.endsWith(pathEnd),
-  ).length;
 }
 
 it(

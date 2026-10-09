@@ -1,37 +1,29 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { getFixedT } from "i18next";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import {
-  type BankErrorBody,
-  lookUpTestRecipient,
-  sendToBank,
-} from "@/test/mock-bank/mock-bank";
-import {
   pressHardwareBack,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { reportedScenarios } from "@/test/doubles/native-doubles";
-import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
+import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
+
+import {
+  askBankToCreateRm100,
+  countSent,
+  waitForHomeToOfferTransfer,
+} from "./TransferReviewScreen.helper";
 
 const t = getFixedT(null, ["shared"]);
 
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-const RECIPIENT_MOBILE = "012-345 6789";
-
-// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
-async function waitForHomeToOfferTransfer() {
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
-  });
-}
 
 async function openReviewOfRm100(
   startPath: "/" | "/transfer" = "/transfer",
@@ -44,21 +36,6 @@ async function openReviewOfRm100(
   }
   await walkToTransferReview({ note });
   return view;
-}
-
-function countSent(method: string, pathEnd: string) {
-  return sentRequests.filter(
-    (request) =>
-      request.method === method &&
-      new URL(request.url).pathname.endsWith(pathEnd),
-  ).length;
-}
-
-async function askBankToCreateRm100() {
-  const { recipientRef } = await lookUpTestRecipient(RECIPIENT_MOBILE);
-  return sendToBank<BankErrorBody>("POST", "/transfers", {
-    body: { recipientRef, amount: { minor: 10_000, currency: "MYR" } },
-  });
 }
 
 it(

@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http } from "msw";
 import { Platform } from "react-native";
 
@@ -25,18 +25,15 @@ import {
 import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
+import {
+  approveRequests,
+  RECIPIENT_MOBILE,
+  waitForHomeToOfferTransfer,
+} from "./TransferReviewScreen.helper";
+
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-const RECIPIENT_MOBILE = "012-345 6789";
-
-// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
-async function waitForHomeToOfferTransfer() {
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
-  });
-}
 
 async function openReviewOfRm100(
   startPath: "/" | "/transfer" = "/transfer",
@@ -65,12 +62,6 @@ async function confirmRm100Transfer() {
   const view = await pairPhoneAndOpenReviewOfRm100();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   return view;
-}
-
-function approveRequests() {
-  return sentRequests.filter((request) =>
-    new URL(request.url).pathname.endsWith("/approve"),
-  );
 }
 
 it(

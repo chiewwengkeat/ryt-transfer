@@ -8,7 +8,7 @@ import {
   reportBiometricSensorUnavailable,
 } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { readBankBalanceMinor, sentRequests } from "@/test/mock-bank/mock-bank";
+import { readBankBalanceMinor } from "@/test/mock-bank/mock-bank";
 import {
   enterPinAndApprove,
   moveAppTo,
@@ -22,16 +22,14 @@ import {
 } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
+import {
+  countSent,
+  waitForHomeToOfferTransfer,
+} from "./TransferReviewScreen.helper";
+
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
-async function waitForHomeToOfferTransfer() {
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
-  });
-}
 
 async function openReviewOfRm100(
   startPath: "/" | "/transfer" = "/transfer",
@@ -44,14 +42,6 @@ async function openReviewOfRm100(
   }
   await walkToTransferReview({ note });
   return view;
-}
-
-function countSent(method: string, pathEnd: string) {
-  return sentRequests.filter(
-    (request) =>
-      request.method === method &&
-      new URL(request.url).pathname.endsWith(pathEnd),
-  ).length;
 }
 
 const DEMO_PIN = "246810";

@@ -38,21 +38,17 @@ import {
 import { observedRecords } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
+import {
+  RECIPIENT_MOBILE,
+  waitForHomeToOfferTransfer,
+} from "./TransferReviewScreen.helper";
+
 afterEach(() => {
   jest.restoreAllMocks();
 });
 
-const RECIPIENT_MOBILE = "012-345 6789";
-
 const STILL_BEING_CHECKED =
   "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
-
-// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
-async function waitForHomeToOfferTransfer() {
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
-  });
-}
 
 async function openReviewOfRm100(
   startPath: "/" | "/transfer" = "/transfer",

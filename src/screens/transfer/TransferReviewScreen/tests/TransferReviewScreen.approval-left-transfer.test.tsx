@@ -2,11 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
-import {
-  readBankBalanceMinor,
-  mswServer,
-  sentRequests,
-} from "@/test/mock-bank/mock-bank";
+import { readBankBalanceMinor, mswServer } from "@/test/mock-bank/mock-bank";
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
@@ -24,6 +20,8 @@ import {
 } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
+import { approveRequests } from "./TransferReviewScreen.helper";
+
 const DEMO_PIN = "246810";
 
 async function pairPhoneAndOpenReviewOfRm100() {
@@ -38,12 +36,6 @@ async function confirmRm100Transfer() {
   const view = await pairPhoneAndOpenReviewOfRm100();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   return view;
-}
-
-function approveRequests() {
-  return sentRequests.filter((request) =>
-    new URL(request.url).pathname.endsWith("/approve"),
-  );
 }
 
 it("lets an approval's answer change nothing once the person has left it and started another transfer", async () => {

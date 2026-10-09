@@ -2,13 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
-import { getLookupRecipientOptions } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
-import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import {
-  lookUpTestRecipient,
-  mswServer,
-  sentRequests,
-} from "@/test/mock-bank/mock-bank";
+import { lookUpTestRecipient, mswServer } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   finishOpeningScreen,
@@ -16,20 +10,18 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { reportedScenarios } from "@/test/doubles/native-doubles";
-import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
+import { renderRoute } from "@/test/render/render-route";
+
+import {
+  askOpenReviewsNameCheckAgain,
+  countSent,
+  RECIPIENT_MOBILE,
+  waitForHomeToOfferTransfer,
+} from "./TransferReviewScreen.helper";
 
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-const RECIPIENT_MOBILE = "012-345 6789";
-
-// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
-async function waitForHomeToOfferTransfer() {
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
-  });
-}
 
 async function openReviewOfRm100(
   startPath: "/" | "/transfer" = "/transfer",
@@ -166,18 +158,6 @@ it(
   }),
 );
 
-// Sign-in spares an answered name check, so this stands in for any later path that asks it again.
-function askOpenReviewsNameCheckAgain() {
-  return act(() => {
-    askOpenAppToReadAgain(
-      getLookupRecipientOptions({
-        idType: RecipientIdType.Mobile,
-        idValue: "+60123456789",
-      }).queryKey,
-    );
-  });
-}
-
 it.each([
   [
     "NAME_ENQUIRY_UNAVAILABLE",
@@ -302,14 +282,6 @@ it("says something unexpected stopped the transfer when the name check answers i
   ).toBeOnTheScreen();
   expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
 });
-
-function countSent(method: string, pathEnd: string) {
-  return sentRequests.filter(
-    (request) =>
-      request.method === method &&
-      new URL(request.url).pathname.endsWith(pathEnd),
-  ).length;
-}
 
 it(
   "asks to confirm the recipient again once the name check has expired, and checks the name afresh",

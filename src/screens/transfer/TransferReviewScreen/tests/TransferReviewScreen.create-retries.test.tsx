@@ -2,8 +2,6 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
-import { getLookupRecipientOptions } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
-import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
   readBankBalanceMinor,
   sendToBank,
@@ -12,20 +10,19 @@ import {
 } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { scenarioTest, walkToTransferReview } from "@/test/render/drive-app";
-import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
+import { renderRoute } from "@/test/render/render-route";
+
+import {
+  askOpenReviewsNameCheckAgain,
+  countSent,
+  idempotencyKeysOfCreatesSent,
+  RECIPIENT_MOBILE,
+  waitForHomeToOfferTransfer,
+} from "./TransferReviewScreen.helper";
 
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-const RECIPIENT_MOBILE = "012-345 6789";
-
-// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
-async function waitForHomeToOfferTransfer() {
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
-  });
-}
 
 async function openReviewOfRm100(
   startPath: "/" | "/transfer" = "/transfer",
@@ -38,26 +35,6 @@ async function openReviewOfRm100(
   }
   await walkToTransferReview({ note });
   return view;
-}
-
-// Sign-in spares an answered name check, so this stands in for any later path that asks it again.
-function askOpenReviewsNameCheckAgain() {
-  return act(() => {
-    askOpenAppToReadAgain(
-      getLookupRecipientOptions({
-        idType: RecipientIdType.Mobile,
-        idValue: "+60123456789",
-      }).queryKey,
-    );
-  });
-}
-
-function countSent(method: string, pathEnd: string) {
-  return sentRequests.filter(
-    (request) =>
-      request.method === method &&
-      new URL(request.url).pathname.endsWith(pathEnd),
-  ).length;
 }
 
 it("treats a key the bank says was used for other details as something unexpected", async () => {
@@ -82,16 +59,6 @@ it("treats a key the bank says was used for other details as something unexpecte
   ).toBeOnTheScreen();
   expect(countSent("POST", "/transfers")).toBe(1);
 });
-
-function idempotencyKeysOfCreatesSent() {
-  return sentRequests
-    .filter(
-      (request) =>
-        request.method === "POST" &&
-        new URL(request.url).pathname.endsWith("/transfers"),
-    )
-    .map((request) => request.headers.get("Idempotency-Key"));
-}
 
 it(
   "repeats an unanswered confirmation under its key, says Ryt could not be reached, and repeats it again when tried",

@@ -37,6 +37,8 @@ import {
 } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
+import { approveRequests } from "./TransferReviewScreen.helper";
+
 const DEMO_PIN = "246810";
 
 async function confirmRm100ApprovedByPin() {
@@ -56,12 +58,6 @@ async function confirmRm100Transfer() {
   const view = await pairPhoneAndOpenReviewOfRm100();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   return view;
-}
-
-function approveRequests() {
-  return sentRequests.filter((request) =>
-    new URL(request.url).pathname.endsWith("/approve"),
-  );
 }
 
 it(

@@ -5,7 +5,6 @@ import {
   lookUpTestRecipient,
   readBankBalanceMinor,
   mswServer,
-  sentRequests,
 } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
@@ -16,18 +15,15 @@ import {
 import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
+import {
+  idempotencyKeysOfCreatesSent,
+  RECIPIENT_MOBILE,
+  waitForHomeToOfferTransfer,
+} from "./TransferReviewScreen.helper";
+
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-const RECIPIENT_MOBILE = "012-345 6789";
-
-// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
-async function waitForHomeToOfferTransfer() {
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
-  });
-}
 
 async function openReviewOfRm100(
   startPath: "/" | "/transfer" = "/transfer",
@@ -40,16 +36,6 @@ async function openReviewOfRm100(
   }
   await walkToTransferReview({ note });
   return view;
-}
-
-function idempotencyKeysOfCreatesSent() {
-  return sentRequests
-    .filter(
-      (request) =>
-        request.method === "POST" &&
-        new URL(request.url).pathname.endsWith("/transfers"),
-    )
-    .map((request) => request.headers.get("Idempotency-Key"));
 }
 
 function loseEveryTryOfTheFirstCreate() {
