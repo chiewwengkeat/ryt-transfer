@@ -39,6 +39,7 @@ export enum TransferReadFailure {
 export function useTransferStatusCheck(
   transferId: string,
   customerId: string | undefined,
+  outcomeShown: boolean,
 ) {
   const queryClient = useQueryClient();
   const [openedAtMs] = useState(Date.now);
@@ -100,11 +101,21 @@ export function useTransferStatusCheck(
           transferId,
           outcome,
           reference,
+          // Back can pop the page as it opens, and Home then announces the outcome the person never saw.
+          keepSettled: !outcomeShown,
         });
     })().catch((error: unknown) => {
       reportError(error, { boundary: "pending_transfer" });
     });
-  }, [customerId, transferId, outcome, reference, readFailure, queryClient]);
+  }, [
+    customerId,
+    transferId,
+    outcome,
+    reference,
+    readFailure,
+    queryClient,
+    outcomeShown,
+  ]);
 
   return {
     transfer,

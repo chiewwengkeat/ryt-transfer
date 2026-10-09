@@ -1,6 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { notificationAsync, NotificationFeedbackType } from "expo-haptics";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import {
+  type NativeStackNavigationProp,
+  router,
+  Stack,
+  useLocalSearchParams,
+  useNavigation,
+} from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -10,11 +16,13 @@ import {
   TransferOutcomeScenario,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
 import {
+  settlePendingTransfer,
   TransferReadFailure,
   useTransferStatusCheck,
 } from "@/domains/transfer/hooks/transfer-status-checks";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
-import { trackEvent } from "@/shared/observability/observability";
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
+import { reportError, trackEvent } from "@/shared/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
@@ -36,9 +44,22 @@ export default function TransferResultScreen() {
     checking?: string;
   }>();
   const customerId = useGetPrimaryAccount().data?.customerId;
+  const navigation =
+    useNavigation<NativeStackNavigationProp<Record<string, object>>>();
+  const [pageOpened, setPageOpened] = useState(false);
+  useEffect(
+    () =>
+      navigation.addListener("transitionEnd", ({ data }) => {
+        if (!data.closing) setPageOpened(true);
+      }),
+    [navigation],
+  );
+  const screenOnTop = useIsScreenOnTop();
+  const outcomeShown = pageOpened && screenOnTop;
   const { transfer, readFailure, bankUnreachable } = useTransferStatusCheck(
     transferId,
     customerId,
+    outcomeShown,
   );
   // Opened without the approve call's answer in hand, nothing has confirmed what the approval did.
   const [checkingUnansweredApproval] = useState(
@@ -107,7 +128,19 @@ export default function TransferResultScreen() {
           <ButtonPrimary
             label={t("result.done")}
             onPress={() => {
-              router.dismissTo("/");
+              void (async () => {
+                // Cleared before Home shows, or Home announces the outcome again.
+                if (outcomeSettled && !outcomeShown && customerId !== undefined)
+                  await settlePendingTransfer({
+                    queryClient,
+                    customerId,
+                    transferId,
+                    outcome,
+                  }).catch((error: unknown) => {
+                    reportError(error, { boundary: "pending_transfer" });
+                  });
+                router.dismissTo("/");
+              })();
             }}
           />
         }

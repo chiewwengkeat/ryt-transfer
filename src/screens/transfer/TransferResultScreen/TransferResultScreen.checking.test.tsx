@@ -162,9 +162,12 @@ it(
 
     await renderRoute("/");
 
-    expect(
-      await screen.findByRole("header", { name: "Transfer not sent" }),
-    ).toBeOnTheScreen();
+    const heading = await screen.findByRole("header", {
+      name: "Transfer not sent",
+    });
+    expect(heading).toBeOnTheScreen();
+    // Jest plays no screen transitions: this is the phone's signal that the page has finished opening.
+    await fireEvent(heading, "appear");
     expect(
       screen.getByText(
         "It was not sent because your balance or limit changed — no money moved.",

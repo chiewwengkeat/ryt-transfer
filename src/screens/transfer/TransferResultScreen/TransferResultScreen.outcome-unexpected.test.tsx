@@ -101,9 +101,10 @@ it("keeps an earlier transfer the launch check finds with an outcome the app can
 
   const view = await renderRoute("/");
 
-  expect(
-    await screen.findByRole("header", { name: "Transfer sent" }),
-  ).toBeOnTheScreen();
+  const heading = await screen.findByRole("header", { name: "Transfer sent" });
+  expect(heading).toBeOnTheScreen();
+  // Jest plays no screen transitions: this is the phone's signal that the page has finished opening.
+  await fireEvent(heading, "appear");
   await waitFor(async () => {
     expect(await listPendingTransfers(customerId)).toEqual([
       expect.objectContaining({

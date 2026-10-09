@@ -59,6 +59,13 @@ async function sendRm100FromHome() {
   return view;
 }
 
+// Jest plays no screen transitions: this is the phone's signal that the page has finished opening.
+async function finishOpeningThePage(
+  elementOnThePage: Parameters<typeof fireEvent>[0],
+) {
+  await fireEvent(elementOnThePage, "appear");
+}
+
 function transferIdIn(pathname: string | undefined) {
   return pathname?.replace("/transfer/result/", "") ?? "";
 }
@@ -643,9 +650,11 @@ it(
   scenarioTest("transfer.processing", async () => {
     const customerId = await readCustomerId();
     await sendRm100FromHome();
-    expect(
-      await screen.findByRole("header", { name: "Transfer processing" }),
-    ).toBeOnTheScreen();
+    const heading = await screen.findByRole("header", {
+      name: "Transfer processing",
+    });
+    expect(heading).toBeOnTheScreen();
+    await finishOpeningThePage(heading);
     await waitFor(async () => {
       expect(await listPendingTransfers(customerId)).toEqual([
         expect.objectContaining({ stage: PendingTransferStage.Processing }),
@@ -888,11 +897,11 @@ it(
 
     const relaunched = await relaunchApp(view);
 
-    expect(
-      await screen.findByRole("header", {
-        name: "Checking your last transfer",
-      }),
-    ).toBeOnTheScreen();
+    const heading = await screen.findByRole("header", {
+      name: "Checking your last transfer",
+    });
+    expect(heading).toBeOnTheScreen();
+    await finishOpeningThePage(heading);
     expect(
       screen.getByText(
         "The app closed before your last transfer's answer arrived. It's being checked, and its outcome will show here — not confirmed yet.",
@@ -941,9 +950,11 @@ it(
 
     await renderRoute("/");
 
-    expect(
-      await screen.findByRole("header", { name: "Transfer sent" }),
-    ).toBeOnTheScreen();
+    const heading = await screen.findByRole("header", {
+      name: "Transfer sent",
+    });
+    expect(heading).toBeOnTheScreen();
+    await finishOpeningThePage(heading);
     await waitFor(async () => {
       expect(await listPendingTransfers(customerId)).toEqual([]);
     });
