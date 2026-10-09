@@ -53,11 +53,13 @@ export function isTransferDraftOpen(flow: TransferFlowState) {
   return "draft" in flow && flow.draft.recipient !== undefined;
 }
 
-export function isTransferBeingSent(flow: TransferFlowState) {
+// Done too: review stays drawn until the result page covers it, and must not offer to send again meanwhile.
+export function isTransferSentOrBeingSent(flow: TransferFlowState) {
   return (
     flow.step === TransferFlowStep.Creating ||
     flow.step === TransferFlowStep.Approving ||
-    flow.step === TransferFlowStep.Submitting
+    flow.step === TransferFlowStep.Submitting ||
+    flow.step === TransferFlowStep.Done
   );
 }
 

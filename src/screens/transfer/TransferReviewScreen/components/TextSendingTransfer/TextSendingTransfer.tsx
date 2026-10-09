@@ -8,9 +8,12 @@ import TextBody from "@/shared/ui/TextBody/TextBody";
 
 export default function TextSendingTransfer() {
   const { t } = useTranslation("transfer");
-  const answerAwaited = useTransferFlow(
-    (flow) => flow.step === TransferFlowStep.Submitting,
+  // Through Done as well: review stays drawn until the result page covers it.
+  const approvalSent = useTransferFlow(
+    (flow) =>
+      flow.step === TransferFlowStep.Submitting ||
+      flow.step === TransferFlowStep.Done,
   );
-  if (!answerAwaited) return null;
+  if (!approvalSent) return null;
   return <TextBody>{t("common.biometrics_recognised.body")}</TextBody>;
 }

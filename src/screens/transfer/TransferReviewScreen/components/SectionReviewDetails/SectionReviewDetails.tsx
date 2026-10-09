@@ -11,7 +11,7 @@ import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/look
 import { LookupRecipientErrorCode } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import {
-  isTransferBeingSent,
+  isTransferSentOrBeingSent,
   TransferFlowScenario,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
@@ -36,7 +36,7 @@ interface Props {
 export default function SectionReviewDetails({ draft }: Props) {
   const { t } = useTranslation("transfer");
   const lookup = useLookupRecipient(draft.recipient);
-  const sending = useTransferFlow(isTransferBeingSent);
+  const sending = useTransferFlow(isTransferSentOrBeingSent);
   const code =
     lookup.error instanceof TransportError ? lookup.error.code : undefined;
   // Never while sending: "no money moved" can be false by then, and a retry mints a new recipient reference.

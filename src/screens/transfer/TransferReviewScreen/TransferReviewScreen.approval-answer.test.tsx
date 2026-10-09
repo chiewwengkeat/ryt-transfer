@@ -75,8 +75,29 @@ it("opens the result page straight from review, showing no other screen of the t
   );
 });
 
-// ⛔ Stands in for Back skipping the result page: review holds Back until the flow is done, and Jest mounts
-// the page in that same render, so a pressed Back always arrives too late here.
+it("keeps review sending, with Transfer and Back held, from a PIN approval's answer until the result page covers it", async () => {
+  await reviewRm100Transfer();
+  // ⛔ Held shut, the result page leaves on screen what review shows until it covers review: on a phone, one commit.
+  const resultPageAsked = jest.spyOn(router, "push").mockReturnValue(undefined);
+  const homeAsked = jest.spyOn(router, "dismissTo").mockReturnValue(undefined);
+  try {
+    for (const label of ["Use PIN instead", ..."246810", "Approve"])
+      await fireEvent.press(await screen.findByRole("button", { name: label }));
+    await waitFor(() => expect(resultPageAsked).toHaveBeenCalled());
+    const requestsSentBeforePresses = sentRequests.length;
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    await pressHardwareBack();
+
+    expect(screen.getByText(SENDING_MESSAGE)).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeBusy();
+    expect(screen.queryByText("Use PIN instead")).toBeNull();
+    expect(sentRequests).toHaveLength(requestsSentBeforePresses);
+  } finally {
+    for (const spy of [resultPageAsked, homeAsked]) spy.mockRestore();
+  }
+});
+
+// ⛔ Stands in for Back skipping the result page: review holds Back until that page covers it, too late to press here.
 function dropTheResultPageAsItOpens() {
   const pushRoute = router.push;
   return jest

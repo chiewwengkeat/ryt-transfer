@@ -15,7 +15,7 @@ import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/look
 import {
   ApprovalPath,
   dispatchTransferFlow,
-  isTransferBeingSent,
+  isTransferSentOrBeingSent,
   TransferFlowActionType,
   TransferFlowScenario,
   TransferFlowStep,
@@ -44,7 +44,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const lookup = useLookupRecipient(draft.recipient);
   const createTransfer = useCreateTransfer();
   const sendTransferApproval = useSendTransferApproval();
-  const transferBeingSent = useTransferFlow(isTransferBeingSent);
+  const transferSentOrBeingSent = useTransferFlow(isTransferSentOrBeingSent);
   const amountRefusedAsShort = useTransferFlow(
     (flow) =>
       flow.step === TransferFlowStep.Reviewing &&
@@ -161,7 +161,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     <>
       <ButtonPrimary
         label={t("review.transfer")}
-        loading={transferBeingSent || lookup.isFetching || checkingPhone}
+        loading={transferSentOrBeingSent || lookup.isFetching || checkingPhone}
         disabledReason={transferDisabledReason}
         onPress={() => {
           void createAndApproveTransfer(ApprovalPath.Biometric).catch(() =>
@@ -171,7 +171,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       />
       <ButtonUsePinInstead
         pinTryAvailable={
-          !transferBeingSent &&
+          !transferSentOrBeingSent &&
           !lookup.isFetching &&
           !checkingPhone &&
           transferDisabledReason === undefined &&
