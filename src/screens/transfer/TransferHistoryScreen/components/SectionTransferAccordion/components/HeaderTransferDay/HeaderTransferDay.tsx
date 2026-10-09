@@ -77,7 +77,7 @@ export default function HeaderTransferDay({
           </TextBody>
         </View>
         {netText !== null && (
-          <TextBody strong tone={"secondary"}>
+          <TextBody strong tone="secondary">
             {netText}
           </TextBody>
         )}

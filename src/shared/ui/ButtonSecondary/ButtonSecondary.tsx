@@ -46,6 +46,6 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
     backgroundColor: colors.surface,
   },
-  buttonPressed: { opacity: 0.8, backgroundColor: "#DBDBDB" },
+  buttonPressed: { opacity: 0.8, backgroundColor: colors.surfacePressed },
   label: { ...typography.label, color: colors.accent, textAlign: "center" },
 });

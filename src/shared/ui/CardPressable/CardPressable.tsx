@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
 
-import { minTouchTarget } from "@/shared/theme/theme";
+import { colors, minTouchTarget } from "@/shared/theme/theme";
 import Card from "@/shared/ui/Card/Card";
 
 interface Props {
@@ -44,5 +44,5 @@ export default function CardPressable({
 
 const styles = StyleSheet.create({
   card: { minHeight: minTouchTarget, justifyContent: "center" },
-  cardPressed: { backgroundColor: "#DBDBDB", opacity: 0.4 },
+  cardPressed: { backgroundColor: colors.surfacePressed, opacity: 0.4 },
 });

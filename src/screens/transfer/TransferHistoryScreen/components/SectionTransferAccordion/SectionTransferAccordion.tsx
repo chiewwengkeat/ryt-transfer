@@ -1,6 +1,7 @@
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { StyleSheet } from "react-native";
 
 import {
   askForNextTransferHistoryPage,
@@ -8,6 +9,7 @@ import {
   resetTransferHistory,
   type useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
+import { spacing } from "@/shared/theme/theme";
 
 import HeaderTransferDay from "./components/HeaderTransferDay/HeaderTransferDay";
 import ItemTransfer from "./components/ItemTransfer/ItemTransfer";
@@ -15,8 +17,6 @@ import ViewTransferHistoryFooter from "./components/ViewTransferHistoryFooter/Vi
 import { useMalaysianToday } from "./hooks/use-malaysian-today";
 import { useTransferHistoryRenderMeasurement } from "./hooks/use-transfer-history-render-measurement";
 import { reuseTransferDayHeaderRow } from "./SectionTransferAccordion.helper";
-import { StyleSheet } from "react-native";
-import { spacing } from "@/shared/theme/theme";
 
 interface Props {
   transferHistory: ReturnType<typeof useListTransfers>;
