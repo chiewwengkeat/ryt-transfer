@@ -19,7 +19,7 @@ const MARKERS = [
   },
   { source: "msw", text: "msw-marker", carriedBy: ["demo", "development"] },
   {
-    source: "src/shared/observability/render-trace.ts",
+    source: "src/shared/observability/render-trace/render-trace.ts",
     text: "trace-marker",
     carriedBy: ["development"],
   },
@@ -146,13 +146,13 @@ test("ships one marker with text for each mock group and msw's core, carried by 
     ).sort(),
     [
       "msw's request-handling core: demo and development",
+      "src/mocks/bank/bank.ts: demo and development",
       "src/mocks/bank: demo and development",
-      "src/mocks/handlers: demo and development",
+      "src/mocks/demo-layer/demo-layer.ts: demo and development",
       "src/mocks/scenarios: demo and development",
       "src/mocks/switcher: demo and development",
-      "src/mocks/transport: demo and development",
-      "src/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/hooks/use-transfer-history-render-measurement.ts: development",
-      "src/shared/observability/render-trace.ts: development",
+      "src/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/hooks/use-transfer-history-render-measurement/use-transfer-history-render-measurement.ts: development",
+      "src/shared/observability/render-trace/render-trace.ts: development",
     ],
   );
   for (const { source, text } of BUNDLE_MARKERS)
@@ -172,7 +172,7 @@ test("refuses a marker that has no text, before running any export", () => {
   assert.equal(fake.exportCalls.length, 0);
 });
 
-test("refuses the marker for src/shared/observability/render-trace.ts when it has no text", () => {
+test("refuses the marker for src/shared/observability/render-trace/render-trace.ts when it has no text", () => {
   const fake = fakeExpoExport();
 
   assert.throws(
@@ -180,7 +180,7 @@ test("refuses the marker for src/shared/observability/render-trace.ts when it ha
       checkWith(fake, {
         markers: [...MARKERS.slice(0, 2), { ...MARKERS[2], text: "" }],
       }),
-    /The marker for src\/shared\/observability\/render-trace\.ts has no text/,
+    /The marker for src\/shared\/observability\/render-trace\/render-trace\.ts has no text/,
   );
   assert.equal(fake.exportCalls.length, 0);
 });

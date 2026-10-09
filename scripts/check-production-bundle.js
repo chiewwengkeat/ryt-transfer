@@ -15,7 +15,7 @@ const BUNDLE_MARKERS = [
   },
   // Not a route path: the scenarios bring those into a bundle that holds no handler.
   {
-    source: "src/mocks/handlers",
+    source: "src/mocks/bank/bank.ts",
     text: "transferHandlers",
     carriedBy: DEMO_LAYER_VARIANTS,
   },
@@ -32,7 +32,7 @@ const BUNDLE_MARKERS = [
   },
   // Not one of its literals: msw's own packages and React Native's fetch carry those too.
   {
-    source: "src/mocks/transport",
+    source: "src/mocks/demo-layer/demo-layer.ts",
     text: "createDemoSend",
     carriedBy: DEMO_LAYER_VARIANTS,
   },
@@ -42,13 +42,13 @@ const BUNDLE_MARKERS = [
     carriedBy: DEMO_LAYER_VARIANTS,
   },
   {
-    source: "src/shared/observability/render-trace.ts",
+    source: "src/shared/observability/render-trace/render-trace.ts",
     text: "ryt-render-trace",
     carriedBy: ["development"],
   },
   {
     source:
-      "src/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/hooks/use-transfer-history-render-measurement.ts",
+      "src/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/hooks/use-transfer-history-render-measurement/use-transfer-history-render-measurement.ts",
     text: "pullToRefreshWithNothingNew",
     carriedBy: ["development"],
   },

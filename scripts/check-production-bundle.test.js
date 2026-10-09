@@ -17,7 +17,7 @@ const MARKERS = [
   },
   { source: "msw", text: "msw-marker", carriedBy: ["demo", "development"] },
   {
-    source: "src/shared/observability/render-trace.ts",
+    source: "src/shared/observability/render-trace/render-trace.ts",
     text: "trace-marker",
     carriedBy: ["development"],
   },
@@ -187,7 +187,7 @@ test("fails a development export missing the render trace, asking for a string n
   assert.match(failures[0], /^development android export lacks "trace-marker"/);
   assert.match(
     failures[0],
-    /and that no code outside src\/shared\/observability\/render-trace\.ts contains\.$/,
+    /and that no code outside src\/shared\/observability\/render-trace\/render-trace\.ts contains\.$/,
   );
 });
 
