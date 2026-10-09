@@ -7,18 +7,20 @@ import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
 interface Props {
   message: string;
+  announce: boolean;
   tryAgainLabel: string;
   onTryAgain: () => void;
 }
 export default function BannerOutOfDate({
   message,
+  announce,
   tryAgainLabel,
   onTryAgain,
 }: Props) {
   const phoneReportsConnection = usePhoneReportsConnection();
   return (
     <View style={styles.banner}>
-      <BannerNotice message={message} />
+      <BannerNotice message={message} announce={announce} />
       {phoneReportsConnection && (
         <ButtonSecondary label={tryAgainLabel} onPress={onTryAgain} />
       )}

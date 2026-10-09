@@ -11,6 +11,7 @@ import {
   trimTransferHistoryToFirstPage,
   useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
+import { isSessionEndFailure } from "@/shared/http/transport-error";
 import { usePhoneReportsConnection } from "@/shared/platform/offline";
 import { colors, spacing } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
@@ -28,6 +29,7 @@ export default function TransferHistoryScreen() {
   const queryClient = useQueryClient();
   const transferHistory = useListTransfers();
   const phoneReportsConnection = usePhoneReportsConnection();
+  const failureIsSessionEnd = isSessionEndFailure(transferHistory.error);
   // Clear on each open: a failure left from an earlier visit would be announced as this one's.
   const [refreshFailed, setRefreshFailed] = useState(false);
   // The query keeps one status, which a page fetch after a failed refresh overwrites: only a refresh's outcome counts.
@@ -83,6 +85,7 @@ export default function TransferHistoryScreen() {
         >
           <BannerNotice
             tone="negative"
+            announce={!failureIsSessionEnd}
             message={t("history.first_page_failed")}
           />
         </ViewScreenFrame>
@@ -91,6 +94,7 @@ export default function TransferHistoryScreen() {
           {(refreshFailed || transferHistory.isPaused) && (
             <View style={styles.outOfDate}>
               <BannerOutOfDate
+                announce={!failureIsSessionEnd}
                 message={t("history.out_of_date")}
                 tryAgainLabel={t("history.retry")}
                 onTryAgain={() => {

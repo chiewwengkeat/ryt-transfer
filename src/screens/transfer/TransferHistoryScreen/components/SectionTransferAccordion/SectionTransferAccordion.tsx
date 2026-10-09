@@ -95,7 +95,9 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
         <ViewTransferHistoryFooter
           hasNextPage={transferHistory.hasNextPage}
           isFetchingNextPage={transferHistory.isFetchingNextPage}
-          isFetchNextPageError={transferHistory.isFetchNextPageError}
+          fetchNextPageFailure={
+            transferHistory.isFetchNextPageError ? transferHistory.error : null
+          }
           onRetry={() => {
             void transferHistory.fetchNextPage();
           }}

@@ -269,6 +269,50 @@ it("announces no failure left from an earlier visit, only one from this visit", 
   expect(announce).toHaveBeenCalledWith(OUT_OF_DATE);
 });
 
+it("says no failure of a read only the session's end failed, keeping the History row, and shows the bank's once they sign in again", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
+  const recoverDetails = failTransferDetails(401);
+  await renderRoute("/transfer-history");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  );
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  // ⛔ Keep this wait: pressed sooner, the view lifts before the failure shows, and this passes either way.
+  await screen.findByText(OUT_OF_DATE, { includeHiddenElements: true });
+  recoverDetails();
+
+  await fireEvent.press(signInAgain);
+
+  expect(await screen.findByText("Lunch")).toBeOnTheScreen();
+  expect(announce).not.toHaveBeenCalledWith(OUT_OF_DATE);
+});
+
+it("says no failure of a link's read only the session's end failed, and shows the transfer once they sign in again", async () => {
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  serveTransferHistoryPages([[]]);
+  serveTransferDetails(AISYAH);
+  const recoverDetails = failTransferDetails(401);
+  await renderRoute(`/transfer-history/${AISYAH.transferId}`);
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  // ⛔ Keep this wait: pressed sooner, the view lifts before the failure shows, and this passes either way.
+  await screen.findByText("Couldn't load this transfer.", {
+    includeHiddenElements: true,
+  });
+  recoverDetails();
+
+  await fireEvent.press(signInAgain);
+
+  expect(await screen.findByText("Aisyah Rahman")).toBeOnTheScreen();
+  expect(announce).not.toHaveBeenCalledWith("Couldn't load this transfer.");
+});
+
 it.each([
   ["a sent transfer", {}, "Successful — money moved", "Completed"],
   [

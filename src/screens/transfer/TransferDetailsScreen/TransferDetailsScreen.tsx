@@ -2,7 +2,10 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import { TransportError } from "@/shared/http/transport-error";
+import {
+  isSessionEndFailure,
+  TransportError,
+} from "@/shared/http/transport-error";
 import { usePhoneReportsConnection } from "@/shared/platform/offline";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
@@ -19,6 +22,7 @@ export default function TransferDetailsScreen() {
   const { transferQuery, transfer } =
     useGetTransferWithHistoryPlaceholder(transferId);
   const phoneReportsConnection = usePhoneReportsConnection();
+  const failureIsSessionEnd = isSessionEndFailure(transferQuery.error);
 
   return (
     <>
@@ -43,6 +47,7 @@ export default function TransferDetailsScreen() {
           {((transferQuery.isError && transferQuery.isFetchedAfterMount) ||
             transferQuery.isPaused) && (
             <BannerOutOfDate
+              announce={!failureIsSessionEnd}
               message={t("details.out_of_date")}
               tryAgainLabel={t("details.retry")}
               onTryAgain={() => {
@@ -65,7 +70,11 @@ export default function TransferDetailsScreen() {
             ) : undefined
           }
         >
-          <BannerNotice tone="negative" message={t("details.failed")} />
+          <BannerNotice
+            tone="negative"
+            announce={!failureIsSessionEnd}
+            message={t("details.failed")}
+          />
         </ViewScreenFrame>
       ) : (
         <Loader />

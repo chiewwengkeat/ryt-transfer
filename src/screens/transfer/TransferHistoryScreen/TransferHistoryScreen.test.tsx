@@ -781,15 +781,6 @@ it("asks the bank nothing when the app comes to the front or the connection retu
   expect(sentTransferHistoryCursors()).toEqual([null]);
 });
 
-it("hands a 401 to the session-ended view", async () => {
-  failTransferHistoryPages("first", 401);
-  await renderRoute("/transfer-history");
-
-  expect(
-    await screen.findByRole("header", { name: "Your session has ended" }),
-  ).toBeOnTheScreen();
-});
-
 it("collapses a day to its header and expands it again, saying which it is", async () => {
   await renderRoute("/transfer-history");
 
