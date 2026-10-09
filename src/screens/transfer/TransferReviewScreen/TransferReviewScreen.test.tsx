@@ -1649,6 +1649,29 @@ it(
   }),
 );
 
+it(
+  "says the too-many-checks words once more when Try again after the minute is refused too",
+  scenarioTest("transfer.too_many_name_checks", async () => {
+    const tooManyChecks =
+      "Too many name checks in a short time. Try again in a minute.";
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+    await openReviewOfRm100();
+    await screen.findByText(tooManyChecks);
+    await act(() => jest.advanceTimersByTimeAsync(60_000));
+    const announcementsBeforeTryAgain = announce.mock.calls.length;
+
+    await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+    await act(() => jest.advanceTimersByTimeAsync(5_000));
+
+    expect(screen.getByText(tooManyChecks)).toBeOnTheScreen();
+    expect(
+      announce.mock.calls
+        .slice(announcementsBeforeTryAgain)
+        .filter(([message]) => message === tooManyChecks),
+    ).toHaveLength(1);
+  }),
+);
+
 // Sign-in spares an answered name check, so this stands in for any later path that asks it again.
 function askOpenReviewsNameCheckAgain() {
   return act(() => {
