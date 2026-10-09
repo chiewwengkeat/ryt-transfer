@@ -28,6 +28,15 @@ export function isSessionEndFailure(error: unknown) {
   );
 }
 
+export function isUnansweredReadFailure(error: unknown) {
+  return (
+    error instanceof TransportError &&
+    (error.kind === TransportErrorKind.Network ||
+      error.kind === TransportErrorKind.Timeout ||
+      (error.kind === TransportErrorKind.Http && (error.status ?? 0) >= 500))
+  );
+}
+
 export function isUnansweredWriteFailure(error: unknown) {
   return (
     error instanceof TransportError &&

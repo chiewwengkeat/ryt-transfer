@@ -10,8 +10,7 @@ import {
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import {
   isSessionEndFailure,
-  TransportError,
-  TransportErrorKind,
+  isUnansweredReadFailure,
 } from "@/shared/http/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
 import { useIsOffline } from "@/shared/platform/offline";
@@ -51,11 +50,7 @@ export default function CardBalance({
   const failureScenario =
     failure === null
       ? undefined
-      : failure instanceof TransportError &&
-          (failure.kind === TransportErrorKind.Network ||
-            failure.kind === TransportErrorKind.Timeout ||
-            (failure.kind === TransportErrorKind.Http &&
-              (failure.status ?? 0) >= 500))
+      : isUnansweredReadFailure(failure)
         ? "balance_unavailable"
         : unexpectedScenario;
   // After sign-in this stays shown until the card's reads answer again.
