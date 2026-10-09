@@ -27,12 +27,17 @@ export default function ButtonLanguage() {
         // Starts with the text on screen, so voice control can press the button by what it shows.
         accessibilityLabel={`${shortName}, ${t("button_language.label")}`}
         accessibilityLanguage={i18n.language}
+        // The navigation bar never grows, so the label stops at what it holds; past that, iOS shows it on a long press.
+        accessibilityShowsLargeContentViewer
+        accessibilityLargeContentTitle={shortName}
         onPress={() => {
           setSheetOpen(true);
         }}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
-        <Text style={styles.label}>{shortName}</Text>
+        <Text maxFontSizeMultiplier={1.5} style={styles.label}>
+          {shortName}
+        </Text>
       </Pressable>
       {sheetOpen && (
         <BottomSheetLanguage
