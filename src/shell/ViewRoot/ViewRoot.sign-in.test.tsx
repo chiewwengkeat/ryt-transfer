@@ -1,9 +1,4 @@
-import {
-  act,
-  fireEvent,
-  screen,
-  waitFor,
-} from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
 import { lookUpTestRecipient } from "@/test/bank-client";
