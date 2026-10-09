@@ -6,12 +6,12 @@ import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
-import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "../state/refresh-after-approval";
+import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
 import {
   TransferFlowStep,
   transferFlowStore,
   useTransferFlow,
-} from "../state/transfer-flow";
+} from "@/screens/transfer/flow-store/transfer-flow";
 import ButtonConfirmTransfer from "./components/ButtonConfirmTransfer/ButtonConfirmTransfer";
 import HeaderReview from "./components/HeaderReview/HeaderReview";
 import SectionReviewDetails from "./components/SectionReviewDetails/SectionReviewDetails";

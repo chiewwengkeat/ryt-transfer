@@ -17,15 +17,15 @@ import {
 import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
 import { settlePendingTransfer } from "@/domains/transfer/hooks/transfer-status-checks";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
-import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
+import { isFlowNoLongerOnTransfer } from "@/screens/transfer/flow-store/approval-events";
+import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
   TransferHoldKind,
   transferFlowStore,
-} from "@/screens/transfer/state/transfer-flow";
-import type { ApprovalEvent } from "@/screens/transfer/state/transfer-flow.type";
+} from "@/screens/transfer/flow-store/transfer-flow";
+import type { ApprovalEvent } from "@/screens/transfer/flow-store/transfer-flow.type";
 import { reportError } from "@/shared/observability/observability";
 
 export async function settleApprovalAnswer({

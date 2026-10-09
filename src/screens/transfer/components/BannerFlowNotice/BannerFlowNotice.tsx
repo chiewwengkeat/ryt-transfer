@@ -9,7 +9,7 @@ import {
 import {
   TransferFlowStep,
   useTransferFlow,
-} from "@/screens/transfer/state/transfer-flow";
+} from "@/screens/transfer/flow-store/transfer-flow";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";

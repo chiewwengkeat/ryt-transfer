@@ -17,8 +17,8 @@ import {
 import {
   isTransferSentOrBeingSent,
   useTransferFlow,
-} from "@/screens/transfer/state/transfer-flow";
-import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
+} from "@/screens/transfer/flow-store/transfer-flow";
+import type { TransferDraft } from "@/screens/transfer/flow-store/transfer-flow.type";
 import {
   isSessionEndFailure,
   TransportError,

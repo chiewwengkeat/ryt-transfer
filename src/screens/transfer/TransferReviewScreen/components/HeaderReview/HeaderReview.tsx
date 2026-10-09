@@ -6,7 +6,7 @@ import { BackHandler } from "react-native";
 import {
   isTransferSentOrBeingSent,
   useTransferFlow,
-} from "@/screens/transfer/state/transfer-flow";
+} from "@/screens/transfer/flow-store/transfer-flow";
 
 export default function HeaderReview() {
   const { t } = useTranslation("transfer");

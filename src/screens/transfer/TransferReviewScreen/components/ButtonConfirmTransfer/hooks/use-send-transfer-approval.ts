@@ -19,15 +19,15 @@ import type { ApproveTransferRequest } from "@/domains/transfer/api/approve-tran
 import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
 import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
+import { isFlowNoLongerOnTransfer } from "@/screens/transfer/flow-store/approval-events";
 import {
   ApprovalPath,
   dispatchTransferFlow,
   TransferFlowActionType,
   TransferFlowStep,
   transferFlowStore,
-} from "@/screens/transfer/state/transfer-flow";
-import type { TransferFlowNotice } from "@/screens/transfer/state/transfer-flow.type";
+} from "@/screens/transfer/flow-store/transfer-flow";
+import type { TransferFlowNotice } from "@/screens/transfer/flow-store/transfer-flow.type";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import { formatMoney } from "@/shared/lib/money/money";
 import { reportError } from "@/shared/observability/observability";

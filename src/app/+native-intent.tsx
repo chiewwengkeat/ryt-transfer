@@ -3,7 +3,7 @@ import { collectManifestSchemes } from "expo-linking";
 import {
   isTransferDraftOpen,
   transferFlowStore,
-} from "@/screens/transfer/state/transfer-flow";
+} from "@/screens/transfer/flow-store/transfer-flow";
 
 const LINKABLE_PATHS = [
   /^\/$/,

@@ -57,7 +57,7 @@ import {
 } from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
-import { TransferFlowStep } from "../state/transfer-flow";
+import { TransferFlowStep } from "@/screens/transfer/flow-store/transfer-flow";
 
 afterEach(() => {
   jest.restoreAllMocks();

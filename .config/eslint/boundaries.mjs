@@ -127,7 +127,7 @@ const flowStateFiles = {
   element: {
     type: "screens-folder",
     fileInternalPath: [
-      "state/**",
+      "flow-store/**",
       "flow-store/flow-store.ts",
       "flow-store/flow-store.type.ts",
     ],
