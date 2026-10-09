@@ -205,6 +205,12 @@ it.each([
       reportBiometricSensorUnavailable("BIOMETRY_NOT_AVAILABLE");
     },
   ],
+  [
+    "the phone has locked face and fingerprint after too many attempts",
+    () => {
+      reportBiometricSensorUnavailable("BIOMETRY_LOCKOUT");
+    },
+  ],
 ])(
   "creates no transfer that only the PIN could approve once the bank has locked the PIN, when %s",
   async (_, leaveOnlyThePinToApprove) => {

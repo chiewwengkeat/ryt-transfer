@@ -123,7 +123,8 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       (path === ApprovalPath.Pin ||
         !approvalSettingsStore.getState().biometricApprovalOn ||
         sensorRefusalOutcome === BiometricSignOutcome.NotSetUp ||
-        sensorRefusalOutcome === BiometricSignOutcome.NoSensor)
+        sensorRefusalOutcome === BiometricSignOutcome.NoSensor ||
+        sensorRefusalOutcome === BiometricSignOutcome.LockedOut)
     ) {
       // ⛔ Dispatched first, since it reports the scenario: a locked PIN is reported as its sheet opens.
       dispatchTransferFlow({
