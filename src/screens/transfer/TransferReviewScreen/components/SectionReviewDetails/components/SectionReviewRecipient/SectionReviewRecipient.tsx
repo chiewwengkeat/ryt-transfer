@@ -4,7 +4,7 @@ import type {
   LookupRecipientResponse,
   RecipientIdType,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import RowDetail from "@/shared/ui/RowDetail/RowDetail";
+import RowDetail from "@/screens/transfer/components/RowDetail/RowDetail";
 
 interface Props {
   recipient: LookupRecipientResponse["recipient"];

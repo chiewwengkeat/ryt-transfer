@@ -20,6 +20,16 @@ function findPlacedPiece(file) {
       };
     }
   }
+  const isInBaseComponent =
+    parts[1] === "shared" && parts[2] === "ui" && /^[A-Z]/.test(parts[3]);
+  if (isInBaseComponent && parts.length > 4)
+    return {
+      path: parts.slice(0, 4).join("/"),
+      container: "src/shared/ui",
+      kind: "components",
+      isFile: false,
+      isBaseComponent: true,
+    };
   return null;
 }
 
@@ -143,6 +153,8 @@ function checkPlacementLadder(rootDir) {
       );
   for (const placed of placedByPath.values()) {
     const { users, usedByRoute } = findAppUsersOf(placed, edgesByModule);
+    // A base component may be built before its first screen, and a route may render one alone.
+    if (users.length === 0 && placed.isBaseComponent) continue;
     if (users.length === 0) {
       failures.push(
         usedByRoute
@@ -189,6 +201,12 @@ function checkPlacementLadder(rootDir) {
           `${placed.path}: used across screens folders or outside them (${shownUsers}) - it belongs in src/domains/<area>/${placed.kind}/`,
         );
       }
+    } else if (placed.isBaseComponent) {
+      // Users spread over several shared modules keep a base component in src/shared/ui/.
+      if (!/^src\/shared\/[^/]+$/.test(owner))
+        failures.push(
+          `${placed.path}: every user sits in ${owner}/ (${shownUsers}) - it belongs in ${owner}/components/ until a second slice uses it`,
+        );
     } else if (placed.container !== `${owner}/${placed.kind}`) {
       failures.push(
         `${placed.path}: every user sits in ${owner}/ (${shownUsers}) - it belongs in ${owner}/${placed.kind}/`,

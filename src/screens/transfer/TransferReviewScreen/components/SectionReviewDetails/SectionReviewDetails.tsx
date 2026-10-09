@@ -24,7 +24,7 @@ import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
-import RowDetail from "@/shared/ui/RowDetail/RowDetail";
+import RowDetail from "@/screens/transfer/components/RowDetail/RowDetail";
 import { READERS_OWN_FOCUS_WAIT_MS } from "@/shared/ui/TextHeading/TextHeading";
 
 import SectionReviewAmount from "./components/SectionReviewAmount/SectionReviewAmount";

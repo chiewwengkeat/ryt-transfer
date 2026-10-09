@@ -11,7 +11,7 @@ import { useTransferStatusWord } from "@/screens/transfer/hooks/use-transfer-sta
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { formatMoney } from "@/shared/lib/money/money";
 import Card from "@/shared/ui/Card/Card";
-import RowDetail from "@/shared/ui/RowDetail/RowDetail";
+import RowDetail from "@/screens/transfer/components/RowDetail/RowDetail";
 
 interface Props {
   transfer: NonNullable<ReturnType<typeof useGetTransfer>["data"]>;
