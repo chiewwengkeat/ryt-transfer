@@ -7,7 +7,7 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
-import { biometricPromptsShown } from "@/test/biometrics-double";
+import { biometricPromptsShown } from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { relaunchApp, renderRoute } from "@/test/render-route";

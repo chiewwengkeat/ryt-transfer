@@ -18,7 +18,7 @@ import {
 import {
   biometricPromptsShown,
   holdNextBiometricPrompt,
-} from "@/test/biometrics-double";
+} from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { observedRecords } from "@/test/harness/recording-sink";

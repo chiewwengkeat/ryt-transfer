@@ -7,7 +7,7 @@ import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { requestJson } from "@/shared/http/transport";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import { lookUpTestRecipient } from "@/test/bank-client";
-import { biometricPromptsShown } from "@/test/biometrics-double";
+import { biometricPromptsShown } from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";

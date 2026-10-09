@@ -8,7 +8,7 @@ import {
   biometricPromptsShown,
   biometricsLibraryDouble,
   holdDeviceIntegrityChecks,
-} from "@/test/biometrics-double";
+} from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";

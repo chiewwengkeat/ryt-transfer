@@ -8,7 +8,7 @@ import { lookUpTestRecipient } from "@/test/bank-client";
 import {
   biometricPromptsShown,
   holdNextBiometricPrompt,
-} from "@/test/biometrics-double";
+} from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import {
   observedRecords,

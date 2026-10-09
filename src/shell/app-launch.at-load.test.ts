@@ -1,4 +1,4 @@
-import { deviceIntegrityChecksAsked } from "@/test/biometrics-double";
+import { deviceIntegrityChecksAsked } from "@/test/harness/biometrics-double";
 import {
   appSwitcherBlurIntensity,
   isScreenCaptureBlocked,

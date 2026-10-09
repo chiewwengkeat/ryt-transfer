@@ -2,7 +2,7 @@ import { waitFor } from "@testing-library/react-native";
 
 import type * as ApprovalKeys from "@/domains/approval/hooks/approval-keys";
 import type * as SecureStorage from "@/shared/platform/secure-storage";
-import { phoneKeyOptions } from "@/test/biometrics-double";
+import { phoneKeyOptions } from "@/test/harness/biometrics-double";
 import { kvStoreDouble } from "@/test/harness/native-doubles";
 
 // Built out here, so the isolated launch below shares these doubles instead of building its own.

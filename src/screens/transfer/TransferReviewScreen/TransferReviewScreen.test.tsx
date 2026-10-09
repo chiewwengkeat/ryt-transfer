@@ -34,7 +34,7 @@ import {
   cancelNextBiometricPrompt,
   holdNextBiometricPrompt,
   phoneKeyOptions,
-} from "@/test/biometrics-double";
+} from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { pressHardwareBack } from "@/test/hardware-back";

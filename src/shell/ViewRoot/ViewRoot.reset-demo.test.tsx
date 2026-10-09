@@ -12,7 +12,7 @@ import {
 } from "@/domains/transfer/hooks/pending-transfers";
 import { requestJson } from "@/shared/http/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
-import { biometricPromptsShown } from "@/test/biometrics-double";
+import { biometricPromptsShown } from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";

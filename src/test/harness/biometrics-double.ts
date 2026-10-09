@@ -6,7 +6,7 @@ import type {
   SignOptions,
 } from "@sbaiahmed1/react-native-biometrics";
 
-import { base64Of, P256_SPKI_PREFIX } from "./bank-client";
+import { base64Of, P256_SPKI_PREFIX } from "@/test/bank-client";
 
 const phoneKeys = new Map<
   string,

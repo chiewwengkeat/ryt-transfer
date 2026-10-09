@@ -20,7 +20,7 @@ import {
   failNextBiometricPrompt,
   holdNextBiometricPrompt,
   reportBiometricSensorUnavailable,
-} from "@/test/biometrics-double";
+} from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { moveAppTo } from "@/test/harness/app-state";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";

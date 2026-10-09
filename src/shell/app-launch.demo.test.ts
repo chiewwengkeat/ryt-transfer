@@ -1,7 +1,7 @@
 import "@/test/demo-build";
 import { checkDeviceIntegrity } from "@/shared/platform/device-integrity";
 import { blockScreenCapture } from "@/shared/platform/screen-capture";
-import { deviceIntegrityChecksAsked } from "@/test/biometrics-double";
+import { deviceIntegrityChecksAsked } from "@/test/harness/biometrics-double";
 import {
   appSwitcherBlurIntensity,
   isScreenCaptureBlocked,

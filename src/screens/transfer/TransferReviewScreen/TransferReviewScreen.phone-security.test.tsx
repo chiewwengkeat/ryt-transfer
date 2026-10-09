@@ -20,7 +20,7 @@ import {
   failNextBiometricPrompt,
   holdDeviceIntegrityChecks,
   reportDeviceIntegrity,
-} from "@/test/biometrics-double";
+} from "@/test/harness/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { observedRecords } from "@/test/harness/recording-sink";
