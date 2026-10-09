@@ -8,7 +8,7 @@ import {
   rememberApprovalPinLocked,
 } from "@/domains/approval/hooks/approval-pin-lock";
 import { askForApprovalPin } from "@/domains/approval/hooks/approval-pin-sheet";
-import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { reportError } from "@/shared/observability/observability";
 
 export function useRegisterApprovalKeysAgain() {
@@ -16,10 +16,10 @@ export function useRegisterApprovalKeysAgain() {
 
   return async (
     noLongerOnThisTransfer: () => boolean,
-    trackScenarioShownWhileOnTop: (scenario: TransferFlowScenario) => void,
+    trackScenarioShownWhileOnTop: (scenario: TransferScenarioId) => void,
     pinInHand?: string,
   ) => {
-    trackScenarioShownWhileOnTop(TransferFlowScenario.ApprovalKeyUnknown);
+    trackScenarioShownWhileOnTop(TransferScenarioId.ApprovalKeyUnknown);
     const words = {
       message: t("common.approval_key_unknown.body"),
       detail: t("common.approval_key_unknown.pin"),
@@ -43,7 +43,7 @@ export function useRegisterApprovalKeysAgain() {
         reportError(failure, { boundary: "approval_key_registration" });
       // ⛔ Left during the call: a sheet or prompt now would cover whatever they moved on to, a newer transfer's sheet included.
       if (noLongerOnThisTransfer())
-        return { notice: TransferFlowScenario.ApprovalCancelled } as const;
+        return { notice: TransferScenarioId.ApprovalCancelled } as const;
       if (failure === undefined) return { pin };
       // The bank asks for a PIN without saying it is locked, so the lock it reported earlier answers instead.
       if (
@@ -51,11 +51,11 @@ export function useRegisterApprovalKeysAgain() {
         (refusal?.code === RegisterApprovalKeysErrorCode.PinRequired &&
           (await isApprovalPinLocked()))
       )
-        return { notice: TransferFlowScenario.PinLocked } as const;
+        return { notice: TransferScenarioId.PinLocked } as const;
       if (failedUnexpectedly)
-        return { notice: TransferFlowScenario.ApprovalKeyUnknown } as const;
+        return { notice: TransferScenarioId.ApprovalKeyUnknown } as const;
       if (refusal?.code === RegisterApprovalKeysErrorCode.PinIncorrect)
-        trackScenarioShownWhileOnTop(TransferFlowScenario.PinIncorrect);
+        trackScenarioShownWhileOnTop(TransferScenarioId.PinIncorrect);
       const askedPin = await askForApprovalPin({
         ...words,
         refusal:
@@ -67,7 +67,7 @@ export function useRegisterApprovalKeysAgain() {
       });
       if (typeof askedPin !== "string")
         return {
-          notice: TransferFlowScenario.ApprovalCancelled,
+          notice: TransferScenarioId.ApprovalCancelled,
           closedBySessionEnd: askedPin === undefined,
         } as const;
       pin = askedPin;

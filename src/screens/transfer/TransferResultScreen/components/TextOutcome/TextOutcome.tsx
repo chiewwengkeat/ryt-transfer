@@ -6,6 +6,7 @@ import {
   type TransferOutcomeScenario,
   type useGetTransfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
+import { scenarioWordsKey } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import { formatMoney } from "@/shared/lib/money/money";
 import TextBody from "@/shared/ui/TextBody/TextBody";
@@ -29,12 +30,7 @@ export default function TextOutcome({
   pageOpened,
 }: Props) {
   const { t } = useTranslation("transfer");
-  const scenarioName = scenario.replace(
-    /^transfer\./,
-    "",
-  ) as `${TransferOutcomeScenario}` extends `transfer.${infer Name}`
-    ? Name
-    : never;
+  const scenarioName = scenarioWordsKey(scenario);
   // While the money is not confirmed yet, support needs something to look the transfer up by.
   const moneyNotConfirmedYet =
     MONEY_STATE_BY_OUTCOME[scenario] === MoneyState.NotConfirmedYet;

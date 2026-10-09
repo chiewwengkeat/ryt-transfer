@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients.type";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
-import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import Card from "@/shared/ui/Card/Card";
 import TextBody from "@/shared/ui/TextBody/TextBody";
@@ -13,7 +13,7 @@ interface Props {
 }
 export default function CardRecentRecipientChosen({ recent, onChange }: Props) {
   const { t } = useTranslation("transfer");
-  useTrackScenarioShown(TransferFlowScenario.RecentRecipientChosen);
+  useTrackScenarioShown(TransferScenarioId.RecentRecipientChosen);
   return (
     <Card>
       <TextBody strong>{recent.registeredName}</TextBody>

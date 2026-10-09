@@ -3,7 +3,6 @@ import { router } from "expo-router";
 import { useEffect } from "react";
 
 import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
-import { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
 import { refreshPendingTransferNotices } from "@/domains/transfer/hooks/pending-transfer-notices";
 import {
   discardOtherCustomersPendingTransfers,
@@ -11,6 +10,7 @@ import {
   PendingTransferStage,
 } from "@/domains/transfer/hooks/pending-transfers";
 import { checkPendingTransferOnce } from "@/domains/transfer/hooks/transfer-status-checks";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { addUnauthorizedListener } from "@/shared/http/transport";
 import { reportError } from "@/shared/observability/observability";
 import { queryClient } from "@/shell/query-client";
@@ -59,7 +59,7 @@ export function usePendingTransfersAtLaunch() {
             pathname: "/transfer/result/[transferId]",
             params: {
               transferId: reopened.transferId,
-              checking: TransferOutcomeScenario.AppClosedDuringApproval,
+              checking: TransferScenarioId.AppClosedDuringApproval,
             },
           });
         await Promise.all(

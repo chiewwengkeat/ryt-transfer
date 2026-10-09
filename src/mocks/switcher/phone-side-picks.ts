@@ -1,5 +1,5 @@
+import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { bankState } from "@/mocks/bank/state";
-import type { TransferScenarioId } from "@/mocks/scenarios/transfer-scenarios";
 import { switcherStore } from "@/mocks/switcher/switcher-store";
 
 export function subscribeToPhoneSidePick(

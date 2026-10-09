@@ -1,10 +1,10 @@
 import { useState } from "react";
 
 import { isApprovalRefusedOnThisPhone } from "@/domains/approval/hooks/device-integrity-verdict";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
-  TransferFlowScenario,
 } from "@/screens/transfer/state/transfer-flow";
 
 export function usePhoneCheckBeforeApproval() {
@@ -24,7 +24,7 @@ export function usePhoneCheckBeforeApproval() {
     if (phoneRefusesApproval)
       dispatchTransferFlow({
         type: TransferFlowActionType.CreateNotSent,
-        notice: TransferFlowScenario.RootedPhone,
+        notice: TransferScenarioId.RootedPhone,
       });
     return !phoneRefusesApproval;
   };

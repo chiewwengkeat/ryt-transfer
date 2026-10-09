@@ -4,13 +4,16 @@ import { Pressable, Text } from "react-native";
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { reportedScenarios } from "@/test/harness/recording-sink";
 import { renderRoute } from "@/test/render-route";
 
 import { useTrackScenarioShown } from "./use-track-scenario-shown";
 
-const homeScenarioStore = createStore<{ scenario?: string }>(() => ({}));
+const homeScenarioStore = createStore<{ scenario?: TransferScenarioId }>(
+  () => ({}),
+);
 
 function HomeOpeningDetails() {
   const scenario = useStore(homeScenarioStore, (home) => home.scenario);
@@ -41,7 +44,9 @@ it("reports what a covered screen came to show once it is back on top, and not a
   await fireEvent.press(screen.getByRole("button", { name: "Open details" }));
 
   await act(() => {
-    homeScenarioStore.setState({ scenario: "transfer.recipient_unexpected" });
+    homeScenarioStore.setState({
+      scenario: TransferScenarioId.RecipientUnexpected,
+    });
   });
   // A covered screen renders late: read the reports before it shows the scenario and this passes either way.
   await screen.findByText("transfer.recipient_unexpected", {

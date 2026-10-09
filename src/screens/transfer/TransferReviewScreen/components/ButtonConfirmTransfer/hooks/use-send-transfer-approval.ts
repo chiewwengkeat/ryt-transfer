@@ -18,12 +18,12 @@ import {
 import type { ApproveTransferRequest } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
 import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
 import {
   ApprovalPath,
   dispatchTransferFlow,
   TransferFlowActionType,
-  TransferFlowScenario,
   TransferFlowStep,
   transferFlowStore,
 } from "@/screens/transfer/state/transfer-flow";
@@ -46,7 +46,7 @@ export function useSendTransferApproval() {
   const screenOnTop = useIsScreenOnTop();
   // A ref, not the render's value: the approval reaches each scenario long after the press, maybe under another view.
   const screenOnTopRef = useRef(screenOnTop);
-  const scenarioReachedUnderAViewRef = useRef<TransferFlowScenario>(undefined);
+  const scenarioReachedUnderAViewRef = useRef<TransferScenarioId>(undefined);
   useEffect(() => {
     screenOnTopRef.current = screenOnTop;
     const scenarioReached = scenarioReachedUnderAViewRef.current;
@@ -66,7 +66,7 @@ export function useSendTransferApproval() {
     // ⛔ Any wait here can end with the flow off this transfer, and whatever it is on now this call leaves alone.
     const noLongerOnThisTransfer = () =>
       isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId);
-    const trackScenarioShownWhileOnTop = (scenario: TransferFlowScenario) => {
+    const trackScenarioShownWhileOnTop = (scenario: TransferScenarioId) => {
       if (screenOnTopRef.current) trackScenarioShown(scenario);
       else scenarioReachedUnderAViewRef.current = scenario;
     };
@@ -82,11 +82,11 @@ export function useSendTransferApproval() {
         { reported: !closedBySessionEnd },
       );
       // ⛔ Shown after the dispatch, which reports the scenario: a locked PIN is reported as its sheet opens.
-      if (notice === TransferFlowScenario.PinLocked)
+      if (notice === TransferScenarioId.PinLocked)
         await showApprovalPinLocked(t("common.pin_locked.body"));
     };
     if (customerId === undefined) {
-      await leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
+      await leaveApprovalNotSent(TransferScenarioId.ApprovalUnexpected);
       return;
     }
     // A refused approval's record would reopen as an unconfirmed transfer at the next launch.
@@ -165,20 +165,16 @@ export function useSendTransferApproval() {
     };
 
     if (path === ApprovalPath.Pin) {
-      await approveWithPin(approval, TransferFlowScenario.PinChosen, {
+      await approveWithPin(approval, TransferScenarioId.PinChosen, {
         message: t("common.pin_chosen.body"),
       });
       return;
     }
     if (!approvalSettingsStore.getState().biometricApprovalOn) {
-      await approveWithPin(
-        approval,
-        TransferFlowScenario.BiometricsUnavailable,
-        {
-          message: t("common.biometrics_unavailable.body"),
-          detail: t("common.biometrics_unavailable.turned_off"),
-        },
-      );
+      await approveWithPin(approval, TransferScenarioId.BiometricsUnavailable, {
+        message: t("common.biometrics_unavailable.body"),
+        detail: t("common.biometrics_unavailable.turned_off"),
+      });
       return;
     }
     await approveWithBiometricKey(approval, {

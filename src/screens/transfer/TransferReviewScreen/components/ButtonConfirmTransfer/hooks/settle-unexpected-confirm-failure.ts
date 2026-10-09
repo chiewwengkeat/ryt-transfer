@@ -2,10 +2,10 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { closeApprovalPinSheet } from "@/domains/approval/hooks/approval-pin-sheet";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
-  TransferFlowScenario,
   TransferFlowStep,
   transferFlowStore,
 } from "@/screens/transfer/state/transfer-flow";
@@ -26,11 +26,11 @@ export async function settleUnexpectedConfirmFailure(queryClient: QueryClient) {
       flow.step === TransferFlowStep.Approving
         ? {
             type: TransferFlowActionType.ApprovalNotSent,
-            notice: TransferFlowScenario.ApprovalUnexpected,
+            notice: TransferScenarioId.ApprovalUnexpected,
           }
         : {
             type: TransferFlowActionType.CreateNotSent,
-            notice: TransferFlowScenario.ReviewUnexpected,
+            notice: TransferScenarioId.ReviewUnexpected,
           },
     );
     return;

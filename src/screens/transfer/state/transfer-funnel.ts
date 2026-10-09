@@ -1,11 +1,8 @@
 import { CoolingOffReason } from "@/domains/transfer/api/create-transfer/create-transfer.type";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { trackEvent } from "@/shared/observability/observability";
 
-import {
-  TransferFlowScenario,
-  type TransferFlowState,
-  TransferHoldKind,
-} from "./transfer-flow.type";
+import { type TransferFlowState, TransferHoldKind } from "./transfer-flow.type";
 
 let scenarioReportsHeld = false;
 let flowReachedWhileReportsHeld: TransferFlowState | undefined;
@@ -44,7 +41,7 @@ export function releaseTransferScenarioReports(
 
 function trackTransferStep(
   flow: TransferFlowState,
-  scenario: TransferFlowScenario | undefined,
+  scenario: TransferScenarioId | undefined,
 ) {
   trackEvent("transfer_step", {
     step: flow.step,
@@ -61,8 +58,8 @@ function findScenarioTheFlowShows(flow: TransferFlowState) {
   if ("notice" in flow && flow.notice !== undefined) return flow.notice;
   if (!("hold" in flow) || flow.hold === undefined) return undefined;
   if (flow.hold.kind === TransferHoldKind.AccountLocked)
-    return TransferFlowScenario.AccountLocked;
+    return TransferScenarioId.AccountLocked;
   return flow.hold.reason === CoolingOffReason.NewAccount
-    ? TransferFlowScenario.CoolingOffNewAccount
-    : TransferFlowScenario.CoolingOffNewPhone;
+    ? TransferScenarioId.CoolingOffNewAccount
+    : TransferScenarioId.CoolingOffNewPhone;
 }

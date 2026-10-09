@@ -11,6 +11,7 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { requestJson } from "@/shared/http/transport";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
@@ -35,7 +36,7 @@ function HomeBalanceOrItsFailure() {
     queryFn: () => requestJson<{ amount: string }>("/balance"),
   });
   useTrackScenarioShown(
-    balance.isError ? "transfer.start_unexpected" : undefined,
+    balance.isError ? TransferScenarioId.StartUnexpected : undefined,
   );
   return balance.isError ? (
     <BannerNotice message={BALANCE_FAILURE} />

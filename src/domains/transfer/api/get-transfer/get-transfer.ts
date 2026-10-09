@@ -4,6 +4,7 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { requestJson } from "@/shared/http/transport";
 import { parseWireAmount } from "@/shared/lib/money/money";
 import { trackEvent } from "@/shared/observability/observability";
@@ -19,33 +20,33 @@ import {
   TransferStatus,
 } from "./get-transfer.type";
 
-// App code may not import the registry's id type, so these restate its ids.
-export enum TransferOutcomeScenario {
-  Completed = "transfer.completed",
-  Processing = "transfer.processing",
-  HeldForReview = "transfer.held_for_review",
-  FraudBlocked = "transfer.fraud_blocked",
-  RecipientAccountInactive = "transfer.recipient_account_inactive",
-  RefundedAfterProcessing = "transfer.refunded_after_processing",
-  BalanceOrLimitShortAtApproval = "transfer.balance_or_limit_short_at_approval",
-  ApprovalExpired = "transfer.approval_expired",
-  OutcomeUnexpected = "transfer.outcome_unexpected",
-  ApprovalUnanswered = "transfer.approval_unanswered",
-  ApprovalUnknownAnswer = "transfer.approval_unknown_answer",
-  AppClosedDuringApproval = "transfer.app_closed_during_approval",
-  StatusUnreachable = "transfer.status_unreachable",
-  LastTransferNotFound = "transfer.last_transfer_not_found",
-  RecoveryUnexpected = "transfer.recovery_unexpected",
-}
+export type TransferOutcomeScenario = Extract<
+  TransferScenarioId,
+  | TransferScenarioId.Completed
+  | TransferScenarioId.Processing
+  | TransferScenarioId.HeldForReview
+  | TransferScenarioId.FraudBlocked
+  | TransferScenarioId.RecipientAccountInactive
+  | TransferScenarioId.RefundedAfterProcessing
+  | TransferScenarioId.BalanceOrLimitShortAtApproval
+  | TransferScenarioId.ApprovalExpired
+  | TransferScenarioId.OutcomeUnexpected
+  | TransferScenarioId.ApprovalUnanswered
+  | TransferScenarioId.ApprovalUnknownAnswer
+  | TransferScenarioId.AppClosedDuringApproval
+  | TransferScenarioId.StatusUnreachable
+  | TransferScenarioId.LastTransferNotFound
+  | TransferScenarioId.RecoveryUnexpected
+>;
 
 // Each says where the money went. Any outcome not listed, a new one included, leaves the money unconfirmed.
 export const SETTLED_TRANSFER_OUTCOMES = [
-  TransferOutcomeScenario.Completed,
-  TransferOutcomeScenario.FraudBlocked,
-  TransferOutcomeScenario.RecipientAccountInactive,
-  TransferOutcomeScenario.RefundedAfterProcessing,
-  TransferOutcomeScenario.BalanceOrLimitShortAtApproval,
-  TransferOutcomeScenario.ApprovalExpired,
+  TransferScenarioId.Completed,
+  TransferScenarioId.FraudBlocked,
+  TransferScenarioId.RecipientAccountInactive,
+  TransferScenarioId.RefundedAfterProcessing,
+  TransferScenarioId.BalanceOrLimitShortAtApproval,
+  TransferScenarioId.ApprovalExpired,
 ] as const;
 
 export function isSettledTransferOutcome(
@@ -126,33 +127,33 @@ export function outcomeOfTransfer({
   underReview,
 }: Transfer) {
   if (funds === TransferFunds.RefundPending || funds === TransferFunds.Refunded)
-    return TransferOutcomeScenario.RefundedAfterProcessing;
+    return TransferScenarioId.RefundedAfterProcessing;
   switch (status) {
     case TransferStatus.AwaitingApproval:
       return null;
     case TransferStatus.Processing:
       return underReview
-        ? TransferOutcomeScenario.HeldForReview
-        : TransferOutcomeScenario.Processing;
+        ? TransferScenarioId.HeldForReview
+        : TransferScenarioId.Processing;
     case TransferStatus.Completed:
-      return TransferOutcomeScenario.Completed;
+      return TransferScenarioId.Completed;
     case TransferStatus.Expired:
-      return TransferOutcomeScenario.ApprovalExpired;
+      return TransferScenarioId.ApprovalExpired;
     case TransferStatus.Unsuccessful:
       // Each of these says no money moved, so a debit the bank has not refunded is none of them.
       if (funds !== TransferFunds.NotDebited) break;
       switch (failureReason) {
         case TransferFailureReason.FraudBlocked:
-          return TransferOutcomeScenario.FraudBlocked;
+          return TransferScenarioId.FraudBlocked;
         case TransferFailureReason.RecipientAccountInactive:
-          return TransferOutcomeScenario.RecipientAccountInactive;
+          return TransferScenarioId.RecipientAccountInactive;
         case TransferFailureReason.InsufficientFunds:
         case TransferFailureReason.DailyLimitExceeded:
-          return TransferOutcomeScenario.BalanceOrLimitShortAtApproval;
+          return TransferScenarioId.BalanceOrLimitShortAtApproval;
         case TransferFailureReason.RecipientBankRejected:
         case undefined:
           break;
       }
   }
-  return TransferOutcomeScenario.OutcomeUnexpected;
+  return TransferScenarioId.OutcomeUnexpected;
 }

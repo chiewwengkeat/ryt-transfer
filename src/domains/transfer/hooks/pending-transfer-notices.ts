@@ -6,12 +6,13 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+
 import {
   getTransferOptions,
   isSettledTransferOutcome,
   selectTransferWithOutcome,
   type SETTLED_TRANSFER_OUTCOMES,
-  TransferOutcomeScenario,
 } from "../api/get-transfer/get-transfer";
 import { transferKeys } from "../api/transfer.keys";
 import { listPendingTransfers } from "./pending-transfers";
@@ -27,13 +28,12 @@ const NEXT_LAUNCH_NOTICE_OF_OUTCOME: Record<
   (typeof SETTLED_TRANSFER_OUTCOMES)[number],
   NextLaunchNotice
 > = {
-  [TransferOutcomeScenario.Completed]: NextLaunchNotice.Completed,
-  [TransferOutcomeScenario.RefundedAfterProcessing]: NextLaunchNotice.Refunded,
-  [TransferOutcomeScenario.FraudBlocked]: NextLaunchNotice.FraudBlocked,
-  [TransferOutcomeScenario.RecipientAccountInactive]: NextLaunchNotice.Declined,
-  [TransferOutcomeScenario.BalanceOrLimitShortAtApproval]:
-    NextLaunchNotice.Declined,
-  [TransferOutcomeScenario.ApprovalExpired]: NextLaunchNotice.Declined,
+  [TransferScenarioId.Completed]: NextLaunchNotice.Completed,
+  [TransferScenarioId.RefundedAfterProcessing]: NextLaunchNotice.Refunded,
+  [TransferScenarioId.FraudBlocked]: NextLaunchNotice.FraudBlocked,
+  [TransferScenarioId.RecipientAccountInactive]: NextLaunchNotice.Declined,
+  [TransferScenarioId.BalanceOrLimitShortAtApproval]: NextLaunchNotice.Declined,
+  [TransferScenarioId.ApprovalExpired]: NextLaunchNotice.Declined,
 };
 
 // No query function: whose records these are is known only to the code that changes them, so each refill says.

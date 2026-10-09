@@ -1,6 +1,7 @@
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+
 import {
   type AmountAndNoteEvent,
-  TransferFlowScenario,
   type TransferFlowState,
   TransferFlowStep,
 } from "./transfer-flow.type";
@@ -31,7 +32,7 @@ export function reduceAmountAndNoteEvent(
         flow.createKeyToReuse !== undefined &&
         (action.amount.minor !== flow.draft.amount.minor ||
           action.note !== flow.draft.note))) && {
-      notice: TransferFlowScenario.DetailsChangedAfterNoAnswer,
+      notice: TransferScenarioId.DetailsChangedAfterNoAnswer,
     }),
   };
 }

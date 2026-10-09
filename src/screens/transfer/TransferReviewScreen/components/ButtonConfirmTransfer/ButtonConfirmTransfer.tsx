@@ -12,12 +12,12 @@ import { approvalSettingsStore } from "@/domains/approval/hooks/approval-setting
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
 import type { CreateTransferResponse } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   ApprovalPath,
   dispatchTransferFlow,
   isTransferSentOrBeingSent,
   TransferFlowActionType,
-  TransferFlowScenario,
   TransferFlowStep,
   transferFlowStore,
   useTransferFlow,
@@ -48,7 +48,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const amountRefusedAsShort = useTransferFlow(
     (flow) =>
       flow.step === TransferFlowStep.Reviewing &&
-      flow.notice === TransferFlowScenario.BalanceOrLimitShortAtConfirmation,
+      flow.notice === TransferScenarioId.BalanceOrLimitShortAtConfirmation,
   );
   const holdReason = useTransferHoldReason();
   const offline = useIsOffline();
@@ -87,7 +87,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       // ⛔ Dispatched first, since it reports the scenario: a locked PIN is reported as its sheet opens.
       dispatchTransferFlow({
         type: TransferFlowActionType.CreateNotSent,
-        notice: TransferFlowScenario.PinLocked,
+        notice: TransferScenarioId.PinLocked,
       });
       await showApprovalPinLocked(t("common.pin_locked.body"));
       return;
@@ -148,7 +148,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     if (hasLeftReviewSincePress()) {
       dispatchTransferFlow({
         type: TransferFlowActionType.ApprovalNotSent,
-        notice: TransferFlowScenario.ApprovalCancelled,
+        notice: TransferScenarioId.ApprovalCancelled,
       });
       return;
     }

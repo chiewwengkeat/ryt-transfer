@@ -7,10 +7,10 @@ import {
   readCreateTransferRefusal,
 } from "@/domains/transfer/api/create-transfer/create-transfer";
 import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
-  TransferFlowScenario,
   TransferHoldKind,
 } from "@/screens/transfer/state/transfer-flow";
 import { isSessionEndFailure } from "@/shared/http/transport-error";
@@ -31,7 +31,7 @@ export function settleCreateFailure({
   if (isCreateTransferUnanswered(failure)) {
     dispatchTransferFlow({
       type: TransferFlowActionType.CreateUnanswered,
-      notice: TransferFlowScenario.ConfirmationUnanswered,
+      notice: TransferScenarioId.ConfirmationUnanswered,
     });
     return;
   }
@@ -62,7 +62,7 @@ export function settleCreateFailure({
       void queryClient.invalidateQueries({ queryKey: accountKeys.all });
       dispatchTransferFlow({
         type: TransferFlowActionType.CreateNotSent,
-        notice: TransferFlowScenario.BalanceOrLimitShortAtConfirmation,
+        notice: TransferScenarioId.BalanceOrLimitShortAtConfirmation,
         noticeDetail: { code: refusal.code },
       });
       return;
@@ -71,7 +71,7 @@ export function settleCreateFailure({
       if (
         dispatchTransferFlow({
           type: TransferFlowActionType.CreateReturnedToAmount,
-          notice: TransferFlowScenario.BadlyFormedInput,
+          notice: TransferScenarioId.BadlyFormedInput,
           noticeDetail: { code: refusal.code },
         })
       )
@@ -80,7 +80,7 @@ export function settleCreateFailure({
     case CreateTransferErrorCode.RecipientRefExpired:
       dispatchTransferFlow({
         type: TransferFlowActionType.CreateNotSent,
-        notice: TransferFlowScenario.NameCheckExpired,
+        notice: TransferScenarioId.NameCheckExpired,
       });
       checkTheNameAgain();
       return;
@@ -91,7 +91,7 @@ export function settleCreateFailure({
       });
       dispatchTransferFlow({
         type: TransferFlowActionType.CreateNotSent,
-        notice: TransferFlowScenario.UnderMaintenance,
+        notice: TransferScenarioId.UnderMaintenance,
         // An unreadable time is dropped: formatting it throws, and the words without a time still serve.
         noticeDetail: {
           until: Number.isNaN(Date.parse(refusal.until ?? ""))
@@ -104,7 +104,7 @@ export function settleCreateFailure({
     case CreateTransferErrorCode.RequestInProgress:
       dispatchTransferFlow({
         type: TransferFlowActionType.CreateUnanswered,
-        notice: TransferFlowScenario.ConfirmationUnanswered,
+        notice: TransferScenarioId.ConfirmationUnanswered,
       });
       return;
     case CreateTransferErrorCode.IdempotencyKeyReused:
@@ -113,7 +113,7 @@ export function settleCreateFailure({
     default:
       dispatchTransferFlow({
         type: TransferFlowActionType.CreateNotSent,
-        notice: TransferFlowScenario.ReviewUnexpected,
+        notice: TransferScenarioId.ReviewUnexpected,
       });
   }
 }

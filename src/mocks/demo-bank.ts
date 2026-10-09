@@ -1,5 +1,7 @@
 import type { RequestHandler } from "msw";
 
+import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+
 import { DEMO_PIN_ATTEMPTS } from "./bank/seed";
 import {
   activeTransferScenario,
@@ -11,7 +13,6 @@ import {
 import { accountHandlers } from "./handlers/account";
 import { approvalHandlers } from "./handlers/approval";
 import { transferHandlers } from "./handlers/transfer";
-import type { TransferScenarioId } from "./scenarios/transfer-scenarios";
 import { NO_SCENARIO_PICK } from "./switcher/switcher-store";
 
 const bankHandlers = [
@@ -32,7 +33,7 @@ export function resetDemoBank(): Promise<void> {
   return Promise.resolve();
 }
 
-export function pickTransferScenario(scenarioId: TransferScenarioId) {
+export function pickTransferScenario(scenarioId: `${TransferScenarioId}`) {
   saveScenarioPick({ scenarioId, activatedAtMs: Date.now() });
 }
 

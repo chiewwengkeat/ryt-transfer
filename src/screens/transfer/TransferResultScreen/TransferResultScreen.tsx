@@ -13,13 +13,14 @@ import { useTranslation } from "react-i18next";
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
   isSettledTransferOutcome,
-  TransferOutcomeScenario,
+  type TransferOutcomeScenario,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
 import {
   settlePendingTransfer,
   TransferReadFailure,
   useTransferStatusCheck,
 } from "@/domains/transfer/hooks/transfer-status-checks";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import { reportError, trackEvent } from "@/shared/observability/observability";
@@ -72,26 +73,29 @@ export default function TransferResultScreen() {
   const latestScenario = outcomeSettled
     ? outcome
     : readFailure === TransferReadFailure.NotFound
-      ? TransferOutcomeScenario.LastTransferNotFound
+      ? TransferScenarioId.LastTransferNotFound
       : readFailure === TransferReadFailure.Unexpected ||
-          outcome === TransferOutcomeScenario.OutcomeUnexpected
+          outcome === TransferScenarioId.OutcomeUnexpected
         ? checkingUnansweredApproval
-          ? TransferOutcomeScenario.RecoveryUnexpected
-          : TransferOutcomeScenario.OutcomeUnexpected
+          ? TransferScenarioId.RecoveryUnexpected
+          : TransferScenarioId.OutcomeUnexpected
         : (outcome ??
           (bankUnreachable
-            ? TransferOutcomeScenario.StatusUnreachable
-            : ([
-                TransferOutcomeScenario.ApprovalUnknownAnswer,
-                TransferOutcomeScenario.AppClosedDuringApproval,
-              ].find((reason) => reason === checking) ??
-              TransferOutcomeScenario.ApprovalUnanswered)));
+            ? TransferScenarioId.StatusUnreachable
+            : ((
+                [
+                  TransferScenarioId.ApprovalUnknownAnswer,
+                  TransferScenarioId.AppClosedDuringApproval,
+                ] as const
+              ).find((reason) => reason === checking) ??
+              TransferScenarioId.ApprovalUnanswered)));
   // A refetch with no data clears the query's error until it answers, which would flip the page back to checking.
   const readingAgainAfterFailure =
     transfer.data === undefined &&
     transfer.isFetching &&
     transfer.errorUpdateCount > 0;
-  const [heldScenario, setHeldScenario] = useState(latestScenario);
+  const [heldScenario, setHeldScenario] =
+    useState<TransferOutcomeScenario>(latestScenario);
   if (!readingAgainAfterFailure && heldScenario !== latestScenario)
     setHeldScenario(latestScenario);
   const scenario = readingAgainAfterFailure ? heldScenario : latestScenario;
@@ -150,7 +154,7 @@ export default function TransferResultScreen() {
         }
       >
         <ViewOutcomeEntrance outcome={scenario}>
-          {scenario === TransferOutcomeScenario.Completed && (
+          {scenario === TransferScenarioId.Completed && (
             <IconTransferCompleted />
           )}
           <TextOutcome
@@ -159,13 +163,13 @@ export default function TransferResultScreen() {
             transferId={transferId}
             pageOpened={pageOpened}
           />
-          {scenario === TransferOutcomeScenario.Completed && transfer.data && (
+          {scenario === TransferScenarioId.Completed && transfer.data && (
             <SectionTransferDetails transfer={transfer.data} />
           )}
           {[
-            TransferOutcomeScenario.OutcomeUnexpected,
-            TransferOutcomeScenario.LastTransferNotFound,
-            TransferOutcomeScenario.RecoveryUnexpected,
+            TransferScenarioId.OutcomeUnexpected,
+            TransferScenarioId.LastTransferNotFound,
+            TransferScenarioId.RecoveryUnexpected,
           ].includes(scenario) && (
             <ButtonSecondary
               label={t("result.transfer_history")}
@@ -174,7 +178,7 @@ export default function TransferResultScreen() {
               }}
             />
           )}
-          {scenario === TransferOutcomeScenario.OutcomeUnexpected && (
+          {scenario === TransferScenarioId.OutcomeUnexpected && (
             <ButtonSecondary
               label={t("common.outcome_unexpected.load_again")}
               onPress={() => {

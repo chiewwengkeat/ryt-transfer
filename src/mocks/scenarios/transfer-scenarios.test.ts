@@ -10,6 +10,7 @@ import {
   TransferStatus,
   type GetTransferResponse,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import type { RegisterApprovalKeysResponse } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
 import { toMalaysiaIso } from "@/mocks/bank/malaysia-time";
 import { DEMO_PIN } from "@/mocks/bank/seed";
@@ -29,8 +30,6 @@ import {
   startTestTransfer,
   type BankErrorBody,
 } from "@/test/bank-client";
-
-import type { TransferScenarioId } from "./transfer-scenarios";
 
 const TEST_START_MS = Date.parse("2026-10-08T10:00:00+08:00");
 const HOUR_MS = 60 * 60 * 1000;
@@ -75,7 +74,7 @@ async function transferReadyToApprove(amountMinor = 2_550) {
 }
 
 describe("overlays that answer for the connection", () => {
-  it.each<[TransferScenarioId, "GET" | "POST", string, number, string]>([
+  it.each<[`${TransferScenarioId}`, "GET" | "POST", string, number, string]>([
     [
       "transfer.balance_unavailable",
       "GET",
@@ -228,7 +227,7 @@ describe("conditions the bank applies itself", () => {
     expect(refused.body.error.code).toBe("DAILY_LIMIT_EXCEEDED");
   });
 
-  it.each<[TransferScenarioId, CoolingOffReason, number]>([
+  it.each<[`${TransferScenarioId}`, CoolingOffReason, number]>([
     [
       "transfer.cooling_off_new_phone",
       CoolingOffReason.DevicePaired,
@@ -285,7 +284,7 @@ describe("conditions the bank applies itself", () => {
     ]);
   });
 
-  it.each<[TransferScenarioId, Partial<BankErrorBody["error"]>]>([
+  it.each<[`${TransferScenarioId}`, Partial<BankErrorBody["error"]>]>([
     ["transfer.account_locked", { code: "ACCOUNT_LOCKED" }],
     [
       "transfer.cooling_off_new_phone",
@@ -379,7 +378,7 @@ describe("conditions the bank applies itself", () => {
     });
   });
 
-  it.each<TransferScenarioId>([
+  it.each<`${TransferScenarioId}`>([
     "transfer.account_locked",
     "transfer.cooling_off_new_phone",
     "transfer.cooling_off_new_account",
@@ -472,7 +471,7 @@ describe("conditions the bank applies itself", () => {
     ]);
   });
 
-  it.each<[TransferScenarioId, TransferFailureReason]>([
+  it.each<[`${TransferScenarioId}`, TransferFailureReason]>([
     [
       "transfer.balance_or_limit_short_at_approval",
       TransferFailureReason.InsufficientFunds,
@@ -514,7 +513,7 @@ describe("conditions the bank applies itself", () => {
     ]);
   });
 
-  it.each<[TransferScenarioId, boolean]>([
+  it.each<[`${TransferScenarioId}`, boolean]>([
     ["transfer.processing", false],
     ["transfer.held_for_review", true],
   ])(
@@ -629,7 +628,7 @@ describe("overlays that let the bank commit, then lose or garble its answer", ()
     expect(await readBankBalanceMinor()).toBe(balanceBefore - 2_550);
   });
 
-  it.each<[TransferScenarioId, number, string]>([
+  it.each<[`${TransferScenarioId}`, number, string]>([
     ["transfer.last_transfer_not_found", 404, "TRANSFER_NOT_FOUND"],
     ["transfer.recovery_unexpected", 400, "NEW_BANK_CODE"],
   ])(

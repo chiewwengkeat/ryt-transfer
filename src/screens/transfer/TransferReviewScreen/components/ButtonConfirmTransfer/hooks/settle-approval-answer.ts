@@ -7,10 +7,7 @@ import {
   readApproveTransferRefusal,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
-import {
-  outcomeOfTransfer,
-  TransferOutcomeScenario,
-} from "@/domains/transfer/api/get-transfer/get-transfer";
+import { outcomeOfTransfer } from "@/domains/transfer/api/get-transfer/get-transfer";
 import {
   type Transfer,
   TransferFailureReason,
@@ -19,12 +16,12 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
 import { settlePendingTransfer } from "@/domains/transfer/hooks/transfer-status-checks";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { isFlowNoLongerOnTransfer } from "@/screens/transfer/state/approval-events";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/state/refresh-after-approval";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
-  TransferFlowScenario,
   TransferHoldKind,
   transferFlowStore,
 } from "@/screens/transfer/state/transfer-flow";
@@ -46,7 +43,7 @@ export async function settleApprovalAnswer({
   if (failure instanceof ApproveRequestNotSentError) {
     dispatchTransferFlow({
       type: TransferFlowActionType.ApprovalNotSent,
-      notice: TransferFlowScenario.ApprovalUnexpected,
+      notice: TransferScenarioId.ApprovalUnexpected,
     });
     return;
   }
@@ -70,7 +67,7 @@ export async function settleApprovalAnswer({
     void refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
     await returnRefusedApprovalToReview({
       type: TransferFlowActionType.ApprovalNotSent,
-      notice: TransferFlowScenario.BalanceOrLimitShortAtApproval,
+      notice: TransferScenarioId.BalanceOrLimitShortAtApproval,
     });
     return;
   }
@@ -79,19 +76,19 @@ export async function settleApprovalAnswer({
     case ApproveTransferErrorCode.ApprovalExpired:
       await returnRefusedApprovalToReview({
         type: TransferFlowActionType.ApprovalNotSent,
-        notice: TransferFlowScenario.ApprovalExpired,
+        notice: TransferScenarioId.ApprovalExpired,
       });
       return;
     case ApproveTransferErrorCode.ApprovalInvalid:
       await returnRefusedApprovalToReview({
         type: TransferFlowActionType.ApprovalNotSent,
-        notice: TransferFlowScenario.ApprovalNotVerified,
+        notice: TransferScenarioId.ApprovalNotVerified,
       });
       return;
     case ApproveTransferErrorCode.KeyNotRegistered:
       await returnRefusedApprovalToReview({
         type: TransferFlowActionType.ApprovalNotSent,
-        notice: TransferFlowScenario.ApprovalKeyUnknown,
+        notice: TransferScenarioId.ApprovalKeyUnknown,
       });
       return;
     case ApproveTransferErrorCode.AccountLocked:
@@ -115,7 +112,7 @@ export async function settleApprovalAnswer({
     case ApproveTransferErrorCode.InvalidRequest:
       await returnRefusedApprovalToReview({
         type: TransferFlowActionType.ApprovalNotSent,
-        notice: TransferFlowScenario.ApprovalUnexpected,
+        notice: TransferScenarioId.ApprovalUnexpected,
       });
       return;
     // The PIN path answers its own PIN refusals; one here came after the approval left the phone, so it is a lost answer.
@@ -173,7 +170,7 @@ export function openResultPageOfSentApproval({
     params: {
       transferId,
       ...(unknownAnswer && {
-        checking: TransferOutcomeScenario.ApprovalUnknownAnswer,
+        checking: TransferScenarioId.ApprovalUnknownAnswer,
       }),
     },
   });

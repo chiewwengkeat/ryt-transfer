@@ -2,6 +2,7 @@ import { Fragment, useState } from "react";
 import { useStore } from "zustand";
 
 import { notifyApprovalPinReset } from "@/domains/approval/hooks/approval-settings";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   clearTransferScenario,
   isDemoPinLocked,
@@ -13,7 +14,6 @@ import {
   TRANSFER_SCENARIOS,
   TransferStep,
   type TransferScenario,
-  type TransferScenarioId,
 } from "@/mocks/scenarios/transfer-scenarios";
 import { useDemoTranslation } from "@/mocks/switcher/components/ViewDemo/hooks/use-demo-translation";
 import { switcherStore } from "@/mocks/switcher/switcher-store";
@@ -64,9 +64,9 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
       />
       <ItemScenarioDemo
         label={t("bottom_sheet_demo.no_biometrics")}
-        checked={activeScenarioId === "transfer.biometrics_unavailable"}
+        checked={activeScenarioId === TransferScenarioId.BiometricsUnavailable}
         onPress={() => {
-          pickTransferScenario("transfer.biometrics_unavailable");
+          pickTransferScenario(TransferScenarioId.BiometricsUnavailable);
           onClose();
         }}
       />

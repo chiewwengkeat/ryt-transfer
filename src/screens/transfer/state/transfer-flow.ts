@@ -16,7 +16,6 @@ import { trackTransferStepOrScenarioChange } from "./transfer-funnel";
 export {
   ApprovalPath,
   TransferFlowActionType,
-  TransferFlowScenario,
   TransferFlowStep,
   TransferHoldKind,
 } from "./transfer-flow.type";

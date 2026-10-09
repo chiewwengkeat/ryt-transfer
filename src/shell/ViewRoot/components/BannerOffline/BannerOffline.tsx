@@ -4,7 +4,7 @@ import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
-import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { useIsOffline } from "@/shared/platform/offline";
 import { spacing } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
@@ -18,7 +18,7 @@ export default function BannerOffline() {
   const offline = useIsOffline();
   const { bottom } = useSafeAreaInsets();
   const footerHeight = useScreenFooterHeight();
-  useTrackScenarioShown(offline ? TransferFlowScenario.Offline : undefined);
+  useTrackScenarioShown(offline ? TransferScenarioId.Offline : undefined);
   useEffect(() => {
     if (!offline) return;
     return () => {

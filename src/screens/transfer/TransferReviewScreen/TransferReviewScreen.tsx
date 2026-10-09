@@ -2,12 +2,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import BannerEarlierTransferUnconfirmed from "@/domains/transfer/components/BannerEarlierTransferUnconfirmed/BannerEarlierTransferUnconfirmed";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "../state/refresh-after-approval";
 import {
-  TransferFlowScenario,
   TransferFlowStep,
   transferFlowStore,
   useTransferFlow,
@@ -29,7 +29,7 @@ export default function TransferReviewScreen() {
   const phoneRefused = useTransferFlow(
     (flow) =>
       flow.step === TransferFlowStep.Reviewing &&
-      flow.notice === TransferFlowScenario.RootedPhone,
+      flow.notice === TransferScenarioId.RootedPhone,
   );
 
   return (

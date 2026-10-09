@@ -13,6 +13,7 @@ import {
   trackScenarioShown,
   useTrackScenarioShown,
 } from "@/domains/transfer/hooks/use-track-scenario-shown";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { formatMoney, parseTypedAmount } from "@/shared/lib/money/money";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import FieldText from "@/shared/ui/FieldText/FieldText";
@@ -22,7 +23,6 @@ import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
-  TransferFlowScenario,
   TransferFlowStep,
   useTransferFlow,
 } from "../state/transfer-flow";
@@ -109,9 +109,9 @@ export default function TransferAmountScreen() {
   // Not the bank's refusals: the flow already reported each as it came back to this step.
   useTrackScenarioShown(
     amountBadlyFormed || noteBadlyFormed
-      ? TransferFlowScenario.BadlyFormedInput
+      ? TransferScenarioId.BadlyFormedInput
       : !amountRefusedByBank && amountTooHigh
-        ? TransferFlowScenario.AmountTooHigh
+        ? TransferScenarioId.AmountTooHigh
         : undefined,
   );
 

@@ -11,11 +11,11 @@ import {
   ApproveTransferErrorCode,
   type ApproveTransferRequest,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   ApprovalPath,
   dispatchTransferFlow,
   TransferFlowActionType,
-  TransferFlowScenario,
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferFlowNotice } from "@/screens/transfer/state/transfer-flow.type";
 
@@ -28,7 +28,7 @@ export async function approveWithPin(
     t: TFunction<"transfer">;
     signedText: string;
     noLongerOnThisTransfer: () => boolean;
-    trackScenarioShownWhileOnTop: (scenario: TransferFlowScenario) => void;
+    trackScenarioShownWhileOnTop: (scenario: TransferScenarioId) => void;
     leaveApprovalNotSent: (
       notice: TransferFlowNotice,
       sheet?: { closedBySessionEnd?: boolean },
@@ -44,7 +44,7 @@ export async function approveWithPin(
       pinInHand?: string,
     ) => ReturnType<ReturnType<typeof useRegisterApprovalKeysAgain>>;
   },
-  scenario: TransferFlowScenario,
+  scenario: TransferScenarioId,
   words: { message: string; detail?: string },
   afterSetUp: { pinInHand?: string; keysSetUpAgain?: boolean } = {},
 ) {
@@ -63,7 +63,7 @@ export async function approveWithPin(
   let { pinInHand, keysSetUpAgain = false } = afterSetUp;
   // No new try at a PIN the bank has locked; a PIN already in hand is one the bank has just accepted.
   if (pinInHand === undefined && (await isApprovalPinLocked())) {
-    await leaveApprovalNotSent(TransferFlowScenario.PinLocked);
+    await leaveApprovalNotSent(TransferScenarioId.PinLocked);
     return null;
   }
   if (pinInHand === undefined) trackScenarioShownWhileOnTop(scenario);
@@ -72,7 +72,7 @@ export async function approveWithPin(
     pinInHand = undefined;
     if (typeof pin !== "string") {
       await approval.forgetPendingTransfer();
-      await leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled, {
+      await leaveApprovalNotSent(TransferScenarioId.ApprovalCancelled, {
         closedBySessionEnd: pin === undefined,
       });
       return null;
@@ -81,7 +81,7 @@ export async function approveWithPin(
       approval.signedText,
     );
     if (possessionSignature === null) {
-      await leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
+      await leaveApprovalNotSent(TransferScenarioId.ApprovalUnexpected);
       return null;
     }
     const attempt = await approval.sendApproval({
@@ -99,7 +99,7 @@ export async function approveWithPin(
       refusal = t("common.pin_incorrect.body", {
         count: pinRefusal.attemptsRemaining,
       });
-      trackScenarioShownWhileOnTop(TransferFlowScenario.PinIncorrect);
+      trackScenarioShownWhileOnTop(TransferScenarioId.PinIncorrect);
       continue;
     }
     if (pinRefusal?.code === ApproveTransferErrorCode.PinLocked) {
@@ -110,7 +110,7 @@ export async function approveWithPin(
         });
       // Remembered even once left: the bank's lock holds for every transfer, the newer one's included.
       await rememberApprovalPinLocked();
-      await leaveApprovalNotSent(TransferFlowScenario.PinLocked);
+      await leaveApprovalNotSent(TransferScenarioId.PinLocked);
       return null;
     }
     if (

@@ -7,6 +7,7 @@ import {
   saveApprovalKeyIds,
 } from "@/domains/approval/hooks/approval-keys";
 import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 
 import { handlersForActiveScenario } from "./demo-bank";
 import { subscribeToBiometricsOff } from "./switcher/biometrics-off";
@@ -21,9 +22,9 @@ export default {
   subscribeToBiometricsOff,
   subscribeToScenarioChange: (onChange) => switcherStore.subscribe(onChange),
   subscribeToScreenCaptureBlock: (onChange) =>
-    subscribeToPhoneSidePick("transfer.screen_capture_blocked", onChange),
+    subscribeToPhoneSidePick(TransferScenarioId.ScreenCaptureBlocked, onChange),
   subscribeToRootedPhone: (onChange) =>
-    subscribeToPhoneSidePick("transfer.rooted_phone", onChange),
+    subscribeToPhoneSidePick(TransferScenarioId.RootedPhone, onChange),
   // Stands in for the pairing a host app made long ago, so the bank holds no cooling-off against it.
   async pairPhoneAtFirstLaunch() {
     if (await hasApprovalKeysOnFile()) return;

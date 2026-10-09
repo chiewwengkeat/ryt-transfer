@@ -1,7 +1,8 @@
 import {
   isSettledTransferOutcome,
-  TransferOutcomeScenario,
+  type TransferOutcomeScenario,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 
 import {
   MONEY_STATE_BY_OUTCOME,
@@ -39,7 +40,9 @@ it("gives each outcome its matrix section's money state", () => {
 });
 
 it("treats as settled exactly the outcomes whose money state is confirmed", () => {
-  const outcomes = Object.values(TransferOutcomeScenario);
+  const outcomes = Object.keys(
+    MONEY_STATE_BY_OUTCOME,
+  ) as TransferOutcomeScenario[];
 
   expect(outcomes.filter(isSettledTransferOutcome)).toEqual(
     outcomes.filter(
@@ -54,7 +57,7 @@ it("covers every section the matrix shows on the result page", () => {
     .filter((section) => section.shownAs.includes("the result page"))
     .map((section) => section.id);
 
-  expect(resultPageIds).toContain(TransferOutcomeScenario.Completed);
+  expect(resultPageIds).toContain(TransferScenarioId.Completed);
   expect(Object.keys(MONEY_STATE_BY_OUTCOME)).toEqual(
     expect.arrayContaining(resultPageIds),
   );

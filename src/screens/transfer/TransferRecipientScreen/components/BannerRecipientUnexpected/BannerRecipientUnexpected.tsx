@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
-import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { isSessionEndFailure } from "@/shared/http/transport-error";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 
@@ -14,7 +14,7 @@ export default function BannerRecipientUnexpected({ failure, onRetry }: Props) {
   const failureIsSessionEnd = isSessionEndFailure(failure);
   // Sign-in reads the list again, which clears this.
   useTrackScenarioShown(
-    failureIsSessionEnd ? undefined : TransferFlowScenario.RecipientUnexpected,
+    failureIsSessionEnd ? undefined : TransferScenarioId.RecipientUnexpected,
   );
   return (
     <BannerAction

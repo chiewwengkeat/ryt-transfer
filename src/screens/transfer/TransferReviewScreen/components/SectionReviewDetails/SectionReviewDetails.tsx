@@ -11,8 +11,11 @@ import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/look
 import { LookupRecipientErrorCode } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import {
+  scenarioWordsKey,
+  TransferScenarioId,
+} from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import {
   isTransferSentOrBeingSent,
-  TransferFlowScenario,
   useTransferFlow,
 } from "@/screens/transfer/state/transfer-flow";
 import type { TransferDraft } from "@/screens/transfer/state/transfer-flow.type";
@@ -45,20 +48,20 @@ export default function SectionReviewDetails({ draft }: Props) {
     !lookup.isError || sending || isSessionEndFailure(lookup.error)
       ? undefined
       : code === LookupRecipientErrorCode.RecipientNotFound
-        ? "recipient_not_found"
+        ? TransferScenarioId.RecipientNotFound
         : code === LookupRecipientErrorCode.NameEnquiryUnavailable
-          ? "name_check_unavailable"
+          ? TransferScenarioId.NameCheckUnavailable
           : code === LookupRecipientErrorCode.TooManyLookups
-            ? "too_many_name_checks"
-            : "review_unexpected";
+            ? TransferScenarioId.TooManyNameChecks
+            : TransferScenarioId.ReviewUnexpected;
   useTrackScenarioShown(
     nameCheckFailure === undefined
-      ? lookup.data && TransferFlowScenario.RecipientFound
-      : `transfer.${nameCheckFailure}`,
+      ? lookup.data && TransferScenarioId.RecipientFound
+      : nameCheckFailure,
   );
   useTrackScenarioShown(
     nameCheckFailure === undefined && lookup.data?.firstTransfer
-      ? TransferFlowScenario.FirstTransferToRecipient
+      ? TransferScenarioId.FirstTransferToRecipient
       : undefined,
   );
   const navigation =
@@ -88,7 +91,7 @@ export default function SectionReviewDetails({ draft }: Props) {
   const [waitedOutRefusalAt, setWaitedOutRefusalAt] = useState<number>();
   // Try again only after the minute the words ask for: the bank limits name checks on purpose.
   useEffect(() => {
-    if (nameCheckFailure !== "too_many_name_checks") return;
+    if (nameCheckFailure !== TransferScenarioId.TooManyNameChecks) return;
     const timer = setTimeout(
       () => {
         setWaitedOutRefusalAt(refusedAt);
@@ -100,7 +103,7 @@ export default function SectionReviewDetails({ draft }: Props) {
     };
   }, [nameCheckFailure, refusedAt]);
   if (lookup.isPending) return <Loader />;
-  if (nameCheckFailure === "recipient_not_found")
+  if (nameCheckFailure === TransferScenarioId.RecipientNotFound)
     return (
       <BannerAction
         tone="negative"
@@ -121,12 +124,12 @@ export default function SectionReviewDetails({ draft }: Props) {
         key={refusedAt}
         tone="negative"
         announce={failureAnnouncementDue}
-        message={t(`common.${nameCheckFailure}.body`)}
+        message={t(`common.${scenarioWordsKey(nameCheckFailure)}.body`)}
         action={
-          nameCheckFailure !== "too_many_name_checks" ||
+          nameCheckFailure !== TransferScenarioId.TooManyNameChecks ||
           waitedOutRefusalAt === refusedAt
             ? {
-                label: t(`common.${nameCheckFailure}.retry`),
+                label: t(`common.${scenarioWordsKey(nameCheckFailure)}.retry`),
                 onPress: () => {
                   void lookup.refetch();
                 },

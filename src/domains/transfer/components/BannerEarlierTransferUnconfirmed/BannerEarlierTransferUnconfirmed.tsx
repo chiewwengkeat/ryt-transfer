@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 
 import { usePendingTransferNotices } from "../../hooks/pending-transfer-notices";
@@ -20,7 +21,7 @@ export default function BannerEarlierTransferUnconfirmed({
   // Drawn before the transfer is read, but reported only after: a record kept from before this launch may have ended since.
   useTrackScenarioShown(
     newestUnconfirmed?.checkedWithBank
-      ? "transfer.earlier_transfer_unconfirmed"
+      ? TransferScenarioId.EarlierTransferUnconfirmed
       : undefined,
   );
   useRecheckEarlierTransferWhileOnTop({

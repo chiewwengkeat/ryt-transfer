@@ -1,6 +1,9 @@
 import { useTranslation } from "react-i18next";
 
-import type { TransferScenarioId } from "@/mocks/scenarios/transfer-scenarios";
+import {
+  scenarioWordsKey,
+  type TransferScenarioId,
+} from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import demoEnMY from "@/mocks/switcher/i18n/en-MY.json";
 import demoMsMY from "@/mocks/switcher/i18n/ms-MY.json";
 import demoZhMY from "@/mocks/switcher/i18n/zh-MY.json";
@@ -22,10 +25,8 @@ export function useDemoTranslation() {
   return {
     t: (key: KeyPaths<typeof demoEnMY>, values?: Record<string, string>) =>
       translate(`demo:${key}`, values),
-    scenarioTitle: (scenarioId: TransferScenarioId) =>
-      translate(
-        `transfer:common.${scenarioId.replace(/^transfer\./, "")}.title`,
-      ),
+    scenarioTitle: (scenarioId: `${TransferScenarioId}`) =>
+      translate(`transfer:common.${scenarioWordsKey(scenarioId)}.title`),
   };
 }
 

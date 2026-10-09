@@ -8,6 +8,7 @@ import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
@@ -16,7 +17,6 @@ import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
-  TransferFlowScenario,
   TransferFlowStep,
   useTransferFlow,
 } from "../state/transfer-flow";
@@ -54,7 +54,7 @@ export default function TransferRecipientScreen() {
   );
   const [idError, setIdError] = useState<string>();
   useTrackScenarioShown(
-    idError === undefined ? undefined : TransferFlowScenario.BadlyFormedInput,
+    idError === undefined ? undefined : TransferScenarioId.BadlyFormedInput,
   );
   const [bankError, setBankError] = useState<string>();
   const recents = useListRecentRecipients();

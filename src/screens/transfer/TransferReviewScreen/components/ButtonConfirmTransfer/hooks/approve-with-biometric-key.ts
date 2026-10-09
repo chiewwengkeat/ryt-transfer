@@ -7,7 +7,7 @@ import {
 } from "@/domains/approval/hooks/approval-keys";
 import { readApproveTransferRefusal } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
-import { TransferFlowScenario } from "@/screens/transfer/state/transfer-flow";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { reportError } from "@/shared/observability/observability";
 
 import { approveWithPin } from "./approve-with-pin";
@@ -29,7 +29,7 @@ export async function approveWithBiometricKey(
   switch (signing.outcome) {
     case BiometricSignOutcome.Signed: {
       approval.trackScenarioShownWhileOnTop(
-        TransferFlowScenario.BiometricsRecognised,
+        TransferScenarioId.BiometricsRecognised,
       );
       const attempt = await approval.sendApproval({
         keyId: signing.keyId,
@@ -49,7 +49,7 @@ export async function approveWithBiometricKey(
         else
           await approveWithPin(
             approval,
-            TransferFlowScenario.ApprovalKeyUnknown,
+            TransferScenarioId.ApprovalKeyUnknown,
             {
               message: t("common.approval_key_unknown.body"),
               detail: t("common.approval_key_unknown.pin"),
@@ -62,40 +62,32 @@ export async function approveWithBiometricKey(
       return;
     }
     case BiometricSignOutcome.Cancelled:
-      await leaveApprovalNotSent(TransferFlowScenario.ApprovalCancelled);
+      await leaveApprovalNotSent(TransferScenarioId.ApprovalCancelled);
       return;
     case BiometricSignOutcome.NotRecognised:
-      await leaveApprovalNotSent(TransferFlowScenario.BiometricsNotRecognised);
+      await leaveApprovalNotSent(TransferScenarioId.BiometricsNotRecognised);
       return;
     case BiometricSignOutcome.LockedOut:
-      await approveWithPin(approval, TransferFlowScenario.BiometricsLockedOut, {
+      await approveWithPin(approval, TransferScenarioId.BiometricsLockedOut, {
         message: t("common.biometrics_locked_out.body"),
       });
       return;
     case BiometricSignOutcome.NotSetUp:
-      await approveWithPin(
-        approval,
-        TransferFlowScenario.BiometricsUnavailable,
-        {
-          message: t("common.biometrics_unavailable.body"),
-          detail: t("common.biometrics_unavailable.not_set_up"),
-        },
-      );
+      await approveWithPin(approval, TransferScenarioId.BiometricsUnavailable, {
+        message: t("common.biometrics_unavailable.body"),
+        detail: t("common.biometrics_unavailable.not_set_up"),
+      });
       return;
     case BiometricSignOutcome.NoSensor:
-      await approveWithPin(
-        approval,
-        TransferFlowScenario.BiometricsUnavailable,
-        {
-          message: t("common.biometrics_unavailable.body"),
-          detail: t("common.biometrics_unavailable.no_sensor"),
-        },
-      );
+      await approveWithPin(approval, TransferScenarioId.BiometricsUnavailable, {
+        message: t("common.biometrics_unavailable.body"),
+        detail: t("common.biometrics_unavailable.no_sensor"),
+      });
       return;
     case BiometricSignOutcome.KeyChanged: {
       const acceptedPin = await approveWithPin(
         approval,
-        TransferFlowScenario.BiometricsChanged,
+        TransferScenarioId.BiometricsChanged,
         { message: t("common.biometrics_changed.body") },
       );
       if (acceptedPin !== null)
@@ -107,7 +99,7 @@ export async function approveWithBiometricKey(
       return;
     }
     case BiometricSignOutcome.Failed:
-      await leaveApprovalNotSent(TransferFlowScenario.ApprovalUnexpected);
+      await leaveApprovalNotSent(TransferScenarioId.ApprovalUnexpected);
       return;
   }
 }

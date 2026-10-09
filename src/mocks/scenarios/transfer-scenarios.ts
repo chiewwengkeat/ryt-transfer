@@ -8,6 +8,7 @@ import {
 } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { LookupRecipientErrorCode } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { ApprovalOutcome, type BankConditions } from "@/mocks/bank/conditions";
 import { BANK_PATHS } from "@/mocks/handlers/bank-paths";
 
@@ -302,9 +303,7 @@ export const TRANSFER_SCENARIOS = {
       http.get(BANK_PATHS.transfer, unknownCodeAnswer),
     ],
   },
-} satisfies Record<string, TransferScenario>;
-
-export type TransferScenarioId = keyof typeof TRANSFER_SCENARIOS;
+} satisfies Record<`${TransferScenarioId}`, TransferScenario>;
 
 export interface TransferScenario {
   step: TransferStep;

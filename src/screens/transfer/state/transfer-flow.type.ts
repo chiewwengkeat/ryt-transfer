@@ -7,6 +7,7 @@ import type {
   LookupRecipientResponse,
   RecipientIdType,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import type { Money } from "@/shared/lib/money/money.type";
 
 export enum TransferFlowStep {
@@ -47,68 +48,27 @@ export enum TransferHoldKind {
   CoolingOff = "cooling_off",
 }
 
-// App code may not import the registry's id type, so these restate its ids; a test holds them to it.
-export enum TransferFlowScenario {
-  UnderMaintenance = "transfer.under_maintenance",
-  Offline = "transfer.offline",
-  BadlyFormedInput = "transfer.badly_formed_input",
-  ContactsAccessRefused = "transfer.contacts_access_refused",
-  ContactWithoutMobile = "transfer.contact_without_mobile",
-  RecentRecipientChosen = "transfer.recent_recipient_chosen",
-  RecipientUnexpected = "transfer.recipient_unexpected",
-  AmountTooHigh = "transfer.amount_too_high",
-  RecipientFound = "transfer.recipient_found",
-  FirstTransferToRecipient = "transfer.first_transfer_to_recipient",
-  RecipientNotFound = "transfer.recipient_not_found",
-  NameCheckUnavailable = "transfer.name_check_unavailable",
-  TooManyNameChecks = "transfer.too_many_name_checks",
-  BalanceOrLimitShortAtConfirmation = "transfer.balance_or_limit_short_at_confirmation",
-  CoolingOffNewPhone = "transfer.cooling_off_new_phone",
-  CoolingOffNewAccount = "transfer.cooling_off_new_account",
-  AccountLocked = "transfer.account_locked",
-  NameCheckExpired = "transfer.name_check_expired",
-  ConfirmationUnanswered = "transfer.confirmation_unanswered",
-  DetailsChangedAfterNoAnswer = "transfer.details_changed_after_no_answer",
-  ReviewUnexpected = "transfer.review_unexpected",
-  BiometricsRecognised = "transfer.biometrics_recognised",
-  ApprovalCancelled = "transfer.approval_cancelled",
-  BiometricsNotRecognised = "transfer.biometrics_not_recognised",
-  BiometricsLockedOut = "transfer.biometrics_locked_out",
-  BiometricsUnavailable = "transfer.biometrics_unavailable",
-  BiometricsChanged = "transfer.biometrics_changed",
-  PinChosen = "transfer.pin_chosen",
-  PinIncorrect = "transfer.pin_incorrect",
-  PinLocked = "transfer.pin_locked",
-  ApprovalKeyUnknown = "transfer.approval_key_unknown",
-  ApprovalExpired = "transfer.approval_expired",
-  ApprovalNotVerified = "transfer.approval_not_verified",
-  BalanceOrLimitShortAtApproval = "transfer.balance_or_limit_short_at_approval",
-  RootedPhone = "transfer.rooted_phone",
-  ApprovalUnexpected = "transfer.approval_unexpected",
-  SessionEnded = "transfer.session_ended",
-}
-
 export type TransferFlowNotice = Extract<
-  TransferFlowScenario,
-  | TransferFlowScenario.UnderMaintenance
-  | TransferFlowScenario.BadlyFormedInput
-  | TransferFlowScenario.BalanceOrLimitShortAtConfirmation
-  | TransferFlowScenario.NameCheckExpired
-  | TransferFlowScenario.ConfirmationUnanswered
-  | TransferFlowScenario.DetailsChangedAfterNoAnswer
-  | TransferFlowScenario.ReviewUnexpected
-  | TransferFlowScenario.ApprovalCancelled
-  | TransferFlowScenario.BiometricsNotRecognised
-  | TransferFlowScenario.BiometricsLockedOut
-  | TransferFlowScenario.BiometricsUnavailable
-  | TransferFlowScenario.BiometricsChanged
-  | TransferFlowScenario.PinLocked
-  | TransferFlowScenario.ApprovalKeyUnknown
-  | TransferFlowScenario.ApprovalExpired
-  | TransferFlowScenario.ApprovalNotVerified
-  | TransferFlowScenario.BalanceOrLimitShortAtApproval
-  | TransferFlowScenario.RootedPhone
-  | TransferFlowScenario.ApprovalUnexpected
+  TransferScenarioId,
+  | TransferScenarioId.UnderMaintenance
+  | TransferScenarioId.BadlyFormedInput
+  | TransferScenarioId.BalanceOrLimitShortAtConfirmation
+  | TransferScenarioId.NameCheckExpired
+  | TransferScenarioId.ConfirmationUnanswered
+  | TransferScenarioId.DetailsChangedAfterNoAnswer
+  | TransferScenarioId.ReviewUnexpected
+  | TransferScenarioId.ApprovalCancelled
+  | TransferScenarioId.BiometricsNotRecognised
+  | TransferScenarioId.BiometricsLockedOut
+  | TransferScenarioId.BiometricsUnavailable
+  | TransferScenarioId.BiometricsChanged
+  | TransferScenarioId.PinLocked
+  | TransferScenarioId.ApprovalKeyUnknown
+  | TransferScenarioId.ApprovalExpired
+  | TransferScenarioId.ApprovalNotVerified
+  | TransferScenarioId.BalanceOrLimitShortAtApproval
+  | TransferScenarioId.RootedPhone
+  | TransferScenarioId.ApprovalUnexpected
 >;
 
 export type TransferRecipient = Extract<

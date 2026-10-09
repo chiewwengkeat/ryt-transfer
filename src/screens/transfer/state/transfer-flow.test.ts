@@ -3,13 +3,13 @@ import {
   CreateTransferErrorCode,
 } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { asSen } from "@/shared/lib/money/money";
 
 import {
   ApprovalPath,
   dispatchTransferFlow,
   TransferFlowActionType,
-  TransferFlowScenario,
   TransferFlowStep,
   transferFlowStore,
   TransferHoldKind,
@@ -53,14 +53,14 @@ it("returns an unanswered create to review with its key, and a refused one witho
   confirmTransferOfRm100();
   dispatchTransferFlow({
     type: TransferFlowActionType.CreateUnanswered,
-    notice: TransferFlowScenario.ConfirmationUnanswered,
+    notice: TransferScenarioId.ConfirmationUnanswered,
   });
   const unanswered = transferFlowStore.getState();
 
   confirmTransferOfRm100();
   dispatchTransferFlow({
     type: TransferFlowActionType.CreateNotSent,
-    notice: TransferFlowScenario.ReviewUnexpected,
+    notice: TransferScenarioId.ReviewUnexpected,
   });
 
   expect(unanswered).toMatchObject({
@@ -74,18 +74,18 @@ it("gives a create stopped on review its own notice detail, never an earlier ref
   confirmTransferOfRm100();
   dispatchTransferFlow({
     type: TransferFlowActionType.CreateNotSent,
-    notice: TransferFlowScenario.BalanceOrLimitShortAtConfirmation,
+    notice: TransferScenarioId.BalanceOrLimitShortAtConfirmation,
     noticeDetail: { code: CreateTransferErrorCode.InsufficientFunds },
   });
 
   dispatchTransferFlow({
     type: TransferFlowActionType.CreateNotSent,
-    notice: TransferFlowScenario.ReviewUnexpected,
+    notice: TransferScenarioId.ReviewUnexpected,
   });
 
   expect(transferFlowStore.getState()).toMatchObject({
     step: TransferFlowStep.Reviewing,
-    notice: TransferFlowScenario.ReviewUnexpected,
+    notice: TransferScenarioId.ReviewUnexpected,
   });
   expect(transferFlowStore.getState()).not.toHaveProperty("noticeDetail.code");
 });

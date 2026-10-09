@@ -6,10 +6,10 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   TRANSFER_SCENARIOS,
   type TransferScenario,
-  type TransferScenarioId,
 } from "@/mocks/scenarios/transfer-scenarios";
 import { AppLanguage } from "@/shared/i18n/i18n";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
