@@ -7,7 +7,6 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import {
-  listPendingTransfers,
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
@@ -171,11 +170,12 @@ it("quotes nothing when the session ends while Home still announces how an earli
       }),
     ),
   );
-  await renderRoute("/");
-  await screen.findByText(
-    `Your transfer of RM 100.00 to ${lookup.recipient.registeredName} was sent — money moved.`,
-  );
-  expect(await listPendingTransfers(customerId)).toHaveLength(1);
+  const sentNotice = `Your transfer of RM 100.00 to ${lookup.recipient.registeredName} was sent — money moved.`;
+  const view = await renderRoute("/");
+  await screen.findByText(sentNotice);
+  // Announced again at the next launch, so the record outlived its announcement and the view has one to pass over.
+  await relaunchApp(view);
+  await screen.findByText(sentNotice);
 
   await endTheSession();
 

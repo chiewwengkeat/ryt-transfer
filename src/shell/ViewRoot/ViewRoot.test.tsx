@@ -7,7 +7,6 @@ import { AccessibilityInfo, AppState, Pressable, Text } from "react-native";
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { askForApprovalPin } from "@/domains/approval/hooks/approval-pin-sheet";
 import {
-  listPendingTransfers,
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
@@ -18,7 +17,7 @@ import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { reportedScenarios } from "@/test/harness/recording-sink";
 import { mswServer } from "@/test/msw-server";
-import { renderRoute } from "@/test/render-route";
+import { relaunchApp, renderRoute } from "@/test/render-route";
 
 function HomeBalance() {
   const { data } = useQuery({
@@ -215,13 +214,16 @@ it("ignores hardware Back while the session-ended view covers the app, and obeys
 });
 
 it("discards another customer's pending transfers at launch, and keeps the signed-in customer's", async () => {
-  const {
-    body: { customerId },
-  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
-  // Still awaiting approval, so reopening it at launch keeps its record; one the bank cannot find would be cleared.
+  const { body: signedInAccount } = await sendToBank<GetPrimaryAccountResponse>(
+    "GET",
+    "/accounts/primary",
+  );
   const {
     created: { transfer: ownTransfer },
   } = await startTestTransfer(10_000);
+  const {
+    created: { transfer: earlierCustomersTransfer },
+  } = await startTestTransfer(5_000);
   const pendingSince = {
     idempotencyKey: "key-earlier",
     createdAt: "2026-10-07T01:00:00.000Z",
@@ -229,24 +231,31 @@ it("discards another customer's pending transfers at launch, and keeps the signe
   };
   await writePendingTransfer("cus_earlier", {
     ...pendingSince,
-    transferId: "trf_earlier",
+    transferId: earlierCustomersTransfer.transferId,
   });
-  await writePendingTransfer(customerId, {
+  await writePendingTransfer(signedInAccount.customerId, {
     ...pendingSince,
     transferId: ownTransfer.transferId,
   });
 
-  await renderRoute("/", {
+  const view = await renderRoute("/", {
     appDir: "src/app",
     overrides: { index: () => <Text>Home</Text> },
   });
-
-  await waitFor(async () => {
-    expect(await listPendingTransfers("cus_earlier")).toEqual([]);
+  await waitFor(() => {
+    expect(view.getPathname()).toBe(
+      `/transfer/result/${ownTransfer.transferId}`,
+    );
   });
-  expect(await listPendingTransfers(customerId)).toEqual([
-    { ...pendingSince, transferId: ownTransfer.transferId },
-  ]);
+  mswServer.use(
+    http.get("*/accounts/primary", () =>
+      HttpResponse.json({ ...signedInAccount, customerId: "cus_earlier" }),
+    ),
+  );
+  const relaunched = await relaunchApp(view);
+  await act(() => jest.advanceTimersByTimeAsync(500));
+
+  expect(relaunched.getPathname()).toBe("/");
 });
 
 it("answers an open PIN request as closed when the app's root goes away, so its caller is not left waiting", async () => {

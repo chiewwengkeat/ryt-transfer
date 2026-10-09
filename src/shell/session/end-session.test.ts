@@ -1,64 +1,99 @@
-import type { InfiniteData } from "@tanstack/react-query";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
-import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
-import { hasApprovalKeysOnFile } from "@/domains/approval/hooks/approval-keys";
+import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
-import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
-import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 import {
-  listPendingTransfers,
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
-import {
-  TransferFlowStep,
-  transferFlowStore,
-} from "@/screens/transfer/state/transfer-flow";
-import { queryClient } from "@/shell/query-client";
-import { sendToBank } from "@/test/bank-client";
+import { sendToBank, startTestTransfer } from "@/test/bank-client";
+import { biometricPromptsShown } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { pressHardwareBack } from "@/test/hardware-back";
 import { relaunchApp, renderRoute } from "@/test/render-route";
 
 import { endSession } from "./end-session";
 
-it("leaves nothing of the customer's behind — their transfer history, the open transfer and their pending transfers — but keeps the phone's pairing and the host app's approval setting", async () => {
-  const { customerId } = await queryClient.fetchQuery(
-    getPrimaryAccountOptions(),
-  );
-  const { body: historyPage } = await sendToBank<ListTransfersResponse>(
-    "GET",
-    "/transfers",
-  );
-  queryClient.setQueryData<InfiniteData<ListTransfersResponse>>(
-    transferKeys.history(),
-    { pages: [historyPage], pageParams: [null] },
-  );
-  const cachedHistory = () =>
-    queryClient.getQueriesData({ queryKey: transferKeys.historyAll });
-  expect(cachedHistory()).toHaveLength(1);
+it("reopens none of their transfers at the next launch, though one still awaits approval", async () => {
+  const {
+    body: { customerId },
+  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
+  const {
+    created: { transfer },
+  } = await startTestTransfer(10_000);
+  const view = await renderRoute("/");
+  await screen.findByText("RM 12,845.50");
   await writePendingTransfer(customerId, {
-    transferId: "trf_unconfirmed",
-    idempotencyKey: "key-unconfirmed",
+    transferId: transfer.transferId,
+    idempotencyKey: "approval-key",
     createdAt: "2026-10-08T01:00:00.000Z",
     stage: PendingTransferStage.Approving,
   });
+
+  await act(() => endSession());
+  const relaunched = await relaunchApp(view);
+  await act(() => jest.advanceTimersByTimeAsync(500));
+
+  expect(relaunched.getPathname()).toBe("/");
+});
+
+it("closes the amount step of the transfer they were entering", async () => {
+  const view = await renderRoute("/transfer");
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByLabelText("Amount (RM)");
+
+  await act(() => endSession());
+
+  await waitFor(() => {
+    expect(view.getPathname()).toBe("/transfer");
+  });
+  expect(screen.queryByLabelText("Amount (RM)")).toBeNull();
+});
+
+it("opens History on its loader, never on the transfers it showed before the session ended", async () => {
+  const transferRowTime = /^\d{1,2}:\d{2} [ap]m · /;
+  await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer history" }),
+  );
+  expect(await screen.findAllByText(transferRowTime)).not.toHaveLength(0);
+  await pressHardwareBack();
+
+  await act(() => endSession());
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Transfer history" }),
+  );
+
+  expect(screen.getByLabelText("Loading")).toBeOnTheScreen();
+  expect(screen.queryAllByText(transferRowTime)).toHaveLength(0);
+});
+
+it("keeps the host app's choice of the PIN over face or fingerprint, so the next approval asks for the PIN", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  transferFlowStore.setState(
-    { step: TransferFlowStep.Editing, draft: { note: "Rent" } },
-    true,
-  );
   approvalSettingsStore.setState({ biometricApprovalOn: false });
+  await renderRoute("/transfer");
 
-  await endSession();
-
-  expect(cachedHistory()).toEqual([]);
-  expect(await listPendingTransfers(customerId)).toEqual([]);
-  expect(await hasApprovalKeysOnFile()).toBe(true);
-  expect(transferFlowStore.getState()).toEqual(
-    transferFlowStore.getInitialState(),
+  await act(() => endSession());
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
   );
-  expect(approvalSettingsStore.getState().biometricApprovalOn).toBe(false);
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByLabelText("PIN, 0 of 6 digits entered"),
+  ).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toHaveLength(0);
 });
 
 it("approves the first transfer after signing in again with no setting up, because signing out kept the phone paired", async () => {

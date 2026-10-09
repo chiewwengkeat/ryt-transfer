@@ -11,7 +11,6 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import {
-  listPendingTransfers,
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
@@ -51,7 +50,6 @@ async function launchWithATransferLastSeenProcessing(
   const view = await renderRoute("/");
   return {
     view,
-    customerId,
     bankAnswer,
     recipientName: lookup.recipient.registeredName,
   };
@@ -83,16 +81,13 @@ it.each([
     "was stopped by the bank to protect you. The bank will contact you about it — no money moved.",
   ],
 ])(
-  "tells Home at launch how a transfer last seen processing ended (%s), until it is dismissed",
+  "tells Home at launch how a transfer last seen processing ended (%s), until it is dismissed, and not again at the next launch",
   async (_, statusNow, ending) => {
-    const { customerId, recipientName } =
+    const { view, recipientName } =
       await launchWithATransferLastSeenProcessing(statusNow);
+    const endingNotice = `Your transfer of RM 100.00 to ${recipientName} ${ending}`;
 
-    expect(
-      await screen.findByText(
-        `Your transfer of RM 100.00 to ${recipientName} ${ending}`,
-      ),
-    ).toBeOnTheScreen();
+    expect(await screen.findByText(endingNotice)).toBeOnTheScreen();
     expect(screen.queryByText(STILL_BEING_CHECKED)).toBeNull();
 
     await fireEvent.press(
@@ -104,7 +99,10 @@ it.each([
     await waitFor(() => {
       expect(screen.queryByRole("button", { name: /^Dismiss/ })).toBeNull();
     });
-    expect(await listPendingTransfers(customerId)).toEqual([]);
+    await relaunchApp(view);
+    await expect(
+      screen.findByText(endingNotice, {}, { timeout: 500 }),
+    ).rejects.toThrow("Unable to find an element with text");
   },
 );
 
@@ -272,8 +270,10 @@ it("shows Dismiss on each notice's control, names its transfer to screen readers
     }),
   );
   const recipientName = first.lookup.recipient.registeredName;
+  const firstSentNotice = `Your transfer of RM 100.00 to ${recipientName} was sent — money moved.`;
+  const secondSentNotice = `Your transfer of RM 50.00 to ${recipientName} was sent — money moved.`;
 
-  await renderRoute("/");
+  const view = await renderRoute("/");
 
   expect(
     await screen.findByRole("button", {
@@ -288,20 +288,14 @@ it("shows Dismiss on each notice's control, names its transfer to screen readers
   );
 
   await waitFor(() => {
-    expect(
-      screen.queryByText(
-        `Your transfer of RM 50.00 to ${recipientName} was sent — money moved.`,
-      ),
-    ).toBeNull();
+    expect(screen.queryByText(secondSentNotice)).toBeNull();
   });
-  expect(
-    screen.getByText(
-      `Your transfer of RM 100.00 to ${recipientName} was sent — money moved.`,
-    ),
-  ).toBeOnTheScreen();
-  expect(await listPendingTransfers(customerId)).toEqual([
-    expect.objectContaining({ transferId: first.created.transfer.transferId }),
-  ]);
+  expect(screen.getByText(firstSentNotice)).toBeOnTheScreen();
+  await relaunchApp(view);
+  expect(await screen.findByText(firstSentNotice)).toBeOnTheScreen();
+  await expect(
+    screen.findByText(secondSentNotice, {}, { timeout: 500 }),
+  ).rejects.toThrow("Unable to find an element with text");
 });
 
 it("checks a pending transfer again once they sign back in, and tells Home how it ended", async () => {
