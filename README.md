@@ -30,7 +30,7 @@ pnpm ios        # or: pnpm android
 
 `pnpm ios` and `pnpm android` build the app, install it on a simulator or emulator and open it, then keep running as the Metro bundler the app loads its code from: leave that terminal open while you use the app. The first build takes several minutes.
 
-`pnpm start` serves a development build already installed: its QR code and its `a` key open Ryt Transfer Dev, never Expo Go, which cannot run this app.
+Once `pnpm ios` or `pnpm android` has built the development app, `pnpm start` serves it: its QR code and its `a` key open Ryt Transfer Dev, never Expo Go, which cannot run this app.
 
 With several simulators or emulators running, they pick the first one. Name yours with `--device`: a simulator's UDID (`xcrun simctl list devices booted` lists them) or an emulator's AVD name (`$ANDROID_HOME/emulator/emulator -list-avds`).
 
