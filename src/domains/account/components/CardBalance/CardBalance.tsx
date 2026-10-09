@@ -4,8 +4,8 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
-  getTransferLimitsMaintenance,
   useGetTransferLimits,
+  useTransferLimitsMaintenance,
 } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import {
@@ -38,14 +38,9 @@ export default function CardBalance({
   const refetchInterval = useIsOffline() ? 10_000 : false;
   const account = useGetPrimaryAccount({ refetchInterval });
   const limits = useGetTransferLimits({ refetchInterval });
-  const [maintenanceBeforeReRead, setMaintenanceBeforeReRead] = useState(false);
   // Maintenance pauses transfers, not the balance: the balance still shows, and Transfer says why it waits.
-  // A re-read of limits that never loaded clears that answer until it lands: kept, the card stays compact.
   const limitsPausedForMaintenance =
-    getTransferLimitsMaintenance(limits.error) !== undefined ||
-    (limits.fetchStatus !== "idle" && maintenanceBeforeReRead);
-  if (limitsPausedForMaintenance !== maintenanceBeforeReRead)
-    setMaintenanceBeforeReRead(limitsPausedForMaintenance);
+    useTransferLimitsMaintenance(limits) !== undefined;
   const [failureBeforeReRead, setFailureBeforeReRead] = useState<Error | null>(
     null,
   );
