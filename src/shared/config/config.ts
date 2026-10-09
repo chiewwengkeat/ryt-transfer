@@ -1,8 +1,11 @@
 // Sets, not object keys: a lookup must never find `constructor` or `__proto__`.
+// eslint-disable-next-line fe/file-layout -- read at load by the variant check
 const BUILD_VARIANTS = new Set(["production", "demo", "development"]);
+// eslint-disable-next-line fe/file-layout -- read at load by isProductionBuild
 const SWITCHER_VARIANTS = new Set(["demo", "development"]);
 
 // Unset or empty fails closed, as production.
+// eslint-disable-next-line fe/file-layout -- read at load by the variant check
 const buildVariant = process.env.EXPO_PUBLIC_APP_VARIANT || "production";
 if (!BUILD_VARIANTS.has(buildVariant)) {
   throw new Error(

@@ -30,8 +30,6 @@ import {
 import { watchRoutesDrawnOnTop } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
-const t = getFixedT(null, ["shared"]);
-
 it("opens the result page straight from review, showing no other screen of the transfer between them", async () => {
   await reviewRm100Transfer();
   const transferButton = await screen.findByRole("button", {
@@ -280,6 +278,7 @@ it("says the same on review when it is today's limit the bank finds short as the
 });
 
 // Read against the clock the app reads: a fixed time stops being ahead once it has passed.
+// eslint-disable-next-line fe/file-layout -- read at load by an it.each table
 const securityWaitEndsAt = new Date(Date.now() + 60 * 60_000).toISOString();
 
 it.each([
@@ -296,7 +295,7 @@ it.each([
       until: securityWaitEndsAt,
       reason: "DEVICE_PAIRED",
     },
-    `You can send money from ${formatMalaysianDateTime(securityWaitEndsAt, t)} — a security wait after pairing this phone.`,
+    `You can send money from ${formatMalaysianDateTime(securityWaitEndsAt, getFixedT(null, ["shared"]))} — a security wait after pairing this phone.`,
   ],
 ])(
   "holds Transfer on review, saying why and offering no PIN instead, with no record to recheck, when %s after the transfer was created",

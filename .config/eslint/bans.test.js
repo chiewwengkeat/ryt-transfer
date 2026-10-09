@@ -6,8 +6,10 @@ const { after, before, test } = require("node:test");
 
 const { ESLint } = require("eslint");
 
+// eslint-disable-next-line fe/file-layout -- read at load by the before hook, which node:test runs as it registers
 const REPO_ROOT = path.join(__dirname, "..", "..");
 // The type-aware parser lints only files on disk, so the cases go to a copy of the lint setup.
+// eslint-disable-next-line fe/file-layout -- read at load by the before hook, which node:test runs as it registers
 const LINT_SETUP = [
   ".config",
   "eslint.config.mjs",
@@ -15,42 +17,56 @@ const LINT_SETUP = [
   "tsconfig.json",
 ];
 
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const TEST_ID_BAN = {
   ruleId: "no-restricted-syntax",
   message: /accessibilityLabel/,
 };
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const MSW_BAN = {
   ruleId: "@typescript-eslint/no-restricted-imports",
   message: /metro\.msw-entry\.mjs/,
 };
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const SCREEN_CAPTURE_BAN = {
   ruleId: "no-restricted-imports",
   message: /whose one key they must share/,
 };
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const MOCKS_BAN = { ruleId: "no-restricted-imports", message: /^'@\/mocks\// };
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const DEMO_CONTRACT_BAN = {
   ruleId: "no-restricted-imports",
   message: /only the demo contract's types/,
 };
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const STORAGE_BAN = {
   ruleId: "no-restricted-imports",
   message: /wrappers in src\/shared\/platform/,
 };
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const PARENT_FOLDER_IMPORT_BAN = {
   ruleId: "no-restricted-imports",
   message: /outside it with @\//,
 };
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const PARENT_FOLDER_SYNTAX_BAN = {
   ruleId: "no-restricted-syntax",
   message: /outside it with @\//,
 };
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const SCREEN_DIR = "src/screens/probe/ProbeScreen";
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const ROOT_DIR = "src/root/probe";
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const DEMO_CONTRACT = "@/mocks/demo-layer/demo-layer";
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const VIEW_IMPORT = 'import { View } from "react-native";\n';
+// eslint-disable-next-line fe/file-layout -- read at load by CASES
 const componentReturning = (imports, element) =>
   `${imports}\nexport default function Probe() {\n  return ${element};\n}\n`;
 
+// eslint-disable-next-line fe/file-layout -- read at load by the before hook and the test loop
 const CASES = [
   ...[
     ["a JSX attribute", true, "", '<View testID="probe" />'],
@@ -343,7 +359,9 @@ const CASES = [
   })),
 ];
 
+// eslint-disable-next-line fe/file-layout -- read at load by the before hook, which node:test runs as it registers
 let lintRoot;
+// eslint-disable-next-line fe/file-layout -- filled by the before hook, which node:test runs as it registers
 const messagesByFile = new Map();
 
 before(async () => {

@@ -34,7 +34,9 @@ export enum TransferStep {
   Recovery = "Recovery",
 }
 
+// eslint-disable-next-line fe/file-layout -- read at load by TRANSFER_SCENARIOS
 const MINUTE_MS = 60_000;
+// eslint-disable-next-line fe/file-layout -- read at load by TRANSFER_SCENARIOS
 const HOUR_MS = 60 * MINUTE_MS;
 
 export const TRANSFER_SCENARIOS = {

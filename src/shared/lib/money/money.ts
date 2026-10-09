@@ -40,6 +40,7 @@ export function parseTypedAmount(text: string): Money | null {
   return { minor: asSen(minor), currency: "MYR" };
 }
 
+// eslint-disable-next-line fe/file-layout -- read by Sen's key, which no-use-before-define counts as a use
 declare const senBrand: unique symbol;
 
 export type Sen = number & { readonly [senBrand]: true };

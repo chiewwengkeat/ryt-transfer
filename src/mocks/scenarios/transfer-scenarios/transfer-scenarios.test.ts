@@ -28,6 +28,7 @@ import {
   type BankErrorBody,
 } from "@/test/mock-bank/mock-bank";
 
+// eslint-disable-next-line fe/file-layout -- read at load by an it.each table
 const HOUR_MS = 60 * 60 * 1000;
 
 afterEach(() => {

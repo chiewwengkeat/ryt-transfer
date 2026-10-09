@@ -3,6 +3,7 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 
 // Kept current from launch rather than on first use: the stack's transition options read it outside any component.
+// eslint-disable-next-line fe/file-layout -- read at load by isReduceMotionEnabled().then
 const reduceMotionStore = createStore(() => ({
   phoneReducesMotion: false,
 }));

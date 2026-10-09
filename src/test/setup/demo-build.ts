@@ -6,11 +6,13 @@ import type * as AppLaunch from "@/root/app-launch/app-launch";
 // ⛔ Import this before anything that loads the shell: a launch already loaded is handed back, run as production's.
 // Launched here, before jest-setup's hook can, so its load-time code runs as a demo build's does. Its demo layer still
 // loads as null, since the variant is read from the environment: requests go through msw, and each test pairs the phone.
+// eslint-disable-next-line fe/file-layout -- read at load by launchingAsDemo.restore()
 const launchingAsDemo = jest.replaceProperty(
   config,
   "isProductionBuild",
   false,
 );
+// eslint-disable-next-line fe/file-layout -- loads the launch before launchingAsDemo.restore()
 const appLaunch = jest.requireActual<typeof AppLaunch>(
   "@/root/app-launch/app-launch",
 );

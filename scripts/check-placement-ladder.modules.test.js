@@ -5,13 +5,16 @@ const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
 
+// eslint-disable-next-line fe/file-layout -- read at load by keyboardHookUser
 const moduleImporting = (...specifiers) =>
   specifiers
     .map((specifier, i) => `import * as Imported${i} from "${specifier}";\n`)
     .join("");
 
+// eslint-disable-next-line fe/file-layout -- read at load by the loop over the shared hook's users
 const AMOUNT_SCREEN_FILE =
   "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.tsx";
+// eslint-disable-next-line fe/file-layout -- read at load by the loop over the shared hook's users
 const ROOT_VIEW_FILE = "src/root/ViewRoot/ViewRoot.tsx";
 
 test("fails a screens-folder hook that one screen uses, naming that screen's hooks folder", () => {
@@ -100,9 +103,11 @@ test("fails a shared hook that one screen uses, naming that screen's hooks folde
   );
 });
 
+// eslint-disable-next-line fe/file-layout -- read at load by the loop over the shared hook's users
 const keyboardHookUser = moduleImporting(
   "@/shared/hooks/use-keyboard-height/use-keyboard-height",
 );
+// eslint-disable-next-line fe/file-layout -- read at load by the loop over the shared hook's users
 const domainHooksUser = moduleImporting(
   "@/domains/transfer/hooks/use-status-checker/use-status-checker",
   "@/domains/approval/hooks/use-resend-timer/use-resend-timer",

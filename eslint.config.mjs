@@ -1,3 +1,4 @@
+/* eslint-disable fe/file-layout -- a config file built at load */
 import path from "node:path";
 
 import js from "@eslint/js";
@@ -182,7 +183,16 @@ export default defineConfig(
     files: ["**/*.{js,mjs,cjs,ts,tsx}"],
     ignores: ["src/app/**", "**/*.d.ts"],
     plugins: { fe },
-    rules: { "fe/file-layout": "off" },
+    rules: { "fe/file-layout": "error" },
+  },
+  {
+    files: [...TEST_FILES, ".config/**/*.test.js", "scripts/*.test.js"],
+    rules: {
+      "max-lines": [
+        "error",
+        { max: 500, skipBlankLines: false, skipComments: false },
+      ],
+    },
   },
   prettier,
 );

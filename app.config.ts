@@ -1,3 +1,4 @@
+/* eslint-disable fe/file-layout -- a config file built at load */
 import type { ExpoConfig } from "expo/config";
 
 const VARIANTS: Record<

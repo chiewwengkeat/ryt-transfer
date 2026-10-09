@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
+// eslint-disable-next-line fe/file-layout -- read at load by BUNDLE_MARKERS
 const DEMO_LAYER_VARIANTS = ["demo", "development"];
 
 // Strings each group's code uses at runtime: minify drops a constant only a dead branch reads.
@@ -54,6 +55,7 @@ const BUNDLE_MARKERS = [
   },
 ];
 
+// eslint-disable-next-line fe/file-layout -- read at load by the require.main run
 const EXPORT_RUNS = [
   { variant: "production", platform: "android" },
   { variant: "production", platform: "ios" },
@@ -66,6 +68,7 @@ const EXPORT_RUNS = [
 
 // Failures print only after the last export ends, so the production-bundle job's timeout-minutes
 // must outlast every export running to this limit.
+// eslint-disable-next-line fe/file-layout -- read at load by the require.main run
 const EXPORT_TIMEOUT_MINUTES = 5;
 
 function checkProductionBundle({

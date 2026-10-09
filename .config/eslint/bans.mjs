@@ -1,3 +1,4 @@
+/* eslint-disable fe/file-layout -- a config file built at load */
 import { readFileSync } from "node:fs";
 import path from "node:path";
 

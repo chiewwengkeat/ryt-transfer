@@ -21,8 +21,11 @@ import {
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
 
+// eslint-disable-next-line fe/file-layout -- read at load by an it.each table
 const SENT_AT = "5 Oct 2026, 3:42 pm";
+// eslint-disable-next-line fe/file-layout -- read at load by an it.each table
 const SETTLED_AT = "6 Oct 2026, 9:05 am";
+// eslint-disable-next-line fe/file-layout -- read at load by an it.each table
 const RECIPIENT_ID_LABELS = [
   ["Mobile number", RecipientIdType.Mobile],
   ["NRIC number", RecipientIdType.Nric],
@@ -460,13 +463,10 @@ it.each([
 );
 
 it("shows when a transfer was sent in Bahasa Malaysia, and in Chinese once the language is switched", async () => {
-  const transfer = buildHistoryTransfer({
-    createdAt: "2026-03-05T15:42:00+08:00",
-  });
-  serveTransferHistoryPages([[transfer]]);
-  serveTransferDetails(transfer);
   pickAppLanguage(AppLanguage.Malay);
-  await renderRoute(`/transfer-history/${transfer.transferId}`);
+  await openTransferDetails(
+    buildHistoryTransfer({ createdAt: "2026-03-05T15:42:00+08:00" }),
+  );
 
   expect(await screen.findByText("5 Mac 2026, 3:42 PTG")).toBeOnTheScreen();
   await act(() => {
@@ -491,7 +491,6 @@ const AISYAH_IN_FULL = buildHistoryTransfer({
   underReview: true,
   updatedAt: "2026-10-06T09:05:00+08:00",
 });
-
 const OUT_OF_DATE = "Couldn't refresh — these details may be out of date";
 
 async function openTransferDetails(transfer: Transfer) {

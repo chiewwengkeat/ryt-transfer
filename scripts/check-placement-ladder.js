@@ -7,7 +7,9 @@ const { isTestCode } = require("../.config/test-files");
 const { readImportGraph } = require("./import-graph");
 const { findEntriesOutsideTheSliceFolders } = require("./slice-layout");
 
+// eslint-disable-next-line fe/file-layout -- read at load by the try that runs the check
 const staged = process.argv[2] === "--staged";
+// eslint-disable-next-line fe/file-layout -- read at load by the try that runs the check
 const rootDir = staged
   ? checkoutStagedSnapshot()
   : path.resolve(process.argv[2] ?? process.cwd());

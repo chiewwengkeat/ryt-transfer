@@ -26,6 +26,7 @@ export {
   TransferHoldKind,
 } from "./flow-store.type";
 
+// eslint-disable-next-line fe/file-layout -- read at load by transferFlowStore
 const STARTING_FLOW: TransferFlowState = {
   step: TransferFlowStep.Editing,
   draft: {},

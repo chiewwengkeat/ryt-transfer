@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
+// eslint-disable-next-line fe/file-layout -- read at load by the require.main run
 const RELEASE_VARIANTS = new Set(["demo", "production"]);
 
 function buildAndroidReleaseApk({

@@ -2,6 +2,7 @@ import { PermissionStatus } from "expo";
 // ⛔ Type imports only from expo-contacts: a value import loads it before its double is installed.
 import type { ContactsPermissionResponse, ExistingPhone } from "expo-contacts";
 
+// eslint-disable-next-line fe/file-layout -- read at load by contactsNativeDouble
 class ContactDouble {
   readonly phones: ExistingPhone[];
 

@@ -1,3 +1,4 @@
+/* eslint-disable fe/file-layout -- a config file built at load */
 import path from "node:path";
 
 import boundaries from "eslint-plugin-boundaries";

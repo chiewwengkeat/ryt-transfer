@@ -1,5 +1,6 @@
 import { findRouteTestedScenarioIds } from "./find-route-tested-scenario-ids";
 
+// eslint-disable-next-line fe/file-layout -- read at load by an it.each table
 const ROUTE_TEST = `
 it(
   "says the app is offline",

@@ -7,6 +7,7 @@ export enum ApprovalPinSheetStep {
   PinLocked = "pin_locked",
 }
 
+// eslint-disable-next-line fe/file-layout -- read at load by approvalPinSheetStore
 const CLOSED_SHEET: ApprovalPinSheet = { step: ApprovalPinSheetStep.Closed };
 
 // ⛔ Never the PIN: it passes through `answer` to the caller and lives only in that call.

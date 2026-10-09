@@ -1,3 +1,4 @@
+/* eslint-disable fe/file-layout -- its launch steps run in order */
 import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { warmUpDeviceIntegrityCheck } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";

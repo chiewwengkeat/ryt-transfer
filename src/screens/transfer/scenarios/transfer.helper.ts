@@ -1,6 +1,7 @@
 import { AppLanguage } from "@/shared/i18n/i18n";
 
 // Jest defines it; the app's types deliberately leave out Node's globals.
+// eslint-disable-next-line fe/file-layout -- read at load by matrixHeader
 declare const __dirname: string;
 
 export const [matrixHeader = "", ...stepChunks] = jest

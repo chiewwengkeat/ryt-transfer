@@ -1,3 +1,4 @@
+/* eslint-disable fe/file-layout -- a config file built at load */
 const expoPreset = require("jest-expo/jest-preset");
 
 const { TEST_FILES } = require("./.config/test-files");
