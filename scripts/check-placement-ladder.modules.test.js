@@ -36,6 +36,7 @@ function runPlacementCheckOn(tree) {
 
 const AMOUNT_SCREEN_FILE =
   "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.tsx";
+const ROOT_VIEW_FILE = "src/root/ViewRoot/ViewRoot.tsx";
 
 test("fails a screens-folder hook that one screen uses, naming that screen's hooks folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
@@ -142,9 +143,9 @@ for (const [users, tree] of [
     },
   ],
   [
-    "the shell and one screens folder",
+    "the root and one screens folder",
     {
-      "src/shell/ViewLaunchRecovery/ViewLaunchRecovery.tsx": keyboardHookUser,
+      [ROOT_VIEW_FILE]: keyboardHookUser,
       [AMOUNT_SCREEN_FILE]: keyboardHookUser,
     },
   ],
@@ -154,7 +155,7 @@ for (const [users, tree] of [
       "src/domains/transfer/hooks/use-status-checker.ts": keyboardHookUser,
       "src/domains/approval/hooks/use-resend-timer.ts": keyboardHookUser,
       "src/screens/home/HomeScreen/HomeScreen.tsx": domainHooksUser,
-      "src/shell/OverlayPinSheet/OverlayPinSheet.tsx": domainHooksUser,
+      [ROOT_VIEW_FILE]: domainHooksUser,
     },
   ],
 ]) {
@@ -168,23 +169,25 @@ for (const [users, tree] of [
   });
 }
 
-test("fails a shared hook that only the shell uses, naming src/shell/", () => {
+test("fails a shared hook that only the root view uses, naming the root view's hooks folder", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     [KEYBOARD_HOOK_FILE]: KEYBOARD_HOOK_SOURCE,
-    "src/shell/ViewLaunchRecovery/ViewLaunchRecovery.tsx": keyboardHookUser,
+    [ROOT_VIEW_FILE]: keyboardHookUser,
   });
   assert.equal(exitCode, 1);
   assert.match(
     errors,
-    /use-keyboard-height\.ts: only the shell uses it .* - it belongs in src\/shell\/$/m,
+    /use-keyboard-height\.ts: every user sits in src\/root\/ViewRoot\/ .* - it belongs in src\/root\/ViewRoot\/hooks\/$/m,
   );
 });
 
-test("passes a domain hook that only the shell uses", () => {
+test("passes a domain hook that only the root uses, when its files import that domain", () => {
   const { exitCode, errors } = runPlacementCheckOn({
-    "src/domains/approval/hooks/use-resend-timer.ts":
-      "export function useResendTimer() {\n  return null;\n}\n",
-    "src/shell/OverlayPinSheet/OverlayPinSheet.tsx": moduleImporting(
+    "src/domains/approval/hooks/use-resend-timer.ts": moduleImporting(
+      "@/domains/approval/api/approval.keys",
+    ),
+    "src/domains/approval/api/approval.keys.ts": "export const keys = {};\n",
+    [ROOT_VIEW_FILE]: moduleImporting(
       "@/domains/approval/hooks/use-resend-timer",
     ),
   });
@@ -198,7 +201,7 @@ test("fails a domain hook that only one domain component uses, naming that compo
       "export function usePinEntry() {\n  return null;\n}\n",
     "src/domains/approval/components/BottomSheetPin/BottomSheetPin.tsx":
       moduleImporting("@/domains/approval/hooks/use-pin-entry"),
-    "src/shell/OverlayPinSheet/OverlayPinSheet.tsx": moduleImporting(
+    [ROOT_VIEW_FILE]: moduleImporting(
       "@/domains/approval/components/BottomSheetPin/BottomSheetPin",
     ),
   });
@@ -207,4 +210,36 @@ test("fails a domain hook that only one domain component uses, naming that compo
     errors,
     /belongs in src\/domains\/approval\/components\/BottomSheetPin\/hooks\/$/m,
   );
+});
+
+const TRANSFER_LIMITS_FILE =
+  "src/screens/transfer/lib/transfer-limits/transfer-limits.ts";
+const TRANSFER_LIMITS_SOURCE = "export const transferLimits = {};\n";
+
+test("fails a screens-folder lib module that one screen uses, naming that screen's lib folder", () => {
+  const { exitCode, errors } = runPlacementCheckOn({
+    [TRANSFER_LIMITS_FILE]: TRANSFER_LIMITS_SOURCE,
+    [AMOUNT_SCREEN_FILE]: moduleImporting(
+      "@/screens/transfer/lib/transfer-limits/transfer-limits",
+    ),
+  });
+  assert.equal(exitCode, 1);
+  assert.match(
+    errors,
+    /transfer-limits: every user sits in .* - it belongs in src\/screens\/transfer\/TransferAmountScreen\/lib\/$/m,
+  );
+});
+
+test("passes a domain lib module that two screens folders use", () => {
+  const limitsUser = moduleImporting(
+    "@/domains/transfer/lib/transfer-limits/transfer-limits",
+  );
+  const { exitCode, errors } = runPlacementCheckOn({
+    "src/domains/transfer/lib/transfer-limits/transfer-limits.ts":
+      TRANSFER_LIMITS_SOURCE,
+    [AMOUNT_SCREEN_FILE]: limitsUser,
+    "src/screens/home/HomeScreen/HomeScreen.tsx": limitsUser,
+  });
+  assert.equal(errors, "");
+  assert.equal(exitCode, 0);
 });

@@ -161,11 +161,12 @@ test("passes a domain component that two screens folders use", () => {
   assert.equal(exitCode, 0);
 });
 
-test("passes a domain component that only the shell uses", () => {
+test("passes a domain component that only the root uses, when its files import that domain", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     "src/domains/approval/components/BottomSheetPin/BottomSheetPin.tsx":
-      PLACEHOLDER_COMPONENT_SOURCE,
-    "src/shell/OverlayPinSheet/OverlayPinSheet.tsx": moduleImporting(
+      moduleImporting("@/domains/approval/api/approval.keys"),
+    "src/domains/approval/api/approval.keys.ts": "export const keys = {};\n",
+    "src/root/ViewRoot/ViewRoot.tsx": moduleImporting(
       "@/domains/approval/components/BottomSheetPin/BottomSheetPin",
     ),
   });
@@ -176,9 +177,13 @@ test("passes a domain component that only the shell uses", () => {
 test("fails a screens-folder component used from outside the screens folders, naming the domain level", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     [RECEIPT_SECTION]: PLACEHOLDER_COMPONENT_SOURCE,
-    "src/shell/ViewLaunchRecovery/ViewLaunchRecovery.tsx": moduleImporting(
+    "src/root/ViewRoot/ViewRoot.tsx": moduleImporting(
       "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails",
     ),
+    "src/screens/transfer/TransferResultScreen/TransferResultScreen.tsx":
+      moduleImporting(
+        "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails",
+      ),
   });
   assert.equal(exitCode, 1);
   assert.match(errors, /belongs in src\/domains\/<area>\/components\/$/m);
@@ -366,6 +371,16 @@ test("fails a component whose only user is a route, since a route re-exports a s
   assert.equal(exitCode, 1);
   assert.match(errors, /CardBalance: only a route uses it/);
 });
+
+for (const testCode of ["src/app/index.test.tsx", "src/app/test-utils.tsx"])
+  test(`fails ${testCode}, since Expo Router bundles every file under src/app/ as a route`, () => {
+    const { exitCode, errors } = runPlacementCheckOn({
+      "src/app/index.tsx": "export default function Index() {}\n",
+      [testCode]: moduleImporting("./index"),
+    });
+    assert.equal(exitCode, 1);
+    assert.match(errors, /^src\/app\/[^:]+: Expo Router bundles every file/m);
+  });
 
 const PILL_SCENARIO_FILE =
   "src/domains/transfer/components/PillScenario/PillScenario.tsx";

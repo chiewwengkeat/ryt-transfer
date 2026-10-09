@@ -7,11 +7,11 @@ const { isTestCode } = require("../.config/test-files");
 const { readImportGraph } = require("./import-graph");
 const { findEntriesOutsideTheSliceFolders } = require("./slice-layout");
 
-function findPlacedComponentOrHook(file) {
+function findPlacedPiece(file) {
   const parts = file.split("/");
-  if (!["screens", "domains", "shared"].includes(parts[1])) return null;
+  if (!["screens", "domains", "shared", "root"].includes(parts[1])) return null;
   for (let i = parts.length - 2; i >= 2; i -= 1) {
-    if (parts[i] === "components" || parts[i] === "hooks") {
+    if (["components", "hooks", "lib"].includes(parts[i])) {
       return {
         path: parts.slice(0, i + 2).join("/"),
         container: parts.slice(0, i + 1).join("/"),
@@ -43,7 +43,8 @@ function findNearestFolderThatHoldsComponents(directory) {
       isScreenFolder ||
       isComponentFolder ||
       isBaseComponentFolder ||
-      isSliceFolder
+      isSliceFolder ||
+      isRootView(candidate.join("/"))
     )
       return candidate.join("/");
   }
@@ -82,12 +83,9 @@ function findAppUsersOf(placed, edgesByModule) {
   const users = [];
   let usedByRoute = false;
   for (const [file, edges] of edgesByModule) {
-    const insidePlaced = placed.isFile
-      ? file === placed.path
-      : file.startsWith(`${placed.path}/`);
     const reaches = (targets) =>
       targets.some((target) => reachableThrough.has(target));
-    if (insidePlaced) continue;
+    if (isInsidePiece(placed, file)) continue;
     // A route only re-exports a screen, so a route never makes a component's placement right.
     if (file.startsWith("src/app/"))
       usedByRoute ||= reaches(edges.uses) || reaches(edges.reexports);
@@ -96,14 +94,41 @@ function findAppUsersOf(placed, edgesByModule) {
   return { users, usedByRoute };
 }
 
+function isInsidePiece(placed, file) {
+  return placed.isFile
+    ? file === placed.path
+    : file.startsWith(`${placed.path}/`);
+}
+
+function isRootView(folder) {
+  return /^src\/root\/[A-Z][^/]*$/.test(folder);
+}
+
+// A domain may import no other slice, so a piece that reads a screens folder or src/mocks
+// besides its one domain stays in the root like one reading two domains.
+function findSlicesImportedBy(placed, edgesByModule) {
+  const slices = new Set();
+  for (const [file, edges] of edgesByModule) {
+    if (!isInsidePiece(placed, file)) continue;
+    for (const target of [...edges.uses, ...edges.reexports]) {
+      const slice = /^src\/(domains\/[^/]+|screens\/[^/]+|mocks)\//.exec(
+        target,
+      );
+      if (slice && !isInsidePiece(placed, target)) slices.add(slice[1]);
+    }
+  }
+  return slices;
+}
+
 function checkPlacementLadder(rootDir) {
+  const importGraph = readImportGraph(rootDir);
   const edgesByModule = new Map(
-    [...readImportGraph(rootDir)].filter(([file]) => !isTestCode(file)),
+    [...importGraph].filter(([file]) => !isTestCode(file)),
   );
 
   const placedByPath = new Map();
   for (const file of edgesByModule.keys()) {
-    const placed = findPlacedComponentOrHook(file);
+    const placed = findPlacedPiece(file);
     if (!placed) continue;
     if (!placedByPath.has(placed.path))
       placedByPath.set(placed.path, { ...placed, files: [] });
@@ -111,6 +136,11 @@ function checkPlacementLadder(rootDir) {
   }
 
   const failures = findEntriesOutsideTheSliceFolders(rootDir);
+  for (const file of importGraph.keys())
+    if (file.startsWith("src/app/") && isTestCode(file))
+      failures.push(
+        `${file}: Expo Router bundles every file under src/app/ as a route, so test code there ships in the app - move it beside what it tests`,
+      );
   for (const placed of placedByPath.values()) {
     const { users, usedByRoute } = findAppUsersOf(placed, edgesByModule);
     if (users.length === 0) {
@@ -130,23 +160,26 @@ function checkPlacementLadder(rootDir) {
       );
       continue;
     }
-    if (
-      placed.kind === "hooks" &&
-      placed.container.startsWith("src/shared/") &&
-      users.every((file) => file.startsWith("src/shell/"))
-    ) {
-      failures.push(
-        `${placed.path}: only the shell uses it (${shownUsers}) - it belongs in src/shell/`,
-      );
-      continue;
-    }
-
     const usedOutsideSlices = users.some(
-      (file) => !/^src\/(screens|domains|shared)\//.test(file),
+      (file) => !/^src\/(screens|domains|shared|root)\//.test(file),
     );
     const owner = usedOutsideSlices
       ? null
       : findNearestFolderThatHoldsComponents(findCommonDirectory(users));
+    if (
+      users.every((file) => file.startsWith("src/root/")) &&
+      (owner === null || isRootView(owner))
+    ) {
+      const slices = [...findSlicesImportedBy(placed, edgesByModule)];
+      if (slices.length === 1 && slices[0].startsWith("domains/")) {
+        const domainLevel = `src/${slices[0]}/${placed.kind}`;
+        if (placed.container !== domainLevel)
+          failures.push(
+            `${placed.path}: only src/root uses it (${shownUsers}), and its files import one domain - it belongs in ${domainLevel}/`,
+          );
+        continue;
+      }
+    }
     if (owner === null) {
       const atWideLevel =
         placed.container.startsWith("src/shared/") ||
@@ -192,7 +225,7 @@ try {
   const { placedCount, failures } = checkPlacementLadder(rootDir);
   for (const failure of failures) console.error(failure);
   console.log(
-    `placement ladder: ${placedCount} components and hooks checked, ${failures.length} misplaced`,
+    `placement ladder: ${placedCount} components, hooks and lib modules checked, ${failures.length} misplaced`,
   );
   process.exitCode = failures.length > 0 ? 1 : 0;
 } finally {
