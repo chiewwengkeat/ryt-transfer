@@ -43,24 +43,6 @@ function approveRequests() {
   );
 }
 
-it("closes the PIN sheet and checks the transfer on the result page, never saying no money moved, when something unexpected fails after the approval has left the phone", async () => {
-  await confirmRm100ApprovedByPin();
-  // Nothing after the bank's answer throws by itself, so a failing navigation stands in for any throw there.
-  const dismissFailingOnce = jest
-    .spyOn(router, "dismissTo")
-    .mockImplementationOnce(() => {
-      throw new Error("Test.");
-    });
-
-  await enterPinAndApprove(DEMO_PIN);
-
-  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
-  expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
-  expect(screen.queryByText(/no money moved/)).toBeNull();
-  expect(dismissFailingOnce).toHaveBeenCalledTimes(2);
-  dismissFailingOnce.mockRestore();
-});
-
 it("sends an approval whose answer was lost twice more, 2 and then 4 seconds on, as the same bytes under the same key", async () => {
   const approvalsSeen: { atMs: number; key: string | null; body: string }[] =
     [];

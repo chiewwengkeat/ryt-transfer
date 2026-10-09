@@ -8,14 +8,51 @@ import {
   reportBiometricSensorUnavailable,
 } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { readBankBalanceMinor, sentRequests } from "@/test/mock-bank/mock-bank";
 import {
   enterPinAndApprove,
   moveAppTo,
+  readBankOnRealTimers,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import { reportedScenarios } from "@/test/doubles/native-doubles";
+import {
+  reportedScenarios,
+  secureStoreNativeDouble,
+} from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
+// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
+async function waitForHomeToOfferTransfer() {
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+  });
+}
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
+
+function countSent(method: string, pathEnd: string) {
+  return sentRequests.filter(
+    (request) =>
+      request.method === method &&
+      new URL(request.url).pathname.endsWith(pathEnd),
+  ).length;
+}
 
 const DEMO_PIN = "246810";
 
@@ -179,3 +216,55 @@ it(
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
   }),
 );
+
+it("offers to try again or leave when the phone cannot read its approval key", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const balanceBeforeMinor = await readBankBalanceMinor();
+  await openReviewOfRm100();
+  jest
+    .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
+    .mockRejectedValueOnce(new Error("Test."));
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(
+    await screen.findByText(
+      "Something unexpected stopped the approval — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+  expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+    balanceBeforeMinor,
+  );
+});
+
+it("closes the PIN sheet and offers to try again or leave when the phone cannot read its approval key after the PIN", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+  for (const digit of "246810")
+    await fireEvent.press(await screen.findByRole("button", { name: digit }));
+  const readSecureValue = secureStoreNativeDouble.getValueWithKeyAsync;
+  jest
+    .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
+    .mockImplementation((key: string) =>
+      key.includes("possession-key-id")
+        ? Promise.reject(new Error("Test."))
+        : readSecureValue(key),
+    );
+
+  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
+
+  expect(
+    await screen.findByText(
+      "Something unexpected stopped the approval — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
+  expect(countSent("POST", "/approve")).toBe(0);
+});

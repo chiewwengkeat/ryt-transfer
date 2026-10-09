@@ -2,16 +2,70 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
+import { getLookupRecipientOptions } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
+import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
+  holdTheNextTransferRead,
   lookUpTestRecipient,
   mswServer,
+  readBankBalanceMinor,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
-import { scenarioTest, walkToTransferReview } from "@/test/render/drive-app";
+import {
+  readBankOnRealTimers,
+  scenarioTest,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
 import { reportedScenarios } from "@/test/doubles/native-doubles";
-import { renderRoute } from "@/test/render/render-route";
+import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
+const RECIPIENT_MOBILE = "012-345 6789";
+
+// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
+async function waitForHomeToOfferTransfer() {
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+  });
+}
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
+
+// Sign-in spares an answered name check, so this stands in for any later path that asks it again.
+function askOpenReviewsNameCheckAgain() {
+  return act(() => {
+    askOpenAppToReadAgain(
+      getLookupRecipientOptions({
+        idType: RecipientIdType.Mobile,
+        idValue: "+60123456789",
+      }).queryKey,
+    );
+  });
+}
+
+function countSent(method: string, pathEnd: string) {
+  return sentRequests.filter(
+    (request) =>
+      request.method === method &&
+      new URL(request.url).pathname.endsWith(pathEnd),
+  ).length;
+}
 
 async function openReviewOfRm100UntilTransferShows() {
   await renderRoute("/transfer");
@@ -232,5 +286,169 @@ it("shows, says and reports no failure of the name check an expired recipient ch
   expect(shownRightAfterSignIn).toBeNull();
   expect(announce).not.toHaveBeenCalledWith(unexpectedStop);
   expect(scenariosReportedSinceTheView()).toEqual([]);
+  expect(screen.getByText(recipient.registeredName)).toBeOnTheScreen();
+});
+
+it(
+  "checks a lost answer on the result page, and never says no money moved, even after signing in again while the name check is down",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    const releaseTransferRead = holdTheNextTransferRead();
+    const view = await openReviewOfRm100("/");
+    const transferButton = await screen.findByRole("button", {
+      name: "Transfer",
+    });
+    // Ends the session at the lost answer's balance re-read, the next account request.
+    mswServer.use(
+      http.get(
+        "*/accounts/primary",
+        () =>
+          HttpResponse.json(
+            { error: { code: "SESSION_ENDED", message: "Test." } },
+            { status: 401 },
+          ),
+        { once: true },
+      ),
+    );
+    await fireEvent.press(transferButton);
+    const signInButton = await screen.findByRole(
+      "button",
+      { name: "Sign in again" },
+      { timeout: 10_000 },
+    );
+    expect(
+      await screen.findByRole("header", {
+        name: "Checking your transfer",
+        includeHiddenElements: true,
+      }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        "This transfer is being checked, so don't send it again — not confirmed yet.",
+        { includeHiddenElements: true },
+      ),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        `If you contact us, quote this reference: ${view.getPathname()?.replace("/transfer/result/", "")}`,
+        { includeHiddenElements: true },
+      ),
+    ).toBeOnTheScreen();
+    releaseTransferRead();
+    mswServer.use(
+      http.post("*/recipients/lookup", () =>
+        HttpResponse.json(
+          { error: { code: "NAME_ENQUIRY_UNAVAILABLE", message: "Test." } },
+          { status: 503 },
+        ),
+      ),
+    );
+
+    await fireEvent.press(signInButton);
+    // Were sign-in to ask the name check, it would fail only once its retries are spent; asserting sooner passes either way.
+    await act(() => jest.advanceTimersByTimeAsync(15_000));
+
+    expect(screen.getByText("Transfer sent")).toBeOnTheScreen();
+    expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
+    expect(screen.queryByText(/no money moved/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Done" })).toBeOnTheScreen();
+    expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+      balanceBeforeMinor - 10_000,
+    );
+  }),
+);
+
+it("keeps the recipient review showed after signing in again, so the transfer carries the same reference", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  mswServer.use(
+    http.post(
+      "*/transfers",
+      () =>
+        HttpResponse.json(
+          { error: { code: "SESSION_ENDED", message: "Test." } },
+          { status: 401 },
+        ),
+      { once: true },
+    ),
+  );
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Sign in again" }),
+  );
+  // Were sign-in to ask the name check, this lets its new reference land; pressing sooner sends the first one either way.
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText("Transfer sent");
+
+  const recipientRefs = await Promise.all(
+    sentRequests
+      .filter(
+        (request) =>
+          request.method === "POST" &&
+          new URL(request.url).pathname.endsWith("/transfers"),
+      )
+      .map(
+        async (request) =>
+          ((await request.clone().json()) as { recipientRef: string })
+            .recipientRef,
+      ),
+  );
+  expect(recipientRefs).toHaveLength(2);
+  expect(recipientRefs[1]).toBe(recipientRefs[0]);
+});
+
+it("asks review's name check again once they sign back in, when the ended session cut off their Try again", async () => {
+  const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
+  await openReviewOfRm100();
+  await screen.findByText(recipient.registeredName);
+  mswServer.use(
+    http.post(
+      "*/recipients/lookup",
+      () =>
+        HttpResponse.json(
+          { error: { code: "NEW_BANK_CODE", message: "Test." } },
+          { status: 400 },
+        ),
+      { once: true },
+    ),
+  );
+  await askOpenReviewsNameCheckAgain();
+  const tryAgain = await screen.findByRole("button", { name: "Try again" });
+  mswServer.use(
+    http.post(
+      "*/recipients/lookup",
+      () =>
+        HttpResponse.json(
+          { error: { code: "SESSION_ENDED", message: "Test." } },
+          { status: 401 },
+        ),
+      { once: true },
+    ),
+  );
+  await fireEvent.press(tryAgain);
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  const nameChecksBeforeSignIn = countSent("POST", "/recipients/lookup");
+
+  await fireEvent.press(signInAgain);
+
+  // ⛔ Wait for the check first: review still shows its last Transfer for a moment after sign-in, so a find passes either way.
+  await waitFor(() => {
+    expect(countSent("POST", "/recipients/lookup")).toBe(
+      nameChecksBeforeSignIn + 1,
+    );
+  });
+  expect(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  ).toBeOnTheScreen();
   expect(screen.getByText(recipient.registeredName)).toBeOnTheScreen();
 });

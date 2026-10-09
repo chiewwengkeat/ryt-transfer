@@ -1,7 +1,9 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
+import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import { requestJson } from "@/shared/http/transport/transport";
+import { reportRequestOutcome } from "@/shared/platform/offline/offline";
 import {
   lookUpTestRecipient,
   clearTransferScenario,
@@ -9,11 +11,18 @@ import {
   sentRequests,
   pickTransferScenario,
 } from "@/test/mock-bank/mock-bank";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 import {
   scenarioTest,
   enterTransferRecipientAndAmount,
+  walkToTransferReview,
 } from "@/test/render/drive-app";
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 const RECIPIENT_MOBILE = "012-345 6789";
 const OFFLINE_NOTICE =
@@ -25,6 +34,34 @@ async function openReviewWhileNoRequestReachesTheBank() {
   mswServer.use(http.all("*", () => HttpResponse.error()));
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   await screen.findByRole("button", { name: "Try again" });
+}
+
+// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
+async function waitForHomeToOfferTransfer() {
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+  });
+}
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
+
+function countSent(method: string, pathEnd: string) {
+  return sentRequests.filter(
+    (request) =>
+      request.method === method &&
+      new URL(request.url).pathname.endsWith(pathEnd),
+  ).length;
 }
 
 it(
@@ -152,4 +189,99 @@ it("checks the name again only once while it still finds no network, never bring
     ),
   ).toBeOnTheScreen();
   expect(screen.getByRole("button", { name: "Try again" })).toBeOnTheScreen();
+});
+
+it("takes an approval lost as the phone goes offline to the result page, which reads the transfer once the phone is back", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  let releaseApproval = () => {};
+  const approvalHeld = new Promise<void>((resolve) => {
+    releaseApproval = resolve;
+  });
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      async () => {
+        await approvalHeld;
+        return HttpResponse.error();
+      },
+      { once: true },
+    ),
+    http.post("*/transfers/:transferId/approve", () => HttpResponse.error()),
+  );
+  const view = await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await waitFor(() => {
+    expect(countSent("POST", "/approve")).toBe(1);
+  });
+
+  await act(() => {
+    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+  });
+  releaseApproval();
+
+  expect(
+    await screen.findByText(
+      "This transfer is being checked, so don't send it again — not confirmed yet.",
+      {},
+      { timeout: 10_000 },
+    ),
+  ).toBeOnTheScreen();
+  expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
+  expect(screen.queryByText(/not sent|no money moved/)).toBeNull();
+  const transferPath = `/transfers/${view.getPathname()?.split("/").at(-1)}`;
+  const readsOfTheTransfer = () =>
+    sentRequests.filter(
+      (request) =>
+        request.method === "GET" &&
+        new URL(request.url).pathname.endsWith(transferPath),
+    ).length;
+  const readsWhileOffline = readsOfTheTransfer();
+  await act(() => {
+    setPhoneNetwork({ isConnected: true, isInternetReachable: true });
+  });
+  await waitFor(() => {
+    expect(readsOfTheTransfer()).toBeGreaterThan(readsWhileOffline);
+  });
+});
+
+it("offers no PIN instead while the last request found no network, and offers it again once one is answered", async () => {
+  await openReviewOfRm100();
+  expect(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
+
+  await act(() => {
+    reportRequestOutcome("GET /accounts/primary", TransportErrorKind.Network);
+  });
+
+  expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+  expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
+  await act(() => {
+    reportRequestOutcome("GET /accounts/primary");
+  });
+  expect(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
+});
+
+it("pauses sending on review while the phone reports no connection", async () => {
+  await openReviewOfRm100();
+  const transferButton = await screen.findByRole("button", {
+    name: "Transfer",
+  });
+
+  await act(() => {
+    setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+  });
+  expect(transferButton).toBeDisabled();
+  expect(
+    screen.getByText("You're offline, so sending is paused."),
+  ).toBeOnTheScreen();
+
+  await act(() => {
+    setPhoneNetwork({ isConnected: true, isInternetReachable: true });
+  });
+  expect(transferButton).toBeEnabled();
 });

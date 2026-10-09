@@ -23,6 +23,30 @@ import {
 } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
+// Home holds Transfer back until its first reads land, so a press made sooner does nothing.
+async function waitForHomeToOfferTransfer() {
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+  });
+}
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
+}
+
 async function openReviewOfRm100UntilTransferShows() {
   await renderRoute("/transfer");
   await walkToTransferReview();
@@ -322,4 +346,35 @@ it("reports a wrong PIN the bank answers while setting approval up again under t
       ]);
     });
   })();
+});
+
+it("never says the transfer was not sent when the session ends as the bank answers the approval", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  mswServer.use(
+    http.post("*/transfers/:transferId/approve", () =>
+      HttpResponse.json(
+        { error: { code: "UNAUTHORIZED", message: "Test." } },
+        { status: 401 },
+      ),
+    ),
+  );
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(await screen.findByText("Your session has ended")).toBeOnTheScreen();
+  // The ended session hides the app from screen readers, the result's notice included.
+  expect(
+    screen.getByText(
+      "This transfer is being checked, so don't send it again — not confirmed yet.",
+      { includeHiddenElements: true },
+    ),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByText("The transfer was not sent — no money moved.", {
+      includeHiddenElements: true,
+    }),
+  ).toBeNull();
 });
