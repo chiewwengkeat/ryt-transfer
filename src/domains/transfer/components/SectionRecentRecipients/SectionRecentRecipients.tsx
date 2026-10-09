@@ -1,13 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
-import {
-  colors,
-  minTouchTarget,
-  spacing,
-  typography,
-} from "@/shared/theme/theme";
+import { colors, spacing, typography } from "@/shared/theme/theme";
+import CardPressable from "@/shared/ui/CardPressable/CardPressable";
 import TextHeading from "@/shared/ui/TextHeading/TextHeading";
 
 interface Props {
@@ -18,43 +14,42 @@ export default function SectionRecentRecipients({
   onRecentChosen,
   disabledReason,
 }: Props) {
-  const { t, i18n } = useTranslation("transfer");
+  const { t } = useTranslation("transfer");
   const recents = useListRecentRecipients();
   // A shortcut only: while it loads or when it fails, the screen works without it.
   if (recents.data === undefined || recents.data.length === 0) return null;
   const disabled = disabledReason !== undefined;
 
   return (
-    <View style={styles.section}>
+    <View style={styles.main}>
       <TextHeading>{t("recents.title")}</TextHeading>
-      {recents.data.map((recent) => (
-        <Pressable
-          key={recent.recentId}
-          accessibilityRole="button"
-          accessibilityHint={disabledReason}
-          accessibilityLanguage={i18n.language}
-          accessibilityState={{ disabled }}
-          disabled={disabled}
-          onPress={() => {
-            onRecentChosen(recent.recentId);
-          }}
-          style={styles.recent}
-        >
-          <Text style={[styles.name, disabled && styles.nameDisabled]}>
-            {recent.registeredName}
-          </Text>
-          <Text style={styles.account}>
-            {`${recent.bankName} · ${recent.idValueMasked}`}
-          </Text>
-        </Pressable>
-      ))}
+      <View style={styles.sectionList}>
+        {recents.data.map((recent) => (
+          <CardPressable
+            key={recent.recentId}
+            disabledReason={disabledReason}
+            onPress={() => {
+              onRecentChosen(recent.recentId);
+            }}
+          >
+            <Text style={[styles.name, disabled && styles.nameDisabled]}>
+              {recent.registeredName}
+            </Text>
+            <Text style={styles.account}>
+              {`${recent.bankName} · ${recent.idValueMasked}`}
+            </Text>
+          </CardPressable>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { gap: spacing.sm },
-  recent: { minHeight: minTouchTarget, justifyContent: "center" },
+  main: { gap: spacing.md },
+  sectionList: {
+    gap: spacing.sm,
+  },
   name: { ...typography.label, color: colors.textPrimary },
   nameDisabled: { color: colors.textSecondary },
   account: { ...typography.body, color: colors.textSecondary },
