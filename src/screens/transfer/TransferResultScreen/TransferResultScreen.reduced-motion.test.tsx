@@ -5,7 +5,7 @@ import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   turnOnPhoneReduceMotion,
   watchReduceMotionOfAnimations,
-} from "@/test/render/reduced-motion";
+} from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
 
 it("fades into a sent transfer's result and shows its outcome and tick at once when the phone reduces motion", async () => {

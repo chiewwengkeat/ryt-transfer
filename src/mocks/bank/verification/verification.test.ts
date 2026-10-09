@@ -1,6 +1,6 @@
 import { p256 } from "@noble/curves/nist.js";
 
-import { base64Of, P256_SPKI_PREFIX } from "@/test/mock-bank/bank-client";
+import { base64Of, P256_SPKI_PREFIX } from "@/test/mock-bank/mock-bank";
 
 import { isP256PublicKey, verifyApprovalSignature } from "./verification";
 

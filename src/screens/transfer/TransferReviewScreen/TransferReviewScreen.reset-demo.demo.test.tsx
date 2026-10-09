@@ -5,11 +5,13 @@ import { http, HttpResponse } from "msw";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { secureStoreNativeDouble } from "@/test/doubles/native-doubles";
-import { reportedScenarios } from "@/test/doubles/recording-sink";
-import { mswServer } from "@/test/mock-bank/msw-server";
+import {
+  secureStoreNativeDouble,
+  reportedScenarios,
+} from "@/test/doubles/native-doubles";
+import { mswServer } from "@/test/mock-bank/mock-bank";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
+import { scenarioTest } from "@/test/render/drive-app";
 
 // A resolver that answers nothing hands the request on to the bank, once released.
 function holdTheNextPostTo(path: string) {

@@ -12,7 +12,12 @@ import {
 } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { listPendingTransfers } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
-import { readBankBalanceMinor, sendToBank } from "@/test/mock-bank/bank-client";
+import {
+  readBankBalanceMinor,
+  sendToBank,
+  mswServer,
+  sentRequests,
+} from "@/test/mock-bank/mock-bank";
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
@@ -25,17 +30,18 @@ import {
   pairPhoneAsTheDemoLaunchDoes,
   pairPhoneBeforeTheBankForgetsItsKeys,
 } from "@/test/mock-bank/demo-pairing";
-import { enterPinAndApprove } from "@/test/render/enter-pin-and-approve";
-import { moveAppTo } from "@/test/render/app-state";
-import { secureStoreNativeDouble } from "@/test/doubles/native-doubles";
 import {
+  enterPinAndApprove,
+  moveAppTo,
+  scenarioTest,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
+import {
+  secureStoreNativeDouble,
   observedRecords,
   reportedScenarios,
-} from "@/test/doubles/recording-sink";
-import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+} from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
-import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 const DEMO_PIN = "246810";
 

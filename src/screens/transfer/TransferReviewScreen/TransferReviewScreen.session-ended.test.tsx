@@ -3,7 +3,11 @@ import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
-import { lookUpTestRecipient } from "@/test/mock-bank/bank-client";
+import {
+  lookUpTestRecipient,
+  mswServer,
+  sentRequests,
+} from "@/test/mock-bank/mock-bank";
 import {
   biometricPromptsShown,
   holdNextBiometricPrompt,
@@ -12,16 +16,17 @@ import {
   pairPhoneAsTheDemoLaunchDoes,
   pairPhoneBeforeTheBankForgetsItsKeys,
 } from "@/test/mock-bank/demo-pairing";
-import { endTheSessionThroughAnotherRead } from "@/test/render/end-the-session";
-import { enterPinAndApprove } from "@/test/render/enter-pin-and-approve";
+import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
+import {
+  enterPinAndApprove,
+  scenarioTest,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
 import {
   observedRecords,
   reportedScenarios,
-} from "@/test/doubles/recording-sink";
-import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+} from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
-import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 async function openReviewOfRm100() {
   await renderRoute("/transfer");

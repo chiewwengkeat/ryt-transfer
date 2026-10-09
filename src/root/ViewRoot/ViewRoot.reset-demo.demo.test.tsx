@@ -12,11 +12,14 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { requestJson } from "@/shared/http/transport/transport";
-import { sendToBank, startTestTransfer } from "@/test/mock-bank/bank-client";
+import {
+  sendToBank,
+  startTestTransfer,
+  mswServer,
+} from "@/test/mock-bank/mock-bank";
 import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { enterPinAndApprove } from "@/test/render/enter-pin-and-approve";
-import { mswServer } from "@/test/mock-bank/msw-server";
+import { enterPinAndApprove } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
 
 async function sendRm100FromHomeAndReturn() {

@@ -3,7 +3,7 @@ import {
   lookUpTestRecipient,
   sendToBank,
   type BankErrorBody,
-} from "@/test/mock-bank/bank-client";
+} from "@/test/mock-bank/mock-bank";
 
 afterEach(() => {
   jest.restoreAllMocks();

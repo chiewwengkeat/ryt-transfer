@@ -6,13 +6,17 @@ import { AccessibilityInfo } from "react-native";
 import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients.type";
 import type { LookupRecipientResponse } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { requestJson } from "@/shared/http/transport/transport";
-import { pressHardwareBack } from "@/test/render/hardware-back";
-import { moveAppTo } from "@/test/render/app-state";
-import { setPhoneNetwork } from "@/test/doubles/native-doubles";
-import { reportedScenarios } from "@/test/doubles/recording-sink";
-import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import {
+  pressHardwareBack,
+  moveAppTo,
+  scenarioTest,
+} from "@/test/render/drive-app";
+import {
+  setPhoneNetwork,
+  reportedScenarios,
+} from "@/test/doubles/native-doubles";
+import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
 
 const UNKNOWN_BANK_CODE = {
   error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },

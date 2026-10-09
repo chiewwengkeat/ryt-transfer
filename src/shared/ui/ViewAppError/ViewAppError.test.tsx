@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Text } from "react-native";
 
-import { observedRecords } from "@/test/doubles/recording-sink";
+import { observedRecords } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
 let screenCrashes = true;

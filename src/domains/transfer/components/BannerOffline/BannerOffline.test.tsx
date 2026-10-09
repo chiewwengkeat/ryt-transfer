@@ -3,7 +3,7 @@ import { http, HttpResponse } from "msw";
 import { StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 
 import { spacing } from "@/shared/theme/theme";
-import { mswServer } from "@/test/mock-bank/msw-server";
+import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
 const OFFLINE_NOTICE =

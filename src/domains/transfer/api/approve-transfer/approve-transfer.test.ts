@@ -15,8 +15,8 @@ import {
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import { mswServer } from "@/test/mock-bank/msw-server";
-import { createQueryClientWithoutGcTimers } from "@/test/render/query-client-without-gc-timers";
+import { mswServer } from "@/test/mock-bank/mock-bank";
+import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
 
 const REVIEWED_TRANSFER = {
   transferId: "trf_8c1f3a",

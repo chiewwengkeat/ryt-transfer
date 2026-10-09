@@ -28,7 +28,7 @@ import {
   readBankBalanceMinor,
   sendToBank,
   startTestTransfer,
-} from "@/test/mock-bank/bank-client";
+} from "@/test/mock-bank/mock-bank";
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
@@ -36,27 +36,30 @@ import {
   phoneKeyOptions,
 } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { finishOpeningScreen } from "@/test/render/finish-opening-screen";
-import { pressHardwareBack } from "@/test/render/hardware-back";
-import { readBankOnRealTimers } from "@/test/render/read-bank-on-real-timers";
+import {
+  finishOpeningScreen,
+  pressHardwareBack,
+  readBankOnRealTimers,
+  pressHandlerOf,
+  scenarioTest,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
 import {
   secureStoreNativeDouble,
   setPhoneNetwork,
-} from "@/test/doubles/native-doubles";
-import {
   observedRecords,
   reportedScenarios,
-} from "@/test/doubles/recording-sink";
-import { holdTheNextTransferRead } from "@/test/mock-bank/hold-the-next-transfer-read";
-import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
-import { pressHandlerOf } from "@/test/render/press-handler-of";
+} from "@/test/doubles/native-doubles";
+import {
+  holdTheNextTransferRead,
+  mswServer,
+  sentRequests,
+} from "@/test/mock-bank/mock-bank";
 import {
   askOpenAppToReadAgain,
   relaunchApp,
   renderRoute,
 } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
-import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 import { TransferFlowStep } from "@/screens/transfer/flow-store/flow-store";
 

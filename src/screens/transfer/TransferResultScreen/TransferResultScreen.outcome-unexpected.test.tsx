@@ -16,12 +16,11 @@ import {
   sendToBank,
   signTestApproval,
   startTestTransfer,
-} from "@/test/mock-bank/bank-client";
+  mswServer,
+} from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { finishOpeningScreen } from "@/test/render/finish-opening-screen";
-import { mswServer } from "@/test/mock-bank/msw-server";
+import { finishOpeningScreen, scenarioTest } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
 
 it(
   "offers to load the result again, never to send again, when reading a processing transfer fails in a way the app cannot name",

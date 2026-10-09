@@ -1,8 +1,10 @@
 import { act, renderHook } from "@testing-library/react-native";
 
 import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
-import { setPhoneNetwork } from "@/test/doubles/native-doubles";
-import { observedRecords } from "@/test/doubles/recording-sink";
+import {
+  setPhoneNetwork,
+  observedRecords,
+} from "@/test/doubles/native-doubles";
 
 import {
   addBankReachedAgainListener,

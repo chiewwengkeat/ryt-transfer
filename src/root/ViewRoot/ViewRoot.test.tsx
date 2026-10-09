@@ -14,11 +14,14 @@ import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenar
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { requestJson } from "@/shared/http/transport/transport";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import { sendToBank, startTestTransfer } from "@/test/mock-bank/bank-client";
-import { endSessionWithAnyRequest } from "@/test/render/end-the-session";
-import { pressHardwareBack } from "@/test/render/hardware-back";
-import { reportedScenarios } from "@/test/doubles/recording-sink";
-import { mswServer } from "@/test/mock-bank/msw-server";
+import {
+  sendToBank,
+  startTestTransfer,
+  mswServer,
+} from "@/test/mock-bank/mock-bank";
+import { endSessionWithAnyRequest } from "@/test/render/interrupt-app";
+import { pressHardwareBack } from "@/test/render/drive-app";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 function HomeBalance() {

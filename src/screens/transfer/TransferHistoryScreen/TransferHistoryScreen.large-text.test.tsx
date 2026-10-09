@@ -10,7 +10,7 @@ import { renderRoute } from "@/test/render/render-route";
 import {
   buildHistoryTransfer,
   serveTransferHistoryPages,
-} from "@/test/fixtures/transfer-history-pages";
+} from "@/test/fixtures/transfer-responses";
 
 const WINDOW_AT_LAUNCH = Dimensions.get("window");
 const SCREEN_AT_LAUNCH = Dimensions.get("screen");

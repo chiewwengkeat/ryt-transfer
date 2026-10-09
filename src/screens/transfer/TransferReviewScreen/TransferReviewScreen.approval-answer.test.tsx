@@ -15,14 +15,20 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
-import { readBankBalanceMinor, sendToBank } from "@/test/mock-bank/bank-client";
+import {
+  readBankBalanceMinor,
+  sendToBank,
+  mswServer,
+  sentRequests,
+} from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { pressHardwareBack } from "@/test/render/hardware-back";
-import { watchRoutesDrawnOnTop } from "@/test/doubles/screen-stack-double";
-import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import {
+  pressHardwareBack,
+  scenarioTest,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
+import { watchRoutesDrawnOnTop } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
-import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 const t = getFixedT(null, ["shared"]);
 const SENDING_MESSAGE = "Sending your transfer. The bank's answer comes next.";

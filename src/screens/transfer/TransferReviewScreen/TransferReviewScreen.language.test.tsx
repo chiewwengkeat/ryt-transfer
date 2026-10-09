@@ -3,7 +3,7 @@ import { getFixedT } from "i18next";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
-import { findAccessibleGroupAround } from "@/test/render/accessible-group";
+import { findAccessibleGroupAround } from "@/test/render/drive-app";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { renderRoute } from "@/test/render/render-route";
 

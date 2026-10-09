@@ -5,8 +5,8 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { pressHardwareBack } from "@/test/render/hardware-back";
-import { reportedScenarios } from "@/test/doubles/recording-sink";
+import { pressHardwareBack } from "@/test/render/drive-app";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
 import { useTrackScenarioShown } from "./use-track-scenario-shown";

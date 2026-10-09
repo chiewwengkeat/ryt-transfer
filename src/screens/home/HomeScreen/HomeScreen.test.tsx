@@ -8,19 +8,20 @@ import {
   type BankErrorBody,
   lookUpTestRecipient,
   sendToBank,
-} from "@/test/mock-bank/bank-client";
-import { clearTransferScenario } from "@/test/mock-bank/clear-transfer-scenario";
+} from "@/test/mock-bank/mock-bank";
+import { clearTransferScenario, mswServer } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { pressHardwareBack } from "@/test/render/hardware-back";
-import { moveAppTo } from "@/test/render/app-state";
-import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import {
+  pressHardwareBack,
+  moveAppTo,
+  scenarioTest,
+} from "@/test/render/drive-app";
+import {
+  setPhoneNetwork,
   observedRecords,
   reportedScenarios,
-} from "@/test/doubles/recording-sink";
-import { mswServer } from "@/test/mock-bank/msw-server";
+} from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
 
 const t = getFixedT(null, ["shared"]);
 const UNKNOWN_BANK_CODE = {

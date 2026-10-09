@@ -7,11 +7,13 @@ import {
   failNextBiometricPrompt,
 } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { sentRequests } from "@/test/mock-bank/msw-server";
-import { pickDemoScenario } from "@/test/render/pick-demo-scenario";
+import { sentRequests } from "@/test/mock-bank/mock-bank";
+import {
+  pickDemoScenario,
+  scenarioTest,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
-import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 const PHONE_REFUSAL =
   "This phone's security can't be confirmed, so transfers are off on it.";

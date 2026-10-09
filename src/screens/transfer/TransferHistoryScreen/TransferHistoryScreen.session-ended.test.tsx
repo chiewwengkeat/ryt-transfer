@@ -6,7 +6,7 @@ import {
   buildHistoryTransfer,
   failTransferHistoryPages,
   serveTransferHistoryPages,
-} from "@/test/fixtures/transfer-history-pages";
+} from "@/test/fixtures/transfer-responses";
 
 const LIM_ON_4_OCTOBER = buildHistoryTransfer({
   registeredName: "Lim Wei Jie",

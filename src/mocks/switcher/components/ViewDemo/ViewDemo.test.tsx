@@ -19,7 +19,7 @@ import {
   sendToBank,
   signTestApproval,
   startTestTransfer,
-} from "@/test/mock-bank/bank-client";
+} from "@/test/mock-bank/mock-bank";
 
 import ViewDemo from "./ViewDemo";
 

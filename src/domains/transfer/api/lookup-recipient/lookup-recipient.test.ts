@@ -1,4 +1,4 @@
-import { createQueryClientWithoutGcTimers } from "@/test/render/query-client-without-gc-timers";
+import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
 
 import { transferKeys } from "../transfer.keys";
 import {

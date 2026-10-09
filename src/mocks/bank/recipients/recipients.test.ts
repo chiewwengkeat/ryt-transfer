@@ -10,7 +10,7 @@ import {
   signTestApproval,
   startTestTransfer,
   type BankErrorBody,
-} from "@/test/mock-bank/bank-client";
+} from "@/test/mock-bank/mock-bank";
 
 it("finds one registered recipient however a mobile number is written", async () => {
   const lookups = [

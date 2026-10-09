@@ -12,7 +12,7 @@ import {
 import { queryClient } from "@/root/query-client/query-client";
 
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
-import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "./render-route";
 
 function ScreenThatSendsAWrite() {

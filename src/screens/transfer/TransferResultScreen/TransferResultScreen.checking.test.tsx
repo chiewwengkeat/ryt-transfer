@@ -13,23 +13,25 @@ import {
   sendToBank,
   signTestApproval,
   startTestTransfer,
-} from "@/test/mock-bank/bank-client";
+  holdTheNextTransferRead,
+  mswServer,
+} from "@/test/mock-bank/mock-bank";
 import {
   biometricPromptsShown,
   holdNextBiometricPrompt,
 } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { endTheSessionThroughAnotherRead } from "@/test/render/end-the-session";
-import { finishOpeningScreen } from "@/test/render/finish-opening-screen";
-import { observedRecords } from "@/test/doubles/recording-sink";
-import { holdTheNextTransferRead } from "@/test/mock-bank/hold-the-next-transfer-read";
-import { mswServer } from "@/test/mock-bank/msw-server";
+import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
+import {
+  finishOpeningScreen,
+  scenarioTest,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
+import { observedRecords } from "@/test/doubles/native-doubles";
 import {
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
-import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 async function sendRm100FromHome() {
   await pairPhoneAsTheDemoLaunchDoes();

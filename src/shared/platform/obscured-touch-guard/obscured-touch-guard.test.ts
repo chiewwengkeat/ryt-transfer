@@ -1,7 +1,7 @@
 import {
   isObscuredTouchGuardOn,
   touchThroughOverlay,
-} from "@/test/doubles/obscured-touch-guard-double";
+} from "@/test/doubles/native-doubles";
 
 import { enableObscuredTouchGuard } from "./obscured-touch-guard";
 

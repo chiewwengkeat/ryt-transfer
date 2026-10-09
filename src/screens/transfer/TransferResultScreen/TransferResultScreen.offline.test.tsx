@@ -4,7 +4,7 @@ import { AccessibilityInfo } from "react-native";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
+import { scenarioTest } from "@/test/render/drive-app";
 
 const OFFLINE_NOTICE =
   "You're offline. Sending is paused until Ryt can be reached.";

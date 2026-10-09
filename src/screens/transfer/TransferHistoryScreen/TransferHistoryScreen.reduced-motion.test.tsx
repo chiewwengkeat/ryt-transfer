@@ -4,12 +4,12 @@ import { ReduceMotion } from "react-native-reanimated";
 import {
   turnOnPhoneReduceMotion,
   watchReduceMotionOfAnimations,
-} from "@/test/render/reduced-motion";
+} from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
 import {
   buildHistoryTransfer,
   serveTransferHistoryPages,
-} from "@/test/fixtures/transfer-history-pages";
+} from "@/test/fixtures/transfer-responses";
 
 it("turns a day's chevron at once when the phone reduces motion", async () => {
   serveTransferHistoryPages([[buildHistoryTransfer()]]);

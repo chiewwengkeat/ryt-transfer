@@ -25,23 +25,28 @@ import {
   sendToBank,
   signTestApproval,
   startTestTransfer,
-} from "@/test/mock-bank/bank-client";
-import { clearTransferScenario } from "@/test/mock-bank/clear-transfer-scenario";
+  clearTransferScenario,
+  holdTheNextTransferRead,
+  mswServer,
+  sentRequests,
+} from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { finishOpeningScreen } from "@/test/render/finish-opening-screen";
-import { pressHardwareBack } from "@/test/render/hardware-back";
-import { setPhoneNetwork } from "@/test/doubles/native-doubles";
-import { observedRecords } from "@/test/doubles/recording-sink";
-import { holdTheNextTransferRead } from "@/test/mock-bank/hold-the-next-transfer-read";
-import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
-import { readBankOnRealTimers } from "@/test/render/read-bank-on-real-timers";
+import {
+  finishOpeningScreen,
+  pressHardwareBack,
+  readBankOnRealTimers,
+  scenarioTest,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
+import {
+  setPhoneNetwork,
+  observedRecords,
+} from "@/test/doubles/native-doubles";
 import {
   relaunchApp,
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
-import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 const t = getFixedT(null, ["shared"]);
 const BANK_REFERENCE =

@@ -17,7 +17,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
-import { pressHardwareBack } from "@/test/render/hardware-back";
+import { pressHardwareBack } from "@/test/render/drive-app";
 
 import BottomSheetFrame from "./BottomSheetFrame";
 

@@ -4,8 +4,8 @@ import { delay, http, HttpResponse } from "msw";
 import { API_BASE_URL } from "@/shared/config/config";
 import { setObservabilitySink } from "@/shared/observability/observability";
 import { useIsOffline } from "@/shared/platform/offline/offline";
-import { observedRecords } from "@/test/doubles/recording-sink";
-import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { observedRecords } from "@/test/doubles/native-doubles";
+import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 
 import {
   addUnauthorizedListener,

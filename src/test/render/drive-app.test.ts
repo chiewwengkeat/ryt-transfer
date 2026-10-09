@@ -1,5 +1,5 @@
-import { BANK_ORIGIN } from "@/test/mock-bank/bank-client";
-import { scenarioTest } from "./scenario-test";
+import { BANK_ORIGIN } from "@/test/mock-bank/mock-bank";
+import { scenarioTest } from "./drive-app";
 
 it(
   "fails every request for lack of a connection",

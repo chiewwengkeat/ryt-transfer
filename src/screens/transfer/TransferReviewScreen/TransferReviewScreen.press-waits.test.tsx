@@ -9,14 +9,15 @@ import {
   biometricsLibraryDouble,
   holdDeviceIntegrityChecks,
 } from "@/test/doubles/biometrics-double";
-import { approveFromReviewOpenedAgain } from "@/test/render/approve-from-review-opened-again";
+import {
+  approveFromReviewOpenedAgain,
+  pressHardwareBack,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { pressHardwareBack } from "@/test/render/hardware-back";
 import { secureStoreNativeDouble } from "@/test/doubles/native-doubles";
-import { mswServer } from "@/test/mock-bank/msw-server";
+import { mswServer, transferWritesSent } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
-import { transferWritesSent } from "@/test/mock-bank/sent-request-filters";
-import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 async function openReviewOfRm100() {
   const view = await renderRoute("/transfer");

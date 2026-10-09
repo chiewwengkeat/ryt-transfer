@@ -2,10 +2,12 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
 
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { finishOpeningScreen } from "@/test/render/finish-opening-screen";
-import { pressHardwareBack } from "@/test/render/hardware-back";
+import {
+  finishOpeningScreen,
+  pressHardwareBack,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
-import { walkToTransferReview } from "@/test/render/walk-to-transfer-review";
 
 const SENT_NOTICE =
   /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/;

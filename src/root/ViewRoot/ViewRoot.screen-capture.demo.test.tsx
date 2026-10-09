@@ -2,12 +2,14 @@ import { act, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 
 import "@/test/setup/demo-build";
-import { crashTheScreenOfASettledReceipt } from "@/test/render/crash-on-press";
+import { crashTheScreenOfASettledReceipt } from "@/test/render/interrupt-app";
 import { isScreenCaptureBlocked } from "@/test/doubles/native-doubles";
-import { waitPastReceiptSettle } from "@/test/render/receipt-settle";
-import { pickDemoScenario } from "@/test/render/pick-demo-scenario";
+import {
+  waitPastReceiptSettle,
+  pickDemoScenario,
+  scenarioTest,
+} from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
 
 it(
   "blocks capture on Home in a demo build while Screenshots blocked is picked, and allows it on a receipt",

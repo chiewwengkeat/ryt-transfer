@@ -2,13 +2,13 @@ import { screen } from "@testing-library/react-native";
 import { getFixedT } from "i18next";
 
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
-import { findAccessibleGroupAround } from "@/test/render/accessible-group";
+import { findAccessibleGroupAround } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
 import {
   buildHistoryTransfer,
   holdTransferHistoryPages,
   serveTransferHistoryPages,
-} from "@/test/fixtures/transfer-history-pages";
+} from "@/test/fixtures/transfer-responses";
 
 it("tells a screen reader that History's days, transfers and loading footer are in Bahasa Malaysia when the app opens with it picked", async () => {
   serveTransferHistoryPages([

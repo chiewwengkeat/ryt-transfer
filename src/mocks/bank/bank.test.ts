@@ -13,7 +13,7 @@ import {
   signTestApproval,
   startTestTransfer,
   type BankErrorBody,
-} from "@/test/mock-bank/bank-client";
+} from "@/test/mock-bank/mock-bank";
 
 import { bankPorts } from "./ports/ports";
 import type * as BankPorts from "./ports/ports";

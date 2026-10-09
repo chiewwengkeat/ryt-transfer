@@ -28,23 +28,21 @@ import {
   resetContactsNativeDouble,
 } from "@/test/doubles/contacts-native-double";
 import type * as NativeDoubles from "@/test/doubles/native-doubles";
-import { resetNativeDoubles } from "@/test/doubles/native-doubles";
 import {
+  resetNativeDoubles,
   obscuredTouchGuardNativeDouble,
   resetObscuredTouchGuardDouble,
-} from "@/test/doubles/obscured-touch-guard-double";
-import {
   observedRecords,
   recordObservation,
-} from "@/test/doubles/recording-sink";
-import type * as ScreenStackDouble from "@/test/doubles/screen-stack-double";
-import { resetScreenStackDouble } from "@/test/doubles/screen-stack-double";
+  resetScreenStackDouble,
+} from "@/test/doubles/native-doubles";
+import type * as ScreenStackDouble from "@/test/doubles/native-doubles";
 import {
   mswServer,
   recordUnhandledRequest,
   sentRequests,
   unhandledRequests,
-} from "@/test/mock-bank/msw-server";
+} from "@/test/mock-bank/mock-bank";
 
 // expo-contacts binds its native module as it loads, so no import above may load it before this line runs.
 globalThis.expo.modules.ExpoContactsNext = contactsNativeDouble;
@@ -127,9 +125,7 @@ jest.mock(
 );
 jest.mock("react-native-screens", () =>
   jest
-    .requireActual<typeof ScreenStackDouble>(
-      "@/test/doubles/screen-stack-double",
-    )
+    .requireActual<typeof ScreenStackDouble>("@/test/doubles/native-doubles")
     .reactNativeScreensRecordingTopRoutes(),
 );
 

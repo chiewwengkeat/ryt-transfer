@@ -4,14 +4,14 @@ import {
   TransferDirection,
   TransferFunds,
   TransferStatus,
+  type GetTransferResponse,
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { MONEY_MOVED_SIGN } from "@/domains/transfer/api/list-transfers/list-transfers";
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
-
-import { mswServer } from "@/test/mock-bank/msw-server";
+import { mswServer } from "@/test/mock-bank/mock-bank";
 
 // One row unless a test serves others: a query by a row's text then matches that row alone.
 beforeEach(() => {
@@ -123,4 +123,40 @@ function isRequestForPages(request: Request, pages: "first" | "later") {
   return (
     new URL(request.url).searchParams.has("cursor") === (pages === "later")
   );
+}
+
+// Any other transfer goes on to the bank, which knows none of these fixtures and answers 404.
+export function serveTransferDetails(transfer: Transfer) {
+  mswServer.use(
+    http.get(BANK_PATHS.transfer, ({ params }) =>
+      params.transferId === transfer.transferId
+        ? HttpResponse.json({ transfer } satisfies GetTransferResponse)
+        : undefined,
+    ),
+  );
+}
+
+export function holdTransferDetails() {
+  let release!: () => void;
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  mswServer.use(
+    http.get(BANK_PATHS.transfer, async () => {
+      await released;
+    }),
+  );
+  return release;
+}
+
+export function failTransferDetails(status = 500) {
+  let failing = true;
+  mswServer.use(
+    http.get(BANK_PATHS.transfer, () =>
+      failing ? new HttpResponse(null, { status }) : undefined,
+    ),
+  );
+  return () => {
+    failing = false;
+  };
 }

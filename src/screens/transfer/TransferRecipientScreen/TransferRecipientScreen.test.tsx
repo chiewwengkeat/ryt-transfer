@@ -9,10 +9,10 @@ import { AccessibilityInfo } from "react-native";
 
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { parseTypedAmount } from "@/shared/lib/money/money";
-import { reportedScenarios } from "@/test/doubles/recording-sink";
-import { mswServer } from "@/test/mock-bank/msw-server";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
+import { scenarioTest } from "@/test/render/drive-app";
 
 import {
   dispatchTransferFlow,

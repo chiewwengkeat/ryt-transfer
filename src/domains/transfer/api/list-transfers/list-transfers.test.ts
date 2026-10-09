@@ -1,6 +1,6 @@
 import type { InfiniteData } from "@tanstack/react-query";
 
-import { createQueryClientWithoutGcTimers } from "@/test/render/query-client-without-gc-timers";
+import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
 
 import {
   TransferDirection,

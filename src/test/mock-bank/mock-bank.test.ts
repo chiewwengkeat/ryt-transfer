@@ -2,8 +2,12 @@ import { http, HttpResponse } from "msw";
 
 import { clearTransferScenario, pickTransferScenario } from "@/mocks/bank/bank";
 
-import { BANK_ORIGIN } from "./bank-client";
-import { mswServer, sentRequests, unhandledRequests } from "./msw-server";
+import {
+  BANK_ORIGIN,
+  mswServer,
+  sentRequests,
+  unhandledRequests,
+} from "./mock-bank";
 
 const PROBE_URL = "https://api.example.test/probe";
 

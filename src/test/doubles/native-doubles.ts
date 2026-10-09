@@ -1,5 +1,14 @@
 // ⛔ Type imports only from the doubled packages: a value import re-enters the mock factory building them.
 import type { NetworkState } from "expo-network";
+import {
+  type ComponentProps,
+  createElement,
+  isValidElement,
+  useLayoutEffect,
+} from "react";
+import type * as ReactNativeScreens from "react-native-screens";
+
+import type { ObservedRecord } from "@/shared/observability/observability";
 
 const kvEntries = new Map<string, string>();
 
@@ -136,4 +145,87 @@ export function resetNativeDoubles() {
   // As a production launch leaves it, since the shell's block at load runs once per file rather than per test.
   // Never the reverse: the library would see its key still held and skip blocking again.
   screenCaptureBlocked = true;
+}
+
+let guardOn = false;
+const dropListeners = new Set<() => void>();
+
+// State lives in this file, not on the object: jest-expo copies the object's keys onto a new module on every require.
+export const obscuredTouchGuardNativeDouble = {
+  enable: () => {
+    guardOn = true;
+  },
+  disable: () => {
+    guardOn = false;
+  },
+  addListener: (eventName: string, listener: () => void) => {
+    if (eventName === "onObscuredTouchDropped") dropListeners.add(listener);
+    return {
+      remove: () => {
+        dropListeners.delete(listener);
+      },
+    };
+  },
+};
+
+// A tap through another app's window drawn over this one: dropped and reported only while the guard is on.
+export function touchThroughOverlay() {
+  if (!guardOn) return;
+  for (const listener of dropListeners) listener();
+}
+
+export function isObscuredTouchGuardOn() {
+  return guardOn;
+}
+
+// Listeners stay: each holder removes its own on release.
+export function resetObscuredTouchGuardDouble() {
+  guardOn = false;
+}
+
+const routesDrawnOnTop: string[] = [];
+
+// Jest draws no frames, so what each native stack is handed on top, commit by commit, is what a phone animates to.
+export function reactNativeScreensRecordingTopRoutes() {
+  const actual = jest.requireActual<typeof ReactNativeScreens>(
+    "react-native-screens",
+  );
+  return {
+    ...actual,
+    ScreenStack(props: ComponentProps<typeof actual.ScreenStack>) {
+      const topRouteName = [props.children]
+        .flat()
+        .filter(
+          isValidElement<{
+            isPreloaded: boolean;
+            descriptor: { route: { name: string } };
+          }>,
+        )
+        .findLast((scene) => !scene.props.isPreloaded)?.props.descriptor
+        .route.name;
+      useLayoutEffect(() => {
+        if (topRouteName !== undefined) routesDrawnOnTop.push(topRouteName);
+      });
+      return createElement(actual.ScreenStack, props);
+    },
+  };
+}
+
+export function watchRoutesDrawnOnTop() {
+  const watchedFrom = routesDrawnOnTop.length;
+  return () => routesDrawnOnTop.slice(watchedFrom);
+}
+
+export function resetScreenStackDouble() {
+  routesDrawnOnTop.splice(0);
+}
+
+export const observedRecords: ObservedRecord[] = [];
+
+export function recordObservation(record: ObservedRecord) {
+  observedRecords.push(record);
+}
+
+export function reportedScenarios() {
+  return observedRecords.flatMap(({ properties }) => properties.scenario ?? []);
 }

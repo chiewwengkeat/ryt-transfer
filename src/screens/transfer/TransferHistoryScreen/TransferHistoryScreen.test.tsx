@@ -8,20 +8,22 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
-import { lookUpTestRecipient } from "@/test/mock-bank/bank-client";
+import {
+  lookUpTestRecipient,
+  mswServer,
+  sentRequests,
+} from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { moveAppTo } from "@/test/render/app-state";
-import { observedRecords } from "@/test/doubles/recording-sink";
-import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+import { moveAppTo, scenarioTest } from "@/test/render/drive-app";
+import { observedRecords } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
 import {
   buildHistoryTransfer,
   failTransferHistoryPages,
   holdTransferHistoryPages,
   serveTransferHistoryPages,
   serveTransferHistoryResponses,
-} from "@/test/fixtures/transfer-history-pages";
+} from "@/test/fixtures/transfer-responses";
 
 const sentTransferHistoryCursors = () =>
   sentRequests

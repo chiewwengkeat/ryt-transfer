@@ -4,15 +4,14 @@ import { http } from "msw";
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { pressHardwareBack } from "@/test/render/hardware-back";
-import { setPhoneNetwork } from "@/test/doubles/native-doubles";
+import { pressHardwareBack, scenarioTest } from "@/test/render/drive-app";
 import {
+  setPhoneNetwork,
   isObscuredTouchGuardOn,
   touchThroughOverlay,
-} from "@/test/doubles/obscured-touch-guard-double";
-import { mswServer, sentRequests } from "@/test/mock-bank/msw-server";
+} from "@/test/doubles/native-doubles";
+import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/scenario-test";
 
 async function openPinSheetWithBiometricsOff() {
   await pairPhoneAsTheDemoLaunchDoes();

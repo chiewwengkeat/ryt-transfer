@@ -1,4 +1,6 @@
 import { p256 } from "@noble/curves/nist.js";
+import { getResponse, http } from "msw";
+import { setupServer } from "msw/node";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
@@ -10,6 +12,68 @@ import {
   RecipientIdType,
   type LookupRecipientResponse,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import { handlersForActiveScenario } from "@/mocks/bank/bank";
+
+export { clearTransferScenario, pickTransferScenario } from "@/mocks/bank/bank";
+
+// Resolved per request, as a phone's demo layer does, so a mid-test scenario switch applies.
+// Matching every request, it reports the unmatched ones itself: msw would pass them through.
+export const mswServer = setupServer(
+  http.all(
+    "*",
+    async ({ request }) =>
+      (await getResponse(handlersForActiveScenario(), request)) ??
+      recordUnhandledRequest(request),
+  ),
+);
+
+// Cloned, so a test can still read the body after a handler has consumed the original.
+export const sentRequests: Request[] = [];
+mswServer.events.on("request:start", ({ request }) => {
+  sentRequests.push(request.clone());
+});
+
+export const unhandledRequests: string[] = [];
+
+export function recordUnhandledRequest(request: Request) {
+  unhandledRequests.push(`${request.method} ${request.url}`);
+  throw new Error(`No mock handler for ${request.method} ${request.url}`);
+}
+
+export function transferWritesSent() {
+  return sentRequests
+    .filter(({ method }) => method === "POST")
+    .map(({ url }) => new URL(url).pathname)
+    .filter((path) => path.startsWith("/transfers"));
+}
+
+export function sentNameChecks() {
+  return sentRequests.filter(({ url }) => url.endsWith("/recipients/lookup"));
+}
+
+export function readsOfTheBalance() {
+  return sentRequests.filter(
+    ({ method, url }) => method === "GET" && url.endsWith("/accounts/primary"),
+  ).length;
+}
+
+// A resolver that answers nothing hands the read on to the bank, once released.
+export function holdTheNextTransferRead() {
+  let releaseTransferRead = () => undefined as void;
+  const transferReadHeld = new Promise<void>((release) => {
+    releaseTransferRead = release;
+  });
+  mswServer.use(
+    http.get(
+      "*/transfers/:transferId",
+      async () => {
+        await transferReadHeld;
+      },
+      { once: true },
+    ),
+  );
+  return releaseTransferRead;
+}
 
 export const BANK_ORIGIN = "https://bank.example.test";
 
