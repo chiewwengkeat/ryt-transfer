@@ -80,10 +80,11 @@ export default function SectionReviewDetails({ draft }: Props) {
         }}
       />
     );
-  // One banner whether or not Try again shows: a remounted one announces its words again.
+  // One banner per refusal, whether or not Try again shows: a remounted one announces its words again.
   if (nameCheckFailure !== undefined)
     return (
       <BannerAction
+        key={refusedAt}
         tone="negative"
         message={t(`common.${nameCheckFailure}.body`)}
         action={
