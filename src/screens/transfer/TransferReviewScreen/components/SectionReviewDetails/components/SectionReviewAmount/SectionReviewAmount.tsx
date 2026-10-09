@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import type { TransferDraft } from "@/screens/transfer/flow-store/transfer-flow.type";
+import type { TransferDraft } from "@/screens/transfer/flow-store/flow-store.type";
 import { formatMoney } from "@/shared/lib/money/money";
 import RowDetail from "@/screens/transfer/components/RowDetail/RowDetail";
 

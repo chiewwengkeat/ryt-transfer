@@ -11,7 +11,7 @@ import {
   notifyApprovalPinReset,
 } from "@/domains/approval/hooks/approval-settings";
 import { listPendingTransfers } from "@/domains/transfer/hooks/pending-transfers";
-import { transferFlowStore } from "@/screens/transfer/flow-store/transfer-flow";
+import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
 import {
   biometricPromptsShown,

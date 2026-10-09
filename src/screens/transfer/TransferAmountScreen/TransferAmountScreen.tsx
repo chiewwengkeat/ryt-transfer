@@ -23,7 +23,7 @@ import {
   TransferFlowActionType,
   TransferFlowStep,
   useTransferFlow,
-} from "@/screens/transfer/flow-store/transfer-flow";
+} from "@/screens/transfer/flow-store/flow-store";
 
 export default function TransferAmountScreen() {
   const { t } = useTranslation("transfer");

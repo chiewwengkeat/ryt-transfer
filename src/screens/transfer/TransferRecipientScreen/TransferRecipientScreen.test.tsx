@@ -18,7 +18,7 @@ import { scenarioTest } from "@/test/scenario-test";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
-} from "@/screens/transfer/flow-store/transfer-flow";
+} from "@/screens/transfer/flow-store/flow-store";
 
 const UNKNOWN_BANK_CODE = {
   error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },

@@ -1,24 +1,30 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 
-import { reduceAmountAndNoteEvent } from "./amount-and-note-events";
-import { reduceApprovalEvent } from "./approval-events";
-import { reduceRecipientEvent } from "./recipient-events";
-import { reduceReviewAndCreateEvent } from "./review-and-create-events";
+import { CoolingOffReason } from "@/domains/transfer/api/create-transfer/create-transfer.type";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { trackEvent } from "@/shared/observability/observability";
+
+import {
+  reduceAmountAndNoteEvent,
+  reduceApprovalEvent,
+  reduceRecipientEvent,
+  reduceReviewAndCreateEvent,
+} from "./flow-store.reduce";
 import {
   type TransferFlowAction,
   TransferFlowActionType,
   type TransferFlowState,
   TransferFlowStep,
-} from "./transfer-flow.type";
-import { trackTransferStepOrScenarioChange } from "./transfer-funnel";
+  TransferHoldKind,
+} from "./flow-store.type";
 
 export {
   ApprovalPath,
   TransferFlowActionType,
   TransferFlowStep,
   TransferHoldKind,
-} from "./transfer-flow.type";
+} from "./flow-store.type";
 
 const STARTING_FLOW: TransferFlowState = {
   step: TransferFlowStep.Editing,
@@ -60,6 +66,73 @@ export function isTransferSentOrBeingSent(flow: TransferFlowState) {
     flow.step === TransferFlowStep.Submitting ||
     flow.step === TransferFlowStep.Done
   );
+}
+
+export function isFlowNoLongerOnTransfer(
+  flow: TransferFlowState,
+  transferId: string,
+) {
+  return !("transferId" in flow) || flow.transferId !== transferId;
+}
+
+let scenarioReportsHeld = false;
+let flowReachedWhileReportsHeld: TransferFlowState | undefined;
+
+export function holdTransferScenarioReports() {
+  scenarioReportsHeld = true;
+}
+
+// Reports the held scenario only if the flow still shows it; with no flow, as the root goes away, nothing shows.
+export function releaseTransferScenarioReports(
+  flowShownNow?: TransferFlowState,
+) {
+  const flowReached = flowReachedWhileReportsHeld;
+  scenarioReportsHeld = false;
+  flowReachedWhileReportsHeld = undefined;
+  if (flowReached !== undefined && flowReached === flowShownNow)
+    trackTransferStep(flowReached, findScenarioTheFlowShows(flowReached));
+}
+
+function trackTransferStepOrScenarioChange(
+  flow: TransferFlowState,
+  nextFlow: TransferFlowState,
+) {
+  const scenario = findScenarioTheFlowShows(nextFlow);
+  if (
+    nextFlow.step === flow.step &&
+    (scenario === undefined || scenario === findScenarioTheFlowShows(flow))
+  )
+    return;
+  if (scenarioReportsHeld && scenario !== undefined) {
+    flowReachedWhileReportsHeld = nextFlow;
+    return;
+  }
+  trackTransferStep(nextFlow, scenario);
+}
+
+function trackTransferStep(
+  flow: TransferFlowState,
+  scenario: TransferScenarioId | undefined,
+) {
+  trackEvent("transfer_step", {
+    step: flow.step,
+    ...("draft" in flow && {
+      amountMinor: flow.draft.amount?.minor,
+      currency: flow.draft.amount?.currency,
+    }),
+    ...("path" in flow && { path: flow.path }),
+    scenario,
+  });
+}
+
+function findScenarioTheFlowShows(flow: TransferFlowState) {
+  if ("notice" in flow && flow.notice !== undefined) return flow.notice;
+  if (!("hold" in flow) || flow.hold === undefined) return undefined;
+  if (flow.hold.kind === TransferHoldKind.AccountLocked)
+    return TransferScenarioId.AccountLocked;
+  return flow.hold.reason === CoolingOffReason.NewAccount
+    ? TransferScenarioId.CoolingOffNewAccount
+    : TransferScenarioId.CoolingOffNewPhone;
 }
 
 function reduceTransferFlow(

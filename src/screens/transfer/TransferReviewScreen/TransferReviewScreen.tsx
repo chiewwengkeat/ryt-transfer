@@ -11,7 +11,7 @@ import {
   TransferFlowStep,
   transferFlowStore,
   useTransferFlow,
-} from "@/screens/transfer/flow-store/transfer-flow";
+} from "@/screens/transfer/flow-store/flow-store";
 import ButtonConfirmTransfer from "./components/ButtonConfirmTransfer/ButtonConfirmTransfer";
 import HeaderReview from "./components/HeaderReview/HeaderReview";
 import SectionReviewDetails from "./components/SectionReviewDetails/SectionReviewDetails";

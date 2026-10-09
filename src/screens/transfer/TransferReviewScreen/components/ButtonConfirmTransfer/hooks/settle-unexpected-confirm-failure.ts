@@ -8,7 +8,7 @@ import {
   TransferFlowActionType,
   TransferFlowStep,
   transferFlowStore,
-} from "@/screens/transfer/flow-store/transfer-flow";
+} from "@/screens/transfer/flow-store/flow-store";
 
 import {
   openResultPageOfSentApproval,

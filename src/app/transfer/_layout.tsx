@@ -7,7 +7,7 @@ import {
   TransferFlowActionType,
   TransferFlowStep,
   useTransferFlow,
-} from "@/screens/transfer/flow-store/transfer-flow";
+} from "@/screens/transfer/flow-store/flow-store";
 import { screenTransitionOptions } from "@/shared/lib/motion/motion";
 import { demoLayer } from "@/shell/app-launch";
 

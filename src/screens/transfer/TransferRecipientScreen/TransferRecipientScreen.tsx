@@ -19,7 +19,7 @@ import {
   TransferFlowActionType,
   TransferFlowStep,
   useTransferFlow,
-} from "@/screens/transfer/flow-store/transfer-flow";
+} from "@/screens/transfer/flow-store/flow-store";
 import BannerRecipientUnexpected from "./components/BannerRecipientUnexpected/BannerRecipientUnexpected";
 import ButtonContacts from "./components/ButtonContacts/ButtonContacts";
 import CardRecentRecipientChosen from "./components/CardRecentRecipientChosen/CardRecentRecipientChosen";

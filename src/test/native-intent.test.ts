@@ -5,7 +5,7 @@ import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
-} from "@/screens/transfer/flow-store/transfer-flow";
+} from "@/screens/transfer/flow-store/flow-store";
 import { asSen } from "@/shared/lib/money/money";
 
 // The demo build's scheme, which Jest has no app config to supply. Spied, not mocked: expo-router's test

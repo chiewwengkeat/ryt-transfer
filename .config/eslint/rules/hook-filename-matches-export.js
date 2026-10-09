@@ -53,7 +53,7 @@ function exportedNames(body) {
   return { names, unknown };
 }
 
-/** Drops `use` and `Store`, so `state/transfer.ts` may export `useTransferStore`. Only
+/** Drops `use` and `Store`, so `flow-store/transfer.ts` may export `useTransferStore`. Only
  * the first letter is case-folded, so `use-contentheight.ts` still reports. */
 function coreHookName(name) {
   const stripped = stripAffixes(name, STORE_AFFIXES);
@@ -83,11 +83,11 @@ module.exports = {
         "hook-file-kebab-case, which checks the casing of a file already named use*: " +
         "this one checks the name itself, and reaches files not named use* at all. " +
         "A leading `use` and a trailing `Store` may be dropped from the filename, so " +
-        "state/transfer.ts exporting useTransferStore passes.",
+        "flow-store/transfer.ts exporting useTransferStore passes.",
     },
     messages: {
       rename:
-        "File '{{file}}' exports nothing but the hook '{{hook}}', so its name should be '{{kebab}}'. A reader searching for '{{hook}}' has to land on the file that defines it, and an importer should be able to guess the path from the name. Dropping a leading 'use' or a trailing 'Store' is allowed (state/transfer.ts exporting useTransferStore passes); anything else must match.",
+        "File '{{file}}' exports nothing but the hook '{{hook}}', so its name should be '{{kebab}}'. A reader searching for '{{hook}}' has to land on the file that defines it, and an importer should be able to guess the path from the name. Dropping a leading 'use' or a trailing 'Store' is allowed (flow-store/transfer.ts exporting useTransferStore passes); anything else must match.",
     },
     schema: [],
   },

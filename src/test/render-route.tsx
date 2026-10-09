@@ -8,7 +8,7 @@ import {
 import { changeLanguage } from "i18next";
 import { useEffect, type ReactNode } from "react";
 
-import { transferFlowStore } from "@/screens/transfer/flow-store/transfer-flow";
+import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { AppLanguage, initTranslations } from "@/shared/i18n/i18n";
 import { queryClient } from "@/shell/query-client";
 import { TRANSLATION_BUNDLES } from "@/shell/translations";

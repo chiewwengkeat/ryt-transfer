@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   TransferFlowStep,
   useTransferFlow,
-} from "@/screens/transfer/flow-store/transfer-flow";
+} from "@/screens/transfer/flow-store/flow-store";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
 export default function TextSendingTransfer() {

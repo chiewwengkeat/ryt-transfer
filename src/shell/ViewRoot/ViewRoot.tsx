@@ -7,11 +7,11 @@ import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
 import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
-import { transferFlowStore } from "@/screens/transfer/flow-store/transfer-flow";
 import {
   holdTransferScenarioReports,
   releaseTransferScenarioReports,
-} from "@/screens/transfer/flow-store/transfer-funnel";
+  transferFlowStore,
+} from "@/screens/transfer/flow-store/flow-store";
 import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top";
 import { addUnauthorizedListener } from "@/shared/http/transport";
 import {

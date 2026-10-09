@@ -13,7 +13,7 @@ import {
   TransferFlowStep,
   transferFlowStore,
   TransferHoldKind,
-} from "./transfer-flow";
+} from "./flow-store";
 
 const COOLING_OFF_HOLD = {
   kind: TransferHoldKind.CoolingOff,

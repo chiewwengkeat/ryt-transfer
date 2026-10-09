@@ -5,7 +5,7 @@ import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
-} from "@/screens/transfer/flow-store/transfer-flow";
+} from "@/screens/transfer/flow-store/flow-store";
 
 export function usePhoneCheckBeforeApproval() {
   const [checkingPhone, setCheckingPhone] = useState(false);

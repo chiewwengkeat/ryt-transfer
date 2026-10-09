@@ -21,8 +21,8 @@ import {
   TransferFlowStep,
   transferFlowStore,
   useTransferFlow,
-} from "@/screens/transfer/flow-store/transfer-flow";
-import type { TransferDraft } from "@/screens/transfer/flow-store/transfer-flow.type";
+} from "@/screens/transfer/flow-store/flow-store";
+import type { TransferDraft } from "@/screens/transfer/flow-store/flow-store.type";
 import { useIsOffline } from "@/shared/platform/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 

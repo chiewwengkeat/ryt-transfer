@@ -27,7 +27,7 @@ const ruleTester = new RuleTester({
 
 const S = "/repo/src";
 const H = S + "/shared/hooks";
-const STATE = S + "/screens/transfer/state";
+const FLOW_STORE = S + "/screens/transfer/flow-store";
 
 function passes(rule, testCase) {
   ruleTester.run("rule", rule, { valid: [testCase], invalid: [] });
@@ -108,30 +108,30 @@ test("hook-filename-matches-export: use-utf8-encoder.ts / useUtf8Encoder passes"
   });
 });
 
-test("hook-filename-matches-export: state/transfer.ts exporting useTransferStore passes", () => {
+test("hook-filename-matches-export: flow-store/transfer.ts exporting useTransferStore passes", () => {
   passes(hookFilename, {
-    filename: STATE + "/transfer.ts",
+    filename: FLOW_STORE + "/transfer.ts",
     code: "export const useTransferStore = () => 0;",
   });
 });
 
 test("hook-filename-matches-export: use-transfer-store.ts exporting useTransferStore passes", () => {
   passes(hookFilename, {
-    filename: STATE + "/use-transfer-store.ts",
+    filename: FLOW_STORE + "/use-transfer-store.ts",
     code: "export const useTransferStore = () => 0;",
   });
 });
 
 test("hook-filename-matches-export: use-recipient.ts exporting useRecipientStore passes", () => {
   passes(hookFilename, {
-    filename: STATE + "/use-recipient.ts",
+    filename: FLOW_STORE + "/use-recipient.ts",
     code: "export const useRecipientStore = () => 0;",
   });
 });
 
 test("hook-filename-matches-export: store.ts exporting useStore passes — stripAffixes refuses to empty", () => {
   passes(hookFilename, {
-    filename: STATE + "/store.ts",
+    filename: FLOW_STORE + "/store.ts",
     code: "export const useStore = () => 0;",
   });
 });
@@ -162,7 +162,7 @@ test("hook-filename-matches-export: a file exporting a component AND a hook keep
 
 test("hook-filename-matches-export: two hook exports are not a sole export", () => {
   passes(hookFilename, {
-    filename: STATE + "/use-flow-context.tsx",
+    filename: FLOW_STORE + "/use-flow-context.tsx",
     code: [
       "export const useFlow = () => 0;",
       "export const useFlowDispatch = () => 0;",
@@ -221,7 +221,7 @@ test("hook-filename-matches-export: an inline `export { type X, useFoo }` type s
 
 test("hook-filename-matches-export: `export * from` makes the surface unknowable, so the rule bails", () => {
   passes(hookFilename, {
-    filename: STATE + "/legacy.ts",
+    filename: FLOW_STORE + "/legacy.ts",
     code: [
       "export * from './other';",
       "export const useRecipientStore = () => 0;",
@@ -291,7 +291,7 @@ test("hook-filename-matches-export: use-amount-entry.tsx exporting useAmountForm
 
 test("hook-filename-matches-export: a store file named for neither the hook nor its core reports", () => {
   reports(hookFilename, {
-    filename: STATE + "/legacy.ts",
+    filename: FLOW_STORE + "/legacy.ts",
     code: "export const useRecipientStore = () => 0;",
     errors: rename({
       file: "legacy.ts",

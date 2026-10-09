@@ -16,8 +16,8 @@ import {
   ApprovalPath,
   dispatchTransferFlow,
   TransferFlowActionType,
-} from "@/screens/transfer/flow-store/transfer-flow";
-import type { TransferFlowNotice } from "@/screens/transfer/flow-store/transfer-flow.type";
+} from "@/screens/transfer/flow-store/flow-store";
+import type { TransferFlowNotice } from "@/screens/transfer/flow-store/flow-store.type";
 
 import type { settleApprovalAnswer } from "./settle-approval-answer";
 import type { useRegisterApprovalKeysAgain } from "./use-register-approval-keys-again";

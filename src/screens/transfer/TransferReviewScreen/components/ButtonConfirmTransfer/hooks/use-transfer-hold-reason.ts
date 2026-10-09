@@ -7,8 +7,8 @@ import {
   TransferFlowStep,
   TransferHoldKind,
   useTransferFlow,
-} from "@/screens/transfer/flow-store/transfer-flow";
-import type { TransferHold } from "@/screens/transfer/flow-store/transfer-flow.type";
+} from "@/screens/transfer/flow-store/flow-store";
+import type { TransferHold } from "@/screens/transfer/flow-store/flow-store.type";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 
