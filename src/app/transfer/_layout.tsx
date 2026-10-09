@@ -9,7 +9,7 @@ import {
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
 import { screenTransitionOptions } from "@/shared/lib/motion/motion";
-import { demoLayer } from "@/shell/app-launch";
+import { demoLayer } from "@/root/app-launch/app-launch";
 
 export default function TransferLayout() {
   // Open through Done: the result page replaces this stack a commit later, and closing first shows the recipient step.

@@ -14,7 +14,7 @@ const MSW_DEVICE_EXPORTS = [
 const staticMocksImport = {
   group: ["@/mocks", "@/mocks/**", "**/mocks", "**/mocks/**"],
   message:
-    "Mock code reaches the app only through the shell's conditional require(); a static import ships it in production builds.",
+    "Mock code reaches the app only through the root's conditional require(); a static import ships it in production builds.",
 };
 const storageOutsidePlatform = {
   group: [
@@ -194,15 +194,6 @@ export default [
       "@typescript-eslint/no-restricted-imports": [
         "error",
         { paths: [mswRootImport] },
-      ],
-    },
-  },
-  {
-    files: ["src/shell/**"],
-    rules: {
-      "@typescript-eslint/no-require-imports": [
-        "error",
-        { allow: ["^@/mocks(/|$)"] },
       ],
     },
   },

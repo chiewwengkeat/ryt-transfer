@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 
 import { screenTransitionOptions } from "@/shared/lib/motion/motion";
-import { demoLayer } from "@/shell/app-launch";
+import { demoLayer } from "@/root/app-launch/app-launch";
 
 export default function TransferHistoryLayout() {
   return (

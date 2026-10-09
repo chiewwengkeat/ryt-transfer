@@ -457,7 +457,7 @@ async function readWhatTheAppStillHolds() {
     await jest.advanceTimersByTimeAsync(0);
   });
   const { queryClient } = jest.requireMock<{ queryClient: QueryClient }>(
-    "@/shell/query-client",
+    "@/root/query-client/query-client",
   );
   return JSON.stringify([
     queryClient

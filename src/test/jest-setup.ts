@@ -18,8 +18,8 @@ import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integr
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { setObservabilitySink } from "@/shared/observability/observability";
 import { forgetRequestOutcomes } from "@/shared/platform/offline";
-import type * as ShellQueryClient from "@/shell/query-client";
-import "@/shell/translations";
+import type * as ShellQueryClient from "@/root/query-client/query-client";
+import "@/root/translations/translations";
 
 import type * as BiometricsDouble from "./biometrics-double";
 import { resetBiometricsDouble } from "./biometrics-double";
@@ -127,9 +127,9 @@ jest.mock("react-native-screens", () =>
 // Each test gets its own client, so no test reads another's cache, with no retry backoff: RNTL's waitFor
 // gives up after 1 s, before TanStack's first two retries have run.
 let mockQueryClient: QueryClient | undefined;
-jest.mock("@/shell/query-client", () => {
+jest.mock("@/root/query-client/query-client", () => {
   const actual = jest.requireActual<typeof ShellQueryClient>(
-    "@/shell/query-client",
+    "@/root/query-client/query-client",
   );
   // Defined after the spread: Babel's object spread reads a getter once and keeps the value.
   return Object.defineProperty({ __esModule: true, ...actual }, "queryClient", {
@@ -156,7 +156,7 @@ beforeAll(() => {
   mswServer.listen({ onUnhandledRequest: recordUnhandledRequest });
   // Ahead of every test, as at launch, or its reinstall wipe would erase keys a test paired before rendering. In a
   // hook, so a demo-build file launches it first as a demo; actual, so a file that mocks it still runs the launch.
-  jest.requireActual("@/shell/app-launch");
+  jest.requireActual("@/root/app-launch/app-launch");
 });
 
 beforeEach(() => {

@@ -5,7 +5,7 @@ import {
   listPendingTransfers,
 } from "@/domains/transfer/hooks/pending-transfers";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
-import { queryClient } from "@/shell/query-client";
+import { queryClient } from "@/root/query-client/query-client";
 
 // ⛔ Never on a 401: after signing in again, a transfer still being checked needs its record.
 export async function endSession() {

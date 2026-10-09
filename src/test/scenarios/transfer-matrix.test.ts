@@ -1,6 +1,6 @@
 import { TRANSFER_SCENARIOS } from "@/mocks/scenarios/transfer-scenarios";
 import { AppLanguage } from "@/shared/i18n/i18n";
-import { TRANSLATION_BUNDLES } from "@/shell/translations";
+import { TRANSLATION_BUNDLES } from "@/root/translations/translations";
 
 import { findRouteTestedScenarioIds } from "./find-route-tested-scenario-ids";
 

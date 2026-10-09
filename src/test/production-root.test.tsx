@@ -20,7 +20,7 @@ function launchShellBuiltAs(variant: string | undefined) {
   const fetchMswIntercepts = globalThis.fetch;
   try {
     jest.isolateModules(() => {
-      jest.requireActual("@/shell/app-launch");
+      jest.requireActual("@/root/app-launch/app-launch");
     });
   } finally {
     // The launch loads expo afresh through the capture library, and expo installs its own fetch over msw's.

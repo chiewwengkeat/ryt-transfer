@@ -8,7 +8,7 @@ import {
   blockScreenCapture,
   useScreenErrorShowing,
 } from "@/shared/platform/screen-capture";
-import { demoLayer } from "@/shell/app-launch";
+import { demoLayer } from "@/root/app-launch/app-launch";
 
 const RECEIPT_ROUTES = new Set([
   "/transfer/result/[transferId]",

@@ -9,7 +9,7 @@ import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error";
-import { queryClient } from "@/shell/query-client";
+import { queryClient } from "@/root/query-client/query-client";
 
 import { setPhoneNetwork } from "./harness/native-doubles";
 import { mswServer, sentRequests } from "./msw-server";

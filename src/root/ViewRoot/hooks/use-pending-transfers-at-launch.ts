@@ -13,7 +13,7 @@ import { checkPendingTransferOnce } from "@/domains/transfer/hooks/transfer-stat
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { addUnauthorizedListener } from "@/shared/http/transport";
 import { reportError } from "@/shared/observability/observability";
-import { queryClient } from "@/shell/query-client";
+import { queryClient } from "@/root/query-client/query-client";
 
 export function usePendingTransfersAtLaunch() {
   useEffect(() => {

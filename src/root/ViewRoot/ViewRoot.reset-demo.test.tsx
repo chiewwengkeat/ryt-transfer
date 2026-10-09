@@ -18,7 +18,7 @@ import { mswServer } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 
 // The demo build's root: Jest runs as production, whose launch loads no demo layer.
-jest.mock("@/shell/app-launch", () => ({
+jest.mock("@/root/app-launch/app-launch", () => ({
   __esModule: true,
   demoLayer: jest.requireActual<{ default: DemoLayer }>("@/mocks/demo-layer")
     .default,

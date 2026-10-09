@@ -10,8 +10,8 @@ import { useEffect, type ReactNode } from "react";
 
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { AppLanguage, initTranslations } from "@/shared/i18n/i18n";
-import { queryClient } from "@/shell/query-client";
-import { TRANSLATION_BUNDLES } from "@/shell/translations";
+import { queryClient } from "@/root/query-client/query-client";
+import { TRANSLATION_BUNDLES } from "@/root/translations/translations";
 
 // renderRoute's fake timers last one test: left on, they stall the next test's msw delay().
 afterEach(() => {

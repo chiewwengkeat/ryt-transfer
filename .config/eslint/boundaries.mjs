@@ -22,7 +22,6 @@ const DOMAIN_TYPES = [
 
 const sliceElements = [
   { type: "app", pattern: "src/app", partialMatch: false },
-  { type: "shell", pattern: "src/shell", partialMatch: false },
   {
     type: "root",
     pattern: "src/root/*",
@@ -149,7 +148,6 @@ const sliceBoundaries = [
         flowStateFiles,
         ...domainPublicFiles,
         sharedCode,
-        { element: { type: "shell" } },
         {
           element: {
             type: "root",
@@ -163,7 +161,7 @@ const sliceBoundaries = [
     },
   },
   {
-    from: { element: { types: { anyOf: ["shell", "root"] } } },
+    from: { element: { type: "root" } },
     allow: {
       to: [
         screenEntry,
@@ -240,7 +238,7 @@ export default [
         { category: "test", pattern: [...TEST_FILES, ...TEST_HELPER_FILES] },
         { category: "check", pattern: CHECK_TEST_FILES },
       ],
-      // require() must count: it is the shell's one way into src/mocks.
+      // require() must count: it is the root's one way into src/mocks.
       "boundaries/dependency-nodes": [
         "import",
         "export",

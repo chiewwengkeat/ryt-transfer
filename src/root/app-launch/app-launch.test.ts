@@ -21,7 +21,7 @@ it("forgets the approval keys a reinstalled app finds left from before", async (
       biometricKeyId: "key_biometric",
     });
 
-    jest.requireActual("@/shell/app-launch");
+    jest.requireActual("./app-launch");
     await waitFor(() => {
       expect(kvStoreDouble.getItemSync("install-marker")).not.toBeNull();
     });
@@ -46,7 +46,7 @@ it("keeps the approval keys when the app was not reinstalled", async () => {
       biometricKeyId: "key_biometric",
     });
 
-    jest.requireActual("@/shell/app-launch");
+    jest.requireActual("./app-launch");
     // Storage runs writes and wipes in the order asked, so this settles only after any wipe the launch asked for.
     await writeSecureRecord({ namespace: "test", name: "launch-settled" }, "");
 
