@@ -1,5 +1,5 @@
 import type { QueryKey } from "@tanstack/react-query";
-import { render } from "@testing-library/react-native";
+import { act, render, screen } from "@testing-library/react-native";
 import { ExpoRoot, usePathname } from "expo-router";
 import {
   getMockContext,
@@ -65,4 +65,18 @@ export async function relaunchApp(
   await changeLanguage(AppLanguage.English);
   initTranslations(TRANSLATION_BUNDLES);
   return renderRoute("/");
+}
+
+// Home offers Transfer once the account is read, and the launch's checks of kept transfers land within a second.
+export async function relaunchAppAndWaitForItsLaunchChecks(
+  killedView: Awaited<ReturnType<typeof renderRoute>>,
+) {
+  const view = await relaunchApp(killedView);
+  await screen.findByRole("button", {
+    name: "Transfer",
+    disabled: false,
+    includeHiddenElements: true,
+  });
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  return view;
 }

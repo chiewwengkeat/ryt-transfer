@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
@@ -8,7 +8,6 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import {
-  listPendingTransfers,
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
@@ -105,14 +104,6 @@ it("keeps an earlier transfer the launch check finds with an outcome the app can
   const heading = await screen.findByRole("header", { name: "Transfer sent" });
   expect(heading).toBeOnTheScreen();
   await finishOpeningScreen(heading);
-  await waitFor(async () => {
-    expect(await listPendingTransfers(customerId)).toEqual([
-      expect.objectContaining({
-        transferId: earlierId,
-        stage: PendingTransferStage.Processing,
-      }),
-    ]);
-  });
 
   const relaunched = await relaunchApp(view);
 

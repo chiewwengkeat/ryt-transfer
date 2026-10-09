@@ -5,7 +5,6 @@ import { AccessibilityInfo } from "react-native";
 import { accountKeys } from "@/domains/account/api/account.keys";
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
-  listPendingTransfers,
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
@@ -19,7 +18,11 @@ import {
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { finishOpeningScreen } from "@/test/finish-opening-screen";
 import { mswServer } from "@/test/msw-server";
-import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
+import {
+  askOpenAppToReadAgain,
+  relaunchAppAndWaitForItsLaunchChecks,
+  renderRoute,
+} from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 // A resolver that answers nothing hands the read on to the bank, once released.
@@ -161,7 +164,7 @@ it(
       stage: PendingTransferStage.Approving,
     });
 
-    await renderRoute("/");
+    const view = await renderRoute("/");
 
     const heading = await screen.findByRole("header", {
       name: "Transfer not sent",
@@ -179,8 +182,8 @@ it(
         .getAllByRole("button")
         .map((button) => button.props.accessibilityLabel as unknown),
     ).toEqual(["Done"]);
-    await waitFor(async () => {
-      expect(await listPendingTransfers(customerId)).toEqual([]);
-    });
+    const relaunched = await relaunchAppAndWaitForItsLaunchChecks(view);
+    expect(screen.queryByText(/^Your (last )?transfer/)).toBeNull();
+    expect(relaunched.getPathname()).toBe("/");
   }),
 );

@@ -15,7 +15,6 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
-  listPendingTransfers,
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
@@ -34,7 +33,11 @@ import { setPhoneNetwork } from "@/test/harness/native-doubles";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { readBankOnRealTimers } from "@/test/read-bank-on-real-timers";
-import { relaunchApp, renderRoute } from "@/test/render-route";
+import {
+  relaunchApp,
+  relaunchAppAndWaitForItsLaunchChecks,
+  renderRoute,
+} from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 const BANK_REFERENCE =
@@ -603,7 +606,6 @@ it(
 it(
   "keeps warning on Home not to send again a transfer whose outcome the app cannot name, at the next launch too",
   scenarioTest("transfer.outcome_unexpected", async () => {
-    const customerId = await readCustomerId();
     const { recipient } = await lookUpTestRecipient("012-345 6789");
     answerApprovalAndReadsWithAnUnnamedOutcome(recipient);
     const view = await sendRm100FromHome();
@@ -615,9 +617,6 @@ it(
     const stillBeingChecked =
       "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
     expect(await screen.findByText(stillBeingChecked)).toBeOnTheScreen();
-    expect(await listPendingTransfers(customerId)).toEqual([
-      expect.objectContaining({ stage: PendingTransferStage.Processing }),
-    ]);
 
     const relaunched = await relaunchApp(view);
 
@@ -636,29 +635,37 @@ async function readCustomerId() {
 }
 
 it(
-  "keeps checking a processing transfer in place, its record kept as processing, and shows the receipt once it completes",
+  "keeps checking a processing transfer in place and shows the receipt once it completes, leaving nothing for the next launch to warn about",
   scenarioTest("transfer.processing", async () => {
-    const customerId = await readCustomerId();
-    await sendRm100FromHome();
-    const heading = await screen.findByRole("header", {
-      name: "Transfer processing",
-    });
-    expect(heading).toBeOnTheScreen();
-    await finishOpeningScreen(heading);
-    await waitFor(async () => {
-      expect(await listPendingTransfers(customerId)).toEqual([
-        expect.objectContaining({ stage: PendingTransferStage.Processing }),
-      ]);
-    });
+    const view = await sendRm100FromHome();
+    await finishOpeningScreen(
+      await screen.findByRole("header", { name: "Transfer processing" }),
+    );
 
     await act(() => jest.advanceTimersByTimeAsync(32_000));
 
     expect(
       await screen.findByRole("header", { name: "Transfer sent" }),
     ).toBeOnTheScreen();
-    await waitFor(async () => {
-      expect(await listPendingTransfers(customerId)).toEqual([]);
-    });
+    const relaunched = await relaunchAppAndWaitForItsLaunchChecks(view);
+    expect(screen.queryByText(/^Your (last )?transfer/)).toBeNull();
+    expect(relaunched.getPathname()).toBe("/");
+  }),
+);
+
+it(
+  "warns on Home at the next launch, instead of reopening the page, when the app closes while a processing transfer is being checked",
+  scenarioTest("transfer.processing", async () => {
+    const view = await sendRm100FromHome();
+    await screen.findByRole("header", { name: "Transfer processing" });
+    await act(() => jest.advanceTimersByTimeAsync(1_000));
+
+    const relaunched = await relaunchAppAndWaitForItsLaunchChecks(view);
+
+    expect(
+      screen.getByText(/^Your last transfer is still being checked/),
+    ).toBeOnTheScreen();
+    expect(relaunched.getPathname()).toBe("/");
   }),
 );
 
@@ -867,9 +874,8 @@ it("checks a transfer whose approval drew an answer the app does not know, under
 });
 
 it(
-  "reopens the transfer the app was closed during, quoting its id, with Home's warning beneath asking the bank nothing, and says no money moved once its window passes",
+  "reopens the transfer the app was closed during, quoting its id, with Home's warning beneath asking the bank nothing, then says no money moved once its window passes and leaves nothing for the next launch",
   scenarioTest("transfer.app_closed_during_approval", async () => {
-    const customerId = await readCustomerId();
     // Never answered: the app is killed while the approval is on its way.
     mswServer.use(
       http.post(
@@ -927,9 +933,10 @@ it(
     expect(
       screen.getByText("The approval timed out — no money moved."),
     ).toBeOnTheScreen();
-    await waitFor(async () => {
-      expect(await listPendingTransfers(customerId)).toEqual([]);
-    });
+    const relaunchedAgain =
+      await relaunchAppAndWaitForItsLaunchChecks(relaunched);
+    expect(screen.queryByText(/^Your (last )?transfer/)).toBeNull();
+    expect(relaunchedAgain.getPathname()).toBe("/");
   }),
 );
 
@@ -953,16 +960,16 @@ it(
       stage: PendingTransferStage.Approving,
     });
 
-    await renderRoute("/");
+    const view = await renderRoute("/");
 
     const heading = await screen.findByRole("header", {
       name: "Transfer sent",
     });
     expect(heading).toBeOnTheScreen();
     await finishOpeningScreen(heading);
-    await waitFor(async () => {
-      expect(await listPendingTransfers(customerId)).toEqual([]);
-    });
+    const relaunched = await relaunchAppAndWaitForItsLaunchChecks(view);
+    expect(screen.queryByText(/^Your (last )?transfer/)).toBeNull();
+    expect(relaunched.getPathname()).toBe("/");
   }),
 );
 

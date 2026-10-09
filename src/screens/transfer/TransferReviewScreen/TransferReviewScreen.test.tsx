@@ -16,7 +16,6 @@ import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-r
 import { getLookupRecipientOptions } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
-  listPendingTransfers,
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
@@ -49,7 +48,11 @@ import {
 } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 import { pressHandlerOf } from "@/test/press-handler-of";
-import { askOpenAppToReadAgain, renderRoute } from "@/test/render-route";
+import {
+  askOpenAppToReadAgain,
+  relaunchApp,
+  renderRoute,
+} from "@/test/render-route";
 import { scenarioTest } from "@/test/scenario-test";
 
 import { TransferFlowStep } from "../state/transfer-flow";
@@ -811,36 +814,40 @@ it("takes an approval lost as the phone goes offline to the result page, which r
   });
 });
 
-it("keeps the transfer on the phone before its approval leaves, under the key the approval carries", async () => {
+it("keeps the transfer on the phone before its approval leaves, so the next launch reopens it after the app is killed as it leaves", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  const {
-    body: { customerId },
-  } = await sendToBank<GetPrimaryAccountResponse>("GET", "/accounts/primary");
-  let approvalKey: string | null = null;
-  let pendingWhenApprovalArrived: Awaited<
-    ReturnType<typeof listPendingTransfers>
-  > = [];
+  const secureStoreWrites = jest.spyOn(
+    secureStoreNativeDouble,
+    "setValueWithKeyAsync",
+  );
   mswServer.use(
-    http.post("*/transfers/:transferId/approve", async ({ request }) => {
-      approvalKey = request.headers.get("Idempotency-Key");
-      pendingWhenApprovalArrived = await listPendingTransfers(customerId);
-      return HttpResponse.error();
+    http.post("*/transfers/:transferId/approve", () => {
+      // Killed as the approval leaves: nothing the app would store from here on is kept.
+      secureStoreWrites.mockRejectedValue(new Error("The app was killed."));
+      return new Promise<never>(() => undefined);
     }),
   );
   const view = await openReviewOfRm100();
-
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
-  await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 });
+  await waitFor(() => {
+    expect(countSent("POST", "/approve")).toBe(1);
+  });
+  const approvedTransferId = sentRequests
+    .find(({ url }) => url.endsWith("/approve"))
+    ?.url.split("/")
+    .at(-2);
+  secureStoreWrites.mockRestore();
 
-  expect(pendingWhenApprovalArrived).toEqual([
-    expect.objectContaining({
-      transferId: view.getPathname()?.replace("/transfer/result/", ""),
-      idempotencyKey: approvalKey,
-      stage: PendingTransferStage.Approving,
-    }),
-  ]);
+  const relaunched = await relaunchApp(view);
+
+  expect(
+    await screen.findByRole("header", { name: "Checking your last transfer" }),
+  ).toBeOnTheScreen();
+  expect(relaunched.getPathname()).toBe(
+    `/transfer/result/${approvedTransferId}`,
+  );
 });
 
 it("says the approval was not sent when the phone cannot keep a record of it", async () => {
