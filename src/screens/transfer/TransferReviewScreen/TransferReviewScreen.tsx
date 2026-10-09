@@ -1,21 +1,24 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { Stack, useNavigation } from "expo-router";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { BackHandler } from "react-native";
 
 import BannerEarlierTransferUnconfirmed from "@/domains/transfer/components/BannerEarlierTransferUnconfirmed/BannerEarlierTransferUnconfirmed";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import TextBody from "@/shared/ui/TextBody/TextBody";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
 import {
+  isTransferSentOrBeingSent,
   TransferFlowStep,
   transferFlowStore,
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
 import ButtonConfirmTransfer from "./components/ButtonConfirmTransfer/ButtonConfirmTransfer";
-import HeaderReview from "./components/HeaderReview/HeaderReview";
 import SectionReviewDetails from "./components/SectionReviewDetails/SectionReviewDetails";
-import TextSendingTransfer from "./components/TextSendingTransfer/TextSendingTransfer";
 
 export default function TransferReviewScreen() {
   const queryClient = useQueryClient();
@@ -62,4 +65,47 @@ export default function TransferReviewScreen() {
       </ViewScreenFrame>
     </>
   );
+}
+
+function HeaderReview() {
+  const { t } = useTranslation("transfer");
+  const navigation = useNavigation();
+  const sending = useTransferFlow(isTransferSentOrBeingSent);
+  // Android's Back and the root stack's swipe too, which this stack's options never reach: leaving
+  // mid-send strands an approval no screen can answer.
+  useEffect(() => {
+    if (!sending) return;
+    const flowScreen = navigation.getParent();
+    flowScreen?.setOptions({ gestureEnabled: false });
+    const backPress = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => true,
+    );
+    return () => {
+      backPress.remove();
+      flowScreen?.setOptions({ gestureEnabled: true });
+    };
+  }, [navigation, sending]);
+
+  return (
+    <Stack.Screen
+      options={{
+        title: t("review.title"),
+        headerBackVisible: !sending,
+        gestureEnabled: !sending,
+      }}
+    />
+  );
+}
+
+function TextSendingTransfer() {
+  const { t } = useTranslation("transfer");
+  // Through Done as well: review stays drawn until the result page covers it.
+  const approvalSent = useTransferFlow(
+    (flow) =>
+      flow.step === TransferFlowStep.Submitting ||
+      flow.step === TransferFlowStep.Done,
+  );
+  if (!approvalSent) return null;
+  return <TextBody>{t("common.biometrics_recognised.body")}</TextBody>;
 }

@@ -8,7 +8,11 @@ import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
 
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
-import { LookupRecipientErrorCode } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import {
+  LookupRecipientErrorCode,
+  type LookupRecipientResponse,
+  type RecipientIdType,
+} from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import {
   scenarioWordsKey,
@@ -23,15 +27,13 @@ import {
   isSessionEndFailure,
   TransportError,
 } from "@/shared/http/transport-error";
+import { formatMoney } from "@/shared/lib/money/money";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
 import RowDetail from "@/screens/transfer/components/RowDetail/RowDetail";
 import { READERS_OWN_FOCUS_WAIT_MS } from "@/shared/ui/TextHeading/TextHeading";
-
-import SectionReviewAmount from "./components/SectionReviewAmount/SectionReviewAmount";
-import SectionReviewRecipient from "./components/SectionReviewRecipient/SectionReviewRecipient";
 
 interface Props {
   draft: TransferDraft;
@@ -153,5 +155,41 @@ export default function SectionReviewDetails({ draft }: Props) {
       <SectionReviewRecipient recipient={recipient} />
       <SectionReviewAmount draft={draft} />
     </Card>
+  );
+}
+
+interface SectionReviewRecipientProps {
+  recipient: LookupRecipientResponse["recipient"];
+}
+function SectionReviewRecipient({ recipient }: SectionReviewRecipientProps) {
+  const { t } = useTranslation("transfer");
+  return (
+    <>
+      <RowDetail
+        label={t("section_review_recipient.bank")}
+        value={recipient.bankName}
+      />
+      <RowDetail
+        label={t(
+          `section_review_recipient.${recipient.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+        )}
+        value={recipient.idValueMasked}
+      />
+    </>
+  );
+}
+
+interface SectionReviewAmountProps {
+  draft: TransferDraft;
+}
+function SectionReviewAmount({ draft }: SectionReviewAmountProps) {
+  const { t } = useTranslation("transfer");
+  return (
+    <>
+      <RowDetail label={t("review.amount")} value={formatMoney(draft.amount)} />
+      {draft.note !== undefined && (
+        <RowDetail label={t("review.note")} value={draft.note} />
+      )}
+    </>
   );
 }
