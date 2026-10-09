@@ -10,6 +10,8 @@ module.exports = {
   roots: ["<rootDir>/src"],
   testMatch: TEST_FILES.map((glob) => `<rootDir>/${glob}`),
   globalSetup: "<rootDir>/jest.global-setup.js",
+  // Route tests that walk a whole transfer, signing included, outran Jest's 5 s default in a parallel run under load.
+  testTimeout: 15_000,
   setupFilesAfterEnv: [
     "<rootDir>/src/test/jest-setup.ts",
     "<rootDir>/src/test/demo-bank-setup.ts",
