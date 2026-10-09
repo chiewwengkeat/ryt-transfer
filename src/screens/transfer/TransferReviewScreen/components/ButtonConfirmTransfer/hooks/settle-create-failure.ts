@@ -13,6 +13,10 @@ import {
   TransferFlowScenario,
   TransferHoldKind,
 } from "@/screens/transfer/state/transfer-flow";
+import {
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport-error";
 
 export function settleCreateFailure({
   failure,
@@ -23,6 +27,15 @@ export function settleCreateFailure({
   queryClient: QueryClient;
   checkTheNameAgain: () => void;
 }) {
+  // The session's end, which its own view shows and reports: review keeps no notice of it.
+  if (
+    failure instanceof TransportError &&
+    failure.kind === TransportErrorKind.Http &&
+    failure.status === 401
+  ) {
+    dispatchTransferFlow({ type: TransferFlowActionType.CreateNotSent });
+    return;
+  }
   if (isCreateTransferUnanswered(failure)) {
     dispatchTransferFlow({
       type: TransferFlowActionType.CreateUnanswered,

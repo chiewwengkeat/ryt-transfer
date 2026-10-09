@@ -195,6 +195,38 @@ it(
   }),
 );
 
+it("reports only the session's end for a transfer the bank would not create because the session had ended, and offers Transfer again once signed in", async () => {
+  await openReviewOfRm100();
+  const scenariosReportedSinceTheCreate = scenariosReportedFromNowOn();
+  mswServer.use(
+    http.post(
+      "*/transfers",
+      () =>
+        HttpResponse.json(
+          { error: { code: "UNAUTHORIZED", message: "Test." } },
+          { status: 401 },
+        ),
+      { once: true },
+    ),
+  );
+
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Sign in again" }),
+  );
+
+  expect(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  ).toBeOnTheScreen();
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
+  expect(scenariosReportedSinceTheCreate()).toEqual(["transfer.session_ended"]);
+  expect(
+    screen.queryByText(
+      "Something unexpected stopped the transfer — no money moved.",
+    ),
+  ).toBeNull();
+});
+
 it("reports only the session's end for a PIN sheet it closes, which they find closed as not sent once signed in again", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await openReviewOfRm100();

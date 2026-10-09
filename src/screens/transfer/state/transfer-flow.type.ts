@@ -193,7 +193,7 @@ export type ReviewAndCreateEvent =
     }
   | {
       type: TransferFlowActionType.CreateNotSent;
-      notice: TransferFlowNotice;
+      notice?: TransferFlowNotice;
       noticeDetail?: TransferNoticeDetail;
     }
   | {
