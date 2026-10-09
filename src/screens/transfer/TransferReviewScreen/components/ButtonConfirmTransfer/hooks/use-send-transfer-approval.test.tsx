@@ -1512,6 +1512,7 @@ it("sets approval up again with the PIN when the bank no longer knows the phone'
     expect(
       await screen.findByText("That PIN is incorrect. You have 2 tries left."),
     ).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.pin_incorrect");
     await approveWithPin(DEMO_PIN);
 
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();

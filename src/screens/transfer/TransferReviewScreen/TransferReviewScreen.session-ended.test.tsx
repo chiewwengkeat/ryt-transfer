@@ -4,6 +4,7 @@ import { AccessibilityInfo } from "react-native";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import { lookUpTestRecipient } from "@/test/bank-client";
 import {
   biometricPromptsShown,
   holdNextBiometricPrompt,
@@ -122,6 +123,75 @@ it(
     expect(scenariosReportedSinceTheView()).toEqual([
       "transfer.account_locked",
     ]);
+  }),
+);
+
+it(
+  "says a hold once, not again when review is back on top after signing in again",
+  scenarioTest("transfer.account_locked", async () => {
+    const holdReason = "Your account is locked. Contact Ryt to unlock it.";
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+    announce.mockClear();
+    const timesHoldSpoken = () =>
+      announce.mock.calls.filter(([words]) => words === holdReason).length;
+    await openReviewOfRm100();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    await waitFor(() => {
+      expect(timesHoldSpoken()).toBe(1);
+    });
+
+    await fireEvent.press(await endTheSessionThroughAnotherRead());
+    await act(() => jest.advanceTimersByTimeAsync(1_000));
+
+    expect(screen.getByText(holdReason)).toBeOnTheScreen();
+    expect(timesHoldSpoken()).toBe(1);
+  }),
+);
+
+it(
+  "speaks the result page's outcome once, not again when that page is back on top after signing in again",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+    announce.mockClear();
+    const { recipient } = await lookUpTestRecipient("012-345 6789");
+    const outcomeAnnouncement = `Transfer sent. RM 100.00 sent to ${recipient.registeredName} — money moved.`;
+    const timesOutcomeSpoken = () =>
+      announce.mock.calls.filter(([words]) => words === outcomeAnnouncement)
+        .length;
+    let releaseStatusRead = () => undefined as void;
+    const statusReadHeld = new Promise<void>((release) => {
+      releaseStatusRead = release;
+    });
+    mswServer.use(
+      http.get(
+        "*/transfers/:transferId",
+        async () => {
+          await statusReadHeld;
+        },
+        { once: true },
+      ),
+    );
+    await pairPhoneAsTheDemoLaunchDoes();
+    await openReviewOfRm100();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    await screen.findByRole(
+      "header",
+      { name: "Checking your transfer" },
+      { timeout: 10_000 },
+    );
+    releaseStatusRead();
+    await screen.findByRole("header", { name: "Transfer sent" });
+    await waitFor(() => {
+      expect(timesOutcomeSpoken()).toBe(1);
+    });
+
+    await fireEvent.press(await endTheSessionThroughAnotherRead());
+    await act(() => jest.advanceTimersByTimeAsync(1_000));
+
+    expect(
+      screen.getByRole("header", { name: "Transfer sent" }),
+    ).toBeOnTheScreen();
+    expect(timesOutcomeSpoken()).toBe(1);
   }),
 );
 
