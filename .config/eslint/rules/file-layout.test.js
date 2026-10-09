@@ -384,7 +384,7 @@ test("file-layout: checks a .tsx file with no component as a module", () => {
 
 const SRC = "/repo/src";
 const MODULE_FILE = `${SRC}/domains/transfer/lib/total/total.ts`;
-const SCREEN_TEST_FILE = `${SRC}/screens/transfer/TransferAmountScreen/TransferAmountScreen.test.tsx`;
+const SCREEN_TEST_FILE = `${SRC}/screens/transfer/TransferAmountScreen/tests/TransferAmountScreen.test.tsx`;
 const RULE_FILE = "/repo/.config/eslint/rules/total-rule.js";
 const RULE_TEST_FILE = "/repo/.config/eslint/rules/total-rule.test.js";
 const SCRIPT_FILE = "/repo/scripts/git-status.js";

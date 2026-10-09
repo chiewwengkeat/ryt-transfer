@@ -195,8 +195,10 @@ test("fails a component whose only importers are tests", () => {
   const { exitCode, errors } = runPlacementCheckOn({
     "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.tsx":
       PLACEHOLDER_COMPONENT_SOURCE,
-    "src/screens/transfer/TransferAmountScreen/TransferAmountScreen.test.tsx":
-      moduleImporting("./components/FieldAmount/FieldAmount"),
+    "src/screens/transfer/TransferAmountScreen/tests/TransferAmountScreen.test.tsx":
+      moduleImporting(
+        "@/screens/transfer/TransferAmountScreen/components/FieldAmount/FieldAmount",
+      ),
     [`${fieldAmountDir}/FieldAmount.tsx`]: PLACEHOLDER_COMPONENT_SOURCE,
     [`${fieldAmountDir}/FieldAmount.test.tsx`]:
       moduleImporting("./FieldAmount"),
