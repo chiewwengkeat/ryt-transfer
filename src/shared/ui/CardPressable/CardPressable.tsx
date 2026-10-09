@@ -44,5 +44,5 @@ export default function CardPressable({
 
 const styles = StyleSheet.create({
   card: { minHeight: minTouchTarget, justifyContent: "center" },
-  cardPressed: { backgroundColor: colors.surfacePressed, opacity: 0.4 },
+  cardPressed: { backgroundColor: colors.surfacePressed, opacity: 0.8 },
 });
