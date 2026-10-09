@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
@@ -13,7 +14,18 @@ export function useStartTransferDisabledReason() {
   const offline = useIsOffline();
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
-  const maintenance = getTransferLimitsMaintenance(limits.error);
+  const [maintenanceErrorBeforeReRead, setMaintenanceErrorBeforeReRead] =
+    useState<Error | null>(null);
+  // A re-read of limits that never loaded clears that answer until it lands: kept, the reason stays.
+  const maintenanceError =
+    getTransferLimitsMaintenance(limits.error) !== undefined
+      ? limits.error
+      : limits.fetchStatus !== "idle"
+        ? maintenanceErrorBeforeReRead
+        : null;
+  if (maintenanceError !== maintenanceErrorBeforeReRead)
+    setMaintenanceErrorBeforeReRead(maintenanceError);
+  const maintenance = getTransferLimitsMaintenance(maintenanceError);
 
   return offline
     ? t("common.offline.disabled_reason")
