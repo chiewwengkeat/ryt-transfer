@@ -187,7 +187,6 @@ export default [
         "dynamic-import",
       ],
       "boundaries/legacy-templates": false,
-      // A root other than the repo's matches no element, and every boundary then passes silently.
       "boundaries/root-path": REPO_ROOT,
       "import/resolver": {
         typescript: { alwaysTryTypes: true, project: TSCONFIG_PATH },
