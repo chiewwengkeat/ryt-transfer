@@ -4,14 +4,33 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
+import {
+  biometricPromptsShown,
+  deviceIntegrityChecksAsked,
+  failNextBiometricPrompt,
+} from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   secureStoreNativeDouble,
   reportedScenarios,
 } from "@/test/doubles/native-doubles";
-import { mswServer } from "@/test/mock-bank/mock-bank";
+import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
-import { scenarioTest } from "@/test/render/drive-app";
+import {
+  pickDemoScenario,
+  scenarioTest,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
+
+const PHONE_REFUSAL =
+  "This phone's security can't be confirmed, so transfers are off on it.";
+const PIN_OFFER =
+  "Your face or fingerprint was not recognised. You can try again, or use your PIN.";
+
+async function openReviewOfRm100() {
+  await renderRoute("/transfer");
+  await walkToTransferReview();
+}
 
 // A resolver that answers nothing hands the request on to the bank, once released.
 function holdTheNextPostTo(path: string) {
@@ -144,3 +163,94 @@ it(
     );
   }),
 );
+
+it(
+  "refuses approval on review in a demo build while the rooted phone is picked, with no face or fingerprint prompt and no transfer sent",
+  scenarioTest("transfer.rooted_phone", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(await screen.findByText(PHONE_REFUSAL)).toBeOnTheScreen();
+    expect(biometricPromptsShown()).toEqual([]);
+    const requestsSent = sentRequests.map(
+      ({ method, url }) => `${method} ${new URL(url).pathname}`,
+    );
+    expect(requestsSent).toContain("GET /accounts/primary");
+    expect(
+      requestsSent.filter((request) => request.startsWith("POST /transfers")),
+    ).toEqual([]);
+  }),
+);
+
+it("refuses Use PIN instead before any PIN sheet in a demo build while the rooted phone is picked, asking the phone's own check nothing", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+  await pickDemoScenario("Rooted, jailbroken or tampered phone");
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+
+  expect(await screen.findByText(PHONE_REFUSAL)).toBeOnTheScreen();
+  expect(
+    screen.queryByText("Enter your bank PIN to approve this transfer."),
+  ).toBeNull();
+  expect(
+    sentRequests.filter(
+      ({ method, url }) =>
+        method === "POST" && new URL(url).pathname.startsWith("/transfers"),
+    ),
+  ).toEqual([]);
+  expect(deviceIntegrityChecksAsked()).toBe(0);
+});
+
+it("lets approval go ahead in a demo build with no scenario picked, without asking the phone's own check", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toHaveLength(1);
+  expect(deviceIntegrityChecksAsked()).toBe(0);
+});
+
+it("lets approval go ahead in a demo build once another scenario replaces the rooted phone", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await openReviewOfRm100();
+  await pickDemoScenario("Rooted, jailbroken or tampered phone");
+  await pickDemoScenario("Normal, no scenario");
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(biometricPromptsShown()).toHaveLength(1);
+});
+
+it("shows the refusal with no earlier notice or button beside it that offers the PIN", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  failNextBiometricPrompt("AUTHENTICATION_FAILED");
+  await openReviewOfRm100();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  expect(await screen.findByText(PIN_OFFER)).toBeOnTheScreen();
+  expect(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  ).toBeOnTheScreen();
+
+  await pickDemoScenario("Rooted, jailbroken or tampered phone");
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+  expect(await screen.findByText(PHONE_REFUSAL)).toBeOnTheScreen();
+  expect(screen.queryByText(PIN_OFFER)).toBeNull();
+  expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
+});
