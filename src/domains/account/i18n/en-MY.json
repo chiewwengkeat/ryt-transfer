@@ -1,11 +1,9 @@
 {
   "card_balance": {
-    "label": "Balance"
+    "label": "Balance",
+    "remaining_today": "You can send {{amount}} more today"
   },
   "common": {
-    "balance_and_limit_shown": {
-      "remaining_today": "You can send {{amount}} more today"
-    },
     "start_unexpected": {
       "body": "Something unexpected went wrong.",
       "retry": "Try again"

@@ -1,11 +1,9 @@
 {
   "card_balance": {
-    "label": "余额"
+    "label": "余额",
+    "remaining_today": "今天还可转账 {{amount}}"
   },
   "common": {
-    "balance_and_limit_shown": {
-      "remaining_today": "今天还可转账 {{amount}}"
-    },
     "start_unexpected": {
       "body": "出现了意外问题。",
       "retry": "重试"

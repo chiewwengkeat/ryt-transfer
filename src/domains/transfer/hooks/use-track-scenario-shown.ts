@@ -5,7 +5,7 @@ import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
 import { trackEvent } from "@/shared/observability/observability";
 
 // For a scenario a screen shows by itself: the transfer store reports its own with the step it moves to.
-export function trackScenarioShown(scenario: string) {
+export function trackScenarioShown(scenario: TransferScenarioId) {
   trackEvent("transfer_step", { scenario });
 }
 

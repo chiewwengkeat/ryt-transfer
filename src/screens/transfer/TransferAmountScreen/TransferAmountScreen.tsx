@@ -9,10 +9,8 @@ import {
 } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
 import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
-import {
-  trackScenarioShown,
-  useTrackScenarioShown,
-} from "@/domains/transfer/hooks/use-track-scenario-shown";
+import { useBalanceScenarios } from "@/domains/transfer/hooks/use-balance-scenarios/use-balance-scenarios";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { formatMoney, parseTypedAmount } from "@/shared/lib/money/money";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
@@ -29,6 +27,9 @@ import {
 
 export default function TransferAmountScreen() {
   const { t } = useTranslation("transfer");
+  const balanceScenarios = useBalanceScenarios(
+    TransferScenarioId.AmountUnexpected,
+  );
   const enteredAmount = useTransferFlow((flow) =>
     "draft" in flow ? flow.draft.amount : undefined,
   );
@@ -157,10 +158,7 @@ export default function TransferAmountScreen() {
         }
       >
         <BannerFlowNotice step={TransferFlowStep.Editing} />
-        <CardBalance
-          unexpectedScenario="amount_unexpected"
-          onScenarioShown={trackScenarioShown}
-        />
+        <CardBalance {...balanceScenarios} />
         <FieldText
           label={t("amount.label")}
           placeholder={t("amount.placeholder")}

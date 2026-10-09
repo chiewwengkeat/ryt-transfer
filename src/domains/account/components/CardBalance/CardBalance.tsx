@@ -22,12 +22,19 @@ import Loader from "@/shared/ui/Loader/Loader";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
 interface Props {
-  unexpectedScenario: "start_unexpected" | "amount_unexpected";
-  onScenarioShown: (scenario: string) => void;
+  failureWords: Record<
+    "unavailable" | "unexpected",
+    { body: string; retry: string }
+  >;
+  onLoaded: () => void;
+  onFailed: (failure: keyof Props["failureWords"]) => void;
+  onUnderMaintenance: () => void;
 }
 export default function CardBalance({
-  unexpectedScenario,
-  onScenarioShown,
+  failureWords,
+  onLoaded,
+  onFailed,
+  onUnderMaintenance,
 }: Props) {
   const { t, i18n } = useTranslation("account");
   // Only a request that reaches the bank ends offline, so the card keeps asking while it lasts.
@@ -48,7 +55,7 @@ export default function CardBalance({
       ? failureBeforeReRead
       : null);
   if (failure !== failureBeforeReRead) setFailureBeforeReRead(failure);
-  const failureScenario =
+  const shownFailure =
     failure === null
       ? undefined
       : failure instanceof TransportError &&
@@ -56,39 +63,40 @@ export default function CardBalance({
             failure.kind === TransportErrorKind.Timeout ||
             (failure.kind === TransportErrorKind.Http &&
               (failure.status ?? 0) >= 500))
-        ? "balance_unavailable"
-        : unexpectedScenario;
+        ? "unavailable"
+        : "unexpected";
   // After sign-in this stays shown until the card's reads answer again.
   const failureIsSessionEnd = isSessionEndFailure(failure);
-  const shownScenario = failureIsSessionEnd
+  const shown = failureIsSessionEnd
     ? undefined
-    : failureScenario !== undefined
-      ? `transfer.${failureScenario}`
-      : limitsPausedForMaintenance
-        ? "transfer.under_maintenance"
+    : (shownFailure ??
+      (limitsPausedForMaintenance
+        ? "under_maintenance"
         : account.data !== undefined && limits.isSuccess
-          ? "transfer.balance_and_limit_shown"
-          : undefined;
+          ? "loaded"
+          : undefined));
   const screenOnTop = useIsScreenOnTop();
-  const reportedScenarioRef = useRef<string>(undefined);
+  const reportedShownRef = useRef<typeof shown>(undefined);
   // useTrackScenarioShown's rule, which an account component may not import: only on top, once per showing.
   useEffect(() => {
-    if (shownScenario === undefined) reportedScenarioRef.current = undefined;
-    else if (screenOnTop && reportedScenarioRef.current !== shownScenario) {
-      reportedScenarioRef.current = shownScenario;
-      onScenarioShown(shownScenario);
+    if (shown === undefined) reportedShownRef.current = undefined;
+    else if (screenOnTop && reportedShownRef.current !== shown) {
+      reportedShownRef.current = shown;
+      if (shown === "loaded") onLoaded();
+      else if (shown === "under_maintenance") onUnderMaintenance();
+      else onFailed(shown);
     }
-  }, [shownScenario, screenOnTop, onScenarioShown]);
+  }, [shown, screenOnTop, onLoaded, onFailed, onUnderMaintenance]);
 
-  if (failureScenario !== undefined) {
+  if (shownFailure !== undefined) {
     return (
       <Card>
         <BannerAction
           tone="negative"
           announce={!failureIsSessionEnd}
-          message={t(`common.${failureScenario}.body`)}
+          message={failureWords[shownFailure].body}
           action={{
-            label: t(`common.${failureScenario}.retry`),
+            label: failureWords[shownFailure].retry,
             onPress: () => {
               // Pressed, the answer is a new showing: said and reported even when it fails the same way.
               setFailureBeforeReRead(null);
@@ -114,7 +122,7 @@ export default function CardBalance({
       </View>
       {limits.isSuccess && (
         <TextBody>
-          {t("common.balance_and_limit_shown.remaining_today", {
+          {t("card_balance.remaining_today", {
             amount: formatMoney(limits.data.remainingToday),
           })}
         </TextBody>
