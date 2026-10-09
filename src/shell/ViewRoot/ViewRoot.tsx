@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StatusBar, StyleSheet, View } from "react-native";
 
 import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
@@ -39,6 +39,11 @@ export default function ViewRoot() {
   const [sessionEnded, setSessionEnded] = useState(false);
   const [appSheetOpen, setAppSheetOpen] = useState(false);
   const [navigatorMounts, setNavigatorMounts] = useState(0);
+  useEffect(() => {
+    // Android otherwise keeps the status bar's icons white, unseen on the app's white headers. Called,
+    // not rendered: a <StatusBar> here stalled route tests under renderRoute's fake timers.
+    StatusBar.setBarStyle("dark-content");
+  }, []);
   useEffect(() => {
     const removeUnauthorizedListener = addUnauthorizedListener(() => {
       setSessionEnded(true);
