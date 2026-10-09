@@ -100,7 +100,13 @@ export default function CardBalance({
       </Card>
     );
   }
-  if (account.data === undefined || limits.isPending) return <Loader />;
+  if (account.data === undefined || limits.isPending) {
+    return (
+      <Card styles={{ main: styles.main }}>
+        <Loader />
+      </Card>
+    );
+  }
 
   return (
     <Card styles={{ main: styles.main }}>
@@ -132,7 +138,7 @@ export default function CardBalance({
 const styles = StyleSheet.create({
   main: {
     padding: spacing.lg,
-    // The failure state's height at default text size, held by both states so a retry moves nothing
+    // The failure state's height at default text size, held by every state so a retry moves nothing
     // below: card padding, the notice's padding and one line, the card's gap, the button.
     minHeight:
       2 * spacing.lg +
