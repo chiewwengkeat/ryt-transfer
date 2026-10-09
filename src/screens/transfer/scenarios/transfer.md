@@ -76,6 +76,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **Shown as:** on the home screen, or on the review step if it begins mid-transfer
 - **Tell them:** transfers are unavailable right now, and until when if the bank says
 - **They can:** try again later
+- **Afterwards:** Home asks the bank again at the time it gave, and turns Transfer back on once maintenance is over
 - **Why:** the bank knows when its maintenance ends, so the app passes on the bank's own time rather than inventing one
 
 ### Offline
@@ -447,7 +448,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **Tell them:** the bank stopped this transfer to protect them and will contact them — no money moved
 - **They can:** finish
 - **Never:** offer to send it again
-- **Afterwards:** the bank contacts them about it
+- **Afterwards:** the bank contacts them about it; if the result page never opened, Home announces it in the same session
 - **Why:** a blocked transfer may be a scam in progress, so the person is sent to the bank, never back to sending
 
 ### Held for a security check
@@ -458,7 +459,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **Tell them:** it is held for a security check and will complete or be refunded, with a reference to quote to support — not confirmed yet
 - **They can:** finish
 - **Never:** offer to send it again
-- **Afterwards:** when it settles, History shows the outcome and the next launch announces it
+- **Afterwards:** when it settles, History shows the outcome and Home announces it: within about 15 seconds while Home is open and in front, otherwise at the next launch
 - **Why:** the money may already be on its way, so a second send could pay twice
 
 ### Receiving account inactive
@@ -468,6 +469,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **Shown as:** the result page
 - **Tell them:** the transfer was declined — no money moved
 - **They can:** finish
+- **Afterwards:** if the result page never opened, Home announces it in the same session
 - **Why:** the decline came before any money left, so the person hears plainly that nothing was taken
 
 ### Rooted, jailbroken or tampered phone
@@ -498,7 +500,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **Shown as:** the result page, as a receipt
 - **Tell them:** it was sent, with a receipt of the amount, the registered name, the masked ID, the bank, the note, a reference, and the date and time it completed in Malaysia time — money moved
 - **They can:** finish
-- **Afterwards:** their balance, today's limit and history update, and the bank sends its own notice of the transfer
+- **Afterwards:** their balance, today's limit and history update, and the bank sends its own notice of the transfer; if the result page never opened, Home announces it in the same session
 - **Why:** the receipt carries what a person needs to prove the payment, in Malaysia time so it matches their statement
 
 ### Transfer processing
@@ -509,7 +511,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **Tell them:** it is usually instant but can take up to one business day, and the result will show in History, with a reference to quote to support — not confirmed yet
 - **They can:** finish
 - **Never:** offer to send it again
-- **Afterwards:** when it settles, the result page and History update, or the next launch announces it
+- **Afterwards:** when it settles, the result page and History update, or Home announces it: within about 15 seconds while Home is open and in front, otherwise at the next launch
 - **Why:** a transfer in progress may still complete, so the person learns where the answer will appear instead of being invited to send again
 
 ### Refunded after processing
