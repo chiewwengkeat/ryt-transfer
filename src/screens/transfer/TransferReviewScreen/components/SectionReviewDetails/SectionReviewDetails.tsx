@@ -25,6 +25,7 @@ import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
 import RowDetail from "@/shared/ui/RowDetail/RowDetail";
+import { READERS_OWN_FOCUS_WAIT_MS } from "@/shared/ui/TextHeading/TextHeading";
 
 import SectionReviewAmount from "./components/SectionReviewAmount/SectionReviewAmount";
 import SectionReviewRecipient from "./components/SectionReviewRecipient/SectionReviewRecipient";
@@ -70,9 +71,12 @@ export default function SectionReviewDetails({ draft }: Props) {
       "transitionEnd",
       ({ data }) => {
         if (data.closing) return;
-        announcementTimer = setTimeout(() => {
-          setFailureAnnouncementDue(true);
-        }, VOICEOVER_FOCUS_WAIT_MS);
+        announcementTimer = setTimeout(
+          () => {
+            setFailureAnnouncementDue(true);
+          },
+          Platform.select({ ios: READERS_OWN_FOCUS_WAIT_MS, default: 0 }),
+        );
       },
     );
     return () => {
@@ -148,6 +152,3 @@ export default function SectionReviewDetails({ draft }: Props) {
     </Card>
   );
 }
-
-// VoiceOver places its own focus up to half a second after the push ends; TalkBack cuts nothing off.
-const VOICEOVER_FOCUS_WAIT_MS = Platform.select({ ios: 1_000, default: 0 });

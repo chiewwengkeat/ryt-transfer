@@ -58,4 +58,4 @@ const styles = StyleSheet.create({
 
 // A screen reader places its own focus up to half a second after what it reads changes, and the later request wins:
 // VoiceOver after a page or sheet opens, both readers after the session-ended view lifts.
-const READERS_OWN_FOCUS_WAIT_MS = 1_000;
+export const READERS_OWN_FOCUS_WAIT_MS = 1_000;
