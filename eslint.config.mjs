@@ -14,10 +14,10 @@ import testingLibrary from "eslint-plugin-testing-library";
 import globals from "globals";
 import * as tseslint from "typescript-eslint";
 
-import appCodeBans from "./eslint.bans.mjs";
-import sliceBoundaries, { SOURCE_FILES } from "./eslint.boundaries.mjs";
+import appCodeBans from "./.config/eslint/bans.mjs";
+import sliceBoundaries, { SOURCE_FILES } from "./.config/eslint/boundaries.mjs";
 import fe from "./eslint-rules/index.js";
-import { TEST_FILES, TEST_HELPER_FILES } from "./test-files.js";
+import { TEST_FILES, TEST_HELPER_FILES } from "./.config/test-files.js";
 
 const TSCONFIG_PATH = path.join(import.meta.dirname, "tsconfig.json");
 const TEST_CODE_FILES = [...TEST_FILES, ...TEST_HELPER_FILES];
@@ -107,16 +107,16 @@ export default defineConfig(
             ...TEST_CODE_FILES,
             "scripts/**",
             "eslint-rules/**",
+            ".config/**",
             "*.config.{js,mjs,ts}",
-            "eslint.*.mjs",
           ],
         },
       ],
     },
   },
   {
-    files: ["metro.msw-entry.mjs"],
-    // msw-core/* exists only inside Metro, which metro.config.js points at msw's own modules.
+    files: [".config/metro.msw-entry.mjs"],
+    // msw-core/* exists only inside Metro, which .config/metro.js points at msw's own modules.
     rules: { "import-x/no-unresolved": "off" },
   },
   {

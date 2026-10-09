@@ -15,7 +15,7 @@ import {
 // Not an import: the import rules refuse any repo file outside src/.
 const { isTestFile } = jest.requireActual<{
   isTestFile: (file: string) => boolean;
-}>("../../../test-files");
+}>("../../../.config/test-files");
 
 const JEST_GLOBAL_MODIFIERS = new Map<string, string[]>([
   ["describe", []],

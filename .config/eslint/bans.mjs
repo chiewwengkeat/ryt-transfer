@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { SOURCE_FILES } from "./eslint.boundaries.mjs";
+import { SOURCE_FILES } from "./boundaries.mjs";
 
 const MSW_DEVICE_EXPORTS = [
   ...readFileSync(
-    path.join(import.meta.dirname, "metro.msw-entry.mjs"),
+    path.join(import.meta.dirname, "..", "metro.msw-entry.mjs"),
     "utf8",
   ).matchAll(/^export \{ (\w+) \}/gm),
 ].map(([, name]) => name);

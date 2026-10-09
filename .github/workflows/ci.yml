@@ -33,7 +33,7 @@ jobs:
             pushed=$(git rev-list "$PUSHED_FROM..HEAD")
           fi
           for sha in $pushed; do
-            git log -1 --format=%B "$sha" | node_modules/.bin/commitlint
+            git log -1 --format=%B "$sha" | node_modules/.bin/commitlint -g .config/commitlint.config.js
           done
 
   production-bundle:

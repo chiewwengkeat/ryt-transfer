@@ -1,15 +1,17 @@
 const expoPreset = require("jest-expo/jest-preset");
 
-const { TEST_FILES } = require("./test-files");
+const { TEST_FILES } = require("./.config/test-files");
 
 const [presetAllowList, ...presetIgnorePatterns] =
   expoPreset.transformIgnorePatterns;
+
+// Jest's workers inherit this process's environment, so every suite runs in UTC.
+process.env.TZ = "UTC";
 
 module.exports = {
   preset: "jest-expo",
   roots: ["<rootDir>/src"],
   testMatch: TEST_FILES.map((glob) => `<rootDir>/${glob}`),
-  globalSetup: "<rootDir>/jest.global-setup.js",
   // Route tests that walk a whole transfer, signing included, outran Jest's 5 s default in a parallel run under load.
   testTimeout: 15_000,
   setupFilesAfterEnv: [

@@ -2,11 +2,12 @@ import path from "node:path";
 
 import boundaries from "eslint-plugin-boundaries";
 
-import { TEST_FILES, TEST_HELPER_FILES } from "./test-files.js";
+import { TEST_FILES, TEST_HELPER_FILES } from "../test-files.js";
 
 export const SOURCE_FILES = ["src/**/*.{ts,tsx}"];
 
-const TSCONFIG_PATH = path.join(import.meta.dirname, "tsconfig.json");
+const REPO_ROOT = path.join(import.meta.dirname, "..", "..");
+const TSCONFIG_PATH = path.join(REPO_ROOT, "tsconfig.json");
 const DOMAIN_TYPES = ["domain", "endpoint", "domain-component"];
 
 const sliceElements = [
@@ -186,7 +187,8 @@ export default [
         "dynamic-import",
       ],
       "boundaries/legacy-templates": false,
-      "boundaries/root-path": import.meta.dirname,
+      // A root other than the repo's matches no element, and every boundary then passes silently.
+      "boundaries/root-path": REPO_ROOT,
       "import/resolver": {
         typescript: { alwaysTryTypes: true, project: TSCONFIG_PATH },
       },

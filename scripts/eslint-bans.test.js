@@ -9,13 +9,10 @@ const { ESLint } = require("eslint");
 const REPO_ROOT = path.join(__dirname, "..");
 // The type-aware parser lints only files on disk, so the cases go to a copy of the lint setup.
 const LINT_SETUP = [
+  ".config",
   "eslint-rules",
-  "eslint.bans.mjs",
-  "eslint.boundaries.mjs",
   "eslint.config.mjs",
-  "metro.msw-entry.mjs",
   "package.json",
-  "test-files.js",
   "tsconfig.json",
 ];
 

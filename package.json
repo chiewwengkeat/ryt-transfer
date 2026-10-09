@@ -80,5 +80,20 @@
     "test-renderer": "1.2.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "8.71.1"
+  },
+  "lint-staged": {
+    "*.{js,jsx,mjs,cjs,ts,tsx}": [
+      "eslint --fix --max-warnings 0 --no-warn-ignored",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": "prettier --write",
+    "*": "secretlint"
+  },
+  "secretlint": {
+    "rules": [
+      {
+        "id": "@secretlint/secretlint-rule-preset-recommend"
+      }
+    ]
   }
 }

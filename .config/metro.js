@@ -1,7 +1,9 @@
 const path = require("node:path");
 const { getDefaultConfig } = require("expo/metro-config");
 
-const config = getDefaultConfig(__dirname);
+// Expo finds this file only as ./metro.config.* or ./.config/metro.*; under any other name Metro
+// silently runs on Expo's defaults, without the variant cache key or the msw entry below.
+const config = getDefaultConfig(path.join(__dirname, ".."));
 
 // Release transforms inline EXPO_PUBLIC_ variables, and Metro's cache key never sees them.
 config.cacheVersion = process.env.EXPO_PUBLIC_APP_VARIANT || "production";
