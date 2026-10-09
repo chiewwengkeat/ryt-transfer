@@ -293,7 +293,8 @@
       "received_at": "Diterima pada",
       "completed_at": "Selesai pada",
       "refunded_at": "Dipulangkan pada"
-    }
+    },
+    "back_to_home": "Kembali ke Laman Utama"
   },
   "recipient": {
     "title": "Pindahan",
@@ -325,8 +326,7 @@
     "bank_search_label": "Cari bank",
     "bank_no_match": "Tiada bank yang sepadan dengan carian anda.",
     "close_sheet": "Tutup",
-    "continue": "Teruskan",
-    "home": "Kembali ke Laman Utama"
+    "continue": "Teruskan"
   },
   "amount": {
     "title": "Jumlah",
@@ -383,7 +383,6 @@
   },
   "history": {
     "title": "Sejarah pindahan",
-    "home": "Kembali ke Laman Utama",
     "empty": {
       "title": "Belum ada pindahan",
       "body": "Pindahan yang anda hantar atau terima akan dipaparkan di sini."

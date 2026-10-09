@@ -293,7 +293,8 @@
       "received_at": "Received",
       "completed_at": "Completed",
       "refunded_at": "Refunded"
-    }
+    },
+    "back_to_home": "Back to Home"
   },
   "recipient": {
     "title": "Transfer",
@@ -325,8 +326,7 @@
     "bank_search_label": "Search banks",
     "bank_no_match": "No bank matches your search.",
     "close_sheet": "Close",
-    "continue": "Continue",
-    "home": "Back to Home"
+    "continue": "Continue"
   },
   "amount": {
     "title": "Amount",
@@ -383,7 +383,6 @@
   },
   "history": {
     "title": "Transfer history",
-    "home": "Back to Home",
     "empty": {
       "title": "No transfers yet",
       "body": "Transfers you send or receive will show here."

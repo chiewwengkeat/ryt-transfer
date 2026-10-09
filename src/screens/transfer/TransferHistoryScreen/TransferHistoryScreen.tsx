@@ -1,6 +1,5 @@
 import { hashKey, useQueryClient } from "@tanstack/react-query";
-import { router, Stack } from "expo-router";
-import { HeaderBackButton } from "expo-router/react-navigation";
+import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
@@ -20,6 +19,7 @@ import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerOutOfDate from "../components/BannerOutOfDate/BannerOutOfDate";
+import ButtonHeaderHome from "../components/ButtonHeaderHome/ButtonHeaderHome";
 import SectionTransferAccordion from "./components/SectionTransferAccordion/SectionTransferAccordion";
 
 export default function TransferHistoryScreen() {
@@ -61,16 +61,7 @@ export default function TransferHistoryScreen() {
         options={{
           title: t("history.title"),
           // First in its own stack, the root header that would go back hidden over it; a link can open it with nothing beneath.
-          headerLeft: (props) => (
-            <HeaderBackButton
-              {...props}
-              displayMode="minimal"
-              accessibilityLabel={t("history.home")}
-              onPress={() => {
-                router.dismissTo("/");
-              }}
-            />
-          ),
+          headerLeft: (props) => <ButtonHeaderHome {...props} />,
         }}
       />
       {transferHistory.isPending && !transferHistory.isPaused ? (

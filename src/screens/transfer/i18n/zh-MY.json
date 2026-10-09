@@ -293,7 +293,8 @@
       "received_at": "收款时间",
       "completed_at": "完成时间",
       "refunded_at": "退款时间"
-    }
+    },
+    "back_to_home": "返回首页"
   },
   "recipient": {
     "title": "转账",
@@ -325,8 +326,7 @@
     "bank_search_label": "搜索银行",
     "bank_no_match": "没有与您的搜索匹配的银行。",
     "close_sheet": "关闭",
-    "continue": "继续",
-    "home": "返回首页"
+    "continue": "继续"
   },
   "amount": {
     "title": "金额",
@@ -383,7 +383,6 @@
   },
   "history": {
     "title": "转账记录",
-    "home": "返回首页",
     "empty": {
       "title": "暂无转账",
       "body": "您发送或收到的转账将显示在此处。"
