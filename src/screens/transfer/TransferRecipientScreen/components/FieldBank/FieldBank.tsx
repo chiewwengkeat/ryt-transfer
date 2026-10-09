@@ -10,6 +10,8 @@ import {
 } from "react-native";
 
 import { useListBanks } from "@/domains/transfer/api/list-banks/list-banks";
+import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
+import { useIsOffline } from "@/shared/platform/offline";
 import {
   colors,
   minTouchTarget,
@@ -17,9 +19,11 @@ import {
   spacing,
   typography,
 } from "@/shared/theme/theme";
+import BannerAction from "@/shared/ui/BannerAction/BannerAction";
+import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
+import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
+import Loader from "@/shared/ui/Loader/Loader";
 import TextBody from "@/shared/ui/TextBody/TextBody";
-
-import BottomSheetBank from "./components/BottomSheetBank/BottomSheetBank";
 
 interface Props {
   bankCode: string | undefined;
@@ -90,4 +94,78 @@ const styles = StyleSheet.create({
   fieldInvalid: { borderColor: colors.negative, borderWidth: 2 },
   bank: { ...typography.body, color: colors.textPrimary },
   placeholder: { ...typography.body, color: colors.textSecondary },
+});
+
+interface BottomSheetBankProps {
+  onBankChosen: (bankCode: string) => void;
+  onClose: () => void;
+}
+function BottomSheetBank({ onBankChosen, onClose }: BottomSheetBankProps) {
+  const { t, i18n } = useTranslation("transfer");
+  const banks = useListBanks();
+  // The shell's offline notice sits under the sheet, so the sheet says why its list waits.
+  const offline = useIsOffline();
+  const [bankSearch, setBankSearch] = useState("");
+  const matchingBanks =
+    banks.data &&
+    [...banks.data.values()].filter((bank) =>
+      bank.name.toLowerCase().includes(bankSearch.trim().toLowerCase()),
+    );
+
+  return (
+    <BottomSheetFrame
+      title={t("recipient.bank_sheet_title")}
+      closeLabel={t("recipient.close_sheet")}
+      onClose={onClose}
+      searchField={{
+        label: t("recipient.bank_search_label"),
+        value: bankSearch,
+        onChangeText: setBankSearch,
+      }}
+    >
+      {matchingBanks === undefined ? (
+        offline && !banks.isFetching ? (
+          <BannerAction
+            message={t("common.offline.notice")}
+            action={{
+              label: t("common.recipient_unexpected.retry"),
+              onPress: () => {
+                void banks.refetch();
+              },
+            }}
+          />
+        ) : banks.isError ? (
+          <BannerRecipientUnexpected
+            failure={banks.error}
+            onRetry={() => {
+              void banks.refetch();
+            }}
+          />
+        ) : (
+          <Loader />
+        )
+      ) : matchingBanks.length === 0 ? (
+        <BannerNotice message={t("recipient.bank_no_match")} />
+      ) : (
+        matchingBanks.map((bank) => (
+          <Pressable
+            key={bank.bankCode}
+            accessibilityRole="button"
+            accessibilityLanguage={i18n.language}
+            onPress={() => {
+              onBankChosen(bank.bankCode);
+            }}
+            style={bottomSheetBankStyles.bank}
+          >
+            <Text style={bottomSheetBankStyles.bankName}>{bank.name}</Text>
+          </Pressable>
+        ))
+      )}
+    </BottomSheetFrame>
+  );
+}
+
+const bottomSheetBankStyles = StyleSheet.create({
+  bank: { minHeight: minTouchTarget, justifyContent: "center" },
+  bankName: { ...typography.body, color: colors.textPrimary },
 });
