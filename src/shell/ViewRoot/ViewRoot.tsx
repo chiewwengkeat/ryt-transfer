@@ -24,7 +24,7 @@ import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import { demoLayer } from "@/shell/app-launch";
 import { queryClient } from "@/shell/query-client";
-import { endSession } from "@/shell/session/end-session";
+import { endSession } from "@/shell/end-session";
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
 import "@/shell/translations";
 
