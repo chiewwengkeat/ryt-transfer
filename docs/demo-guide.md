@@ -61,6 +61,6 @@ The rest come from what you type or do, with **Normal, no scenario** picked unle
 
 ## Face ID, fingerprints and the demo PIN
 
-- **iOS simulator:** turn on Features → Face ID → Enrolled. While the prompt shows, Features → Face ID → Matching Face approves, and Non-matching Face makes the prompt offer to try again. From a terminal, `xcrun simctl spawn booted notifyutil -p com.apple.BiometricKit_Sim.pearl.match` matches, and the same with `com.apple.BiometricKit_Sim.pearl.nomatch` does not.
+- **iOS simulator:** turn on Features → Face ID → Enrolled. While the prompt shows, Features → Face ID → Matching Face approves, and Non-matching Face makes the prompt offer to try again. In Xcode 27, where DeviceHub replaces Simulator, that menu is Device → Face ID, and Matching Face is called Authorized with Face ID. From a terminal, `xcrun simctl spawn booted notifyutil -p com.apple.BiometricKit_Sim.pearl.match` matches, and the same with `com.apple.BiometricKit_Sim.pearl.nomatch` does not.
 - **Android emulator:** set a screen lock and add a fingerprint in the emulator's settings, touching the sensor from the emulator's extended controls (⋯ → Fingerprint) when it asks. While the prompt shows, touch the sensor with that finger to approve; another finger makes the prompt ask again. From a terminal, `adb -e emu finger touch 1` touches with finger 1.
 - **The demo PIN** shows on the PIN sheet itself. The bank allows three tries.
