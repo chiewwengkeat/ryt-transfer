@@ -1264,7 +1264,7 @@ it(
     );
 
     await fireEvent.press(signInButton);
-    // A name check asked at sign-in fails only once its retries are spent; asserting sooner passes either way.
+    // Were sign-in to ask the name check, it would fail only once its retries are spent; asserting sooner passes either way.
     await act(() => jest.advanceTimersByTimeAsync(15_000));
 
     expect(screen.getByText("Transfer sent")).toBeOnTheScreen();
@@ -1299,7 +1299,7 @@ it("keeps the recipient review showed after signing in again, so the transfer ca
   await fireEvent.press(
     await screen.findByRole("button", { name: "Sign in again" }),
   );
-  // Lets a name check asked at sign-in answer first; pressing sooner sends the first reference either way.
+  // Were sign-in to ask the name check, this lets its new reference land; pressing sooner sends the first one either way.
   await act(() => jest.advanceTimersByTimeAsync(1_000));
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -1592,7 +1592,7 @@ it(
   }),
 );
 
-// Sign-in spares an open review's name check, so this stands in for any later path that asks it again.
+// Sign-in spares an answered name check, so this stands in for any later path that asks it again.
 function askOpenReviewsNameCheckAgain() {
   return act(() => {
     askOpenAppToReadAgain(
@@ -1630,6 +1630,54 @@ it.each([
     expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
   },
 );
+
+it("asks review's name check again once they sign back in, when the ended session cut off their Try again", async () => {
+  const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
+  await openReviewOfRm100();
+  await screen.findByText(recipient.registeredName);
+  mswServer.use(
+    http.post(
+      "*/recipients/lookup",
+      () =>
+        HttpResponse.json(
+          { error: { code: "NEW_BANK_CODE", message: "Test." } },
+          { status: 400 },
+        ),
+      { once: true },
+    ),
+  );
+  await askOpenReviewsNameCheckAgain();
+  const tryAgain = await screen.findByRole("button", { name: "Try again" });
+  mswServer.use(
+    http.post(
+      "*/recipients/lookup",
+      () =>
+        HttpResponse.json(
+          { error: { code: "SESSION_ENDED", message: "Test." } },
+          { status: 401 },
+        ),
+      { once: true },
+    ),
+  );
+  await fireEvent.press(tryAgain);
+  const signInAgain = await screen.findByRole("button", {
+    name: "Sign in again",
+  });
+  const nameChecksBeforeSignIn = countSent("POST", "/recipients/lookup");
+
+  await fireEvent.press(signInAgain);
+
+  // ⛔ Wait for the check first: review still shows its last Transfer for a moment after sign-in, so a find passes either way.
+  await waitFor(() => {
+    expect(countSent("POST", "/recipients/lookup")).toBe(
+      nameChecksBeforeSignIn + 1,
+    );
+  });
+  expect(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  ).toBeOnTheScreen();
+  expect(screen.getByText(recipient.registeredName)).toBeOnTheScreen();
+});
 
 it("offers no PIN instead while review's name check, asked again, is running, and offers it again once it answers", async () => {
   await openReviewOfRm100();
