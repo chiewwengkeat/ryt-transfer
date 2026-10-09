@@ -2,18 +2,6 @@ import { PermissionStatus } from "expo";
 // ⛔ Type imports only from expo-contacts: a value import loads it before its double is installed.
 import type { ContactsPermissionResponse, ExistingPhone } from "expo-contacts";
 
-const GRANTED_CONTACTS_PERMISSION: ContactsPermissionResponse = {
-  status: PermissionStatus.GRANTED,
-  granted: true,
-  canAskAgain: true,
-  expires: "never",
-};
-
-let contactsPermission = GRANTED_CONTACTS_PERMISSION;
-let pickedContactPhones: ExistingPhone[] | null = null;
-let pickedContactUnreadable = false;
-let contactsPickerFailsNext = false;
-
 class ContactDouble {
   readonly phones: ExistingPhone[];
 
@@ -73,3 +61,15 @@ export function resetContactsNativeDouble() {
   pickedContactUnreadable = false;
   contactsPickerFailsNext = false;
 }
+
+const GRANTED_CONTACTS_PERMISSION: ContactsPermissionResponse = {
+  status: PermissionStatus.GRANTED,
+  granted: true,
+  canAskAgain: true,
+  expires: "never",
+};
+
+let contactsPermission = GRANTED_CONTACTS_PERMISSION;
+let pickedContactPhones: ExistingPhone[] | null = null;
+let pickedContactUnreadable = false;
+let contactsPickerFailsNext = false;

@@ -13,17 +13,6 @@ import {
   setPickedContactUnreadable,
 } from "./contacts-native-double";
 
-const REFUSED_PERMISSION = {
-  status: PermissionStatus.DENIED,
-  granted: false,
-  canAskAgain: false,
-  expires: "never" as const,
-};
-const PICKED_PHONES = [
-  { id: "phone-1", label: "mobile", number: "012-345 6789" },
-  { id: "phone-2", label: "work", number: "+60 3-2345 6789" },
-];
-
 it("grants contacts access whether the app checks or asks", async () => {
   const granted = { status: PermissionStatus.GRANTED, granted: true };
 
@@ -74,3 +63,14 @@ it("puts back granted access and an empty pick on reset", async () => {
   await expect(getPermissionsAsync()).resolves.toMatchObject({ granted: true });
   await expect(Contact.presentPicker()).resolves.toBeNull();
 });
+
+const REFUSED_PERMISSION = {
+  status: PermissionStatus.DENIED,
+  granted: false,
+  canAskAgain: false,
+  expires: "never" as const,
+};
+const PICKED_PHONES = [
+  { id: "phone-1", label: "mobile", number: "012-345 6789" },
+  { id: "phone-2", label: "work", number: "+60 3-2345 6789" },
+];

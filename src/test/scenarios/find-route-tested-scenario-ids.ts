@@ -12,24 +12,6 @@ import {
   type Node,
 } from "typescript";
 
-// Not an import: the import rules refuse any repo file outside src/.
-// eslint-disable-next-line no-restricted-syntax -- .config/test-files.js sits outside src/, which @/ cannot reach
-const { isCheckTest, isTestFile } = jest.requireActual<{
-  isCheckTest: (file: string) => boolean;
-  isTestFile: (file: string) => boolean;
-}>("../../../.config/test-files");
-
-const JEST_GLOBAL_MODIFIERS = new Map<string, string[]>([
-  ["describe", []],
-  ["it", []],
-  ["test", []],
-  ["xdescribe", ["skip"]],
-  ["xit", ["skip"]],
-  ["xtest", ["skip"]],
-  ["fdescribe", ["only"]],
-  ["fit", ["only"]],
-]);
-
 // ⛔ Strict on purpose: a self-test with no route, a skipped test or one that asserts nothing would pass as coverage.
 export function findRouteTestedScenarioIds(file: string, sourceText: string) {
   if (!isTestFile(file) || isCheckTest(file)) return [];
@@ -72,6 +54,24 @@ export function findRouteTestedScenarioIds(file: string, sourceText: string) {
       });
     });
 }
+
+// Not an import: the import rules refuse any repo file outside src/.
+// eslint-disable-next-line no-restricted-syntax -- .config/test-files.js sits outside src/, which @/ cannot reach
+const { isCheckTest, isTestFile } = jest.requireActual<{
+  isCheckTest: (file: string) => boolean;
+  isTestFile: (file: string) => boolean;
+}>("../../../.config/test-files");
+
+const JEST_GLOBAL_MODIFIERS = new Map<string, string[]>([
+  ["describe", []],
+  ["it", []],
+  ["test", []],
+  ["xdescribe", ["skip"]],
+  ["xit", ["skip"]],
+  ["xtest", ["skip"]],
+  ["fdescribe", ["only"]],
+  ["fit", ["only"]],
+]);
 
 // describe.skip.each(table)(…) and xdescribe.each(table)(…) both read skip, each.
 function readJestModifiers(callee: Expression): string[] | undefined {

@@ -10,8 +10,6 @@ import type * as ReactNativeScreens from "react-native-screens";
 
 import type { ObservedRecord } from "@/shared/observability/observability";
 
-const kvEntries = new Map<string, string>();
-
 export const kvStoreDouble = {
   getItemSync: (key: string) => kvEntries.get(key) ?? null,
   setItemSync: (
@@ -71,20 +69,11 @@ export const secureStoreNativeDouble = {
   canUseBiometricAuthentication: () => false,
 };
 
-let uuidsIssued = 0;
-
 // Sequential, so a test can name the idempotency key a request should carry.
 export function randomUUIDDouble() {
   uuidsIssued += 1;
   return `00000000-0000-4000-8000-${String(uuidsIssued).padStart(12, "0")}`;
 }
-
-const CONNECTED_NETWORK: NetworkState = {
-  isConnected: true,
-  isInternetReachable: true,
-};
-let phoneNetwork = CONNECTED_NETWORK;
-const networkListeners = new Set<(state: NetworkState) => void>();
 
 export const networkNativeDouble = {
   getNetworkStateAsync: () => Promise.resolve(phoneNetwork),
@@ -109,9 +98,6 @@ export function setPhoneNetwork(state: NetworkState) {
 export function setPhoneNetworkWithoutAnEvent(state: NetworkState) {
   phoneNetwork = state;
 }
-
-let screenCaptureBlocked = false;
-let blurIntensityInAppSwitcher: number | null = null;
 
 export const screenCaptureNativeDouble = {
   preventScreenCapture: () => {
@@ -147,9 +133,6 @@ export function resetNativeDoubles() {
   screenCaptureBlocked = true;
 }
 
-let guardOn = false;
-const dropListeners = new Set<() => void>();
-
 // State lives in this file, not on the object: jest-expo copies the object's keys onto a new module on every require.
 export const obscuredTouchGuardNativeDouble = {
   enable: () => {
@@ -182,8 +165,6 @@ export function isObscuredTouchGuardOn() {
 export function resetObscuredTouchGuardDouble() {
   guardOn = false;
 }
-
-const routesDrawnOnTop: string[] = [];
 
 // Jest draws no frames, so what each native stack is handed on top, commit by commit, is what a phone animates to.
 export function reactNativeScreensRecordingTopRoutes() {
@@ -229,3 +210,22 @@ export function recordObservation(record: ObservedRecord) {
 export function reportedScenarios() {
   return observedRecords.flatMap(({ properties }) => properties.scenario ?? []);
 }
+
+const kvEntries = new Map<string, string>();
+
+let uuidsIssued = 0;
+
+const CONNECTED_NETWORK: NetworkState = {
+  isConnected: true,
+  isInternetReachable: true,
+};
+let phoneNetwork = CONNECTED_NETWORK;
+const networkListeners = new Set<(state: NetworkState) => void>();
+
+let screenCaptureBlocked = false;
+let blurIntensityInAppSwitcher: number | null = null;
+
+let guardOn = false;
+const dropListeners = new Set<() => void>();
+
+const routesDrawnOnTop: string[] = [];

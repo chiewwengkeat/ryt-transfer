@@ -74,11 +74,6 @@ export function pressHandlerOf(element: ReturnType<typeof screen.getByRole>) {
   throw new Error("Nothing handles a press on this element.");
 }
 
-type PressFiber = {
-  memoizedProps: { onPress?: unknown } | null;
-  return: PressFiber | null;
-};
-
 // ⛔ Assert on the group, never the text: each text carries the language itself, so it passes either way.
 export function findAccessibleGroupAround(
   text: ReturnType<typeof screen.getByText>,
@@ -168,3 +163,8 @@ export function createQueryClientWithoutGcTimers() {
     },
   });
 }
+
+type PressFiber = {
+  memoizedProps: { onPress?: unknown } | null;
+  return: PressFiber | null;
+};

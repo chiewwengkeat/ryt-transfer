@@ -15,22 +15,6 @@ import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "./render-route";
 
-function ScreenThatSendsAWrite() {
-  const write = useMutation({
-    mutationFn: () => requestJson("/write", { method: "POST", body: {} }),
-  });
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={() => {
-        write.mutate();
-      }}
-    >
-      <Text>{write.isSuccess ? "Sent" : "Send"}</Text>
-    </Pressable>
-  );
-}
-
 it("reports the pathname the user navigated to", async () => {
   const view = await renderRoute("/", {
     _layout: () => <Stack />,
@@ -119,3 +103,19 @@ it("mounts the app's own routes and root layout when given none", async () => {
     screen.getByRole("header", { name: "Your session has ended" }),
   ).toBeOnTheScreen();
 });
+
+function ScreenThatSendsAWrite() {
+  const write = useMutation({
+    mutationFn: () => requestJson("/write", { method: "POST", body: {} }),
+  });
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => {
+        write.mutate();
+      }}
+    >
+      <Text>{write.isSuccess ? "Sent" : "Send"}</Text>
+    </Pressable>
+  );
+}

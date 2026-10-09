@@ -11,12 +11,6 @@ import {
   setPhoneNetwork,
 } from "./native-doubles";
 
-const OFFLINE = {
-  type: NetworkStateType.NONE,
-  isConnected: false,
-  isInternetReachable: false,
-};
-
 it("issues the same UUIDs in the same order in every test", () => {
   expect([randomUUID(), randomUUID()]).toEqual([
     "00000000-0000-4000-8000-000000000001",
@@ -52,3 +46,9 @@ it("tells the phone's network listeners when the connection changes", () => {
 
   expect(heard).toEqual([false]);
 });
+
+const OFFLINE = {
+  type: NetworkStateType.NONE,
+  isConnected: false,
+  isInternetReachable: false,
+};

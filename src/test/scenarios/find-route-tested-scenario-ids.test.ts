@@ -1,13 +1,5 @@
 import { findRouteTestedScenarioIds } from "./find-route-tested-scenario-ids";
 
-// Jest defines it; the app's types deliberately leave out Node's globals.
-declare const __dirname: string;
-
-const { readFileSync } = jest.requireActual<{
-  readFileSync: (path: string, encoding: "utf8") => string;
-}>("node:fs");
-
-const ROUTE_TEST_FILE = "src/screens/probe/ProbeScreen.test.tsx";
 const ROUTE_TEST = `
 it(
   "says the app is offline",
@@ -157,3 +149,12 @@ it("credits nothing outside a test file", () => {
     ),
   ).toEqual([]);
 });
+
+// Jest defines it; the app's types deliberately leave out Node's globals.
+declare const __dirname: string;
+
+const { readFileSync } = jest.requireActual<{
+  readFileSync: (path: string, encoding: "utf8") => string;
+}>("node:fs");
+
+const ROUTE_TEST_FILE = "src/screens/probe/ProbeScreen.test.tsx";

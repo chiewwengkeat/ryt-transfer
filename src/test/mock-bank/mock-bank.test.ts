@@ -9,8 +9,6 @@ import {
   unhandledRequests,
 } from "./mock-bank";
 
-const PROBE_URL = "https://api.example.test/probe";
-
 it("answers each request by the scenario active when it is sent, switched mid-test", async () => {
   const balanceUrl = `${BANK_ORIGIN}/accounts/primary`;
 
@@ -56,3 +54,5 @@ it("catches a request no handler answers, even for a .json path", async () => {
     "GET https://api.example.test/scenarios/unmocked.json",
   ]);
 });
+
+const PROBE_URL = "https://api.example.test/probe";

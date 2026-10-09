@@ -119,12 +119,6 @@ export function failTransferHistoryPages(
   };
 }
 
-function isRequestForPages(request: Request, pages: "first" | "later") {
-  return (
-    new URL(request.url).searchParams.has("cursor") === (pages === "later")
-  );
-}
-
 // Any other transfer goes on to the bank, which knows none of these fixtures and answers 404.
 export function serveTransferDetails(transfer: Transfer) {
   mswServer.use(
@@ -159,4 +153,10 @@ export function failTransferDetails(status = 500) {
   return () => {
     failing = false;
   };
+}
+
+function isRequestForPages(request: Request, pages: "first" | "later") {
+  return (
+    new URL(request.url).searchParams.has("cursor") === (pages === "later")
+  );
 }

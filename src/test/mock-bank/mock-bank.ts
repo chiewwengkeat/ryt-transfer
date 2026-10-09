@@ -80,11 +80,6 @@ export const BANK_ORIGIN = "https://bank.example.test";
 export const P256_SPKI_PREFIX = (
   "3059301306072a8648ce3d020106082a8648ce3d030107034200".match(/../g) ?? []
 ).map((pair) => parseInt(pair, 16));
-const PHONE_SECRET_KEYS = {
-  possession: Uint8Array.from({ length: 32 }, (_, index) => index + 1),
-  biometric: Uint8Array.from({ length: 32 }, (_, index) => 99 - index),
-};
-let writeNumber = 0;
 
 export const base64Of = (bytes: Iterable<number>) =>
   btoa(String.fromCharCode(...bytes));
@@ -218,3 +213,9 @@ export interface BankErrorBody {
     reason?: string;
   };
 }
+
+const PHONE_SECRET_KEYS = {
+  possession: Uint8Array.from({ length: 32 }, (_, index) => index + 1),
+  biometric: Uint8Array.from({ length: 32 }, (_, index) => 99 - index),
+};
+let writeNumber = 0;

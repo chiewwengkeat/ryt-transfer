@@ -8,31 +8,6 @@ import type {
 
 import { base64Of, P256_SPKI_PREFIX } from "@/test/mock-bank/mock-bank";
 
-const phoneKeys = new Map<
-  string,
-  { secretKey: Uint8Array; options: CreateKeysOptions }
->();
-const keysKilledByEnrolmentChange = new Set<string>();
-const biometricPrompts: SignatureOptions[] = [];
-let nextPromptRecognised = true;
-let nextPromptFailure: string | null = null;
-let nextPromptHeldUntil: Promise<void> | null = null;
-let sensorUnavailableCode: string | null = null;
-const UNTAMPERED_PHONE: DeviceIntegrityResult = {
-  hasRuntimeHooks: false,
-  isCompromised: false,
-  riskLevel: "NONE",
-};
-let answerIntegrityCheck = () => Promise.resolve(UNTAMPERED_PHONE);
-let integrityChecksAsked = 0;
-
-function signForReal(data: string, secretKey: Uint8Array) {
-  const signature = p256.sign(new TextEncoder().encode(data), secretKey, {
-    format: "der",
-  });
-  return Promise.resolve({ success: true, signature: base64Of(signature) });
-}
-
 // Signs for real with a test key, so the bank's own verification runs against the app's signed text.
 export const biometricsLibraryDouble = {
   BiometricStrength: { Strong: "strong", Weak: "weak" },
@@ -175,4 +150,29 @@ export function resetBiometricsDouble() {
   sensorUnavailableCode = null;
   answerIntegrityCheck = () => Promise.resolve(UNTAMPERED_PHONE);
   integrityChecksAsked = 0;
+}
+
+const phoneKeys = new Map<
+  string,
+  { secretKey: Uint8Array; options: CreateKeysOptions }
+>();
+const keysKilledByEnrolmentChange = new Set<string>();
+const biometricPrompts: SignatureOptions[] = [];
+let nextPromptRecognised = true;
+let nextPromptFailure: string | null = null;
+let nextPromptHeldUntil: Promise<void> | null = null;
+let sensorUnavailableCode: string | null = null;
+const UNTAMPERED_PHONE: DeviceIntegrityResult = {
+  hasRuntimeHooks: false,
+  isCompromised: false,
+  riskLevel: "NONE",
+};
+let answerIntegrityCheck = () => Promise.resolve(UNTAMPERED_PHONE);
+let integrityChecksAsked = 0;
+
+function signForReal(data: string, secretKey: Uint8Array) {
+  const signature = p256.sign(new TextEncoder().encode(data), secretKey, {
+    format: "der",
+  });
+  return Promise.resolve({ success: true, signature: base64Of(signature) });
 }
