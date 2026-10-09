@@ -28,7 +28,7 @@ import {
 } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
-async function openReviewOfRm100() {
+async function openReviewOfRm100UntilTransferShows() {
   await renderRoute("/transfer");
   await walkToTransferReview();
   await screen.findByRole("button", { name: "Transfer" });
@@ -70,7 +70,7 @@ it(
   scenarioTest("transfer.account_locked", async () => {
     const holdReason = "Your account is locked. Contact Ryt to unlock it.";
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
-    await openReviewOfRm100();
+    await openReviewOfRm100UntilTransferShows();
     const create = holdTheNextPost("*/transfers");
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await create.waitUntilSent();
@@ -103,7 +103,7 @@ it(
     announce.mockClear();
     const timesHoldSpoken = () =>
       announce.mock.calls.filter(([words]) => words === holdReason).length;
-    await openReviewOfRm100();
+    await openReviewOfRm100UntilTransferShows();
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await waitFor(() => {
       expect(timesHoldSpoken()).toBe(1);
@@ -141,7 +141,7 @@ it(
       ),
     );
     await pairPhoneAsTheDemoLaunchDoes();
-    await openReviewOfRm100();
+    await openReviewOfRm100UntilTransferShows();
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await screen.findByRole(
       "header",
@@ -165,7 +165,7 @@ it(
 );
 
 it("reports only the session's end for a transfer the bank would not create because the session had ended, and offers Transfer again once signed in", async () => {
-  await openReviewOfRm100();
+  await openReviewOfRm100UntilTransferShows();
   const scenariosReportedSinceTheCreate = scenariosReportedFromNowOn();
   mswServer.use(
     http.post(
@@ -204,7 +204,7 @@ it("shows, says and reports no failure of the name check an expired recipient ch
   const countNameChecks = () =>
     sentRequests.filter(({ url }) => url.endsWith("/recipients/lookup")).length;
   const { recipient } = await lookUpTestRecipient("012-345 6789");
-  await openReviewOfRm100();
+  await openReviewOfRm100UntilTransferShows();
   mswServer.use(
     http.post(
       "*/transfers",
@@ -252,7 +252,7 @@ it("shows, says and reports no failure of the name check an expired recipient ch
 
 it("reports only the session's end for a PIN sheet it closes, which they find closed as not sent once signed in again", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100();
+  await openReviewOfRm100UntilTransferShows();
   await fireEvent.press(
     screen.getByRole("button", { name: "Use PIN instead" }),
   );
@@ -272,7 +272,7 @@ it("reports only the session's end for a PIN sheet it closes, which they find cl
 it("reports only the session's end for a sheet setting approval up again that it closes", async () => {
   await pairPhoneBeforeTheBankForgetsItsKeys();
   await scenarioTest("transfer.approval_key_unknown", async () => {
-    await openReviewOfRm100();
+    await openReviewOfRm100UntilTransferShows();
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await screen.findByText("Approval needs setting up again on this phone.");
     const scenariosReportedSinceTheSheet = scenariosReportedFromNowOn();
@@ -300,7 +300,7 @@ it("reports a PIN the bank locks as it answers under the session-ended view only
       ),
     ),
   );
-  await openReviewOfRm100();
+  await openReviewOfRm100UntilTransferShows();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   const approval = holdTheNextPost("*/transfers/:transferId/approve");
   await enterPinAndApprove("111111");
@@ -331,7 +331,7 @@ it("reports once, after signing in again, a notice the approval leaves review wi
         () => new HttpResponse(null, { status: 500 }),
       ),
     );
-    await openReviewOfRm100();
+    await openReviewOfRm100UntilTransferShows();
     const approval = holdTheNextPost("*/transfers/:transferId/approve");
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await approval.waitUntilSent();
@@ -362,7 +362,7 @@ it("reports once, after signing in again, a notice the approval leaves review wi
 it("reports a PIN approval that opens under the session-ended view only once signed in again, its sheet still showing", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   approvalSettingsStore.setState({ biometricApprovalOn: false });
-  await openReviewOfRm100();
+  await openReviewOfRm100UntilTransferShows();
   const create = holdTheNextPost("*/transfers");
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   await create.waitUntilSent();
@@ -388,7 +388,7 @@ it("reports a PIN approval that opens under the session-ended view only once sig
 it("reports a wrong PIN the bank answers under the session-ended view only once signed in again, its sheet still showing", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   approvalSettingsStore.setState({ biometricApprovalOn: false });
-  await openReviewOfRm100();
+  await openReviewOfRm100UntilTransferShows();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   const approval = holdTheNextPost("*/transfers/:transferId/approve");
   await enterPinAndApprove("111111");
@@ -412,7 +412,7 @@ it("reports a wrong PIN the bank answers under the session-ended view only once 
 it("reports no face or fingerprint match that comes back under the session-ended view, even once signed in again", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const releasePrompt = holdNextBiometricPrompt();
-  await openReviewOfRm100();
+  await openReviewOfRm100UntilTransferShows();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   await waitFor(() => {
     expect(biometricPromptsShown()).toHaveLength(1);
@@ -434,7 +434,7 @@ it("reports no face or fingerprint match that comes back under the session-ended
 it("reports the outcome of an approval answered under the session-ended view only once signed in again", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const releasePrompt = holdNextBiometricPrompt();
-  await openReviewOfRm100();
+  await openReviewOfRm100UntilTransferShows();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   await waitFor(() => {
     expect(biometricPromptsShown()).toHaveLength(1);
@@ -463,7 +463,7 @@ it("reports the outcome of an approval answered under the session-ended view onl
 it("reports an approval key the bank stops knowing as it answers under the session-ended view only once signed in again, its sheet still showing", async () => {
   await pairPhoneBeforeTheBankForgetsItsKeys();
   await scenarioTest("transfer.approval_key_unknown", async () => {
-    await openReviewOfRm100();
+    await openReviewOfRm100UntilTransferShows();
     const approval = holdTheNextPost("*/transfers/:transferId/approve");
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await approval.waitUntilSent();
@@ -489,7 +489,7 @@ it("reports an approval key the bank stops knowing as it answers under the sessi
 it("reports a wrong PIN the bank answers while setting approval up again under the session-ended view only once signed in again, its sheet still showing", async () => {
   await pairPhoneBeforeTheBankForgetsItsKeys();
   await scenarioTest("transfer.approval_key_unknown", async () => {
-    await openReviewOfRm100();
+    await openReviewOfRm100UntilTransferShows();
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await screen.findByText("Approval needs setting up again on this phone.");
     const registration = holdTheNextPost("*/approval-keys");

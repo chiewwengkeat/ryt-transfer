@@ -50,7 +50,7 @@ async function confirmRm100ApprovedByPin() {
   return confirmRm100Transfer();
 }
 
-async function openReviewOfRm100() {
+async function pairPhoneAndOpenReviewOfRm100() {
   await pairPhoneAsTheDemoLaunchDoes();
   const view = await renderRoute("/transfer");
   await walkToTransferReview();
@@ -59,7 +59,7 @@ async function openReviewOfRm100() {
 }
 
 async function confirmRm100Transfer() {
-  const view = await openReviewOfRm100();
+  const view = await pairPhoneAndOpenReviewOfRm100();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
   return view;
 }
@@ -159,7 +159,7 @@ it(
 );
 
 it("offers no PIN instead once the bank has locked the PIN, and leaves face or fingerprint to approve", async () => {
-  await openReviewOfRm100();
+  await pairPhoneAndOpenReviewOfRm100();
   await fireEvent.press(
     screen.getByRole("button", { name: "Use PIN instead" }),
   );
@@ -202,7 +202,7 @@ it.each([
 ])(
   "creates no transfer that only the PIN could approve once the bank has locked the PIN, when %s",
   async (_, leaveOnlyThePinToApprove) => {
-    await openReviewOfRm100();
+    await pairPhoneAndOpenReviewOfRm100();
     await fireEvent.press(
       screen.getByRole("button", { name: "Use PIN instead" }),
     );
@@ -342,7 +342,7 @@ it.each([
           { once: true },
         ),
       );
-      await openReviewOfRm100();
+      await pairPhoneAndOpenReviewOfRm100();
       await fireEvent.press(
         screen.getByRole("button", { name: "Use PIN instead" }),
       );
@@ -352,7 +352,7 @@ it.each([
   [
     "the fingerprints or face changed",
     async () => {
-      await openReviewOfRm100();
+      await pairPhoneAndOpenReviewOfRm100();
       await act(rememberApprovalPinLocked);
       changeEnrolledBiometrics();
       await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
@@ -372,7 +372,7 @@ it.each([
           { once: true },
         ),
       );
-      await openReviewOfRm100();
+      await pairPhoneAndOpenReviewOfRm100();
       await act(rememberApprovalPinLocked);
       await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     },
@@ -380,7 +380,7 @@ it.each([
   [
     "only the PIN could approve the next transfer",
     async () => {
-      await openReviewOfRm100();
+      await pairPhoneAndOpenReviewOfRm100();
       await act(() => {
         approvalSettingsStore.setState({ biometricApprovalOn: false });
       });
@@ -742,7 +742,7 @@ it("offers no PIN instead while the transfer is being sent", async () => {
 
 it("offers no PIN instead while face or fingerprint approval is turned off, Transfer asking for the PIN itself", async () => {
   approvalSettingsStore.setState({ biometricApprovalOn: false });
-  await openReviewOfRm100();
+  await pairPhoneAndOpenReviewOfRm100();
 
   expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
@@ -752,7 +752,7 @@ it("offers no PIN instead while face or fingerprint approval is turned off, Tran
 });
 
 it("takes the PIN choice away once face or fingerprint approval is turned off with review open", async () => {
-  await openReviewOfRm100();
+  await pairPhoneAndOpenReviewOfRm100();
   expect(
     screen.getByRole("button", { name: "Use PIN instead" }),
   ).toBeOnTheScreen();
@@ -765,7 +765,7 @@ it("takes the PIN choice away once face or fingerprint approval is turned off wi
 });
 
 it("asks the phone again on coming back to the app, taking the PIN choice away once nothing is enrolled", async () => {
-  await openReviewOfRm100();
+  await pairPhoneAndOpenReviewOfRm100();
   expect(
     screen.getByRole("button", { name: "Use PIN instead" }),
   ).toBeOnTheScreen();
@@ -803,7 +803,7 @@ it(
   "reports the PIN locked, not why the PIN was wanted, when the phone locks face and fingerprint while the bank holds the PIN locked",
   scenarioTest("transfer.biometrics_locked_out", async () => {
     failNextBiometricPrompt("BIOMETRIC_LOCKOUT");
-    await openReviewOfRm100();
+    await pairPhoneAndOpenReviewOfRm100();
     await act(rememberApprovalPinLocked);
 
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
@@ -834,7 +834,7 @@ it(
 
 it("still offers Use PIN instead while the phone reports face and fingerprint locked", async () => {
   reportBiometricSensorUnavailable("BIOMETRY_LOCKOUT");
-  await openReviewOfRm100();
+  await pairPhoneAndOpenReviewOfRm100();
 
   await fireEvent.press(
     screen.getByRole("button", { name: "Use PIN instead" }),
@@ -873,7 +873,7 @@ it.each([
   "offers no PIN instead and asks for the PIN itself, saying why, when %s",
   async (_, sensorCode, reason) => {
     reportBiometricSensorUnavailable(sensorCode);
-    await openReviewOfRm100();
+    await pairPhoneAndOpenReviewOfRm100();
 
     await waitFor(() => {
       expect(
@@ -1540,7 +1540,7 @@ it.each([
   "sets approval up again only once with %s when the bank still does not know the new keys, then says so on review",
   async (_, approveButtonName, finishApproving) => {
     let keyRegistrations = 0;
-    await openReviewOfRm100();
+    await pairPhoneAndOpenReviewOfRm100();
     mswServer.use(
       http.post("*/transfers/:transferId/approve", () =>
         HttpResponse.json(
@@ -1628,7 +1628,7 @@ it.each([
     const newerApprovalHeld = new Promise<void>((release) => {
       releaseNewerApproval = release;
     });
-    await openReviewOfRm100();
+    await pairPhoneAndOpenReviewOfRm100();
     await fireEvent.press(
       screen.getByRole("button", { name: "Use PIN instead" }),
     );
