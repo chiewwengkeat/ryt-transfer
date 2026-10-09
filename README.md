@@ -18,11 +18,23 @@ Download `ryt-transfer-demo.apk` from the [latest release](https://github.com/ch
 
 ### Build from source
 
-You need Node 22.13 or later on the 22 line (see `.nvmrc`), pnpm 12, and Xcode with an iOS simulator or Android Studio with an emulator. Install pnpm 12 from <https://pnpm.io/installation>, or prefix each `pnpm` command below with `npx pnpm@12.9.1`.
+You need Node 22.13 or later on the 22 line (see `.nvmrc`) and pnpm 12. Install pnpm 12 from <https://pnpm.io/installation>, or prefix each `pnpm` command below with `npx pnpm@12.9.1`. Then, for the platform you build:
+
+- iOS: Xcode 16.1 or later with an iOS simulator, and CocoaPods (`brew install cocoapods`).
+- Android: JDK 17, and Android Studio with an emulator, with `ANDROID_HOME` set to its Android SDK (on a Mac, `export ANDROID_HOME=$HOME/Library/Android/sdk`).
 
 ```sh
 pnpm install
 pnpm ios        # or: pnpm android
+```
+
+`pnpm ios` and `pnpm android` build the app, install it on a simulator or emulator and open it, then keep running as the Metro bundler the app loads its code from: leave that terminal open while you use the app. The first build takes several minutes.
+
+With several simulators or emulators running, they pick the first one. Name yours with `--device`: a simulator's UDID (`xcrun simctl list devices booted` lists them) or an emulator's AVD name (`$ANDROID_HOME/emulator/emulator -list-avds`).
+
+```sh
+pnpm ios --device <simulator UDID>
+pnpm android --device <AVD name>
 ```
 
 Expo Go cannot run this app: it carries native modules, biometric key signing and the PIN pad's touch guard among them, that Expo Go does not ship.
