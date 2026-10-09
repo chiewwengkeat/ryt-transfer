@@ -528,8 +528,8 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **When:** the bank has answered the approval, but something the scenarios above don't name stops the outcome showing
 - **Money:** not confirmed yet
 - **Shown as:** the result page
-- **Tell them:** the result can't be shown right now, and to check History before sending again, with a reference to quote to support — not confirmed yet
-- **They can:** check History, or try loading the result again
+- **Tell them:** the result can't be shown right now, and to check their transfer history before sending again, with a reference to quote to support — not confirmed yet
+- **They can:** open Transfer history, or try loading the result again
 - **Never:** offer to send it again
 - **Why:** once the bank has answered, money may have moved, so an unexplained failure here sends the person to History, never back to sending
 
@@ -570,8 +570,8 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **When:** checking a transfer, the bank says it has no such transfer (`TRANSFER_NOT_FOUND`); the phone then stops checking it
 - **Money:** not confirmed yet
 - **Shown as:** the result page
-- **Tell them:** their last transfer can't be found, and to check History before sending again, with a reference to quote to support — not confirmed yet
-- **They can:** check History
+- **Tell them:** their last transfer can't be found, and to check their transfer history before sending again, with a reference to quote to support — not confirmed yet
+- **They can:** open Transfer history
 - **Never:** offer to send it again
 - **Why:** not found is not the same as not sent, so the person checks History before sending again rather than being told nothing happened
 
@@ -600,7 +600,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 - **When:** anything the scenarios above don't name goes wrong while checking a transfer's outcome
 - **Money:** not confirmed yet
 - **Shown as:** the result page
-- **Tell them:** the outcome isn't confirmed, and to check History before sending again, with a reference to quote to support — not confirmed yet
-- **They can:** check History, or leave; checking resumes the next time the app opens
+- **Tell them:** the outcome isn't confirmed, and to check their transfer history before sending again, with a reference to quote to support — not confirmed yet
+- **They can:** open Transfer history, or leave; checking resumes the next time the app opens
 - **Never:** offer to send it again
 - **Why:** while the outcome is unknown, money may have moved, so the person is sent to History, never back to sending
