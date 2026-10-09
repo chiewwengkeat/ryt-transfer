@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 
+import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { closeApprovalPinSheet } from "@/domains/approval/hooks/approval-pin-sheet";
 import {
   dispatchTransferFlow,
@@ -9,9 +10,12 @@ import {
   transferFlowStore,
 } from "@/screens/transfer/state/transfer-flow";
 
-import { openResultPageOfSentApproval } from "./settle-approval-answer";
+import {
+  openResultPageOfSentApproval,
+  settleApprovalAnswer,
+} from "./settle-approval-answer";
 
-export function settleUnexpectedConfirmFailure(queryClient: QueryClient) {
+export async function settleUnexpectedConfirmFailure(queryClient: QueryClient) {
   // A sheet left sending cannot be closed by the person, and nothing else will close it.
   closeApprovalPinSheet();
   // Before the approval leaves the phone nothing can have moved, so review offers it again.
@@ -31,10 +35,22 @@ export function settleUnexpectedConfirmFailure(queryClient: QueryClient) {
     );
     return;
   }
-  openResultPageOfSentApproval({
-    queryClient,
+  const customerId = queryClient.getQueryData(
+    getPrimaryAccountOptions().queryKey,
+  )?.customerId;
+  if (customerId === undefined) {
+    openResultPageOfSentApproval({
+      queryClient,
+      transferId: flow.transferId,
+      answered: false,
+      unknownAnswer: false,
+    });
+    return;
+  }
+  await settleApprovalAnswer({
+    answer: {},
     transferId: flow.transferId,
-    answered: false,
-    unknownAnswer: false,
+    customerId,
+    queryClient,
   });
 }

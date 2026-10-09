@@ -5,6 +5,11 @@ import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
+  ApprovalPinSheetStep,
+  approvalPinSheetStore,
+} from "@/domains/approval/hooks/approval-pin-sheet";
+import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import {
   type GetTransferResponse,
   TransferFailureReason,
   TransferFunds,
@@ -124,6 +129,52 @@ it(
       ).toBeOnTheScreen();
       expect(relaunched.getPathname()).toMatch(RESULT_PATH);
     } finally {
+      resultPageDropped.mockRestore();
+    }
+  }),
+);
+
+it(
+  "warns Home not to send it again when something unexpected fails as a lost answer is settled and the result page never opens, and reopens that page at the next launch",
+  scenarioTest("transfer.approval_unanswered", async () => {
+    approvalSettingsStore.setState({ biometricApprovalOn: false });
+    // ⛔ Nothing between the bank's answer and its settling throws by itself, so the sending sheet's close, the
+    // settling's first step, stands in for any throw there.
+    const stopFailingTheSendingSheetsClose = approvalPinSheetStore.subscribe(
+      (sheet, previousSheet) => {
+        if (
+          previousSheet.step !== ApprovalPinSheetStep.Sending ||
+          sheet.step !== ApprovalPinSheetStep.Closed
+        )
+          return;
+        stopFailingTheSendingSheetsClose();
+        throw new Error("Test.");
+      },
+    );
+    const resultPageDropped = dropTheResultPageAsItOpens();
+    try {
+      const view = await approveRm100Transfer();
+      for (const digit of "246810")
+        await fireEvent.press(
+          await screen.findByRole("button", { name: digit }),
+        );
+      await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
+
+      expect(
+        await screen.findByText(
+          /^Your last transfer is still being checked, so don't send it again — not confirmed yet\./,
+          { timeout: 10_000 },
+        ),
+      ).toBeOnTheScreen();
+      expect(view.getPathname()).toBe("/");
+      resultPageDropped.mockRestore();
+      const relaunched = await relaunchApp(view);
+      expect(
+        await screen.findByRole("header", { name: "Transfer sent" }),
+      ).toBeOnTheScreen();
+      expect(relaunched.getPathname()).toMatch(RESULT_PATH);
+    } finally {
+      stopFailingTheSendingSheetsClose();
       resultPageDropped.mockRestore();
     }
   }),

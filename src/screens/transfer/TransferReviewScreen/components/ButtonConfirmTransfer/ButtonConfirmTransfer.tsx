@@ -164,9 +164,9 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
         loading={transferBeingSent || lookup.isFetching || checkingPhone}
         disabledReason={transferDisabledReason}
         onPress={() => {
-          void createAndApproveTransfer(ApprovalPath.Biometric).catch(() => {
-            settleUnexpectedConfirmFailure(queryClient);
-          });
+          void createAndApproveTransfer(ApprovalPath.Biometric).catch(() =>
+            settleUnexpectedConfirmFailure(queryClient),
+          );
         }}
       />
       <ButtonUsePinInstead
@@ -178,9 +178,9 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
           approvalPinLocked === false
         }
         onPress={() => {
-          void createAndApproveTransfer(ApprovalPath.Pin).catch(() => {
-            settleUnexpectedConfirmFailure(queryClient);
-          });
+          void createAndApproveTransfer(ApprovalPath.Pin).catch(() =>
+            settleUnexpectedConfirmFailure(queryClient),
+          );
         }}
       />
     </>
