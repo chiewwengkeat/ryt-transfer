@@ -1,15 +1,13 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { getFixedT } from "i18next";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo, BackHandler } from "react-native";
 
-import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import {
-  type BankErrorBody,
   lookUpTestRecipient,
   sendToBank,
+  clearTransferScenario,
+  mswServer,
 } from "@/test/mock-bank/mock-bank";
-import { clearTransferScenario, mswServer } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   pressHardwareBack,
@@ -23,7 +21,6 @@ import {
 } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
-const t = getFixedT(null, ["shared"]);
 const UNKNOWN_BANK_CODE = {
   error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
 };
@@ -119,56 +116,6 @@ it(
       screen.getByText("Your balance couldn't be loaded."),
     ).toBeOnTheScreen();
   }),
-);
-
-it(
-  "shows the balance during maintenance, says until when transfers are unavailable, and starts none from the recent recipients",
-  scenarioTest("transfer.under_maintenance", async () => {
-    const { body } = await sendToBank<BankErrorBody>("GET", "/transfer-limits");
-    const view = await renderRoute("/");
-
-    expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        `Transfers are unavailable right now, until ${formatMalaysianDateTime(body.error.until ?? "", t)}.`,
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
-    expect(screen.queryByText(/more today/)).toBeNull();
-    expect(reportedScenarios()).toContain("transfer.under_maintenance");
-    await pressEveryRecentRecipientExpectingItDisabled();
-    expect(view.getPathname()).toBe("/");
-  }),
-);
-
-it.each([
-  ["a time the app cannot read", { until: "soon" }],
-  ["no time", {}],
-])(
-  "says transfers are unavailable without a time when maintenance comes with %s",
-  async (_, untilField) => {
-    mswServer.use(
-      http.get("*/transfer-limits", () =>
-        HttpResponse.json(
-          {
-            error: {
-              code: "SERVICE_UNAVAILABLE",
-              message: "Test.",
-              ...untilField,
-            },
-          },
-          { status: 503 },
-        ),
-      ),
-    );
-    await renderRoute("/");
-
-    expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
-    expect(
-      screen.getByText("Transfers are unavailable right now. Try again later."),
-    ).toBeOnTheScreen();
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
-  },
 );
 
 it(
@@ -393,6 +340,50 @@ it("asks for the balance again every 10 seconds while offline, and resumes sendi
     ),
   ).toBeNull();
   expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
+});
+
+it("says the balance couldn't be loaded when the bank never answers it, and never counts the app offline for that", async () => {
+  mswServer.use(
+    http.get("*/accounts/primary", () => new Promise<never>(() => undefined)),
+  );
+  await renderRoute("/");
+
+  await act(() => jest.advanceTimersByTimeAsync(45_000));
+
+  expect(
+    await screen.findByText("Your balance couldn't be loaded."),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByText(
+      "You can send once your balance and today's limit have loaded.",
+    ),
+  ).toBeOnTheScreen();
+  expect(
+    screen.queryByText(
+      "You're offline. Sending is paused until Ryt can be reached.",
+    ),
+  ).toBeNull();
+});
+
+it("says and reports the balance failing once while offline, keeping it shown as each re-read fails the same way", async () => {
+  const balanceFailure = "Your balance couldn't be loaded.";
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  announce.mockClear();
+  mswServer.use(http.all("*", () => HttpResponse.error()));
+  await renderRoute("/");
+  await screen.findByText(balanceFailure);
+
+  await act(() => jest.advanceTimersByTimeAsync(40_000));
+
+  expect(screen.getByText(balanceFailure)).toBeOnTheScreen();
+  expect(
+    announce.mock.calls.filter(([words]) => words === balanceFailure),
+  ).toHaveLength(1);
+  expect(
+    reportedScenarios().filter(
+      (scenario) => scenario === "transfer.balance_unavailable",
+    ),
+  ).toHaveLength(1);
 });
 
 it("lists the recipient of a transfer just sent first among the recent recipients, back on Home", async () => {

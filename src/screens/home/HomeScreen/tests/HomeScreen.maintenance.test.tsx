@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { type BankErrorBody, sendToBank } from "@/test/mock-bank/mock-bank";
 import {
   pressHardwareBack,
@@ -47,6 +48,63 @@ async function returnToFrontHoldingTheLimitsRead() {
   await act(() => jest.advanceTimersByTimeAsync(100));
   return () => answerLimitsAgain();
 }
+
+async function pressEveryRecentRecipientExpectingItDisabled() {
+  for (const recent of await screen.findAllByRole("button", { name: /••••/ })) {
+    expect(recent).toBeDisabled();
+    await fireEvent.press(recent);
+  }
+}
+
+it(
+  "shows the balance during maintenance, says until when transfers are unavailable, and starts none from the recent recipients",
+  scenarioTest("transfer.under_maintenance", async () => {
+    const { body } = await sendToBank<BankErrorBody>("GET", "/transfer-limits");
+    const view = await renderRoute("/");
+
+    expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        `Transfers are unavailable right now, until ${formatMalaysianDateTime(body.error.until ?? "", t)}.`,
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+    expect(screen.queryByText(/more today/)).toBeNull();
+    expect(reportedScenarios()).toContain("transfer.under_maintenance");
+    await pressEveryRecentRecipientExpectingItDisabled();
+    expect(view.getPathname()).toBe("/");
+  }),
+);
+
+it.each([
+  ["a time the app cannot read", { until: "soon" }],
+  ["no time", {}],
+])(
+  "says transfers are unavailable without a time when maintenance comes with %s",
+  async (_, untilField) => {
+    mswServer.use(
+      http.get("*/transfer-limits", () =>
+        HttpResponse.json(
+          {
+            error: {
+              code: "SERVICE_UNAVAILABLE",
+              message: "Test.",
+              ...untilField,
+            },
+          },
+          { status: 503 },
+        ),
+      ),
+    );
+    await renderRoute("/");
+
+    expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
+    expect(
+      screen.getByText("Transfers are unavailable right now. Try again later."),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
+  },
+);
 
 it(
   "stops saying how much more can be sent today once maintenance answers a later read, while the amount check keeps the limit already loaded",
