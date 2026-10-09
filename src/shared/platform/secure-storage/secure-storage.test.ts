@@ -15,10 +15,6 @@ import {
   writeSecureRecord,
 } from "./secure-storage";
 
-const FIRST_PENDING = { namespace: "customer-1", name: "pending.tr-1" };
-const FIRST_KEYS = { namespace: "customer-1", name: "approval-keys" };
-const SECOND_PENDING = { namespace: "customer-2", name: "pending.tr-2" };
-
 afterEach(() => {
   jest.restoreAllMocks();
 });
@@ -182,3 +178,7 @@ it("refuses a namespace that could build another record's key", async () => {
 
   expect(await listSecureRecords()).toEqual([]);
 });
+
+const FIRST_PENDING = { namespace: "customer-1", name: "pending.tr-1" };
+const FIRST_KEYS = { namespace: "customer-1", name: "approval-keys" };
+const SECOND_PENDING = { namespace: "customer-2", name: "pending.tr-2" };

@@ -7,9 +7,6 @@ import {
   toMalaysianDateKey,
 } from "./dates";
 
-// A screen's t, bound to a namespace that holds no date words.
-const transferT = getFixedT(null, "transfer");
-
 it.each([
   ["2026-10-06T07:42:00Z", "6 Oct 2026, 3:42 pm"],
   ["2026-10-06T15:42:00+08:00", "6 Oct 2026, 3:42 pm"],
@@ -90,3 +87,6 @@ it("gives no time or day for an instant it cannot read", () => {
   expect(formatMalaysianTime("not a date", transferT)).toBeNull();
   expect(toMalaysianDateKey("not a date")).toBeNull();
 });
+
+// A screen's t, bound to a namespace that holds no date words.
+const transferT = getFixedT(null, "transfer");

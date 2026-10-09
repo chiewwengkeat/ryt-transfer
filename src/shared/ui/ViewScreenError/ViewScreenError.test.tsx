@@ -7,12 +7,6 @@ import { renderRoute } from "@/test/render/render-route";
 
 import ViewScreenError from "./ViewScreenError";
 
-let screenCrashes = true;
-function ScreenThatCrashes() {
-  if (screenCrashes) throw new Error("render failed");
-  return <Text>Details</Text>;
-}
-
 beforeEach(() => {
   screenCrashes = true;
 });
@@ -91,3 +85,9 @@ it("offers Back to the screen before the one that crashed", async () => {
     screen.getByRole("button", { name: "Open details" }),
   ).toBeOnTheScreen();
 });
+
+let screenCrashes = true;
+function ScreenThatCrashes() {
+  if (screenCrashes) throw new Error("render failed");
+  return <Text>Details</Text>;
+}

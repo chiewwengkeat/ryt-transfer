@@ -7,20 +7,6 @@ import { renderRoute } from "@/test/render/render-route";
 
 import BannerNotice from "./BannerNotice";
 
-const bannerMessageStore = create(() => ({
-  message: "Check your connection",
-}));
-
-const SCREEN_WITH_BANNER_UNDER_DETAILS = {
-  _layout: () => <Stack />,
-  index: function ScreenWithBanner() {
-    return (
-      <BannerNotice message={bannerMessageStore((state) => state.message)} />
-    );
-  },
-  details: () => null,
-};
-
 beforeEach(() => {
   bannerMessageStore.setState(bannerMessageStore.getInitialState(), true);
 });
@@ -68,3 +54,17 @@ it("holds a message that changes beneath another screen until its own screen is 
   });
   expect(announce.mock.calls).toEqual([["Back online"]]);
 });
+
+const bannerMessageStore = create(() => ({
+  message: "Check your connection",
+}));
+
+const SCREEN_WITH_BANNER_UNDER_DETAILS = {
+  _layout: () => <Stack />,
+  index: function ScreenWithBanner() {
+    return (
+      <BannerNotice message={bannerMessageStore((state) => state.message)} />
+    );
+  },
+  details: () => null,
+};

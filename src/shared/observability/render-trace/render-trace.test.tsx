@@ -6,10 +6,6 @@ import { Linking, Text } from "react-native";
 
 import type * as RenderTrace from "./render-trace";
 
-const VARIANT_BEFORE_TESTS = process.env.EXPO_PUBLIC_APP_VARIANT;
-const MEASURE_LINK = "ryt-dev://transfer-history?measure=renders";
-let renderTrace: typeof RenderTrace;
-
 beforeEach(() => {
   jest.useFakeTimers();
 });
@@ -21,109 +17,6 @@ afterEach(() => {
     delete process.env.EXPO_PUBLIC_APP_VARIANT;
   else process.env.EXPO_PUBLIC_APP_VARIANT = VARIANT_BEFORE_TESTS;
 });
-
-function loadRenderTraceBuiltAs(variant: string | undefined) {
-  if (variant === undefined) delete process.env.EXPO_PUBLIC_APP_VARIANT;
-  else process.env.EXPO_PUBLIC_APP_VARIANT = variant;
-  jest.isolateModules(() => {
-    // The cells below render with this file's React, and the spy below watches this file's Linking.
-    jest.doMock("react", () => React);
-    jest.doMock("react-native", () => ReactNative);
-    renderTrace = jest.requireActual<typeof RenderTrace>("./render-trace");
-  });
-}
-
-function TracedCell({
-  cellKind,
-  cellKey,
-}: {
-  cellKind: string;
-  cellKey: string;
-}) {
-  renderTrace.useRenderTrace(cellKind, cellKey);
-  return (
-    <Text>
-      {renderTrace.traceFormatCalls((text: string) => text.toUpperCase())(
-        cellKey,
-      )}
-    </Text>
-  );
-}
-
-// Keyed by slot, never by row: a recycling list hands a mounted cell another row.
-function TracedCells() {
-  const [rows, setRows] = useState([
-    { slot: "first", rowKey: "a" },
-    { slot: "second", rowKey: "b" },
-  ]);
-  renderTrace.useRenderMeasurement(
-    {
-      rerenderEveryCellTwice: () => {
-        setRows((current) => [...current]);
-        setTimeout(() => {
-          setRows((current) => [...current]);
-        }, 100);
-      },
-      showNewKeyInFirstRow: () => {
-        setRows([
-          { slot: "first", rowKey: "c" },
-          { slot: "second", rowKey: "b" },
-        ]);
-      },
-      unmountLastRow: () => {
-        setRows([{ slot: "first", rowKey: "c" }]);
-      },
-      showNewKeyThenRedrawIt: () => {
-        setRows([{ slot: "first", rowKey: "d" }]);
-        setTimeout(() => {
-          setRows((current) => [...current]);
-        }, 100);
-      },
-      shiftEveryRowDownOneSlot: () => {
-        setRows([
-          { slot: "first", rowKey: "e" },
-          { slot: "second", rowKey: "d" },
-        ]);
-      },
-    },
-    () => ({ rowCount: rows.length }),
-  );
-  return (
-    <>
-      <TracedCell cellKind="header" cellKey="day" />
-      {rows.map(({ slot, rowKey }) => (
-        <TracedCell key={slot} cellKind="row" cellKey={rowKey} />
-      ))}
-    </>
-  );
-}
-
-async function launchWith(launchURL: string | null) {
-  // jest-expo's Linking is already a mock, so spyOn hands back that one, calls from earlier tests included.
-  const getInitialURL = jest
-    .spyOn(Linking, "getInitialURL")
-    .mockClear()
-    .mockResolvedValue(launchURL);
-  const logged = jest
-    .spyOn(console, "info")
-    .mockImplementation(() => undefined);
-  const view = await render(<TracedCells />);
-  const measurements = () =>
-    logged.mock.calls.flatMap(([line]: unknown[]) =>
-      typeof line === "string" && line.startsWith("ryt-render-trace ")
-        ? [JSON.parse(line.slice("ryt-render-trace ".length)) as unknown]
-        : [],
-    );
-  return { view, getInitialURL, measurements };
-}
-
-// In steps: an act holds its updates until it ends, so one long act would show the trace no commits.
-async function passTime(milliseconds: number) {
-  for (let passed = 0; passed < milliseconds; passed += 100)
-    await act(async () => {
-      await jest.advanceTimersByTimeAsync(100);
-    });
-}
 
 it("counts a re-render only for a cell redrawing the key it showed at the start, and a cell showing a new key as a first render", async () => {
   loadRenderTraceBuiltAs("development");
@@ -249,3 +142,110 @@ it.each([
     expect(measurements()).toEqual([]);
   },
 );
+
+const VARIANT_BEFORE_TESTS = process.env.EXPO_PUBLIC_APP_VARIANT;
+const MEASURE_LINK = "ryt-dev://transfer-history?measure=renders";
+let renderTrace: typeof RenderTrace;
+
+function loadRenderTraceBuiltAs(variant: string | undefined) {
+  if (variant === undefined) delete process.env.EXPO_PUBLIC_APP_VARIANT;
+  else process.env.EXPO_PUBLIC_APP_VARIANT = variant;
+  jest.isolateModules(() => {
+    // The cells below render with this file's React, and the spy below watches this file's Linking.
+    jest.doMock("react", () => React);
+    jest.doMock("react-native", () => ReactNative);
+    renderTrace = jest.requireActual<typeof RenderTrace>("./render-trace");
+  });
+}
+
+function TracedCell({
+  cellKind,
+  cellKey,
+}: {
+  cellKind: string;
+  cellKey: string;
+}) {
+  renderTrace.useRenderTrace(cellKind, cellKey);
+  return (
+    <Text>
+      {renderTrace.traceFormatCalls((text: string) => text.toUpperCase())(
+        cellKey,
+      )}
+    </Text>
+  );
+}
+
+// Keyed by slot, never by row: a recycling list hands a mounted cell another row.
+function TracedCells() {
+  const [rows, setRows] = useState([
+    { slot: "first", rowKey: "a" },
+    { slot: "second", rowKey: "b" },
+  ]);
+  renderTrace.useRenderMeasurement(
+    {
+      rerenderEveryCellTwice: () => {
+        setRows((current) => [...current]);
+        setTimeout(() => {
+          setRows((current) => [...current]);
+        }, 100);
+      },
+      showNewKeyInFirstRow: () => {
+        setRows([
+          { slot: "first", rowKey: "c" },
+          { slot: "second", rowKey: "b" },
+        ]);
+      },
+      unmountLastRow: () => {
+        setRows([{ slot: "first", rowKey: "c" }]);
+      },
+      showNewKeyThenRedrawIt: () => {
+        setRows([{ slot: "first", rowKey: "d" }]);
+        setTimeout(() => {
+          setRows((current) => [...current]);
+        }, 100);
+      },
+      shiftEveryRowDownOneSlot: () => {
+        setRows([
+          { slot: "first", rowKey: "e" },
+          { slot: "second", rowKey: "d" },
+        ]);
+      },
+    },
+    () => ({ rowCount: rows.length }),
+  );
+  return (
+    <>
+      <TracedCell cellKind="header" cellKey="day" />
+      {rows.map(({ slot, rowKey }) => (
+        <TracedCell key={slot} cellKind="row" cellKey={rowKey} />
+      ))}
+    </>
+  );
+}
+
+async function launchWith(launchURL: string | null) {
+  // jest-expo's Linking is already a mock, so spyOn hands back that one, calls from earlier tests included.
+  const getInitialURL = jest
+    .spyOn(Linking, "getInitialURL")
+    .mockClear()
+    .mockResolvedValue(launchURL);
+  const logged = jest
+    .spyOn(console, "info")
+    .mockImplementation(() => undefined);
+  const view = await render(<TracedCells />);
+  const measurements = () =>
+    logged.mock.calls.flatMap(([line]: unknown[]) =>
+      typeof line === "string" && line.startsWith("ryt-render-trace ")
+        ? [JSON.parse(line.slice("ryt-render-trace ".length)) as unknown]
+        : [],
+    );
+  return { view, getInitialURL, measurements };
+}
+
+// In steps: an act holds its updates until it ends, so one long act would show the trace no commits.
+async function passTime(milliseconds: number) {
+  for (let passed = 0; passed < milliseconds; passed += 100)
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(100);
+    });
+}

@@ -23,13 +23,6 @@ export const APP_LANGUAGE_NAMES = {
   [AppLanguage.Chinese]: { full: "中文", short: "中文" },
 } satisfies Record<AppLanguage, { full: string; short: string }>;
 
-const APP_LANGUAGE_BY_PHONE_LANGUAGE = new Map([
-  ["en", AppLanguage.English],
-  ["ms", AppLanguage.Malay],
-  ["zh", AppLanguage.Chinese],
-]);
-const PICKED_LANGUAGE_KEY = "app-language";
-
 // A screens folder and its same-name domain share a namespace, each under its own top-level keys.
 export function initTranslations(
   bundles: Record<string, Record<string, Record<string, unknown>[]>>,
@@ -74,6 +67,13 @@ export function followPhoneLanguage() {
   kvStorage.removeItemSync(PICKED_LANGUAGE_KEY);
   void changeLanguage(findAppLanguageForPhone());
 }
+
+const APP_LANGUAGE_BY_PHONE_LANGUAGE = new Map([
+  ["en", AppLanguage.English],
+  ["ms", AppLanguage.Malay],
+  ["zh", AppLanguage.Chinese],
+]);
+const PICKED_LANGUAGE_KEY = "app-language";
 
 function findAppLanguageForPhone() {
   return (

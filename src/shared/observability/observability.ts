@@ -1,28 +1,5 @@
 import { TransportError } from "@/shared/http/transport-error/transport-error";
 
-// An allow-list, so nothing unvetted reaches a sink: credentials and personal data never pass; amounts may, in sen.
-const ALLOWED_PROPERTY_NAMES = new Set([
-  "scenario",
-  "step",
-  "outcome",
-  "method",
-  "attempt",
-  "count",
-  "amountMinor",
-  "currency",
-  "boundary",
-  "errorKind",
-  "httpStatus",
-  "errorCode",
-  "path",
-]);
-
-let sink: ObservabilitySink | null = __DEV__
-  ? (record) => {
-      console.info(`[${record.type}] ${record.name}`, record.properties);
-    }
-  : null;
-
 export function setObservabilitySink(nextSink: ObservabilitySink | null) {
   sink = nextSink;
 }
@@ -59,6 +36,37 @@ export function reportError(
   });
 }
 
+export type ObservabilitySink = (record: ObservedRecord) => void;
+
+export interface ObservedRecord {
+  type: "event" | "error";
+  name: string;
+  properties: Record<string, string | number | boolean | null>;
+}
+
+// An allow-list, so nothing unvetted reaches a sink: credentials and personal data never pass; amounts may, in sen.
+const ALLOWED_PROPERTY_NAMES = new Set([
+  "scenario",
+  "step",
+  "outcome",
+  "method",
+  "attempt",
+  "count",
+  "amountMinor",
+  "currency",
+  "boundary",
+  "errorKind",
+  "httpStatus",
+  "errorCode",
+  "path",
+]);
+
+let sink: ObservabilitySink | null = __DEV__
+  ? (record) => {
+      console.info(`[${record.type}] ${record.name}`, record.properties);
+    }
+  : null;
+
 function sendToSinkIgnoringItsFailure(record: ObservedRecord) {
   try {
     sink?.(record);
@@ -80,12 +88,4 @@ function redactProperties(properties: Record<string, unknown>) {
       allowed[name] = value;
   }
   return allowed;
-}
-
-export type ObservabilitySink = (record: ObservedRecord) => void;
-
-export interface ObservedRecord {
-  type: "event" | "error";
-  name: string;
-  properties: Record<string, string | number | boolean | null>;
 }

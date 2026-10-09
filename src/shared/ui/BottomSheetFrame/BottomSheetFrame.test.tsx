@@ -21,99 +21,6 @@ import { pressHardwareBack } from "@/test/render/drive-app";
 
 import BottomSheetFrame from "./BottomSheetFrame";
 
-const PHONE_METRICS = {
-  frame: { x: 0, y: 0, width: 390, height: 844 },
-  insets: { top: 47, right: 0, bottom: 34, left: 0 },
-};
-
-function ScreenWithBankSheet({
-  dismissable = true,
-}: {
-  dismissable?: boolean;
-}) {
-  const [bankSheetOpen, setBankSheetOpen] = useState(false);
-  const [branchSheetOpen, setBranchSheetOpen] = useState(false);
-  const [bankSearch, setBankSearch] = useState("");
-  return (
-    <SafeAreaProvider initialMetrics={PHONE_METRICS}>
-      <ViewBottomSheetHost>
-        <ButtonPrimary
-          label="Choose a bank"
-          onPress={() => {
-            setBankSheetOpen(true);
-          }}
-        />
-        {bankSheetOpen && (
-          <BottomSheetFrame
-            title="Banks"
-            closeLabel="Close"
-            dismissable={dismissable}
-            onClose={() => {
-              setBankSheetOpen(false);
-            }}
-            searchField={{
-              label: "Search banks",
-              value: bankSearch,
-              onChangeText: setBankSearch,
-            }}
-          >
-            <Text>
-              {bankSearch === ""
-                ? "Every bank"
-                : `Banks matching ${bankSearch}`}
-            </Text>
-            <ButtonPrimary
-              label="Choose a branch"
-              onPress={() => {
-                setBranchSheetOpen(true);
-              }}
-            />
-          </BottomSheetFrame>
-        )}
-        {branchSheetOpen && (
-          <BottomSheetFrame
-            title="Branches"
-            closeLabel="Close"
-            onClose={() => {
-              setBranchSheetOpen(false);
-            }}
-          >
-            <Text>Kuala Lumpur</Text>
-          </BottomSheetFrame>
-        )}
-      </ViewBottomSheetHost>
-    </SafeAreaProvider>
-  );
-}
-
-// TalkBack's rule, not RNTL's: React Native makes every focusable view clickable on Android, and TalkBack
-// stops on a clickable view whatever `accessible` says. A scroll view is focusable while it can scroll.
-function screenReaderStopsUnder(
-  element: typeof screen.container,
-): (typeof screen.container)[] {
-  if (isHiddenFromAccessibility(element)) return [];
-  if (
-    element.props.accessible === true ||
-    element.props.focusable === true ||
-    element.type === "Text" ||
-    element.type === "TextInput"
-  )
-    return [element];
-  return [
-    ...(element.type === "RCTScrollView" &&
-    element.props.scrollEnabled !== false
-      ? [element]
-      : []),
-    ...element.children.flatMap((child) =>
-      typeof child === "string" ? [] : screenReaderStopsUnder(child),
-    ),
-  ];
-}
-
-async function openBankSheet() {
-  await fireEvent.press(screen.getByRole("button", { name: "Choose a bank" }));
-}
-
 afterEach(() => {
   jest.useRealTimers();
 });
@@ -306,3 +213,96 @@ it("hands what is typed in its search field to its owner", async () => {
 
   expect(screen.getByText("Banks matching Ma")).toBeOnTheScreen();
 });
+
+const PHONE_METRICS = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, right: 0, bottom: 34, left: 0 },
+};
+
+function ScreenWithBankSheet({
+  dismissable = true,
+}: {
+  dismissable?: boolean;
+}) {
+  const [bankSheetOpen, setBankSheetOpen] = useState(false);
+  const [branchSheetOpen, setBranchSheetOpen] = useState(false);
+  const [bankSearch, setBankSearch] = useState("");
+  return (
+    <SafeAreaProvider initialMetrics={PHONE_METRICS}>
+      <ViewBottomSheetHost>
+        <ButtonPrimary
+          label="Choose a bank"
+          onPress={() => {
+            setBankSheetOpen(true);
+          }}
+        />
+        {bankSheetOpen && (
+          <BottomSheetFrame
+            title="Banks"
+            closeLabel="Close"
+            dismissable={dismissable}
+            onClose={() => {
+              setBankSheetOpen(false);
+            }}
+            searchField={{
+              label: "Search banks",
+              value: bankSearch,
+              onChangeText: setBankSearch,
+            }}
+          >
+            <Text>
+              {bankSearch === ""
+                ? "Every bank"
+                : `Banks matching ${bankSearch}`}
+            </Text>
+            <ButtonPrimary
+              label="Choose a branch"
+              onPress={() => {
+                setBranchSheetOpen(true);
+              }}
+            />
+          </BottomSheetFrame>
+        )}
+        {branchSheetOpen && (
+          <BottomSheetFrame
+            title="Branches"
+            closeLabel="Close"
+            onClose={() => {
+              setBranchSheetOpen(false);
+            }}
+          >
+            <Text>Kuala Lumpur</Text>
+          </BottomSheetFrame>
+        )}
+      </ViewBottomSheetHost>
+    </SafeAreaProvider>
+  );
+}
+
+// TalkBack's rule, not RNTL's: React Native makes every focusable view clickable on Android, and TalkBack
+// stops on a clickable view whatever `accessible` says. A scroll view is focusable while it can scroll.
+function screenReaderStopsUnder(
+  element: typeof screen.container,
+): (typeof screen.container)[] {
+  if (isHiddenFromAccessibility(element)) return [];
+  if (
+    element.props.accessible === true ||
+    element.props.focusable === true ||
+    element.type === "Text" ||
+    element.type === "TextInput"
+  )
+    return [element];
+  return [
+    ...(element.type === "RCTScrollView" &&
+    element.props.scrollEnabled !== false
+      ? [element]
+      : []),
+    ...element.children.flatMap((child) =>
+      typeof child === "string" ? [] : screenReaderStopsUnder(child),
+    ),
+  ];
+}
+
+async function openBankSheet() {
+  await fireEvent.press(screen.getByRole("button", { name: "Choose a bank" }));
+}

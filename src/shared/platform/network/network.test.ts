@@ -5,13 +5,6 @@ import {
 
 import { subscribeToPhoneConnection } from "./network";
 
-const OFFLINE = { isConnected: false, isInternetReachable: false };
-const ONLINE = { isConnected: true, isInternetReachable: true };
-
-function settle() {
-  return new Promise((resolve) => setTimeout(resolve, 0));
-}
-
 afterEach(() => {
   jest.useRealTimers();
 });
@@ -116,3 +109,10 @@ it("keeps a change that arrives while a reading taken again is on its way", asyn
 
   expect(heard).toEqual([false, true]);
 });
+
+const OFFLINE = { isConnected: false, isInternetReachable: false };
+const ONLINE = { isConnected: true, isInternetReachable: true };
+
+function settle() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}

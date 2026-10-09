@@ -4,12 +4,6 @@ import { Text } from "react-native";
 import { observedRecords } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
-let screenCrashes = true;
-function ScreenWithNoBoundary() {
-  if (screenCrashes) throw new Error("render failed");
-  return <Text>Home</Text>;
-}
-
 it("replaces the app when a screen with no boundary of its own crashes, and Try again remounts it", async () => {
   await renderRoute("/", {
     appDir: "src/app",
@@ -28,3 +22,9 @@ it("replaces the app when a screen with no boundary of its own crashes, and Try 
 
   expect(screen.getByText("Home")).toBeOnTheScreen();
 });
+
+let screenCrashes = true;
+function ScreenWithNoBoundary() {
+  if (screenCrashes) throw new Error("render failed");
+  return <Text>Home</Text>;
+}

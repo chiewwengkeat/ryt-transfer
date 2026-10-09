@@ -5,30 +5,6 @@ import { reportError } from "@/shared/observability/observability";
 
 import { subscribeToPhoneConnection } from "@/shared/platform/network/network";
 
-let phoneConnected = true;
-let lastRequestFoundNoNetwork = false;
-const requestsFindingNoNetworkSinceTheBankAnswered = new Set<string>();
-const requestsLostWhileTheBankAnswersOthers = new Set<string>();
-const offlineListeners = new Set<() => void>();
-const bankReachedAgainListeners = new Set<() => void>();
-let stopReadingPhoneConnection = () => {};
-
-function subscribeToOfflineChanges(onChange: () => void) {
-  offlineListeners.add(onChange);
-  if (offlineListeners.size === 1)
-    stopReadingPhoneConnection = subscribeToPhoneConnection((connected) => {
-      phoneConnected = connected;
-      for (const listener of offlineListeners) listener();
-    });
-  return () => {
-    offlineListeners.delete(onChange);
-    if (offlineListeners.size > 0) return;
-    stopReadingPhoneConnection();
-    // Nobody keeps this reading fresh now: the next reader must not open on a stale "no connection".
-    phoneConnected = true;
-  };
-}
-
 export function useIsOffline() {
   return useSyncExternalStore(
     subscribeToOfflineChanges,
@@ -89,5 +65,29 @@ export function addBankReachedAgainListener(listener: () => void) {
   bankReachedAgainListeners.add(listener);
   return () => {
     bankReachedAgainListeners.delete(listener);
+  };
+}
+
+let phoneConnected = true;
+let lastRequestFoundNoNetwork = false;
+const requestsFindingNoNetworkSinceTheBankAnswered = new Set<string>();
+const requestsLostWhileTheBankAnswersOthers = new Set<string>();
+const offlineListeners = new Set<() => void>();
+const bankReachedAgainListeners = new Set<() => void>();
+let stopReadingPhoneConnection = () => {};
+
+function subscribeToOfflineChanges(onChange: () => void) {
+  offlineListeners.add(onChange);
+  if (offlineListeners.size === 1)
+    stopReadingPhoneConnection = subscribeToPhoneConnection((connected) => {
+      phoneConnected = connected;
+      for (const listener of offlineListeners) listener();
+    });
+  return () => {
+    offlineListeners.delete(onChange);
+    if (offlineListeners.size > 0) return;
+    stopReadingPhoneConnection();
+    // Nobody keeps this reading fresh now: the next reader must not open on a stale "no connection".
+    phoneConnected = true;
   };
 }

@@ -3,20 +3,6 @@ import { AccessibilityInfo } from "react-native";
 
 import { renderRoute } from "@/test/render/render-route";
 
-const OVER_TODAYS_LIMIT =
-  "That is more than the RM 5,000.00 you can still send today.";
-
-async function typeAnAmountOverTodaysLimit() {
-  await renderRoute("/transfer");
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByText("RM 12,845.50");
-  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "5,000.01");
-}
-
 afterEach(() => {
   jest.restoreAllMocks();
 });
@@ -49,3 +35,17 @@ it("keeps the keyboard from learning or correcting a recipient's mobile number",
   expect(mobileNumber).toHaveProp("autoCorrect", false);
   expect(mobileNumber).toHaveProp("autoComplete", "tel");
 });
+
+const OVER_TODAYS_LIMIT =
+  "That is more than the RM 5,000.00 you can still send today.";
+
+async function typeAnAmountOverTodaysLimit() {
+  await renderRoute("/transfer");
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "5,000.01");
+}

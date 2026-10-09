@@ -1,23 +1,5 @@
 import type { Namespace, TFunction } from "i18next";
 
-// No daylight saving in Malaysia: a fixed shift plus UTC getters reads the same on every phone, with no Intl zone data.
-const MALAYSIA_OFFSET_MS = 8 * 60 * 60 * 1000;
-const DAY_MS = 24 * 60 * 60 * 1000;
-const MONTH_KEYS = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
-] as const;
-
 // The caller's t: the React Compiler caches a call by its arguments, so only a t that changes with the language
 // reformats. Every key names shared because a caller's t looks only in the caller's own namespace.
 export function formatMalaysianDateTime(
@@ -67,6 +49,24 @@ export function toMalaysianDateKey(instant: string) {
     ? null
     : wallClock.toISOString().slice(0, 10);
 }
+
+// No daylight saving in Malaysia: a fixed shift plus UTC getters reads the same on every phone, with no Intl zone data.
+const MALAYSIA_OFFSET_MS = 8 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+] as const;
 
 function formatDayMonthYear(wallClock: Date, t: TFunction<Namespace>) {
   const monthKey = MONTH_KEYS[wallClock.getUTCMonth()];

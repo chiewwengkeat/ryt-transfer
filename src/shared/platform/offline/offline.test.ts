@@ -12,11 +12,6 @@ import {
   useIsOffline,
 } from "./offline";
 
-const NO_CONNECTION = { isConnected: false, isInternetReachable: false };
-const CONNECTED = { isConnected: true, isInternetReachable: true };
-const BALANCE_READ = "GET /accounts/primary";
-const STATUS_READ = "GET /transfers/trf_1";
-
 it("reads online while the phone has a connection and requests reach the bank", async () => {
   const { result } = await renderHook(useIsOffline);
 
@@ -165,3 +160,8 @@ it("reports a listener that throws once a request reaches the bank again, and st
     properties: { boundary: "bank_reached_again_listener" },
   });
 });
+
+const NO_CONNECTION = { isConnected: false, isInternetReachable: false };
+const CONNECTED = { isConnected: true, isInternetReachable: true };
+const BALANCE_READ = "GET /accounts/primary";
+const STATUS_READ = "GET /transfers/trf_1";

@@ -6,9 +6,6 @@ export enum DeviceIntegrity {
   Unknown = "unknown",
 }
 
-// No answer within this reads as unclear, as a failed check does: a check that never settles must not hold an approval.
-const INTEGRITY_CHECK_TIMEOUT_MS = 5_000;
-
 export async function checkDeviceIntegrity() {
   let unansweredTimer: ReturnType<typeof setTimeout> | undefined;
   const report = await Promise.race([
@@ -32,3 +29,6 @@ export async function checkDeviceIntegrity() {
     return DeviceIntegrity.Unknown;
   return DeviceIntegrity.Clear;
 }
+
+// No answer within this reads as unclear, as a failed check does: a check that never settles must not hold an approval.
+const INTEGRITY_CHECK_TIMEOUT_MS = 5_000;

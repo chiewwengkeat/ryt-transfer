@@ -9,16 +9,6 @@ import {
 
 export type Send = (request: Request) => Promise<Response>;
 
-const DEFAULT_TIMEOUT_MS = 10_000;
-
-// An arrow, not fetch itself: called unbound fetch can throw, and msw swaps the global after load.
-const sendWithFetch: Send = (request) => fetch(request);
-const withoutAuthHeaders = () => ({});
-
-let configuredSend = sendWithFetch;
-let authHeaders: () => Record<string, string> = withoutAuthHeaders;
-const unauthorizedListeners = new Set<() => void>();
-
 export function configureTransport(
   options: { send?: Send; authHeaders?: () => Record<string, string> } = {},
 ) {
@@ -137,3 +127,13 @@ export async function requestJson<Data>(
     errorBody,
   );
 }
+
+const DEFAULT_TIMEOUT_MS = 10_000;
+
+// An arrow, not fetch itself: called unbound fetch can throw, and msw swaps the global after load.
+const sendWithFetch: Send = (request) => fetch(request);
+const withoutAuthHeaders = () => ({});
+
+let configuredSend = sendWithFetch;
+let authHeaders: () => Record<string, string> = withoutAuthHeaders;
+const unauthorizedListeners = new Set<() => void>();

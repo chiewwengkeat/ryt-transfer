@@ -1,7 +1,5 @@
 import { requireNativeModule } from "expo";
 
-let guardHoldCount = 0;
-
 export function enableObscuredTouchGuard(onTouchDropped: () => void) {
   // Required per hold, not at import, so a file importing this one loads before any native module or Jest double exists.
   const guardModule = requireNativeModule<{
@@ -28,3 +26,5 @@ export function enableObscuredTouchGuard(onTouchDropped: () => void) {
     if (guardHoldCount === 0) guardModule.disable();
   };
 }
+
+let guardHoldCount = 0;

@@ -11,22 +11,6 @@ import {
   readPickedAppLanguage,
 } from "./i18n";
 
-const WELCOME_IN_EVERY_LANGUAGE = {
-  "en-MY": { shared: [{ welcome: "Welcome" }] },
-  "ms-MY": { shared: [{ welcome: "Selamat datang" }] },
-  "zh-MY": { shared: [{ welcome: "欢迎" }] },
-};
-
-function launchOnPhoneSetTo(
-  languageCode: string,
-  bundles: Parameters<typeof initTranslations>[0] = WELCOME_IN_EVERY_LANGUAGE,
-) {
-  jest
-    .spyOn(Localization, "getLocales")
-    .mockReturnValue([{ languageCode } as Localization.Locale]);
-  initTranslations(bundles);
-}
-
 afterEach(() => {
   jest.restoreAllMocks();
 });
@@ -103,3 +87,19 @@ it("follows the phone when the stored language is not one the app has", () => {
     "Selamat datang",
   );
 });
+
+const WELCOME_IN_EVERY_LANGUAGE = {
+  "en-MY": { shared: [{ welcome: "Welcome" }] },
+  "ms-MY": { shared: [{ welcome: "Selamat datang" }] },
+  "zh-MY": { shared: [{ welcome: "欢迎" }] },
+};
+
+function launchOnPhoneSetTo(
+  languageCode: string,
+  bundles: Parameters<typeof initTranslations>[0] = WELCOME_IN_EVERY_LANGUAGE,
+) {
+  jest
+    .spyOn(Localization, "getLocales")
+    .mockReturnValue([{ languageCode } as Localization.Locale]);
+  initTranslations(bundles);
+}

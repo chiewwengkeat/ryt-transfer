@@ -17,8 +17,6 @@ import {
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
 
-const PROBE_URL = `${API_BASE_URL}/probe`;
-
 afterEach(() => {
   configureTransport();
   jest.useRealTimers();
@@ -305,3 +303,5 @@ it("adds the host app's auth headers to every request", async () => {
     sentRequests.map((request) => request.headers.get("Authorization")),
   ).toEqual(["Bearer host-token", "Bearer host-token"]);
 });
+
+const PROBE_URL = `${API_BASE_URL}/probe`;

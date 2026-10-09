@@ -7,14 +7,6 @@ import { createStore } from "zustand/vanilla";
 
 import { reportError } from "@/shared/observability/observability";
 
-// One key for every caller: the library lifts a block only once every key that set one is allowed.
-const SCREEN_CAPTURE_KEY = "app";
-const CURRENT_WINDOW_KEY = "current-window";
-
-// A screen error stands in for a screen without being it, so capture allowed on that screen must not reach it.
-// Counted, so one leaving never clears another still showing.
-const screenErrorStore = createStore(() => ({ screenErrorsShowing: 0 }));
-
 export function markScreenErrorShowing() {
   screenErrorStore.setState(({ screenErrorsShowing }) => ({
     screenErrorsShowing: screenErrorsShowing + 1,
@@ -50,3 +42,11 @@ export function allowScreenCapture() {
     reportError(error, { boundary: "screen_capture" });
   });
 }
+
+// One key for every caller: the library lifts a block only once every key that set one is allowed.
+const SCREEN_CAPTURE_KEY = "app";
+const CURRENT_WINDOW_KEY = "current-window";
+
+// A screen error stands in for a screen without being it, so capture allowed on that screen must not reach it.
+// Counted, so one leaving never clears another still showing.
+const screenErrorStore = createStore(() => ({ screenErrorsShowing: 0 }));
