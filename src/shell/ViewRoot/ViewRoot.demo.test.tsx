@@ -1,12 +1,15 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
 import { useState } from "react";
 import { Pressable, Text } from "react-native";
 
 import type { DemoLayer } from "@/domains/approval/hooks/demo-layer.type";
 import { requestJson } from "@/shared/http/transport";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
+import { lookUpTestRecipient } from "@/test/bank-client";
 import { biometricPromptsShown } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
+import { mswServer, sentRequests } from "@/test/msw-server";
 import { renderRoute } from "@/test/render-route";
 
 // The demo build's root: Jest runs as production, whose launch loads no demo layer.
@@ -54,6 +57,9 @@ async function pickDemoScenario(title: string) {
   await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
   await fireEvent.press(screen.getByRole("radio", { name: title }));
 }
+
+const sentNameChecks = () =>
+  sentRequests.filter(({ url }) => url.endsWith("/recipients/lookup"));
 
 async function readTheAccountAsAScreenWould() {
   // The bank answers after a delay, which the route's fake timers would hold forever.
@@ -113,6 +119,39 @@ it("shows the Demo banner over a session that ended with a screen's sheet open, 
   expect(
     screen.getByRole("button", { name: "Back to normal" }),
   ).toBeOnTheScreen();
+});
+
+it("asks a refused name check again once a Demo scenario is picked, so review shows that scenario's answer", async () => {
+  const { recipient } = await lookUpTestRecipient("012-345 6789");
+  mswServer.use(
+    http.post(
+      "*/recipients/lookup",
+      () =>
+        HttpResponse.json(
+          { error: { code: "TOO_MANY_LOOKUPS", message: "Test." } },
+          { status: 429 },
+        ),
+      { once: true },
+    ),
+  );
+  await renderRoute("/transfer");
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByText("RM 12,845.50");
+  await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await screen.findByText(
+    "Too many name checks in a short time. Try again in a minute.",
+  );
+  const nameChecksBeforePick = sentNameChecks().length;
+
+  await pickDemoScenario("Balance or limit short at confirmation");
+
+  expect(await screen.findByText(recipient.registeredName)).toBeOnTheScreen();
+  expect(sentNameChecks()).toHaveLength(nameChecksBeforePick + 1);
 });
 
 it("hides the app and the session-ended view from screen readers while the Demo menu is open", async () => {

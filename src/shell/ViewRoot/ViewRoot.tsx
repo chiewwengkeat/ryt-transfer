@@ -50,9 +50,9 @@ export default function ViewRoot() {
   );
   useEffect(
     () =>
-      demoLayer?.subscribeToScenarioChange(
-        readAgainEveryReadButAnAnsweredNameCheck,
-      ),
+      demoLayer?.subscribeToScenarioChange(() => {
+        readAgainEveryReadButAnsweredNameChecks({ refusalsAreAnswers: false });
+      }),
     [],
   );
   useEffect(
@@ -98,7 +98,9 @@ export default function ViewRoot() {
             // Stands in for the host app's sign-in: the session is the host's, so a standalone build only resumes.
             onSignIn={() => {
               setSessionEnded(false);
-              readAgainEveryReadButAnAnsweredNameCheck();
+              readAgainEveryReadButAnsweredNameChecks({
+                refusalsAreAnswers: true,
+              });
             }}
           />
         </View>
@@ -138,19 +140,26 @@ const styles = StyleSheet.create({
   layer: { ...StyleSheet.absoluteFill, pointerEvents: "box-none" },
 });
 
-// A name check the bank answered, a refusal included, stays: asking again mints another reference or meets the check limit.
-function readAgainEveryReadButAnAnsweredNameCheck() {
+// A found recipient stays: asking again mints another reference. After sign-in a refusal stays too, as asking again meets
+// the check limit; a Demo pick asks it again, since the picked scenario may answer it otherwise.
+function readAgainEveryReadButAnsweredNameChecks({
+  refusalsAreAnswers,
+}: {
+  refusalsAreAnswers: boolean;
+}) {
   void queryClient.invalidateQueries({
     predicate: ({ queryKey, state: { status, error } }) =>
       queryKey[0] !== transferKeys.lookupAll[0] ||
       status === "pending" ||
       (status === "error" &&
-        error instanceof TransportError &&
-        ([
-          TransportErrorKind.Network,
-          TransportErrorKind.Timeout,
-          TransportErrorKind.Aborted,
-        ].includes(error.kind) ||
-          (error.kind === TransportErrorKind.Http && error.status === 401))),
+        (!refusalsAreAnswers ||
+          (error instanceof TransportError &&
+            ([
+              TransportErrorKind.Network,
+              TransportErrorKind.Timeout,
+              TransportErrorKind.Aborted,
+            ].includes(error.kind) ||
+              (error.kind === TransportErrorKind.Http &&
+                error.status === 401))))),
   });
 }
