@@ -9,7 +9,7 @@ import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
-import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
+import BannerFlowNotice from "@/screens/transfer/components/BannerFlowNotice/BannerFlowNotice";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
 import {
   isTransferSentOrBeingSent,

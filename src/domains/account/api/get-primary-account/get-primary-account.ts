@@ -4,7 +4,7 @@ import { requestJson } from "@/shared/http/transport/transport";
 import { parseWireAmount } from "@/shared/lib/money/money";
 import { trackEvent } from "@/shared/observability/observability";
 
-import { accountKeys } from "../account.keys";
+import { accountKeys } from "@/domains/account/api/account.keys";
 import type { GetPrimaryAccountResponse } from "./get-primary-account.type";
 
 export const getPrimaryAccountOptions = () =>

@@ -10,7 +10,7 @@ import {
 import { reportError } from "@/shared/observability/observability";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 
-import { isSettledTransferOutcome } from "../../api/get-transfer/get-transfer";
+import { isSettledTransferOutcome } from "@/domains/transfer/api/get-transfer/get-transfer";
 import {
   refreshPendingTransferNotices,
   usePendingTransferNotices,

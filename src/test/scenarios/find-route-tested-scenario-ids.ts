@@ -13,6 +13,7 @@ import {
 } from "typescript";
 
 // Not an import: the import rules refuse any repo file outside src/.
+// eslint-disable-next-line no-restricted-syntax -- .config/test-files.js sits outside src/, which @/ cannot reach
 const { isCheckTest, isTestFile } = jest.requireActual<{
   isCheckTest: (file: string) => boolean;
   isTestFile: (file: string) => boolean;

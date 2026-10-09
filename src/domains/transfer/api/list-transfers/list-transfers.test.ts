@@ -7,9 +7,9 @@ import {
   TransferFunds,
   TransferStatus,
   type Transfer,
-} from "../get-transfer/get-transfer.type";
-import { RecipientIdType } from "../lookup-recipient/lookup-recipient.type";
-import { transferKeys } from "../transfer.keys";
+} from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 import {
   countLoadedTransfersOnDay,
   isTransferHistoryCached,

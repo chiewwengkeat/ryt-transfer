@@ -1,5 +1,5 @@
-import type { CoolingOffReason } from "../create-transfer/create-transfer.type";
-import type { Transfer } from "../get-transfer/get-transfer.type";
+import type { CoolingOffReason } from "@/domains/transfer/api/create-transfer/create-transfer.type";
+import type { Transfer } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 
 export interface ApproveTransferRequest {
   keyId: string;

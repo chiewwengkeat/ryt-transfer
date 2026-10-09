@@ -36,6 +36,14 @@ const STORAGE_BAN = {
   ruleId: "no-restricted-imports",
   message: /wrappers in src\/shared\/platform/,
 };
+const PARENT_FOLDER_IMPORT_BAN = {
+  ruleId: "no-restricted-imports",
+  message: /outside it with @\//,
+};
+const PARENT_FOLDER_SYNTAX_BAN = {
+  ruleId: "no-restricted-syntax",
+  message: /outside it with @\//,
+};
 const SCREEN_DIR = "src/screens/probe/ProbeScreen";
 const ROOT_DIR = "src/root/probe";
 const DEMO_CONTRACT = "@/mocks/demo-layer/demo-layer";
@@ -240,6 +248,97 @@ const CASES = [
     file,
     source: `${source}\n`,
     refused,
+    ban,
+  })),
+  ...[
+    ["a screen", `${SCREEN_DIR}/parent-folder-import.ts`],
+    ["src/shared/platform/", "src/shared/platform/parent-folder-import.ts"],
+    ["src/mocks/", "src/mocks/parent-folder-import.ts"],
+    ["src/test/", "src/test/parent-folder-import.ts"],
+    ["src/root/", `${ROOT_DIR}/parent-folder-import.ts`],
+    ["a .check.test file", `${SCREEN_DIR}/parent-folder-import.check.test.ts`],
+  ].map(([where, file]) => ({
+    title: `refuses a ../ import in ${where}`,
+    file,
+    source: 'import { probe } from "../probe";\n',
+    refused: true,
+    ban: PARENT_FOLDER_IMPORT_BAN,
+  })),
+  ...[
+    [
+      'import type { Probe } from "../probe";',
+      "a type import",
+      PARENT_FOLDER_IMPORT_BAN,
+    ],
+    [
+      'export { probe } from "../probe";',
+      "a re-export",
+      PARENT_FOLDER_IMPORT_BAN,
+    ],
+    [
+      'import { probe } from "..";',
+      "an import of the parent folder itself",
+      PARENT_FOLDER_IMPORT_BAN,
+    ],
+    [
+      'import { probe } from "../../probe";',
+      "an import two folders up",
+      PARENT_FOLDER_IMPORT_BAN,
+    ],
+    [
+      'export const probe: unknown = require("../probe");',
+      "require()",
+      PARENT_FOLDER_SYNTAX_BAN,
+    ],
+    ['jest.mock("../probe");', "jest.mock()", PARENT_FOLDER_SYNTAX_BAN],
+    [
+      'export const probe = jest.requireActual<unknown>("../probe");',
+      "jest.requireActual() with a type argument",
+      PARENT_FOLDER_SYNTAX_BAN,
+    ],
+    [
+      'export const probe = import("../probe");',
+      "a dynamic import()",
+      PARENT_FOLDER_SYNTAX_BAN,
+    ],
+    [
+      'import probe = require("../probe");',
+      "an import-equals",
+      PARENT_FOLDER_SYNTAX_BAN,
+    ],
+    [
+      'export type Probe = import("../probe").Probe;',
+      "an import() type",
+      PARENT_FOLDER_SYNTAX_BAN,
+    ],
+  ].map(([source, what, ban], i) => ({
+    title: `refuses a ../ path in ${what}`,
+    file: `${SCREEN_DIR}/parent-folder-${i}.ts`,
+    source: `${source}\n`,
+    refused: true,
+    ban,
+  })),
+  ...[
+    [
+      'import { probe } from "./probe";',
+      "an import inside its folder",
+      PARENT_FOLDER_IMPORT_BAN,
+    ],
+    [
+      'import { probe } from "@/shared/probe";',
+      "an import through the alias",
+      PARENT_FOLDER_IMPORT_BAN,
+    ],
+    [
+      'jest.mock("./probe");',
+      "jest.mock() inside its folder",
+      PARENT_FOLDER_SYNTAX_BAN,
+    ],
+  ].map(([source, what, ban], i) => ({
+    title: `passes ${what}`,
+    file: `${SCREEN_DIR}/inside-folder-${i}.ts`,
+    source: `${source}\n`,
+    refused: false,
     ban,
   })),
 ];

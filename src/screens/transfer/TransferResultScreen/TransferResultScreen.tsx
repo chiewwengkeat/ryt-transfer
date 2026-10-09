@@ -29,7 +29,7 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
-import SectionTransferDetails from "../components/SectionTransferDetails/SectionTransferDetails";
+import SectionTransferDetails from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
 import IconTransferCompleted from "./components/IconTransferCompleted/IconTransferCompleted";
 import TextOutcome from "./components/TextOutcome/TextOutcome";
 import ViewOutcomeEntrance from "./components/ViewOutcomeEntrance/ViewOutcomeEntrance";

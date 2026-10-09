@@ -13,8 +13,8 @@ import { trackEvent } from "@/shared/observability/observability";
 import {
   TransferFunds,
   type Transfer,
-} from "../get-transfer/get-transfer.type";
-import { transferKeys } from "../transfer.keys";
+} from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 import type { ListTransfersResponse } from "./list-transfers.type";
 
 // As the bank's day net counts it, so a day's rows add up to its header: a pending refund has not come back yet.

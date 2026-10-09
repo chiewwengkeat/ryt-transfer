@@ -20,8 +20,8 @@ import Loader from "@/shared/ui/Loader/Loader";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
-import BannerOutOfDate from "../components/BannerOutOfDate/BannerOutOfDate";
-import ButtonHeaderHome from "../components/ButtonHeaderHome/ButtonHeaderHome";
+import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
+import ButtonHeaderHome from "@/screens/transfer/components/ButtonHeaderHome/ButtonHeaderHome";
 import SectionTransferAccordion from "./components/SectionTransferAccordion/SectionTransferAccordion";
 
 export default function TransferHistoryScreen() {

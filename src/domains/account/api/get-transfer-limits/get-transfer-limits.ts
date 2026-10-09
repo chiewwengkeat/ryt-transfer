@@ -6,7 +6,7 @@ import { TransportError } from "@/shared/http/transport-error/transport-error";
 import { parseWireAmount } from "@/shared/lib/money/money";
 import { trackEvent } from "@/shared/observability/observability";
 
-import { accountKeys } from "../account.keys";
+import { accountKeys } from "@/domains/account/api/account.keys";
 import {
   GetTransferLimitsErrorCode,
   type GetTransferLimitsErrorResponse,

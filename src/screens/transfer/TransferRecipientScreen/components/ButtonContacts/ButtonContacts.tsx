@@ -20,7 +20,7 @@ import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
-import BannerRecipientUnexpected from "../BannerRecipientUnexpected/BannerRecipientUnexpected";
+import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
 import BottomSheetContactMobiles from "./components/BottomSheetContactMobiles/BottomSheetContactMobiles";
 
 interface Props {

@@ -1,6 +1,6 @@
 import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
 
-import { transferKeys } from "../transfer.keys";
+import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 import {
   getLookupRecipientOptions,
   parseRecipientId,

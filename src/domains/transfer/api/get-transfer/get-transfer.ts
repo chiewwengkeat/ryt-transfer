@@ -9,9 +9,9 @@ import { requestJson } from "@/shared/http/transport/transport";
 import { parseWireAmount } from "@/shared/lib/money/money";
 import { trackEvent } from "@/shared/observability/observability";
 
-import { patchTransferInHistory } from "../list-transfers/list-transfers";
-import type { ListTransfersResponse } from "../list-transfers/list-transfers.type";
-import { transferKeys } from "../transfer.keys";
+import { patchTransferInHistory } from "@/domains/transfer/api/list-transfers/list-transfers";
+import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
+import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 import {
   type GetTransferResponse,
   type Transfer,

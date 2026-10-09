@@ -39,11 +39,19 @@ const screenCaptureOutsidePlatform = {
   message:
     "Block and allow screen capture through src/shared/platform/, whose one key they must share: under a second key, allowing capture leaves it blocked.",
 };
+const PARENT_FOLDER_IMPORT =
+  "Inside a folder import with ./…, outside it with @/…, so every importer from outside spells a module's path the same way.";
+const PARENT_FOLDER_PATH = String.raw`/^\.\.(\/|$)/`;
+const parentFolderImport = {
+  group: ["../*", "..", "../**"],
+  message: PARENT_FOLDER_IMPORT,
+};
 const IMPORT_BANS = [
   staticMocksImport,
   storageOutsidePlatform,
   storageAnywhere,
   screenCaptureOutsidePlatform,
+  parentFolderImport,
 ];
 // Not a group with a `!` entry: gitignore never re-includes a path under an ignored parent.
 const mocksBesideDemoContract = {
@@ -115,6 +123,13 @@ export default [
           message:
             "Use `import type`: the slice boundaries cannot follow an import() type.",
         },
+        ...[
+          `CallExpression[callee.name='require'][arguments.0.value=${PARENT_FOLDER_PATH}]`,
+          `CallExpression[callee.object.name='jest'][callee.property.name=/^(mock|unmock|doMock|dontMock|requireActual|requireMock|setMock|createMockFromModule)$/][arguments.0.value=${PARENT_FOLDER_PATH}]`,
+          `ImportExpression[source.value=${PARENT_FOLDER_PATH}]`,
+          `TSImportEqualsDeclaration[moduleReference.expression.value=${PARENT_FOLDER_PATH}]`,
+          `TSImportType[source.value=${PARENT_FOLDER_PATH}]`,
+        ].map((selector) => ({ selector, message: PARENT_FOLDER_IMPORT })),
         {
           selector: "JSXAttribute[name.name='testID']",
           message: TEST_ID_INSTEAD_OF_ACCESSIBLE_NAME,

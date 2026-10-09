@@ -17,7 +17,7 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import FieldText from "@/shared/ui/FieldText/FieldText";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
-import BannerFlowNotice from "../components/BannerFlowNotice/BannerFlowNotice";
+import BannerFlowNotice from "@/screens/transfer/components/BannerFlowNotice/BannerFlowNotice";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,

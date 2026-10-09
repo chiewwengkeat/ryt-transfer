@@ -13,7 +13,7 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
-import ButtonHeaderHome from "../components/ButtonHeaderHome/ButtonHeaderHome";
+import ButtonHeaderHome from "@/screens/transfer/components/ButtonHeaderHome/ButtonHeaderHome";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,

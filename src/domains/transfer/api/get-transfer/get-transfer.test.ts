@@ -17,8 +17,8 @@ import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-
 import { startTestTransfer, mswServer } from "@/test/mock-bank/mock-bank";
 import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
 
-import type { ListTransfersResponse } from "../list-transfers/list-transfers.type";
-import { transferKeys } from "../transfer.keys";
+import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
+import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 
 const transferAt = (
   transferId: string,
