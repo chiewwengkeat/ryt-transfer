@@ -6,7 +6,7 @@ import {
   ApprovalPinSheetStep,
   approvalPinSheetStore,
 } from "@/domains/approval/hooks/approval-pin-sheet";
-import { addUnauthorizedListener } from "@/shared/http/transport";
+import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 
 export default function ViewPinSheetHost() {
   const pinSheet = useStore(approvalPinSheetStore);

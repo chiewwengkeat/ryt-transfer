@@ -3,7 +3,7 @@ import {
   deleteSecureRecord,
   readSecureRecord,
   writeSecureRecord,
-} from "@/shared/platform/secure-storage";
+} from "@/shared/platform/secure-storage/secure-storage";
 
 // Beside the phone's key ids, so whatever wipes the module's records takes the lock with them.
 const PIN_LOCKED_RECORD = { namespace: "approval", name: "pin-locked" };

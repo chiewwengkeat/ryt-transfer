@@ -13,7 +13,7 @@ import {
   TransferFlowActionType,
   TransferHoldKind,
 } from "@/screens/transfer/flow-store/flow-store";
-import { isSessionEndFailure } from "@/shared/http/transport-error";
+import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 
 export function settleCreateFailure({
   failure,

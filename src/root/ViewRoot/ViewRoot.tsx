@@ -12,15 +12,15 @@ import {
   releaseTransferScenarioReports,
   transferFlowStore,
 } from "@/screens/transfer/flow-store/flow-store";
-import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top";
-import { addUnauthorizedListener } from "@/shared/http/transport";
+import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
+import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import {
   isSessionEndFailure,
   TransportError,
   TransportErrorKind,
-} from "@/shared/http/transport-error";
+} from "@/shared/http/transport-error/transport-error";
 import { screenTransitionOptions } from "@/shared/lib/motion/motion";
-import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
+import { deleteAllSecureRecords } from "@/shared/platform/secure-storage/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import { demoLayer } from "@/root/app-launch/app-launch";
 import { queryClient } from "@/root/query-client/query-client";

@@ -7,7 +7,7 @@ import {
   allowScreenCapture,
   blockScreenCapture,
   useScreenErrorShowing,
-} from "@/shared/platform/screen-capture";
+} from "@/shared/platform/screen-capture/screen-capture";
 import { demoLayer } from "@/root/app-launch/app-launch";
 
 const RECEIPT_ROUTES = new Set([

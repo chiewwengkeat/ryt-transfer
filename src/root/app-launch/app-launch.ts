@@ -2,12 +2,12 @@ import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
 import { warmUpDeviceIntegrityCheck } from "@/domains/approval/hooks/device-integrity-verdict";
 import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import { isProductionBuild } from "@/shared/config/config";
-import { configureTransport } from "@/shared/http/transport";
+import { configureTransport } from "@/shared/http/transport/transport";
 import { reportError } from "@/shared/observability/observability";
-import { enableAppSwitcherBlur } from "@/shared/platform/app-switcher-blur";
-import { kvStorage } from "@/shared/platform/kv-storage";
-import { blockScreenCapture } from "@/shared/platform/screen-capture";
-import { deleteAllSecureRecords } from "@/shared/platform/secure-storage";
+import { enableAppSwitcherBlur } from "@/shared/platform/app-switcher-blur/app-switcher-blur";
+import { kvStorage } from "@/shared/platform/kv-storage/kv-storage";
+import { blockScreenCapture } from "@/shared/platform/screen-capture/screen-capture";
+import { deleteAllSecureRecords } from "@/shared/platform/secure-storage/secure-storage";
 
 const INSTALL_MARKER_KEY = "install-marker";
 

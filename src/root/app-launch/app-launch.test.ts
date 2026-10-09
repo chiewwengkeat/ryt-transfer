@@ -1,7 +1,7 @@
 import { waitFor } from "@testing-library/react-native";
 
 import type * as ApprovalKeys from "@/domains/approval/hooks/approval-keys";
-import type * as SecureStorage from "@/shared/platform/secure-storage";
+import type * as SecureStorage from "@/shared/platform/secure-storage/secure-storage";
 import { phoneKeyOptions } from "@/test/biometrics-double";
 import { kvStoreDouble } from "@/test/harness/native-doubles";
 
@@ -38,7 +38,7 @@ it("keeps the approval keys when the app was not reinstalled", async () => {
       "@/domains/approval/hooks/approval-keys",
     );
     const { writeSecureRecord } = jest.requireActual<typeof SecureStorage>(
-      "@/shared/platform/secure-storage",
+      "@/shared/platform/secure-storage/secure-storage",
     );
     await approvalKeys.createApprovalKeys();
     await approvalKeys.saveApprovalKeyIds({

@@ -1,7 +1,7 @@
 import * as Localization from "expo-localization";
 import { t } from "i18next";
 
-import { kvStorage } from "@/shared/platform/kv-storage";
+import { kvStorage } from "@/shared/platform/kv-storage/kv-storage";
 
 import {
   AppLanguage,

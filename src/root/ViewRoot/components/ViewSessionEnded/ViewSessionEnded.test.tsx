@@ -10,7 +10,7 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
-import { requestJson } from "@/shared/http/transport";
+import { requestJson } from "@/shared/http/transport/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { clearTransferScenario } from "@/test/clear-transfer-scenario";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";

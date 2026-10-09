@@ -23,7 +23,7 @@ import {
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
 import type { TransferDraft } from "@/screens/transfer/flow-store/flow-store.type";
-import { useIsOffline } from "@/shared/platform/offline";
+import { useIsOffline } from "@/shared/platform/offline/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 
 import ButtonUsePinInstead from "./components/ButtonUsePinInstead/ButtonUsePinInstead";

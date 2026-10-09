@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { delay, http, HttpResponse } from "msw";
 
-import { requestJson } from "@/shared/http/transport";
+import { requestJson } from "@/shared/http/transport/transport";
 import { lookUpTestRecipient } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { mswServer, sentRequests } from "@/test/msw-server";

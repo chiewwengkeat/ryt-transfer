@@ -1,6 +1,6 @@
 import "@/test/demo-build";
-import { checkDeviceIntegrity } from "@/shared/platform/device-integrity";
-import { blockScreenCapture } from "@/shared/platform/screen-capture";
+import { checkDeviceIntegrity } from "@/shared/platform/device-integrity/device-integrity";
+import { blockScreenCapture } from "@/shared/platform/screen-capture/screen-capture";
 import { deviceIntegrityChecksAsked } from "@/test/biometrics-double";
 import {
   appSwitcherBlurIntensity,

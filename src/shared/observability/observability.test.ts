@@ -1,7 +1,7 @@
 import {
   TransportError,
   TransportErrorKind,
-} from "@/shared/http/transport-error";
+} from "@/shared/http/transport-error/transport-error";
 import { observedRecords } from "@/test/harness/recording-sink";
 
 import { reportError, setObservabilitySink, trackEvent } from "./observability";

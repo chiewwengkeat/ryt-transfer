@@ -9,7 +9,7 @@ import Animated, {
 
 import type { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
 import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
-import { phoneReducesMotionNow } from "@/shared/platform/reduce-motion";
+import { phoneReducesMotionNow } from "@/shared/platform/reduce-motion/reduce-motion";
 import { spacing } from "@/shared/theme/theme";
 
 interface Props {

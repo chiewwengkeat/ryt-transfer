@@ -13,7 +13,7 @@ import { bankState } from "@/mocks/bank/state";
 import { handlersForActiveScenario } from "@/mocks/demo-bank";
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
 import { switcherStore } from "@/mocks/switcher/switcher-store";
-import type { Send } from "@/shared/http/transport";
+import type { Send } from "@/shared/http/transport/transport";
 
 export default {
   demoSend: createDemoSend(handlersForActiveScenario),

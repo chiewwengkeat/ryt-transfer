@@ -1,7 +1,7 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
-import { requestJson } from "@/shared/http/transport";
+import { requestJson } from "@/shared/http/transport/transport";
 import { lookUpTestRecipient } from "@/test/bank-client";
 import { clearTransferScenario } from "@/test/clear-transfer-scenario";
 import { mswServer, sentRequests } from "@/test/msw-server";

@@ -26,7 +26,7 @@ import type { TransferDraft } from "@/screens/transfer/flow-store/flow-store.typ
 import {
   isSessionEndFailure,
   TransportError,
-} from "@/shared/http/transport-error";
+} from "@/shared/http/transport-error/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";

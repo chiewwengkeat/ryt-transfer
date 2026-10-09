@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Pressable, Text } from "react-native";
 
 import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
-import { requestJson } from "@/shared/http/transport";
+import { requestJson } from "@/shared/http/transport/transport";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import { lookUpTestRecipient } from "@/test/bank-client";
 import { biometricPromptsShown } from "@/test/biometrics-double";

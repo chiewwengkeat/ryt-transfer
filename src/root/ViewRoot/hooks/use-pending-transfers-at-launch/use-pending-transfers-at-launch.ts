@@ -11,7 +11,7 @@ import {
 } from "@/domains/transfer/hooks/pending-transfers";
 import { checkPendingTransferOnce } from "@/domains/transfer/hooks/transfer-status-checks";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { addUnauthorizedListener } from "@/shared/http/transport";
+import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import { reportError } from "@/shared/observability/observability";
 import { queryClient } from "@/root/query-client/query-client";
 

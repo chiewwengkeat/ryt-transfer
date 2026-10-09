@@ -1,6 +1,6 @@
 import demoLayer from "@/mocks/demo-layer/demo-layer";
 import * as config from "@/shared/config/config";
-import { allowScreenCapture } from "@/shared/platform/screen-capture";
+import { allowScreenCapture } from "@/shared/platform/screen-capture/screen-capture";
 import type * as AppLaunch from "@/root/app-launch/app-launch";
 
 // ⛔ Import this before anything that loads the shell: a launch already loaded is handed back, run as production's.

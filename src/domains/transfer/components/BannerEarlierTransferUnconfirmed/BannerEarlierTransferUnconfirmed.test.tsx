@@ -11,7 +11,7 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
-import { requestJson } from "@/shared/http/transport";
+import { requestJson } from "@/shared/http/transport/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { reportedScenarios } from "@/test/harness/recording-sink";

@@ -27,7 +27,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion";
+import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion/reduce-motion";
 import {
   colors,
   minTouchTarget,

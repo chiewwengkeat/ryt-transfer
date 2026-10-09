@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { enableObscuredTouchGuard } from "@/shared/platform/obscured-touch-guard";
-import { useIsOffline } from "@/shared/platform/offline";
+import { enableObscuredTouchGuard } from "@/shared/platform/obscured-touch-guard/obscured-touch-guard";
+import { useIsOffline } from "@/shared/platform/offline/offline";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";

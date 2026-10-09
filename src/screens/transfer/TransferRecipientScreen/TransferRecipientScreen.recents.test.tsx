@@ -5,7 +5,7 @@ import { AccessibilityInfo } from "react-native";
 
 import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients.type";
 import type { LookupRecipientResponse } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import { requestJson } from "@/shared/http/transport";
+import { requestJson } from "@/shared/http/transport/transport";
 import { pressHardwareBack } from "@/test/hardware-back";
 import { moveAppTo } from "@/test/harness/app-state";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";

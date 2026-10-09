@@ -9,9 +9,9 @@ import { AppState, type AppStateStatus } from "react-native";
 import {
   TransportError,
   TransportErrorKind,
-} from "@/shared/http/transport-error";
-import { subscribeToPhoneConnection } from "@/shared/platform/network";
-import { addBankReachedAgainListener } from "@/shared/platform/offline";
+} from "@/shared/http/transport-error/transport-error";
+import { subscribeToPhoneConnection } from "@/shared/platform/network/network";
+import { addBankReachedAgainListener } from "@/shared/platform/offline/offline";
 
 onlineManager.setEventListener(subscribeToPhoneConnection);
 focusManager.setEventListener((setFocused) => {

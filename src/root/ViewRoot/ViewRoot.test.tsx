@@ -12,7 +12,7 @@ import {
 } from "@/domains/transfer/hooks/pending-transfers";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { requestJson } from "@/shared/http/transport";
+import { requestJson } from "@/shared/http/transport/transport";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { pressHardwareBack } from "@/test/hardware-back";

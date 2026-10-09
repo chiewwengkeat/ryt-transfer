@@ -1,9 +1,9 @@
 import { useSyncExternalStore } from "react";
 
-import { TransportErrorKind } from "@/shared/http/transport-error";
+import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import { reportError } from "@/shared/observability/observability";
 
-import { subscribeToPhoneConnection } from "./network";
+import { subscribeToPhoneConnection } from "@/shared/platform/network/network";
 
 let phoneConnected = true;
 let lastRequestFoundNoNetwork = false;

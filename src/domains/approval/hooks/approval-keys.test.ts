@@ -1,4 +1,4 @@
-import { writeSecureRecord } from "@/shared/platform/secure-storage";
+import { writeSecureRecord } from "@/shared/platform/secure-storage/secure-storage";
 
 import {
   BiometricSignOutcome,

@@ -5,7 +5,7 @@ import {
   readSecureRecord,
   updateSecureRecord,
   writeSecureRecord,
-} from "@/shared/platform/secure-storage";
+} from "@/shared/platform/secure-storage/secure-storage";
 
 const NAMESPACE_PREFIX = "pending-transfers-";
 

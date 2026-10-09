@@ -10,7 +10,7 @@ import {
   resetTransferHistory,
   type useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
-import { useRenderMeasurement } from "@/shared/observability/render-trace";
+import { useRenderMeasurement } from "@/shared/observability/render-trace/render-trace";
 
 // ⛔ Keep the literal comparison, never a shared constant or config: Metro folds only this form, which removes the operations below from demo and production builds.
 export const useTransferHistoryRenderMeasurement =

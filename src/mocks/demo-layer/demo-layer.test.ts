@@ -5,8 +5,11 @@ import { bankPorts } from "@/mocks/bank/ports";
 import type * as BankPorts from "@/mocks/bank/ports";
 import { clearTransferScenario, pickTransferScenario } from "@/mocks/demo-bank";
 import { API_BASE_URL } from "@/shared/config/config";
-import { configureTransport, requestJson } from "@/shared/http/transport";
-import { TransportErrorKind } from "@/shared/http/transport-error";
+import {
+  configureTransport,
+  requestJson,
+} from "@/shared/http/transport/transport";
+import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import { mswServer } from "@/test/msw-server";
 
 import demoLayer, { createDemoSend } from "./demo-layer";

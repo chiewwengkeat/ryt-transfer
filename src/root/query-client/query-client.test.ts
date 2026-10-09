@@ -4,8 +4,8 @@ import { AppState } from "react-native";
 import {
   TransportError,
   TransportErrorKind,
-} from "@/shared/http/transport-error";
-import { reportRequestOutcome } from "@/shared/platform/offline";
+} from "@/shared/http/transport-error/transport-error";
+import { reportRequestOutcome } from "@/shared/platform/offline/offline";
 import { moveAppTo } from "@/test/harness/app-state";
 import { setPhoneNetwork } from "@/test/harness/native-doubles";
 

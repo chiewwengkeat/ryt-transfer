@@ -9,7 +9,7 @@ import {
   isSessionEndFailure,
   TransportError,
   TransportErrorKind,
-} from "@/shared/http/transport-error";
+} from "@/shared/http/transport-error/transport-error";
 import { reportError } from "@/shared/observability/observability";
 
 import {

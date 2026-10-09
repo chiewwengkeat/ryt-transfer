@@ -2,7 +2,7 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import { TransportError } from "@/shared/http/transport-error";
+import { TransportError } from "@/shared/http/transport-error/transport-error";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";

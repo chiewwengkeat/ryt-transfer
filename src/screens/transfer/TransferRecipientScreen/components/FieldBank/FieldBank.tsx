@@ -11,7 +11,7 @@ import {
 
 import { useListBanks } from "@/domains/transfer/api/list-banks/list-banks";
 import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
-import { useIsOffline } from "@/shared/platform/offline";
+import { useIsOffline } from "@/shared/platform/offline/offline";
 import {
   colors,
   minTouchTarget,

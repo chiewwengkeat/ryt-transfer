@@ -19,9 +19,9 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
-import { TransportErrorKind } from "@/shared/http/transport-error";
+import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
-import { reportRequestOutcome } from "@/shared/platform/offline";
+import { reportRequestOutcome } from "@/shared/platform/offline/offline";
 import {
   type BankErrorBody,
   lookUpTestRecipient,

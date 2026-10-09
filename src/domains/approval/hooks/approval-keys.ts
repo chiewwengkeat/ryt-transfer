@@ -15,7 +15,7 @@ import { trackEvent } from "@/shared/observability/observability";
 import {
   readSecureRecord,
   writeSecureRecord,
-} from "@/shared/platform/secure-storage";
+} from "@/shared/platform/secure-storage/secure-storage";
 
 import { registerApprovalKeys } from "../api/register-approval-keys/register-approval-keys";
 

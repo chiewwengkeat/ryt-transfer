@@ -13,8 +13,8 @@ import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
 import {
   traceFormatCalls,
   useRenderTrace,
-} from "@/shared/observability/render-trace";
-import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion";
+} from "@/shared/observability/render-trace/render-trace";
+import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion/reduce-motion";
 import {
   colors,
   minTouchTarget,

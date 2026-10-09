@@ -1,6 +1,6 @@
 import { Easing } from "react-native-reanimated";
 
-import { phoneReducesMotionNow } from "@/shared/platform/reduce-motion";
+import { phoneReducesMotionNow } from "@/shared/platform/reduce-motion/reduce-motion";
 
 export const motionDurations = {
   screenTransition: 220,

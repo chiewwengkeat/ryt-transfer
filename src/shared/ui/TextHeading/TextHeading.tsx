@@ -2,7 +2,7 @@ import { use, useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { AccessibilityInfo, Platform, StyleSheet, Text } from "react-native";
 
-import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top";
+import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import { colors, typography } from "@/shared/theme/theme";
 
 interface Props {

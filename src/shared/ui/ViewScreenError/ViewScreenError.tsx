@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { reportError } from "@/shared/observability/observability";
-import { markScreenErrorShowing } from "@/shared/platform/screen-capture";
+import { markScreenErrorShowing } from "@/shared/platform/screen-capture/screen-capture";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";

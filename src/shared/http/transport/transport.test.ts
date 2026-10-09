@@ -3,7 +3,7 @@ import { delay, http, HttpResponse } from "msw";
 
 import { API_BASE_URL } from "@/shared/config/config";
 import { setObservabilitySink } from "@/shared/observability/observability";
-import { useIsOffline } from "@/shared/platform/offline";
+import { useIsOffline } from "@/shared/platform/offline/offline";
 import { observedRecords } from "@/test/harness/recording-sink";
 import { mswServer, sentRequests } from "@/test/msw-server";
 
@@ -12,7 +12,10 @@ import {
   configureTransport,
   requestJson,
 } from "./transport";
-import { TransportError, TransportErrorKind } from "./transport-error";
+import {
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport-error/transport-error";
 
 const PROBE_URL = `${API_BASE_URL}/probe`;
 

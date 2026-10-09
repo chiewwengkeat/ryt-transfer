@@ -10,7 +10,7 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/hooks/pending-transfers";
 import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
-import { requestJson } from "@/shared/http/transport";
+import { requestJson } from "@/shared/http/transport/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import { biometricPromptsShown } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";

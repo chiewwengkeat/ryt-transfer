@@ -7,14 +7,14 @@ import {
   getTransferLimitsMaintenance,
   useGetTransferLimits,
 } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
-import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import {
   isSessionEndFailure,
   TransportError,
   TransportErrorKind,
-} from "@/shared/http/transport-error";
+} from "@/shared/http/transport-error/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
-import { useIsOffline } from "@/shared/platform/offline";
+import { useIsOffline } from "@/shared/platform/offline/offline";
 import { colors, spacing, typography } from "@/shared/theme/theme";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import Card from "@/shared/ui/Card/Card";

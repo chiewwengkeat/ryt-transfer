@@ -1,7 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 
-import { requestJson } from "@/shared/http/transport";
+import { requestJson } from "@/shared/http/transport/transport";
 
 import { transferKeys } from "../transfer.keys";
 import type { ListBanksResponse } from "./list-banks.type";

@@ -13,7 +13,7 @@ import { asSen, formatMoney, parseWireAmount } from "@/shared/lib/money/money";
 import {
   traceFormatCalls,
   useRenderTrace,
-} from "@/shared/observability/render-trace";
+} from "@/shared/observability/render-trace/render-trace";
 import { colors, spacing, typography } from "@/shared/theme/theme";
 import CardPressable from "@/shared/ui/CardPressable/CardPressable";
 import TextBody from "@/shared/ui/TextBody/TextBody";

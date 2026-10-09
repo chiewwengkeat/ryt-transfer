@@ -8,7 +8,7 @@ import {
 } from "i18next";
 import { initReactI18next } from "react-i18next";
 
-import { kvStorage } from "@/shared/platform/kv-storage";
+import { kvStorage } from "@/shared/platform/kv-storage/kv-storage";
 
 export enum AppLanguage {
   English = "en-MY",

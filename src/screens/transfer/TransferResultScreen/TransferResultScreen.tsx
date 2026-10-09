@@ -22,7 +22,7 @@ import {
 } from "@/domains/transfer/hooks/transfer-status-checks";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
-import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import { reportError, trackEvent } from "@/shared/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";

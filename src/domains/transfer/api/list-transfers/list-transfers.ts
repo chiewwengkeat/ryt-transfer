@@ -5,7 +5,7 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 
-import { requestJson } from "@/shared/http/transport";
+import { requestJson } from "@/shared/http/transport/transport";
 import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
 import { parseWireAmount } from "@/shared/lib/money/money";
 import { trackEvent } from "@/shared/observability/observability";

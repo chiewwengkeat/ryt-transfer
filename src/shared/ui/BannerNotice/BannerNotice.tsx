@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { AccessibilityInfo, StyleSheet, View } from "react-native";
 
-import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import { colors, radii, spacing } from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 

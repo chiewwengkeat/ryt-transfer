@@ -13,10 +13,10 @@ import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-reci
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
 import { useBalanceScenarios } from "@/domains/transfer/hooks/use-balance-scenarios/use-balance-scenarios";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { isSessionEndFailure } from "@/shared/http/transport-error";
+import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 import { APP_LANGUAGE_NAMES, AppLanguage } from "@/shared/i18n/i18n";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
-import { useIsOffline } from "@/shared/platform/offline";
+import { useIsOffline } from "@/shared/platform/offline/offline";
 import {
   colors,
   minTouchTarget,

@@ -17,7 +17,7 @@ import { approvalSettingsStore } from "@/domains/approval/hooks/approval-setting
 import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { setObservabilitySink } from "@/shared/observability/observability";
-import { forgetRequestOutcomes } from "@/shared/platform/offline";
+import { forgetRequestOutcomes } from "@/shared/platform/offline/offline";
 import type * as ShellQueryClient from "@/root/query-client/query-client";
 import "@/root/translations/translations";
 

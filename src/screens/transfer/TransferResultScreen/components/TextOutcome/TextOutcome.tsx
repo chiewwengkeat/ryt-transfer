@@ -7,7 +7,7 @@ import {
   type useGetTransfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
 import { scenarioWordsKey } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top";
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import { formatMoney } from "@/shared/lib/money/money";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import TextHeading from "@/shared/ui/TextHeading/TextHeading";

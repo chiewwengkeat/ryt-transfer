@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { isSessionEndFailure } from "@/shared/http/transport-error";
+import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 
 interface Props {

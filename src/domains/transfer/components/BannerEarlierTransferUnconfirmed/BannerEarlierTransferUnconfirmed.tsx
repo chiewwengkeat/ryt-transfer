@@ -6,7 +6,7 @@ import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/
 import {
   ScreensCoveredContext,
   useIsScreenOnTop,
-} from "@/shared/hooks/use-is-screen-on-top";
+} from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import { reportError } from "@/shared/observability/observability";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 

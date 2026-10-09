@@ -4,11 +4,11 @@ import { Stack, router } from "expo-router";
 import { http, HttpResponse } from "msw";
 import { Pressable, Text } from "react-native";
 
-import { requestJson } from "@/shared/http/transport";
+import { requestJson } from "@/shared/http/transport/transport";
 import {
   TransportError,
   TransportErrorKind,
-} from "@/shared/http/transport-error";
+} from "@/shared/http/transport-error/transport-error";
 import { queryClient } from "@/root/query-client/query-client";
 
 import { setPhoneNetwork } from "./harness/native-doubles";

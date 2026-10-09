@@ -5,7 +5,7 @@ import { trackEvent } from "@/shared/observability/observability";
 import {
   checkDeviceIntegrity,
   DeviceIntegrity,
-} from "@/shared/platform/device-integrity";
+} from "@/shared/platform/device-integrity/device-integrity";
 
 export const rootedPhoneDemoPickStore = createStore(() => ({
   rootedPhonePicked: false,
