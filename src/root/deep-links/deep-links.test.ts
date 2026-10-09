@@ -20,11 +20,6 @@ beforeEach(() => {
     .mockReturnValue(["ryt-demo"]);
 });
 
-const TEST_RECIPIENT = {
-  idType: RecipientIdType.Mobile,
-  idValue: "+60123456789",
-} as const;
-
 it.each([
   ["ryt-demo://transfer", "/transfer"],
   [
@@ -119,3 +114,8 @@ it("still drops links after the transfer's screens close on an approval whose an
     redirectSystemPath({ path: "ryt-demo://transfer", initial: false }),
   ).toBeNull();
 });
+
+const TEST_RECIPIENT = {
+  idType: RecipientIdType.Mobile,
+  idValue: "+60123456789",
+} as const;

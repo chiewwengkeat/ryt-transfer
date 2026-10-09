@@ -22,40 +22,6 @@ import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 import { scenarioTest } from "@/test/render/drive-app";
 
-const STILL_CHECKED =
-  "Your last transfer is still being checked. If you contact us, quote this reference:";
-
-async function sendRm100FromHomeToTheResultPage() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await fireEvent.changeText(
-    await screen.findByLabelText("Amount (RM)"),
-    "100",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  // Long enough for an approval whose answer is lost to be sent twice more, seconds apart.
-  await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 });
-  return view;
-}
-
-async function endTheSession() {
-  mswServer.use(http.all("*", () => new HttpResponse(null, { status: 401 })));
-  await act(async () => {
-    await requestJson("/any-request").catch(() => undefined);
-  });
-}
-
 it(
   "covers the app with its own screen, offering only to sign in again, when the bank says the session has ended",
   scenarioTest("transfer.session_ended", async () => {
@@ -216,3 +182,37 @@ it("quotes nothing when the session ends while Home still announces how an earli
     screen.findByText(/still being checked/, {}, { timeout: 500 }),
   ).rejects.toThrow("Unable to find an element with text");
 });
+
+const STILL_CHECKED =
+  "Your last transfer is still being checked. If you contact us, quote this reference:";
+
+async function sendRm100FromHomeToTheResultPage() {
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(
+    await screen.findByLabelText("Amount (RM)"),
+    "100",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  // Long enough for an approval whose answer is lost to be sent twice more, seconds apart.
+  await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 });
+  return view;
+}
+
+async function endTheSession() {
+  mswServer.use(http.all("*", () => new HttpResponse(null, { status: 401 })));
+  await act(async () => {
+    await requestJson("/any-request").catch(() => undefined);
+  });
+}

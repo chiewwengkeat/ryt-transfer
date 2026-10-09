@@ -24,35 +24,6 @@ import { pressHardwareBack } from "@/test/render/drive-app";
 import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
-function HomeBalance() {
-  const { data } = useQuery({
-    queryKey: ["balance"],
-    queryFn: () => requestJson<{ amount: string }>("/balance"),
-  });
-  return <Text>{data?.amount ?? "Loading balance"}</Text>;
-}
-
-const BALANCE_FAILURE = "Your balance can't be shown right now.";
-
-function HomeBalanceOrItsFailure() {
-  const balance = useQuery({
-    queryKey: ["balance"],
-    queryFn: () => requestJson<{ amount: string }>("/balance"),
-  });
-  useTrackScenarioShown(
-    balance.isError ? TransferScenarioId.StartUnexpected : undefined,
-  );
-  return balance.isError ? (
-    <BannerNotice message={BALANCE_FAILURE} />
-  ) : (
-    <Text>{balance.data?.amount ?? "Loading balance"}</Text>
-  );
-}
-
-function answerBalance(amount: string) {
-  mswServer.use(http.get("*/balance", () => HttpResponse.json({ amount })));
-}
-
 it("covers the app with the session-ended view when a request answers 401", async () => {
   answerBalance("RM 10.00");
   await renderRoute("/", {
@@ -273,3 +244,32 @@ it("answers an open PIN request as closed when the app's root goes away, so its 
 
   await waitFor(() => expect(pinAnswer).toBeNull());
 });
+
+function HomeBalance() {
+  const { data } = useQuery({
+    queryKey: ["balance"],
+    queryFn: () => requestJson<{ amount: string }>("/balance"),
+  });
+  return <Text>{data?.amount ?? "Loading balance"}</Text>;
+}
+
+const BALANCE_FAILURE = "Your balance can't be shown right now.";
+
+function HomeBalanceOrItsFailure() {
+  const balance = useQuery({
+    queryKey: ["balance"],
+    queryFn: () => requestJson<{ amount: string }>("/balance"),
+  });
+  useTrackScenarioShown(
+    balance.isError ? TransferScenarioId.StartUnexpected : undefined,
+  );
+  return balance.isError ? (
+    <BannerNotice message={BALANCE_FAILURE} />
+  ) : (
+    <Text>{balance.data?.amount ?? "Loading balance"}</Text>
+  );
+}
+
+function answerBalance(amount: string) {
+  mswServer.use(http.get("*/balance", () => HttpResponse.json({ amount })));
+}

@@ -5,13 +5,6 @@ import {
   transferFlowStore,
 } from "@/screens/transfer/flow-store/flow-store";
 
-const LINKABLE_PATHS = [
-  /^\/$/,
-  /^\/transfer$/,
-  /^\/transfer-history$/,
-  /^\/transfer-history\/[\w-]+$/,
-];
-
 export function redirectSystemPath({
   path,
   initial,
@@ -37,3 +30,10 @@ export function redirectSystemPath({
     ? pathname
     : "/";
 }
+
+const LINKABLE_PATHS = [
+  /^\/$/,
+  /^\/transfer$/,
+  /^\/transfer-history$/,
+  /^\/transfer-history\/[\w-]+$/,
+];

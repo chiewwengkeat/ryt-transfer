@@ -12,14 +12,6 @@ import { endSessionWithAnyRequest } from "@/test/render/interrupt-app";
 import { renderRoute } from "@/test/render/render-route";
 import { walkToTransferReview } from "@/test/render/drive-app";
 
-const TOO_MANY_NAME_CHECKS =
-  "Too many name checks in a short time. Try again in a minute.";
-
-async function reviewRm100ToTheTestRecipient() {
-  await renderRoute("/transfer");
-  await walkToTransferReview();
-}
-
 it("asks a name check the ended session interrupted again by itself once they sign back in", async () => {
   const { recipient } = await lookUpTestRecipient("012-345 6789");
   mswServer.use(
@@ -270,3 +262,11 @@ it("keeps the name check review answered when they sign back in, and reads the r
     expect.stringMatching(/\/recipients\/lookup$/),
   );
 });
+
+const TOO_MANY_NAME_CHECKS =
+  "Too many name checks in a short time. Try again in a minute.";
+
+async function reviewRm100ToTheTestRecipient() {
+  await renderRoute("/transfer");
+  await walkToTransferReview();
+}

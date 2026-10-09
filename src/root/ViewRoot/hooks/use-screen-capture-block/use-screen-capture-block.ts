@@ -10,13 +10,6 @@ import {
 } from "@/shared/platform/screen-capture/screen-capture";
 import { demoLayer } from "@/root/app-launch/app-launch";
 
-const RECEIPT_ROUTES = new Set([
-  "/transfer/result/[transferId]",
-  "/transfer-history/[transferId]",
-]);
-// Outlasts a screen transition, whose end only the screen itself is told of: until then the screen being left shows.
-const RECEIPT_SETTLE_MS = 600;
-
 export function useScreenCaptureBlock() {
   const routePattern = `/${useSegments().join("/")}`;
   const pathname = usePathname();
@@ -77,3 +70,10 @@ export function useScreenCaptureBlock() {
     };
   }, [blocked]);
 }
+
+const RECEIPT_ROUTES = new Set([
+  "/transfer/result/[transferId]",
+  "/transfer-history/[transferId]",
+]);
+// Outlasts a screen transition, whose end only the screen itself is told of: until then the screen being left shows.
+const RECEIPT_SETTLE_MS = 600;

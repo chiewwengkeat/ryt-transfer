@@ -34,48 +34,6 @@ import {
 import { crashTheScreenOfASettledReceipt } from "@/test/render/interrupt-app";
 import { renderRoute } from "@/test/render/render-route";
 
-function ScreenWithASheet() {
-  const [sheetOpen, setSheetOpen] = useState(false);
-  return (
-    <>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => {
-          setSheetOpen(true);
-        }}
-      >
-        <Text>Choose a bank</Text>
-      </Pressable>
-      {sheetOpen && (
-        <BottomSheetFrame
-          title="Banks"
-          closeLabel="Close the banks"
-          onClose={() => {
-            setSheetOpen(false);
-          }}
-        >
-          <Text>Maybank</Text>
-        </BottomSheetFrame>
-      )}
-    </>
-  );
-}
-
-async function renderDemoRoot() {
-  await renderRoute("/", {
-    appDir: "src/app",
-    overrides: { index: ScreenWithASheet },
-  });
-}
-
-async function readTheAccountAsAScreenWould() {
-  // The bank answers after a delay, which the route's fake timers would hold forever.
-  jest.useRealTimers();
-  await act(async () => {
-    await requestJson("/accounts/primary").catch(() => undefined);
-  });
-}
-
 it("shows a scenario picked from the Demo menu in a banner, whose ✕ returns to normal", async () => {
   await renderDemoRoot();
 
@@ -253,49 +211,6 @@ it("stops a transfer's approval before any face or fingerprint prompt while No b
   expect(biometricPromptsShown()).toEqual([]);
 });
 
-async function sendRm100FromHomeAndReturn() {
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await fireEvent.changeText(
-    await screen.findByLabelText("Amount (RM)"),
-    "100",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  await fireEvent.press(await screen.findByRole("button", { name: "Done" }));
-}
-
-async function startRm100TransferFromHomeUnderNoBiometrics() {
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Demo menu" }),
-  );
-  await fireEvent.press(screen.getByRole("radio", { name: "No biometrics" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await fireEvent.changeText(
-    await screen.findByLabelText("DuitNow mobile number"),
-    "012-345 6789",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await fireEvent.changeText(
-    await screen.findByLabelText("Amount (RM)"),
-    "100",
-  );
-  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-}
-
 it("puts Home back to the demo's opening balance and limit, and a transfer after the reset still goes through", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/");
@@ -460,3 +375,88 @@ it("leaves capture allowed in a demo build with no scenario picked when the scre
 
   expect(isScreenCaptureBlocked()).toBe(false);
 });
+
+function ScreenWithASheet() {
+  const [sheetOpen, setSheetOpen] = useState(false);
+  return (
+    <>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          setSheetOpen(true);
+        }}
+      >
+        <Text>Choose a bank</Text>
+      </Pressable>
+      {sheetOpen && (
+        <BottomSheetFrame
+          title="Banks"
+          closeLabel="Close the banks"
+          onClose={() => {
+            setSheetOpen(false);
+          }}
+        >
+          <Text>Maybank</Text>
+        </BottomSheetFrame>
+      )}
+    </>
+  );
+}
+
+async function renderDemoRoot() {
+  await renderRoute("/", {
+    appDir: "src/app",
+    overrides: { index: ScreenWithASheet },
+  });
+}
+
+async function readTheAccountAsAScreenWould() {
+  // The bank answers after a delay, which the route's fake timers would hold forever.
+  jest.useRealTimers();
+  await act(async () => {
+    await requestJson("/accounts/primary").catch(() => undefined);
+  });
+}
+
+async function sendRm100FromHomeAndReturn() {
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(
+    await screen.findByLabelText("Amount (RM)"),
+    "100",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await fireEvent.press(await screen.findByRole("button", { name: "Done" }));
+}
+
+async function startRm100TransferFromHomeUnderNoBiometrics() {
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Demo menu" }),
+  );
+  await fireEvent.press(screen.getByRole("radio", { name: "No biometrics" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer", disabled: false }),
+  );
+  await fireEvent.changeText(
+    await screen.findByLabelText("DuitNow mobile number"),
+    "012-345 6789",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  await fireEvent.changeText(
+    await screen.findByLabelText("Amount (RM)"),
+    "100",
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "Review" }));
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+}

@@ -13,13 +13,6 @@ import { createQueryClient } from "./query-client";
 
 // ⛔ gcTime 0 on every query and mutation here: a cached entry's 5-minute timer keeps a single-file run alive.
 
-const OFFLINE = { isConnected: false, isInternetReachable: false };
-const BALANCE_READ = "GET /accounts/primary";
-
-function letPendingFetchesRun() {
-  return new Promise((resolve) => setTimeout(resolve, 10));
-}
-
 it("holds a read while the phone is offline and sends it once the phone reconnects", async () => {
   const client = createQueryClient();
   client.mount();
@@ -384,3 +377,10 @@ it.each([
     client.unmount();
   },
 );
+
+const OFFLINE = { isConnected: false, isInternetReachable: false };
+const BALANCE_READ = "GET /accounts/primary";
+
+function letPendingFetchesRun() {
+  return new Promise((resolve) => setTimeout(resolve, 10));
+}

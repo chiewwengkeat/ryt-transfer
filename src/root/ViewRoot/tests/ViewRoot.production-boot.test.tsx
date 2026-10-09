@@ -13,6 +13,19 @@ afterEach(() => {
   delete process.env.EXPO_PUBLIC_APP_VARIANT;
 });
 
+it("boots the app root as a build with no variant does, never loading the fake bank", async () => {
+  launchShellBuiltAs(undefined);
+  await renderRoute("/");
+
+  expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
+});
+
+it("loads the fake bank in a demo build, which the boot above would fail on", () => {
+  expect(() => {
+    launchShellBuiltAs("demo");
+  }).toThrow("The fake bank's loader was touched.");
+});
+
 // Isolated: setup has already loaded the launch, and a loaded module is handed back without running its gate again.
 function launchShellBuiltAs(variant: string | undefined) {
   if (variant === undefined) delete process.env.EXPO_PUBLIC_APP_VARIANT;
@@ -27,16 +40,3 @@ function launchShellBuiltAs(variant: string | undefined) {
     globalThis.fetch = fetchMswIntercepts;
   }
 }
-
-it("boots the app root as a build with no variant does, never loading the fake bank", async () => {
-  launchShellBuiltAs(undefined);
-  await renderRoute("/");
-
-  expect(await screen.findByText("RM 12,845.50")).toBeOnTheScreen();
-});
-
-it("loads the fake bank in a demo build, which the boot above would fail on", () => {
-  expect(() => {
-    launchShellBuiltAs("demo");
-  }).toThrow("The fake bank's loader was touched.");
-});
