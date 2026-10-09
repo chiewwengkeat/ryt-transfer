@@ -2,12 +2,12 @@ import { useTranslation } from "react-i18next";
 
 import { readRegisterApprovalKeysRefusal } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
 import { RegisterApprovalKeysErrorCode } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
-import { registerNewApprovalKeys } from "@/domains/approval/hooks/approval-keys";
+import { registerNewApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
 import {
   isApprovalPinLocked,
   rememberApprovalPinLocked,
-} from "@/domains/approval/hooks/approval-pin-lock";
-import { askForApprovalPin } from "@/domains/approval/hooks/approval-pin-sheet";
+} from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
+import { askForApprovalPin } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { reportError } from "@/shared/observability/observability";
 

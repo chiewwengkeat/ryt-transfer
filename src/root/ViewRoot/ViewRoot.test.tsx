@@ -5,12 +5,12 @@ import { http, HttpResponse } from "msw";
 import { AccessibilityInfo, AppState, Pressable, Text } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
-import { askForApprovalPin } from "@/domains/approval/hooks/approval-pin-sheet";
+import { askForApprovalPin } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import {
   PendingTransferStage,
   writePendingTransfer,
-} from "@/domains/transfer/hooks/pending-transfers";
-import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
+} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { requestJson } from "@/shared/http/transport/transport";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";

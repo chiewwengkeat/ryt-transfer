@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { isApprovalRefusedOnThisPhone } from "@/domains/approval/hooks/device-integrity-verdict";
+import { isApprovalRefusedOnThisPhone } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   dispatchTransferFlow,

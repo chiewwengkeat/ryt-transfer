@@ -3,12 +3,12 @@ import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
-import { hasApprovalKeysOnFile } from "@/domains/approval/hooks/approval-keys";
+import { hasApprovalKeysOnFile } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { TransferStatus } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import {
   PendingTransferStage,
   writePendingTransfer,
-} from "@/domains/transfer/hooks/pending-transfers";
+} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import { requestJson } from "@/shared/http/transport/transport";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";

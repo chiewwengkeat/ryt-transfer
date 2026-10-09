@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 
-import { closeApprovalPinSheet } from "@/domains/approval/hooks/approval-pin-sheet";
+import { closeApprovalPinSheet } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import {
   ApproveRequestNotSentError,
   readApproveTransferRefusal,
@@ -14,8 +14,8 @@ import {
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
-import { settlePendingTransfer } from "@/domains/transfer/hooks/transfer-status-checks";
+import { clearPendingTransfer } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
+import { settlePendingTransfer } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   dispatchTransferFlow,

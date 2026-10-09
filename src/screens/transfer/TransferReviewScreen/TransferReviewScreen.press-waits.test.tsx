@@ -2,8 +2,8 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http } from "msw";
 
-import { rememberApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-lock";
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import { rememberApprovalPinLocked } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   biometricPromptsShown,
   biometricsLibraryDouble,

@@ -17,7 +17,7 @@ import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-
 import {
   PendingTransferStage,
   writePendingTransfer,
-} from "@/domains/transfer/hooks/pending-transfers";
+} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import {
   lookUpTestRecipient,

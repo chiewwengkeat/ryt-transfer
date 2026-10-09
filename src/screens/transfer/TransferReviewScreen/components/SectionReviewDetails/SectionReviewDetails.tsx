@@ -13,7 +13,7 @@ import {
   type LookupRecipientResponse,
   type RecipientIdType,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import {
   scenarioWordsKey,
   TransferScenarioId,

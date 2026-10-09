@@ -2,7 +2,7 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
-import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
+import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import {
   TransferFunds,
   TransferStatus,
@@ -10,7 +10,7 @@ import {
 import {
   PendingTransferStage,
   writePendingTransfer,
-} from "@/domains/transfer/hooks/pending-transfers";
+} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { sendToBank, startTestTransfer } from "@/test/bank-client";
 import {
   biometricPromptsShown,

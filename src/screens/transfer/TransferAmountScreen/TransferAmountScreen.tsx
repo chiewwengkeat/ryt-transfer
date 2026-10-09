@@ -10,7 +10,7 @@ import {
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
 import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { useBalanceScenarios } from "@/domains/transfer/hooks/use-balance-scenarios/use-balance-scenarios";
-import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { formatMoney, parseTypedAmount } from "@/shared/lib/money/money";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";

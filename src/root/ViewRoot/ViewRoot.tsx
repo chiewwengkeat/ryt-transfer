@@ -3,9 +3,9 @@ import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
-import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
+import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
+import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 import {
   holdTransferScenarioReports,

@@ -13,9 +13,9 @@ import {
   isSettledTransferOutcome,
   selectTransferWithOutcome,
   type SETTLED_TRANSFER_OUTCOMES,
-} from "../api/get-transfer/get-transfer";
-import { transferKeys } from "../api/transfer.keys";
-import { listPendingTransfers } from "./pending-transfers";
+} from "@/domains/transfer/api/get-transfer/get-transfer";
+import { transferKeys } from "@/domains/transfer/api/transfer.keys";
+import { listPendingTransfers } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 
 export enum NextLaunchNotice {
   Completed = "completed",

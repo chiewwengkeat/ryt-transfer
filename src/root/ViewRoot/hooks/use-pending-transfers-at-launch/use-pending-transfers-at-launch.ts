@@ -3,13 +3,13 @@ import { router } from "expo-router";
 import { useEffect } from "react";
 
 import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
-import { refreshPendingTransferNotices } from "@/domains/transfer/hooks/pending-transfer-notices";
+import { refreshPendingTransferNotices } from "@/domains/transfer/lib/pending-transfer-notices/pending-transfer-notices";
 import {
   discardOtherCustomersPendingTransfers,
   listPendingTransfers,
   PendingTransferStage,
-} from "@/domains/transfer/hooks/pending-transfers";
-import { checkPendingTransferOnce } from "@/domains/transfer/hooks/transfer-status-checks";
+} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
+import { checkPendingTransferOnce } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import { reportError } from "@/shared/observability/observability";

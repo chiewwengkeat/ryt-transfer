@@ -5,10 +5,10 @@ import { useTranslation } from "react-i18next";
 import {
   BiometricSignOutcome,
   readBiometricSensorRefusal,
-} from "@/domains/approval/hooks/approval-keys";
-import { isApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-lock";
-import { showApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-sheet";
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+} from "@/domains/approval/lib/approval-keys/approval-keys";
+import { isApprovalPinLocked } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
+import { showApprovalPinLocked } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
 import type { CreateTransferResponse } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";

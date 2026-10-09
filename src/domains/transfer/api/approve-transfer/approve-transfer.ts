@@ -10,7 +10,7 @@ import type { WireMoney } from "@/shared/lib/money/money";
 import {
   PendingTransferStage,
   writePendingTransfer,
-} from "../../hooks/pending-transfers";
+} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { getTransferOptions } from "../get-transfer/get-transfer";
 import type {
   ApproveTransferErrorResponse,

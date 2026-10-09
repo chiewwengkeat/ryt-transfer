@@ -17,14 +17,14 @@ import {
   isSettledTransferOutcome,
   outcomeOfTransfer,
   useGetTransfer,
-} from "../api/get-transfer/get-transfer";
-import { GetTransferErrorCode } from "../api/get-transfer/get-transfer.type";
-import { refreshPendingTransferNotices } from "./pending-transfer-notices";
+} from "@/domains/transfer/api/get-transfer/get-transfer";
+import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { refreshPendingTransferNotices } from "@/domains/transfer/lib/pending-transfer-notices/pending-transfer-notices";
 import {
   clearPendingTransfer,
   PendingTransferStage,
   updatePendingTransfer,
-} from "./pending-transfers";
+} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 
 // The schedule is each read's retry, front-loaded while the bank's answer is likeliest to land.
 const STATUS_READ_TIMES_MS = [2_000, 4_000, 8_000, 16_000];

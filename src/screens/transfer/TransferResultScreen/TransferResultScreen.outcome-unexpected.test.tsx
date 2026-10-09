@@ -10,7 +10,7 @@ import {
 import {
   PendingTransferStage,
   writePendingTransfer,
-} from "@/domains/transfer/hooks/pending-transfers";
+} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import {
   pairTestPhone,
   sendToBank,

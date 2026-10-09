@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import { getFixedT } from "i18next";
 
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
 import { findAccessibleGroupAround } from "@/test/accessible-group";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";

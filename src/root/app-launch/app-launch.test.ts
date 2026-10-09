@@ -1,6 +1,6 @@
 import { waitFor } from "@testing-library/react-native";
 
-import type * as ApprovalKeys from "@/domains/approval/hooks/approval-keys";
+import type * as ApprovalKeys from "@/domains/approval/lib/approval-keys/approval-keys";
 import type * as SecureStorage from "@/shared/platform/secure-storage/secure-storage";
 import { phoneKeyOptions } from "@/test/biometrics-double";
 import { kvStoreDouble } from "@/test/harness/native-doubles";
@@ -13,7 +13,7 @@ it("forgets the approval keys a reinstalled app finds left from before", async (
   kvStoreDouble.removeItemSync("install-marker");
   await jest.isolateModulesAsync(async () => {
     const approvalKeys = jest.requireActual<typeof ApprovalKeys>(
-      "@/domains/approval/hooks/approval-keys",
+      "@/domains/approval/lib/approval-keys/approval-keys",
     );
     await approvalKeys.createApprovalKeys();
     await approvalKeys.saveApprovalKeyIds({
@@ -35,7 +35,7 @@ it("keeps the approval keys when the app was not reinstalled", async () => {
   kvStoreDouble.setItemSync("install-marker", "2026-10-01T00:00:00.000Z");
   await jest.isolateModulesAsync(async () => {
     const approvalKeys = jest.requireActual<typeof ApprovalKeys>(
-      "@/domains/approval/hooks/approval-keys",
+      "@/domains/approval/lib/approval-keys/approval-keys",
     );
     const { writeSecureRecord } = jest.requireActual<typeof SecureStorage>(
       "@/shared/platform/secure-storage/secure-storage",

@@ -1,9 +1,9 @@
 import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
-import { closeApprovalPinSheet } from "@/domains/approval/hooks/approval-pin-sheet";
+import { closeApprovalPinSheet } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import {
   clearPendingTransfer,
   listPendingTransfers,
-} from "@/domains/transfer/hooks/pending-transfers";
+} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { queryClient } from "@/root/query-client/query-client";
 

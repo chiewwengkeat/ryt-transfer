@@ -4,7 +4,7 @@ import {
   forgetApprovalPinLock,
   isApprovalPinLocked,
   rememberApprovalPinLocked,
-} from "@/domains/approval/hooks/approval-pin-lock";
+} from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
 import { secureStoreNativeDouble } from "@/test/harness/native-doubles";
 
 import { useApprovalPinLocked } from "./use-approval-pin-locked";

@@ -14,9 +14,9 @@ import { isSettledTransferOutcome } from "../../api/get-transfer/get-transfer";
 import {
   refreshPendingTransferNotices,
   usePendingTransferNotices,
-} from "../../hooks/pending-transfer-notices";
-import { checkPendingTransferOnce } from "../../hooks/transfer-status-checks";
-import { useTrackScenarioShown } from "../../hooks/use-track-scenario-shown";
+} from "@/domains/transfer/lib/pending-transfer-notices/pending-transfer-notices";
+import { checkPendingTransferOnce } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 
 interface Props {
   onEarlierTransferSettled: () => void;

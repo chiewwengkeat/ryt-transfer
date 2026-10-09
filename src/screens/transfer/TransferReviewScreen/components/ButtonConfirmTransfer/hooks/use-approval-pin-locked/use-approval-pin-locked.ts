@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   isApprovalPinLocked,
   subscribeToApprovalPinLock,
-} from "@/domains/approval/hooks/approval-pin-lock";
+} from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
 
 export function useApprovalPinLocked() {
   // Unknown, not unlocked, until the first read answers: a guess could create a transfer only a PIN could approve.

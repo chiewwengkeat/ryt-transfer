@@ -1,11 +1,11 @@
 import type { TFunction } from "i18next";
 
-import { signWithPossessionKey } from "@/domains/approval/hooks/approval-keys";
+import { signWithPossessionKey } from "@/domains/approval/lib/approval-keys/approval-keys";
 import {
   isApprovalPinLocked,
   rememberApprovalPinLocked,
-} from "@/domains/approval/hooks/approval-pin-lock";
-import { askForApprovalPin } from "@/domains/approval/hooks/approval-pin-sheet";
+} from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
+import { askForApprovalPin } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import { readApproveTransferRefusal } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import {
   ApproveTransferErrorCode,

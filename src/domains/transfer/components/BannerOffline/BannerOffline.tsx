@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { useIsOffline } from "@/shared/platform/offline/offline";
 import { spacing } from "@/shared/theme/theme";

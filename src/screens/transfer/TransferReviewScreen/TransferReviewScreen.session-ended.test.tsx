@@ -3,7 +3,7 @@ import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { lookUpTestRecipient } from "@/test/bank-client";
 import {
   biometricPromptsShown,

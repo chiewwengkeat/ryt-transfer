@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
+import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import {
   scenarioWordsKey,
   TransferScenarioId,

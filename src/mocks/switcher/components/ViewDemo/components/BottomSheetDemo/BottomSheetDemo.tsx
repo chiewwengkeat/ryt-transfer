@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useStore } from "zustand";
 
-import { notifyApprovalPinReset } from "@/domains/approval/hooks/approval-settings";
+import { notifyApprovalPinReset } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   clearTransferScenario,

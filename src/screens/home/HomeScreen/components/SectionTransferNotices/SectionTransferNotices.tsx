@@ -9,8 +9,8 @@ import BannerEarlierTransferUnconfirmed from "@/domains/transfer/components/Bann
 import {
   refreshPendingTransferNotices,
   usePendingTransferNotices,
-} from "@/domains/transfer/hooks/pending-transfer-notices";
-import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
+} from "@/domains/transfer/lib/pending-transfer-notices/pending-transfer-notices";
+import { clearPendingTransfer } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { formatMoney } from "@/shared/lib/money/money";
 import { reportError } from "@/shared/observability/observability";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";

@@ -6,7 +6,7 @@ import { AccessibilityInfo, Platform } from "react-native";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import {
   TransferFunds,
@@ -18,7 +18,7 @@ import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-
 import {
   PendingTransferStage,
   writePendingTransfer,
-} from "@/domains/transfer/hooks/pending-transfers";
+} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { reportRequestOutcome } from "@/shared/platform/offline/offline";

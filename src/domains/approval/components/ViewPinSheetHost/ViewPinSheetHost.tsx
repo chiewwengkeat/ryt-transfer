@@ -5,7 +5,7 @@ import BottomSheetPin from "./components/BottomSheetPin/BottomSheetPin";
 import {
   ApprovalPinSheetStep,
   approvalPinSheetStore,
-} from "@/domains/approval/hooks/approval-pin-sheet";
+} from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 
 export default function ViewPinSheetHost() {

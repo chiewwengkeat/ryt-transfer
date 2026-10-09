@@ -1,7 +1,7 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http } from "msw";
 
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { biometricPromptsShown } from "@/test/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/demo-pairing";
 import { pressHardwareBack } from "@/test/hardware-back";

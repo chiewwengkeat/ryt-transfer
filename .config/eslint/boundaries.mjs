@@ -109,10 +109,7 @@ const domainPublicFiles = [
   {
     element: {
       type: "domain",
-      fileInternalPath: [
-        "api/{{ to.element.captured.area }}.keys.ts",
-        "hooks/*.ts",
-      ],
+      fileInternalPath: "api/{{ to.element.captured.area }}.keys.ts",
     },
   },
 ];

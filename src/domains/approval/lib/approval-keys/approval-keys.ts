@@ -17,7 +17,7 @@ import {
   writeSecureRecord,
 } from "@/shared/platform/secure-storage/secure-storage";
 
-import { registerApprovalKeys } from "../api/register-approval-keys/register-approval-keys";
+import { registerApprovalKeys } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
 
 export enum BiometricSignOutcome {
   Signed = "signed",

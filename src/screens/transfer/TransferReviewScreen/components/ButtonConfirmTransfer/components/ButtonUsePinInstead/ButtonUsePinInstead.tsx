@@ -6,8 +6,8 @@ import { useStore } from "zustand";
 import {
   BiometricSignOutcome,
   readBiometricSensorRefusal,
-} from "@/domains/approval/hooks/approval-keys";
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+} from "@/domains/approval/lib/approval-keys/approval-keys";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
 interface Props {

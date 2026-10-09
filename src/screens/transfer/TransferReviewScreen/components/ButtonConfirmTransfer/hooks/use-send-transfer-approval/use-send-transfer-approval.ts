@@ -9,15 +9,15 @@ import {
   approvalPinSheetStore,
   closeApprovalPinSheet,
   showApprovalPinLocked,
-} from "@/domains/approval/hooks/approval-pin-sheet";
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+} from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   buildSignedApprovalText,
   useApproveTransfer,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import type { ApproveTransferRequest } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
-import { clearPendingTransfer } from "@/domains/transfer/hooks/pending-transfers";
-import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown";
+import { clearPendingTransfer } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
+import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   ApprovalPath,

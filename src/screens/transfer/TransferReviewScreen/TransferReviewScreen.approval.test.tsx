@@ -4,13 +4,13 @@ import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
-import { rememberApprovalPinLocked } from "@/domains/approval/hooks/approval-pin-lock";
-import { approvalPinSheetStore } from "@/domains/approval/hooks/approval-pin-sheet";
+import { rememberApprovalPinLocked } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
+import { approvalPinSheetStore } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import {
   approvalSettingsStore,
   notifyApprovalPinReset,
-} from "@/domains/approval/hooks/approval-settings";
-import { listPendingTransfers } from "@/domains/transfer/hooks/pending-transfers";
+} from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
+import { listPendingTransfers } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { readBankBalanceMinor, sendToBank } from "@/test/bank-client";
 import {

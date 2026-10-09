@@ -4,7 +4,7 @@ import {
   BiometricSignOutcome,
   replaceBiometricApprovalKey,
   signWithBiometricKey,
-} from "@/domains/approval/hooks/approval-keys";
+} from "@/domains/approval/lib/approval-keys/approval-keys";
 import { readApproveTransferRefusal } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";

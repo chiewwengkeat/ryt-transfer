@@ -1,5 +1,5 @@
-import { deleteApprovalKeys } from "@/domains/approval/hooks/approval-keys";
-import { warmUpDeviceIntegrityCheck } from "@/domains/approval/hooks/device-integrity-verdict";
+import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
+import { warmUpDeviceIntegrityCheck } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import { isProductionBuild } from "@/shared/config/config";
 import { configureTransport } from "@/shared/http/transport/transport";

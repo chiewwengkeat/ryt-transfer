@@ -1,6 +1,6 @@
 import { createStore } from "zustand/vanilla";
 
-import { forgetApprovalPinLock } from "./approval-pin-lock";
+import { forgetApprovalPinLock } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
 
 // The host app's "Enable Biometrics" setting, on until the customer turns it off there.
 export const approvalSettingsStore = createStore(() => ({

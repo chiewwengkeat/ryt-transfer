@@ -7,7 +7,7 @@ import {
   hasApprovalKeysOnFile,
   createApprovalKeys,
   saveApprovalKeyIds,
-} from "@/domains/approval/hooks/approval-keys";
+} from "@/domains/approval/lib/approval-keys/approval-keys";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { bankState } from "@/mocks/bank/state/state";
 import { handlersForActiveScenario } from "@/mocks/bank/bank";

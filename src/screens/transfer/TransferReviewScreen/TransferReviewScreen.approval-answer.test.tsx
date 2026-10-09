@@ -6,8 +6,8 @@ import { http, HttpResponse } from "msw";
 import {
   ApprovalPinSheetStep,
   approvalPinSheetStore,
-} from "@/domains/approval/hooks/approval-pin-sheet";
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
+} from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   type GetTransferResponse,
   TransferFailureReason,

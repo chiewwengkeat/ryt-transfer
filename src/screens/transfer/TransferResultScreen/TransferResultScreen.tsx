@@ -19,7 +19,7 @@ import {
   settlePendingTransfer,
   TransferReadFailure,
   useTransferStatusCheck,
-} from "@/domains/transfer/hooks/transfer-status-checks";
+} from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";

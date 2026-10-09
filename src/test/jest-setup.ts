@@ -13,8 +13,8 @@ import {
 import type * as ContextStubs from "expo-router/build/testing-library/context-stubs";
 import i18next, { changeLanguage } from "i18next";
 
-import { approvalSettingsStore } from "@/domains/approval/hooks/approval-settings";
-import { rootedPhoneDemoPickStore } from "@/domains/approval/hooks/device-integrity-verdict";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
+import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { setObservabilitySink } from "@/shared/observability/observability";
 import { forgetRequestOutcomes } from "@/shared/platform/offline/offline";
