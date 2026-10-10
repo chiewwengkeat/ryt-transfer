@@ -11,6 +11,8 @@ import {
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
 
+import { OUT_OF_DATE } from "./TransferHistoryScreen.helper";
+
 it("offers Retry when the next page fails, asks no more by itself, and shows the page once a retry lands", async () => {
   serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
   const recoverLaterPages = failTransferHistoryPages("later");
@@ -236,4 +238,3 @@ const LIM_ON_4_OCTOBER = buildHistoryTransfer({
   registeredName: "Lim Wei Jie",
   createdAt: "2026-10-04T13:05:00+08:00",
 });
-const OUT_OF_DATE = "Couldn't refresh — this list may be out of date";

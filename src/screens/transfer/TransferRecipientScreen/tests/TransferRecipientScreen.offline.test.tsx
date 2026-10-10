@@ -10,6 +10,8 @@ import {
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
+import { UNKNOWN_BANK_CODE } from "./TransferRecipientScreen.helper";
+
 it("says in the bank sheet that the banks wait for a connection, offering Try again, once the phone has none", async () => {
   mswServer.use(
     http.get("*/banks", () =>
@@ -157,9 +159,5 @@ it("reports being offline again when the connection drops a second time on the r
     reportedScenarios().filter((scenario) => scenario === "transfer.offline"),
   ).toHaveLength(2);
 });
-
-const UNKNOWN_BANK_CODE = {
-  error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
-};
 const OFFLINE_NOTICE =
   "You're offline. Sending is paused until Ryt can be reached.";

@@ -11,6 +11,8 @@ import {
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
 
+import { OUT_OF_DATE } from "./TransferHistoryScreen.helper";
+
 it("asks for the newest page once back online when History opened offline, and shows it", async () => {
   serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
   await renderRoute("/");
@@ -249,4 +251,3 @@ const TAN_ON_6_OCTOBER = buildHistoryTransfer({
 });
 const OFFLINE = { isConnected: false, isInternetReachable: false };
 const ONLINE = { isConnected: true, isInternetReachable: true };
-const OUT_OF_DATE = "Couldn't refresh — this list may be out of date";

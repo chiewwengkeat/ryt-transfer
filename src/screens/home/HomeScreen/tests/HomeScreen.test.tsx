@@ -21,6 +21,8 @@ import {
 } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
+import { pressEveryRecentRecipientExpectingItDisabled } from "./HomeScreen.helper";
+
 it(
   "shows the balance and how much more can be sent today",
   scenarioTest("transfer.balance_and_limit_shown", async () => {
@@ -421,10 +423,3 @@ it("opens the transfer history from Home", async () => {
 const UNKNOWN_BANK_CODE = {
   error: { code: "NEW_BANK_CODE", message: "Unknown to this app." },
 };
-
-async function pressEveryRecentRecipientExpectingItDisabled() {
-  for (const recent of await screen.findAllByRole("button", { name: /••••/ })) {
-    expect(recent).toBeDisabled();
-    await fireEvent.press(recent);
-  }
-}

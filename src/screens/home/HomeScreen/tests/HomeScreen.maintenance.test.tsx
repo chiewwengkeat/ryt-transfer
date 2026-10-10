@@ -14,6 +14,8 @@ import {
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
+import { pressEveryRecentRecipientExpectingItDisabled } from "./HomeScreen.helper";
+
 it(
   "shows the balance during maintenance, says until when transfers are unavailable, and starts none from the recent recipients",
   scenarioTest("transfer.under_maintenance", async () => {
@@ -220,11 +222,4 @@ async function returnToFrontHoldingTheLimitsRead() {
   });
   await act(() => jest.advanceTimersByTimeAsync(100));
   return () => answerLimitsAgain();
-}
-
-async function pressEveryRecentRecipientExpectingItDisabled() {
-  for (const recent of await screen.findAllByRole("button", { name: /••••/ })) {
-    expect(recent).toBeDisabled();
-    await fireEvent.press(recent);
-  }
 }
