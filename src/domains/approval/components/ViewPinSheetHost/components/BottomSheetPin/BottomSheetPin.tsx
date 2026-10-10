@@ -14,6 +14,7 @@ interface Props {
   message: string;
   detail?: string;
   refusal?: string;
+  offlineDisabledReason: string;
   pinLocked: boolean;
   sending: boolean;
   onSubmitPin: (pin: string) => void;
@@ -23,12 +24,13 @@ export default function BottomSheetPin({
   message,
   detail,
   refusal,
+  offlineDisabledReason,
   pinLocked,
   sending,
   onSubmitPin,
   onClose,
 }: Props) {
-  const { t } = useTranslation(["approval", "transfer"]);
+  const { t } = useTranslation(["approval"]);
   const [pin, setPin] = useState("");
   const [touchDropped, setTouchDropped] = useState(false);
   const offline = useIsOffline();
@@ -43,7 +45,7 @@ export default function BottomSheetPin({
   const approveDisabledReason = sending
     ? undefined
     : offline
-      ? t("transfer:common.offline.disabled_reason")
+      ? offlineDisabledReason
       : pin.length < APPROVAL_PIN_LENGTH
         ? t("bottom_sheet_pin.enter_every_digit", {
             length: APPROVAL_PIN_LENGTH,

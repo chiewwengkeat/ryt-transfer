@@ -8,7 +8,10 @@ import {
 } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 
-export default function ViewPinSheetHost() {
+interface Props {
+  offlineDisabledReason: string;
+}
+export default function ViewPinSheetHost({ offlineDisabledReason }: Props) {
   const pinSheet = useStore(approvalPinSheetStore);
   // An ended session or a root going away closes the sheet with its flow; only the root's going away answers as the
   // person closing it would, since the session's end has a report of its own.
@@ -38,6 +41,7 @@ export default function ViewPinSheetHost() {
       message={pinSheet.message}
       detail={pinSheet.detail}
       refusal={pinSheet.refusal}
+      offlineDisabledReason={offlineDisabledReason}
       pinLocked={pinSheet.step === ApprovalPinSheetStep.PinLocked}
       sending={pinSheet.step === ApprovalPinSheetStep.Sending}
       onSubmitPin={pinSheet.answer}
