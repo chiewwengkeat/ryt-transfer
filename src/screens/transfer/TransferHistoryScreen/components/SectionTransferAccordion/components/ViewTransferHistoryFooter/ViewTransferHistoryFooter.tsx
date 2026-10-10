@@ -64,5 +64,5 @@ export default function ViewTransferHistoryFooter({
 }
 
 const styles = StyleSheet.create({
-  footer: { gap: spacing.sm, padding: spacing.md },
+  footer: { gap: spacing.sm, paddingVertical: spacing.md },
 });
