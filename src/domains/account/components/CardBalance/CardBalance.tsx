@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
       typography.body.lineHeight +
       spacing.sm +
       minTouchTarget,
+    justifyContent: "center",
   },
   balance: { ...typography.heading, color: colors.textPrimary },
 });
