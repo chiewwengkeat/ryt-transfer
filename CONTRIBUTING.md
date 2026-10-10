@@ -111,7 +111,11 @@ Lint fails a breach of each of these (`eslint.config.mjs`, with the repository's
 - A hook file is kebab-case and named for the hook it exports: `use-send-transfer-approval.ts` exports `useSendTransferApproval`.
 - Only files inside a component's folder import its internal files; code elsewhere imports the component itself.
 
-Review holds the rules no tool checks: what a screen's folder holds, a folder per module and per hook, a `../` path lint cannot see, only `use-*` modules in `hooks/`, where tests and their helpers sit, role files imported only from inside their folder, every size limit but the test cap, how a folded piece is written, the namespace rule for `t`, the `.check.test` suffix for repository checks only, and whether a piece knows about banking.
+Review holds the rules no tool checks: what a screen's folder holds, a folder per module and per hook, a `../` path lint cannot see, only `use-*` modules in `hooks/`, where tests and their helpers sit, role files imported only from inside their folder, every size limit but the test cap, how a folded piece is written, the namespace rule for `t`, the `.check.test` suffix for repository checks only, whether a piece knows about banking, and `collapsable={false}` on a `View` that flattens in only some states.
+
+## Views that flatten
+
+A `View` that in one state has nothing that makes it a native view, and in another has a background, a border, opacity below 1, a transform, `aria-hidden` or any other prop React Native's `ViewShadowNode.cpp` lists as making one, carries `collapsable={false}`: Android can lose a view that flattens and turns real again. A `Pressable` or an `Animated.View` never flattens.
 
 ## Adding a scenario
 
