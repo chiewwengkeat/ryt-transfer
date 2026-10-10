@@ -42,7 +42,8 @@
   "bottom_sheet_bank": {
     "title": "Pilih bank",
     "search_label": "Cari bank",
-    "no_match": "Tiada bank yang sepadan dengan carian anda."
+    "no_match": "Tiada bank yang sepadan dengan carian anda.",
+    "retry": "Cuba lagi"
   },
   "amount": {
     "title": "Jumlah",

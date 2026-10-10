@@ -133,7 +133,7 @@ function BottomSheetBank({ onBankChosen, onClose }: BottomSheetBankProps) {
             key={banks.errorUpdatedAt}
             message={t("common.offline.notice")}
             action={{
-              label: t("common.recipient_unexpected.retry"),
+              label: t("bottom_sheet_bank.retry"),
               onPress: readBanksAgain,
             }}
           />

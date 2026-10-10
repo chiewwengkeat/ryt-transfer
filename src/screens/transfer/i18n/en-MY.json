@@ -42,7 +42,8 @@
   "bottom_sheet_bank": {
     "title": "Choose a bank",
     "search_label": "Search banks",
-    "no_match": "No bank matches your search."
+    "no_match": "No bank matches your search.",
+    "retry": "Try again"
   },
   "amount": {
     "title": "Amount",

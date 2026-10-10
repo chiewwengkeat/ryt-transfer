@@ -42,7 +42,8 @@
   "bottom_sheet_bank": {
     "title": "选择银行",
     "search_label": "搜索银行",
-    "no_match": "没有与您的搜索匹配的银行。"
+    "no_match": "没有与您的搜索匹配的银行。",
+    "retry": "重试"
   },
   "amount": {
     "title": "金额",
