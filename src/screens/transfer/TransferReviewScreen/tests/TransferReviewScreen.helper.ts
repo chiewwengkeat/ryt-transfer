@@ -1,10 +1,12 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { http } from "msw";
 
 import { getLookupRecipientOptions } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
   type BankErrorBody,
   lookUpTestRecipient,
+  mswServer,
   sendToBank,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
@@ -77,4 +79,30 @@ export function askOpenReviewsNameCheckAgain() {
       }).queryKey,
     );
   });
+}
+
+// A resolver that answers nothing hands the request on to the bank, once released.
+export function holdTheNextPost(path: string) {
+  let sent = false;
+  let release = () => undefined as void;
+  const held = new Promise<void>((releaseHeld) => {
+    release = releaseHeld;
+  });
+  mswServer.use(
+    http.post(
+      path,
+      async () => {
+        sent = true;
+        await held;
+      },
+      { once: true },
+    ),
+  );
+  return {
+    release,
+    waitUntilSent: () =>
+      waitFor(() => {
+        expect(sent).toBe(true);
+      }),
+  };
 }

@@ -23,7 +23,10 @@ import {
 } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
-import { walkToTransferReviewUntilTransferShows } from "./TransferReviewScreen.helper";
+import {
+  holdTheNextPost,
+  walkToTransferReviewUntilTransferShows,
+} from "./TransferReviewScreen.helper";
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -334,32 +337,6 @@ it("never says the transfer was not sent when the session ends as the bank answe
     }),
   ).toBeNull();
 });
-
-// A resolver that answers nothing hands the request on to the bank, once released.
-function holdTheNextPost(path: string) {
-  let sent = false;
-  let release = () => undefined as void;
-  const held = new Promise<void>((releaseHeld) => {
-    release = releaseHeld;
-  });
-  mswServer.use(
-    http.post(
-      path,
-      async () => {
-        sent = true;
-        await held;
-      },
-      { once: true },
-    ),
-  );
-  return {
-    release,
-    waitUntilSent: () =>
-      waitFor(() => {
-        expect(sent).toBe(true);
-      }),
-  };
-}
 
 function scenariosReportedFromNowOn() {
   const reportCountNow = reportedScenarios().length;

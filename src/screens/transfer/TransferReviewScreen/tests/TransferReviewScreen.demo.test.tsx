@@ -22,6 +22,8 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 
+import { holdTheNextPost } from "./TransferReviewScreen.helper";
+
 it("opens no result page for a transfer Reset demo ended while its answer was being kept", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const view = await renderRoute("/transfer");
@@ -33,7 +35,7 @@ it("opens no result page for a transfer Reset demo ended while its answer was be
   await screen.findByText("RM 12,845.50");
   await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-  const approval = holdTheNextPostTo("*/transfers/:transferId/approve");
+  const approval = holdTheNextPost("*/transfers/:transferId/approve");
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -66,7 +68,7 @@ it(
     await screen.findByText("RM 12,845.50");
     await fireEvent.changeText(screen.getByLabelText("Amount (RM)"), "100");
     await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-    const create = holdTheNextPostTo("*/transfers");
+    const create = holdTheNextPost("*/transfers");
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
@@ -201,32 +203,6 @@ const PHONE_REFUSAL =
   "This phone's security can't be confirmed, so transfers are off on it.";
 const PIN_OFFER =
   "Your face or fingerprint was not recognised. You can try again, or use your PIN.";
-
-// A resolver that answers nothing hands the request on to the bank, once released.
-function holdTheNextPostTo(path: string) {
-  let sent = false;
-  let release = () => undefined as void;
-  const held = new Promise<void>((releaseHeld) => {
-    release = releaseHeld;
-  });
-  mswServer.use(
-    http.post(
-      path,
-      async () => {
-        sent = true;
-        await held;
-      },
-      { once: true },
-    ),
-  );
-  return {
-    release,
-    waitUntilSent: () =>
-      waitFor(() => {
-        expect(sent).toBe(true);
-      }),
-  };
-}
 
 // A slow keychain. A read, not a write: Reset demo's own deletes queue behind any write, so a held one holds it too.
 function holdTheNextReadOfTheSecureRecordIndex() {

@@ -22,6 +22,7 @@ import { renderRoute } from "@/test/render/render-route";
 import {
   askOpenReviewsNameCheckAgain,
   countSent,
+  holdTheNextPost,
   RECIPIENT_MOBILE,
   walkToTransferReviewUntilTransferShows,
   walkFromHomeToTransferReview,
@@ -387,32 +388,6 @@ it("asks review's name check again once they sign back in, when the ended sessio
   ).toBeOnTheScreen();
   expect(screen.getByText(recipient.registeredName)).toBeOnTheScreen();
 });
-
-// A resolver that answers nothing hands the request on to the bank, once released.
-function holdTheNextPost(path: string) {
-  let sent = false;
-  let release = () => undefined as void;
-  const held = new Promise<void>((releaseHeld) => {
-    release = releaseHeld;
-  });
-  mswServer.use(
-    http.post(
-      path,
-      async () => {
-        sent = true;
-        await held;
-      },
-      { once: true },
-    ),
-  );
-  return {
-    release,
-    waitUntilSent: () =>
-      waitFor(() => {
-        expect(sent).toBe(true);
-      }),
-  };
-}
 
 function scenariosReportedFromNowOn() {
   const reportCountNow = reportedScenarios().length;

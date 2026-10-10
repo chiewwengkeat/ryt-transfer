@@ -173,7 +173,12 @@ it(
 );
 
 it("tells Home the transfer was sent when Back leaves the result page as it opens, at the next launch too", async () => {
-  const view = await approveRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
   await screen.findByRole("header", { name: "Transfer sent" });
 
   await pressHardwareBack();
@@ -186,7 +191,12 @@ it("tells Home the transfer was sent when Back leaves the result page as it open
 });
 
 it("says nothing more on Home once the result page has finished opening and Back leaves it", async () => {
-  const view = await approveRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
   await finishOpeningScreen(
     await screen.findByRole("header", { name: "Transfer sent" }),
   );
@@ -199,7 +209,12 @@ it("says nothing more on Home once the result page has finished opening and Back
 });
 
 it("says nothing more on Home, shown or spoken, when Done leaves the result page before it has finished opening", async () => {
-  const view = await approveRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
   await screen.findByRole("header", { name: "Transfer sent" });
   const announcements = jest
     .spyOn(AccessibilityInfo, "announceForAccessibility")
@@ -271,16 +286,6 @@ async function readCustomerId() {
 
 const SENT_NOTICE =
   /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/;
-
-async function approveRm100Transfer() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
 
 async function waitOnHomeForItsBalance() {
   await screen.findByText("RM 12,745.50");
