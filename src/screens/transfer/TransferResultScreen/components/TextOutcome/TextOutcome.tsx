@@ -15,7 +15,7 @@ import TextHeading from "@/shared/ui/TextHeading/TextHeading";
 import {
   MONEY_STATE_BY_OUTCOME,
   MoneyState,
-} from "@/screens/transfer/TransferResultScreen/lib/transfer-outcome-money-states/transfer-outcome-money-states";
+} from "@/screens/transfer/lib/transfer-money-state/transfer-money-state";
 
 interface Props {
   scenario: TransferOutcomeScenario;

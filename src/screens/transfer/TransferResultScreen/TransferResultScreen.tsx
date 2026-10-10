@@ -34,13 +34,13 @@ import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import SectionTransferDetails from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
 import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
-import IconTransferCompleted from "./components/IconTransferCompleted/IconTransferCompleted";
-import TextOutcome from "./components/TextOutcome/TextOutcome";
-import ViewOutcomeEntrance from "./components/ViewOutcomeEntrance/ViewOutcomeEntrance";
 import {
   MONEY_STATE_BY_OUTCOME,
   MoneyState,
-} from "./lib/transfer-outcome-money-states/transfer-outcome-money-states";
+} from "@/screens/transfer/lib/transfer-money-state/transfer-money-state";
+import IconTransferCompleted from "./components/IconTransferCompleted/IconTransferCompleted";
+import TextOutcome from "./components/TextOutcome/TextOutcome";
+import ViewOutcomeEntrance from "./components/ViewOutcomeEntrance/ViewOutcomeEntrance";
 
 export default function TransferResultScreen() {
   const { t } = useTranslation("transfer");

@@ -9,6 +9,10 @@ import {
 import type { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import RowDetail from "@/screens/transfer/components/RowDetail/RowDetail";
 import { useTransferStatusWord } from "@/screens/transfer/hooks/use-transfer-status-word/use-transfer-status-word";
+import {
+  MoneyState,
+  moneyStateByFundsAndStatus,
+} from "@/screens/transfer/lib/transfer-money-state/transfer-money-state";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { formatMoney } from "@/shared/lib/money/money";
 import Card from "@/shared/ui/Card/Card";
@@ -20,26 +24,23 @@ export default function SectionTransferDetails({ transfer }: Props) {
   const { t } = useTranslation(["transfer", "shared"]);
   const statusWord = useTransferStatusWord(transfer);
   const isReceived = transfer.direction === TransferDirection.In;
-  // No phrase where the matrix has none, nor "money returned" before a refund lands.
-  const moneyState = isReceived
-    ? undefined
-    : (
-        {
-          [TransferFunds.NotDebited]:
-            transfer.status === TransferStatus.AwaitingApproval
-              ? undefined
-              : t("common.section_transfer_details.money.no_money_moved"),
-          [TransferFunds.Debited]:
-            transfer.status === TransferStatus.Completed
-              ? t("common.section_transfer_details.money.money_moved")
-              : t("common.section_transfer_details.money.not_confirmed_yet"),
-          [TransferFunds.RefundPending]: undefined,
-          [TransferFunds.Refunded]: t(
-            "common.section_transfer_details.money.money_returned",
-          ),
-          [TransferFunds.Credited]: undefined,
-        } satisfies Record<TransferFunds, string | undefined>
-      )[transfer.funds];
+  const moneyState = moneyStateByFundsAndStatus(transfer);
+  const moneyPhrase =
+    moneyState &&
+    {
+      [MoneyState.NoMoneyMoved]: t(
+        "common.section_transfer_details.money.no_money_moved",
+      ),
+      [MoneyState.MoneyMoved]: t(
+        "common.section_transfer_details.money.money_moved",
+      ),
+      [MoneyState.NotConfirmedYet]: t(
+        "common.section_transfer_details.money.not_confirmed_yet",
+      ),
+      [MoneyState.MoneyReturned]: t(
+        "common.section_transfer_details.money.money_returned",
+      ),
+    }[moneyState];
   const settledLabel = (
     {
       [TransferStatus.AwaitingApproval]: undefined,
@@ -67,11 +68,11 @@ export default function SectionTransferDetails({ transfer }: Props) {
       <RowDetail
         label={t("common.section_transfer_details.status")}
         value={
-          moneyState === undefined
+          moneyPhrase === undefined
             ? statusWord
             : t("common.section_transfer_details.status_and_money", {
                 status: statusWord,
-                money: moneyState,
+                money: moneyPhrase,
               })
         }
       />
