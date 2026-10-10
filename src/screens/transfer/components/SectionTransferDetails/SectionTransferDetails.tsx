@@ -7,11 +7,11 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import type { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import RowDetail from "@/screens/transfer/components/RowDetail/RowDetail";
 import { useTransferStatusWord } from "@/screens/transfer/hooks/use-transfer-status-word/use-transfer-status-word";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { formatMoney } from "@/shared/lib/money/money";
 import Card from "@/shared/ui/Card/Card";
-import RowDetail from "@/screens/transfer/components/RowDetail/RowDetail";
 
 interface Props {
   transfer: NonNullable<ReturnType<typeof useGetTransfer>["data"]>;
