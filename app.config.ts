@@ -1,5 +1,6 @@
 /* eslint-disable fe/file-layout -- a config file built at load */
 import type { ExpoConfig } from "expo/config";
+import { type ConfigPlugin, withAndroidManifest } from "expo/config-plugins";
 
 const VARIANTS: Record<
   string,
@@ -90,4 +91,17 @@ const config: ExpoConfig = {
   },
 };
 
-export default config;
+// A text-size change otherwise rebuilds the activity, and the contacts picker then fails until the app restarts.
+const withTextSizeChangesKeepingActivity: ConfigPlugin = (expoConfig) =>
+  withAndroidManifest(expoConfig, (manifestConfig) => {
+    const mainActivity =
+      manifestConfig.modResults.manifest.application?.[0]?.activity?.find(
+        (activity) => activity.$["android:name"] === ".MainActivity",
+      );
+    if (mainActivity)
+      mainActivity.$["android:configChanges"] =
+        `${mainActivity.$["android:configChanges"] ?? ""}|fontScale`;
+    return manifestConfig;
+  });
+
+export default withTextSizeChangesKeepingActivity(config);
