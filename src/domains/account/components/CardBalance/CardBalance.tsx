@@ -77,6 +77,7 @@ export default function CardBalance({
           : undefined));
   const screenOnTop = useIsScreenOnTop();
   const reportedShownRef = useRef<typeof shown>(undefined);
+  const [pressedReReadsAnswered, setPressedReReadsAnswered] = useState(0);
   // useTrackScenarioShown's rule, which an account component may not import: only on top, once per showing.
   useEffect(() => {
     if (shown === undefined) reportedShownRef.current = undefined;
@@ -86,22 +87,30 @@ export default function CardBalance({
       else if (shown === "under_maintenance") onUnderMaintenance();
       else onFailed(shown);
     }
-  }, [shown, screenOnTop, onLoaded, onFailed, onUnderMaintenance]);
+  }, [
+    shown,
+    screenOnTop,
+    onLoaded,
+    onFailed,
+    onUnderMaintenance,
+    pressedReReadsAnswered,
+  ]);
 
   if (shownFailure !== undefined) {
     return (
       <Card styles={{ main: [styles.main, styles.floor] }}>
         <BannerAction
+          key={pressedReReadsAnswered}
           tone="negative"
           announce={!failureIsSessionEnd}
           message={failureWords[shownFailure].body}
           action={{
             label: failureWords[shownFailure].retry,
-            onPress: () => {
+            onPress: async () => {
+              await Promise.all([account.refetch(), limits.refetch()]);
               // Pressed, the answer is a new showing: said and reported even when it fails the same way.
-              setFailureBeforeReRead(null);
-              void account.refetch();
-              void limits.refetch();
+              reportedShownRef.current = undefined;
+              setPressedReReadsAnswered((answered) => answered + 1);
             },
           }}
         />

@@ -70,9 +70,7 @@ export default function TransferHistoryScreen() {
             phoneReportsConnection ? (
               <ButtonPrimary
                 label={t("history.retry")}
-                onPress={() => {
-                  void resetTransferHistory(queryClient);
-                }}
+                onPress={() => resetTransferHistory(queryClient)}
               />
             ) : (
               <TextOffline />
@@ -93,9 +91,7 @@ export default function TransferHistoryScreen() {
                 announce={!failureIsSessionEnd}
                 message={t("history.out_of_date")}
                 tryAgainLabel={t("history.retry")}
-                onTryAgain={() => {
-                  void resetTransferHistory(queryClient);
-                }}
+                onTryAgain={() => resetTransferHistory(queryClient)}
               />
             </View>
           )}

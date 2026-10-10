@@ -11,7 +11,7 @@ interface Props {
   message: string;
   announce: boolean;
   tryAgainLabel: string;
-  onTryAgain: () => void;
+  onTryAgain: () => unknown;
 }
 export default function BannerOutOfDate({
   message,

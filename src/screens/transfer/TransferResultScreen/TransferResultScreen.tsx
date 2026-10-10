@@ -188,9 +188,7 @@ export default function TransferResultScreen() {
             (phoneReportsConnection ? (
               <ButtonSecondary
                 label={t("common.outcome_unexpected.load_again")}
-                onPress={() => {
-                  void transfer.refetch();
-                }}
+                onPress={() => transfer.refetch()}
               />
             ) : (
               <TextOffline />

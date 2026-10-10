@@ -132,9 +132,7 @@ export default function SectionReviewDetails({ draft }: Props) {
           waitedOutRefusalAt === refusedAt
             ? {
                 label: t(`common.${scenarioWordsKey(nameCheckFailure)}.retry`),
-                onPress: () => {
-                  void lookup.refetch();
-                },
+                onPress: () => lookup.refetch(),
               }
             : undefined
         }

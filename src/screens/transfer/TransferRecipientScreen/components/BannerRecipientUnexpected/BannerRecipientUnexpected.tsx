@@ -7,7 +7,7 @@ import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 
 interface Props {
   failure?: Error | null;
-  onRetry: () => void;
+  onRetry: () => unknown;
 }
 export default function BannerRecipientUnexpected({ failure, onRetry }: Props) {
   const { t } = useTranslation("transfer");

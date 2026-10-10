@@ -51,9 +51,7 @@ export default function TransferDetailsScreen() {
               announce={!failureIsSessionEnd}
               message={t("details.out_of_date")}
               tryAgainLabel={t("details.retry")}
-              onTryAgain={() => {
-                void transferQuery.refetch();
-              }}
+              onTryAgain={() => transferQuery.refetch()}
             />
           )}
           <SectionTransferDetails transfer={transfer} />
@@ -64,9 +62,7 @@ export default function TransferDetailsScreen() {
             phoneReportsConnection ? (
               <ButtonPrimary
                 label={t("details.retry")}
-                onPress={() => {
-                  void transferQuery.refetch();
-                }}
+                onPress={() => transferQuery.refetch()}
               />
             ) : (
               <TextOffline />

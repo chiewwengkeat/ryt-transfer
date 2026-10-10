@@ -184,9 +184,7 @@ export default function TransferRecipientScreen() {
             {((recents.isError && !offline) || chosenRecentMissing) && (
               <BannerRecipientUnexpected
                 failure={recents.error}
-                onRetry={() => {
-                  void recents.refetch();
-                }}
+                onRetry={() => recents.refetch()}
               />
             )}
             <SectionRecentRecipients onRecentChosen={setChosenRecentId} />

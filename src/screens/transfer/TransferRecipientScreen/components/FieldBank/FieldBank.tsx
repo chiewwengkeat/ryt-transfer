@@ -129,17 +129,13 @@ function BottomSheetBank({ onBankChosen, onClose }: BottomSheetBankProps) {
             message={t("common.offline.notice")}
             action={{
               label: t("common.recipient_unexpected.retry"),
-              onPress: () => {
-                void banks.refetch();
-              },
+              onPress: () => banks.refetch(),
             }}
           />
         ) : banks.isError ? (
           <BannerRecipientUnexpected
             failure={banks.error}
-            onRetry={() => {
-              void banks.refetch();
-            }}
+            onRetry={() => banks.refetch()}
           />
         ) : (
           <Loader />

@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
 
 import {
   colors,
@@ -12,7 +13,7 @@ import {
 interface Props {
   label: string;
   accessibilityLabel?: string;
-  onPress: () => void;
+  onPress: () => unknown;
 }
 export default function ButtonSecondary({
   label,
@@ -20,16 +21,35 @@ export default function ButtonSecondary({
   onPress,
 }: Props) {
   const { i18n } = useTranslation();
+  const [pressAnswerAwaited, setPressAnswerAwaited] = useState(false);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       // On the button, not its label: the screen reader reads the button as one element, in the button's language.
       accessibilityLanguage={i18n.language}
-      onPress={onPress}
+      accessibilityState={{
+        disabled: pressAnswerAwaited,
+        busy: pressAnswerAwaited,
+      }}
+      disabled={pressAnswerAwaited}
+      onPress={() => {
+        const pressAnswer = onPress();
+        if (!(pressAnswer instanceof Promise)) return;
+        setPressAnswerAwaited(true);
+        void pressAnswer.finally(() => {
+          setPressAnswerAwaited(false);
+        });
+      }}
       style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
     >
-      <Text style={styles.label}>{label}</Text>
+      {/* Hidden, not removed: its lines keep the button's height while the spinner shows. */}
+      <Text style={[styles.label, pressAnswerAwaited && styles.labelHidden]}>
+        {label}
+      </Text>
+      {pressAnswerAwaited && (
+        <ActivityIndicator color={colors.accent} style={styles.spinner} />
+      )}
     </Pressable>
   );
 }
@@ -48,4 +68,6 @@ const styles = StyleSheet.create({
   },
   buttonPressed: { opacity: 0.8, backgroundColor: colors.surfacePressed },
   label: { ...typography.label, color: colors.accent, textAlign: "center" },
+  labelHidden: { opacity: 0 },
+  spinner: StyleSheet.absoluteFill,
 });

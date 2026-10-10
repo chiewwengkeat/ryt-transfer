@@ -162,9 +162,7 @@ function SectionRecentRecipientsHome({
           message={t("common.start_unexpected.body")}
           action={{
             label: t("common.start_unexpected.retry"),
-            onPress: () => {
-              void recents.refetch();
-            },
+            onPress: () => recents.refetch(),
           }}
         />
       )}
