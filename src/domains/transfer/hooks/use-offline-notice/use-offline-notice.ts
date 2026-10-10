@@ -5,7 +5,7 @@ import { AccessibilityInfo } from "react-native";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
-import { useIsOffline } from "@/shared/platform/offline/offline";
+import { useIsOffline } from "@/shared/http/offline/offline";
 
 export function useOfflineNotice() {
   const { t } = useTranslation("transfer");

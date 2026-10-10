@@ -23,11 +23,11 @@ import {
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
+import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
 import {
   reportError,
   trackEvent,
 } from "@/shared/observability/observability/observability";
-import { usePhoneReportsConnection } from "@/shared/platform/offline/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";

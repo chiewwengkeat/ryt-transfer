@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "@/shared/config/config";
 import { reportError } from "@/shared/observability/observability/observability";
-import { reportRequestOutcome } from "@/shared/platform/offline/offline";
 
+import { reportRequestOutcome } from "@/shared/http/offline/offline";
 import {
   TransportError,
   TransportErrorKind,
@@ -91,7 +91,7 @@ export async function requestJson<Data>(
     controller.signal.removeEventListener("abort", rejectOnAbort);
   }
 
-  // An error status or an unreadable body still proves the bank was reached.
+  // An error status or an unreadable body still proves the server was reached.
   reportRequestOutcome(`${method} ${path}`);
   if (response.ok) {
     try {

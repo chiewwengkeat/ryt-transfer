@@ -4,8 +4,8 @@ import { useTranslation } from "react-i18next";
 import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
 import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
+import { useIsOffline } from "@/shared/http/offline/offline";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
-import { useIsOffline } from "@/shared/platform/offline/offline";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 
 interface Props {

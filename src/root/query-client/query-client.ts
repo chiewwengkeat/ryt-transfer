@@ -6,13 +6,13 @@ import {
 } from "@tanstack/react-query";
 import { AppState, type AppStateStatus } from "react-native";
 
+import { addServerReachedAgainListener } from "@/shared/http/offline/offline";
 import {
   isUnansweredReadFailure,
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
 import { subscribeToPhoneConnection } from "@/shared/platform/network/network";
-import { addBankReachedAgainListener } from "@/shared/platform/offline/offline";
 
 onlineManager.setEventListener(subscribeToPhoneConnection);
 focusManager.setEventListener((setFocused) => {
@@ -51,7 +51,7 @@ export function createQueryClient() {
   // React Query re-reads on the phone's reconnect, which never comes when only requests found no network.
   // Once per answer: a read that still finds none would turn offline back on after every request that gets through.
   const answersWhenLastReadAgain = new WeakMap<Query, number>();
-  addBankReachedAgainListener(() => {
+  addServerReachedAgainListener(() => {
     const readsThatFoundNoNetwork = client.getQueryCache().findAll({
       type: "active",
       predicate: (query) =>

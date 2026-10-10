@@ -1,9 +1,9 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
+import { reportRequestOutcome } from "@/shared/http/offline/offline";
 import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import { requestJson } from "@/shared/http/transport/transport";
-import { reportRequestOutcome } from "@/shared/platform/offline/offline";
 import {
   lookUpTestRecipient,
   clearTransferScenario,

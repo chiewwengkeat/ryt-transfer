@@ -8,12 +8,12 @@ import {
   useTransferLimitsMaintenance,
 } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
+import { useIsOffline } from "@/shared/http/offline/offline";
 import {
   isSessionEndFailure,
   isUnansweredReadFailure,
 } from "@/shared/http/transport-error/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
-import { useIsOffline } from "@/shared/platform/offline/offline";
 import {
   colors,
   minTouchTarget,

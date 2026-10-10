@@ -2,12 +2,12 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
+import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
 import {
   isSessionEndFailure,
   TransportError,
 } from "@/shared/http/transport-error/transport-error";
-import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
-import { usePhoneReportsConnection } from "@/shared/platform/offline/offline";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";

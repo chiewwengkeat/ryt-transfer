@@ -7,12 +7,12 @@ import {
 } from "@/test/doubles/native-doubles";
 
 import {
-  addBankReachedAgainListener,
+  addServerReachedAgainListener,
   reportRequestOutcome,
   useIsOffline,
 } from "./offline";
 
-it("reads online while the phone has a connection and requests reach the bank", async () => {
+it("reads online while the phone has a connection and requests reach the server", async () => {
   const { result } = await renderHook(useIsOffline);
 
   expect(result.current).toBe(false);
@@ -45,7 +45,7 @@ it("is offline once a request finds no network, and stays so through a timeout a
   expect(result.current).toBe(true);
 });
 
-it("stays online when a request loses its answer again after the bank answered another", async () => {
+it("stays online when a request loses its answer again after the server answered another", async () => {
   const { result } = await renderHook(useIsOffline);
   await act(() => {
     reportRequestOutcome(STATUS_READ, TransportErrorKind.Network);
@@ -84,7 +84,7 @@ it.each([
   ["an error status", TransportErrorKind.Http],
   ["an answer it cannot read", TransportErrorKind.Unreadable],
 ])(
-  "is back online once a request gets %s from the bank",
+  "is back online once a request gets %s from the server",
   async (_, outcome) => {
     const { result } = await renderHook(useIsOffline);
     await act(() => {
@@ -139,12 +139,12 @@ it("opens the next reader online when the connection came back while nobody was 
   expect(readings).not.toContain(true);
 });
 
-it("reports a listener that throws once a request reaches the bank again, and still runs the rest, rather than fail that request", () => {
+it("reports a listener that throws once a request reaches the server again, and still runs the rest, rather than fail that request", () => {
   const listenerAfterTheFailingOne = jest.fn();
-  const stopFailingListener = addBankReachedAgainListener(() => {
+  const stopFailingListener = addServerReachedAgainListener(() => {
     throw new TypeError("undefined is not a function");
   });
-  const stopListenerAfterTheFailingOne = addBankReachedAgainListener(
+  const stopListenerAfterTheFailingOne = addServerReachedAgainListener(
     listenerAfterTheFailingOne,
   );
   reportRequestOutcome(BALANCE_READ, TransportErrorKind.Network);
@@ -157,7 +157,7 @@ it("reports a listener that throws once a request reaches the bank again, and st
   expect(observedRecords).toContainEqual({
     type: "error",
     name: "TypeError",
-    properties: { boundary: "bank_reached_again_listener" },
+    properties: { boundary: "server_reached_again_listener" },
   });
 });
 

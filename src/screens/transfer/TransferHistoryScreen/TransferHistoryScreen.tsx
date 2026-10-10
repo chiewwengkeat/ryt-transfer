@@ -12,9 +12,9 @@ import {
   useListTransfers,
   wasNewestTransferHistoryPageReadWithin,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
-import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
-import { usePhoneReportsConnection } from "@/shared/platform/offline/offline";
+import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
+import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 import { colors, spacing } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";

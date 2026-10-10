@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { usePhoneReportsConnection } from "@/shared/platform/offline/offline";
+import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
 import { spacing } from "@/shared/theme/theme";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 

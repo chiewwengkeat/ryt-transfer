@@ -1,9 +1,9 @@
 import { useSyncExternalStore } from "react";
 
-import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import { reportError } from "@/shared/observability/observability/observability";
-
 import { subscribeToPhoneConnection } from "@/shared/platform/network/network";
+
+import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 
 export function useIsOffline() {
   return useSyncExternalStore(
@@ -21,7 +21,7 @@ export function reportRequestOutcome(
   request: string,
   failure?: TransportErrorKind,
 ) {
-  // Neither says the connection is down: the bank may only be slow, and an abort is the app's own.
+  // Neither says the connection is down: the server may only be slow, and an abort is the app's own.
   if (
     failure === TransportErrorKind.Timeout ||
     failure === TransportErrorKind.Aborted
@@ -30,26 +30,26 @@ export function reportRequestOutcome(
   const foundNoNetwork = failure === TransportErrorKind.Network;
   if (foundNoNetwork) {
     // Its answer is lost while others' arrive: the trouble is this request's, and counting it would flap offline.
-    if (requestsLostWhileTheBankAnswersOthers.has(request)) return;
-    requestsFindingNoNetworkSinceTheBankAnswered.add(request);
+    if (requestsLostWhileTheServerAnswersOthers.has(request)) return;
+    requestsFindingNoNetworkSinceTheServerAnswered.add(request);
   } else {
-    requestsLostWhileTheBankAnswersOthers.delete(request);
-    requestsFindingNoNetworkSinceTheBankAnswered.delete(request);
-    for (const lostRequest of requestsFindingNoNetworkSinceTheBankAnswered)
-      requestsLostWhileTheBankAnswersOthers.add(lostRequest);
-    requestsFindingNoNetworkSinceTheBankAnswered.clear();
+    requestsLostWhileTheServerAnswersOthers.delete(request);
+    requestsFindingNoNetworkSinceTheServerAnswered.delete(request);
+    for (const lostRequest of requestsFindingNoNetworkSinceTheServerAnswered)
+      requestsLostWhileTheServerAnswersOthers.add(lostRequest);
+    requestsFindingNoNetworkSinceTheServerAnswered.clear();
   }
   if (foundNoNetwork === lastRequestFoundNoNetwork) return;
   lastRequestFoundNoNetwork = foundNoNetwork;
   for (const listener of offlineListeners) listener();
   if (foundNoNetwork) return;
-  for (const listener of bankReachedAgainListeners) {
+  for (const listener of serverReachedAgainListeners) {
     try {
       listener();
     } catch (listenerFailure) {
-      // Reported, not thrown: this runs inside the request that got through, whose caller is owed the bank's answer.
+      // Reported, not thrown: this runs inside the request that got through, whose caller is owed the server's answer.
       reportError(listenerFailure, {
-        boundary: "bank_reached_again_listener",
+        boundary: "server_reached_again_listener",
       });
     }
   }
@@ -57,23 +57,23 @@ export function reportRequestOutcome(
 
 export function forgetRequestOutcomes() {
   lastRequestFoundNoNetwork = false;
-  requestsFindingNoNetworkSinceTheBankAnswered.clear();
-  requestsLostWhileTheBankAnswersOthers.clear();
+  requestsFindingNoNetworkSinceTheServerAnswered.clear();
+  requestsLostWhileTheServerAnswersOthers.clear();
 }
 
-export function addBankReachedAgainListener(listener: () => void) {
-  bankReachedAgainListeners.add(listener);
+export function addServerReachedAgainListener(listener: () => void) {
+  serverReachedAgainListeners.add(listener);
   return () => {
-    bankReachedAgainListeners.delete(listener);
+    serverReachedAgainListeners.delete(listener);
   };
 }
 
 let phoneConnected = true;
 let lastRequestFoundNoNetwork = false;
-const requestsFindingNoNetworkSinceTheBankAnswered = new Set<string>();
-const requestsLostWhileTheBankAnswersOthers = new Set<string>();
+const requestsFindingNoNetworkSinceTheServerAnswered = new Set<string>();
+const requestsLostWhileTheServerAnswersOthers = new Set<string>();
 const offlineListeners = new Set<() => void>();
-const bankReachedAgainListeners = new Set<() => void>();
+const serverReachedAgainListeners = new Set<() => void>();
 let stopReadingPhoneConnection = () => {};
 
 function subscribeToOfflineChanges(onChange: () => void) {

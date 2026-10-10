@@ -2,8 +2,8 @@ import { use, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ApprovalDemoPinContext } from "@/domains/approval/lib/approval-demo-pin/approval-demo-pin";
+import { useIsOffline } from "@/shared/http/offline/offline";
 import { enableObscuredTouchGuard } from "@/shared/platform/obscured-touch-guard/obscured-touch-guard";
-import { useIsOffline } from "@/shared/platform/offline/offline";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";

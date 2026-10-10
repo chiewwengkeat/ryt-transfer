@@ -1,11 +1,11 @@
 import { MutationObserver, QueryObserver } from "@tanstack/react-query";
 import { AppState } from "react-native";
 
+import { reportRequestOutcome } from "@/shared/http/offline/offline";
 import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
-import { reportRequestOutcome } from "@/shared/platform/offline/offline";
 import { moveAppTo } from "@/test/render/drive-app";
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 

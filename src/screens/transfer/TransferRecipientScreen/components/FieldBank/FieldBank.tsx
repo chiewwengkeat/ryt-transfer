@@ -12,7 +12,7 @@ import {
 import { useListBanks } from "@/domains/transfer/api/list-banks/list-banks";
 import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
 import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
-import { useIsOffline } from "@/shared/platform/offline/offline";
+import { useIsOffline } from "@/shared/http/offline/offline";
 import {
   colors,
   minTouchTarget,
