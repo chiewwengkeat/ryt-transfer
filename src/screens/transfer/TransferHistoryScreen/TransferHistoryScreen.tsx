@@ -8,9 +8,9 @@ import {
   getListTransfersOptions,
   isTransferHistoryCached,
   resetTransferHistory,
-  TRANSFERS_KEPT_ON_REOPENING,
   trimTransferHistory,
   useListTransfers,
+  wasNewestTransferHistoryPageReadWithin,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
@@ -54,14 +54,17 @@ export default function TransferHistoryScreen() {
         setRefreshFailed(false);
     });
   }, [queryClient]);
-  // Each open fetches the newest pages: people check here before paying again. Not on a cold cache, whose own
-  // first fetch is the first page: a reset would cancel it and ask twice.
+  // Decision 009: within 30 s of the newest page's read, a back-and-forth asks nothing; later, someone checking here
+  // before paying again needs it read again. Never on a cold cache: a reset would cancel its first fetch and ask twice.
   useEffect(() => {
-    if (isTransferHistoryCached(queryClient))
-      void resetTransferHistory(queryClient, TRANSFERS_KEPT_ON_REOPENING);
-    // The reset above runs after a first render that still draws every cached page, so closing trims too.
+    if (
+      isTransferHistoryCached(queryClient) &&
+      !wasNewestTransferHistoryPageReadWithin(queryClient, 30_000)
+    )
+      void resetTransferHistory(queryClient);
+    // An open draws every cached page at once, so 200 transfers bound it.
     return () => {
-      trimTransferHistory(queryClient, TRANSFERS_KEPT_ON_REOPENING);
+      trimTransferHistory(queryClient, 200);
     };
   }, [queryClient]);
 

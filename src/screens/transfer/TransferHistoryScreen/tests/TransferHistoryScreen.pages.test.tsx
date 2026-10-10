@@ -43,7 +43,7 @@ it("shows a loader while the first page is on its way", async () => {
   ).toBeOnTheScreen();
 });
 
-it("shows the transfers it has at once on a later open, then the newest page in their place", async () => {
+it("shows the transfers it has at once on an open 30 s later, then the newest page in their place", async () => {
   await renderRoute("/");
   await act(() => {
     router.push("/transfer-history");
@@ -54,6 +54,7 @@ it("shows the transfers it has at once on a later open, then the newest page in 
   await act(() => {
     router.back();
   });
+  await act(() => jest.advanceTimersByTimeAsync(30_000));
   serveTransferHistoryPages([[LIM_ON_4_OCTOBER]]);
   const releaseFirstPage = holdTransferHistoryPages("first");
 
@@ -74,19 +75,26 @@ it("shows the transfers it has at once on a later open, then the newest page in 
   expect(sentTransferHistoryCursors()).toEqual([null, null]);
 });
 
-it("keeps the older pages it loaded on a later open, showing them while the newest is asked for again", async () => {
+it("draws every page it loaded and asks nothing on an open within 30 s of reading the newest page, then asks for that page once", async () => {
   serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
+  const releaseLaterPages = holdTransferHistoryPages("later");
   await renderRoute("/");
   await act(() => {
     router.push("/transfer-history");
   });
+  expect(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+  // A later page landing late must restart nothing: the 30 s run from the newest page's read.
+  await act(() => jest.advanceTimersByTimeAsync(8_000));
+  releaseLaterPages();
   expect(
     await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
   ).toBeOnTheScreen();
   await act(() => {
     router.back();
   });
-  const releaseFirstPage = holdTransferHistoryPages("first");
+  const requestCountBeforeQuickOpen = sentTransferHistoryCursors().length;
 
   await act(() => {
     router.push("/transfer-history");
@@ -99,10 +107,25 @@ it("keeps the older pages it loaded on a later open, showing them while the newe
   expect(
     screen.getByRole("button", { name: /^Lim Wei Jie/ }),
   ).toBeOnTheScreen();
-  releaseFirstPage();
   expect(
-    await screen.findByRole("button", { name: /^Lim Wei Jie/ }),
-  ).toBeOnTheScreen();
+    sentTransferHistoryCursors().slice(requestCountBeforeQuickOpen),
+  ).toEqual([]);
+  await act(() => {
+    router.back();
+  });
+  await act(() => jest.advanceTimersByTimeAsync(22_000));
+  const requestCountBeforeLateOpen = sentTransferHistoryCursors().length;
+
+  await act(() => {
+    router.push("/transfer-history");
+  });
+  await act(() => jest.advanceTimersByTimeAsync(1000));
+
+  expect(
+    sentTransferHistoryCursors()
+      .slice(requestCountBeforeLateOpen)
+      .filter((cursor) => cursor === null),
+  ).toHaveLength(1);
 });
 
 it(
@@ -135,11 +158,12 @@ it(
       "100",
     );
     await fireEvent.press(screen.getByRole("button", { name: "Review" }));
-    await fireEvent.press(
-      await screen.findByRole("button", { name: "Transfer" }),
-    );
+    const transferButton = await screen.findByRole("button", {
+      name: "Transfer",
+    });
+    const requestCountBeforeTransfer = sentTransferHistoryCursors().length;
+    await fireEvent.press(transferButton);
     await fireEvent.press(await screen.findByRole("button", { name: "Done" }));
-    const requestCountBeforeReopening = sentTransferHistoryCursors().length;
 
     await act(() => {
       router.push("/transfer-history");
@@ -156,7 +180,7 @@ it(
       }),
     ).toBeOnTheScreen();
     expect(
-      sentTransferHistoryCursors().slice(requestCountBeforeReopening),
+      sentTransferHistoryCursors().slice(requestCountBeforeTransfer),
     ).toContain(null);
   }),
 );

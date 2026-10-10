@@ -25,6 +25,7 @@ it("asks for the newest page once back online when History opened offline, and s
   await act(() => {
     router.back();
   });
+  await act(() => jest.advanceTimersByTimeAsync(30_000));
   serveTransferHistoryPages([
     [TAN_ON_6_OCTOBER, buildHistoryTransfer()],
     [LIM_ON_4_OCTOBER],
@@ -70,6 +71,7 @@ it("keeps the rows it has under the notice, offering no Try again, when History 
   await act(() => {
     router.back();
   });
+  await act(() => jest.advanceTimersByTimeAsync(30_000));
   await act(() => {
     setPhoneNetwork(OFFLINE);
   });

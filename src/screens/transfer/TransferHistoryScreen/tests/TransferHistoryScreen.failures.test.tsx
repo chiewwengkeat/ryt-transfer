@@ -211,6 +211,7 @@ it("announces no failure left from an earlier visit, only one from this visit", 
   await act(() => {
     router.back();
   });
+  await act(() => jest.advanceTimersByTimeAsync(30_000));
   const releaseFirstPage = holdTransferHistoryPages("first");
   announce.mockClear();
 

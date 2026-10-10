@@ -29,13 +29,15 @@ export const MONEY_MOVED_SIGN = {
 export const getListTransfersOptions = () =>
   infiniteQueryOptions({
     queryKey: transferKeys.history(),
-    queryFn: async ({ pageParam, signal }) => {
+    queryFn: async ({ pageParam, signal, client }) => {
       const searchParams = new URLSearchParams({ limit: "30" });
       if (pageParam !== null) searchParams.set("cursor", pageParam);
       const page = await requestJson<ListTransfersResponse>(
         `/transfers?${searchParams.toString()}`,
         { signal },
       );
+      if (pageParam === null)
+        newestTransferHistoryPageReadAt.set(client, Date.now());
       const unreadableAmountCount = [
         ...page.items.map(({ amount }) => amount),
         ...page.days.map(({ net }) => net),
@@ -109,6 +111,22 @@ export function isTransferHistoryCached(queryClient: QueryClient) {
   );
 }
 
+// An invalidation only flags a closed History, never reads it, so it voids the read.
+// Two-sided: a phone clock set back must not hold the reuse open.
+export function wasNewestTransferHistoryPageReadWithin(
+  queryClient: QueryClient,
+  milliseconds: number,
+) {
+  const readAt = newestTransferHistoryPageReadAt.get(queryClient);
+  if (
+    readAt === undefined ||
+    queryClient.getQueryState(getListTransfersOptions().queryKey)?.isInvalidated
+  )
+    return false;
+  const elapsed = Date.now() - readAt;
+  return elapsed >= 0 && elapsed < milliseconds;
+}
+
 export function countLoadedTransfersOnDay(
   queryClient: QueryClient,
   date: string,
@@ -149,21 +167,15 @@ export function trimTransferHistory(
 }
 
 // After a transfer: a page fetch already under way would land on pages the new transfer has shifted.
-export async function resetTransferHistory(
-  queryClient: QueryClient,
-  transfersKept = 0,
-) {
+export async function resetTransferHistory(queryClient: QueryClient) {
   await queryClient.cancelQueries({ queryKey: transferKeys.historyAll });
-  trimTransferHistory(queryClient, transfersKept);
+  trimTransferHistory(queryClient);
   // Closed History too: reopened after a transfer, it then shows that transfer at once.
   await queryClient.invalidateQueries({
     queryKey: transferKeys.historyAll,
     refetchType: "all",
   });
 }
-
-// Enough to scroll back through on reopening; every one is drawn as History opens.
-export const TRANSFERS_KEPT_ON_REOPENING = 200;
 
 export async function patchTransferInHistory(
   queryClient: QueryClient,
@@ -210,6 +222,9 @@ export async function patchTransferInHistory(
     },
   );
 }
+
+// Not the query's dataUpdatedAt: a page loaded by scrolling, or a trim, moves that too.
+const newestTransferHistoryPageReadAt = new WeakMap<QueryClient, number>();
 
 // Module-level so its identity holds: TanStack re-runs a new select over every loaded transfer.
 function selectTransferHistory(history: InfiniteData<ListTransfersResponse>) {
