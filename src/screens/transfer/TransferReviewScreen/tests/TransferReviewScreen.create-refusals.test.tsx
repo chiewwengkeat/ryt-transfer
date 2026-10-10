@@ -89,6 +89,7 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(view.getPathname()).toBe("/transfer/review");
+    expect(screen.getByRole("button", { name: "Go back" })).toBeOnTheScreen();
     await waitFor(() => {
       expect(countSent("GET", "/accounts/primary")).toBeGreaterThan(
         balanceReadsBefore,

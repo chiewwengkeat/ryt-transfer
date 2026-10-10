@@ -6,6 +6,7 @@ import { BackHandler } from "react-native";
 
 import BannerEarlierTransferUnconfirmed from "@/domains/transfer/components/BannerEarlierTransferUnconfirmed/BannerEarlierTransferUnconfirmed";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import ButtonHeaderBack from "@/shared/ui/ButtonHeaderBack/ButtonHeaderBack";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
@@ -91,8 +92,17 @@ function HeaderReview() {
     <Stack.Screen
       options={{
         title: t("header_review.title"),
-        // True would draw the platform's back beside the shared one.
-        ...(sending && { headerLeft: () => null, headerBackVisible: false }),
+        // Set on every render: options merge, so a key set only while sending would outlive the send.
+        headerLeft: sending
+          ? () => null
+          : ({ tintColor, canGoBack }) => (
+              <ButtonHeaderBack
+                tintColor={tintColor}
+                canGoBack={canGoBack}
+                opensHome={false}
+              />
+            ),
+        headerBackVisible: false,
         gestureEnabled: !sending,
       }}
     />

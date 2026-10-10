@@ -13,7 +13,7 @@ import { enableAppSwitcherBlur } from "@/shared/platform/app-switcher-blur/app-s
 import { kvStorage } from "@/shared/platform/kv-storage/kv-storage";
 import { blockScreenCapture } from "@/shared/platform/screen-capture/screen-capture";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage/secure-storage";
-import ButtonHeaderBack from "@/root/ViewRoot/components/ButtonHeaderBack/ButtonHeaderBack";
+import ButtonHeaderBack from "@/shared/ui/ButtonHeaderBack/ButtonHeaderBack";
 
 const INSTALL_MARKER_KEY = "install-marker";
 
