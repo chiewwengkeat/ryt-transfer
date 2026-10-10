@@ -3,7 +3,7 @@ import { createStore } from "zustand/vanilla";
 
 import { CoolingOffReason } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { trackEvent } from "@/shared/observability/observability";
+import { trackEvent } from "@/shared/observability/observability/observability";
 
 import {
   reduceAmountAndNoteEvent,

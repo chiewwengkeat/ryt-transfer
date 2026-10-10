@@ -7,7 +7,7 @@ import {
   ScreensCoveredContext,
   useIsScreenOnTop,
 } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
-import { reportError } from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability/observability";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 
 import { isSettledTransferOutcome } from "@/domains/transfer/api/get-transfer/get-transfer";

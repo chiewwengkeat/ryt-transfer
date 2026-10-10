@@ -2,7 +2,7 @@ import type { ErrorBoundaryProps } from "expo-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-import { reportError } from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 

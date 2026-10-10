@@ -12,7 +12,7 @@ import {
 import { listPendingTransfers } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { reportError } from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";

@@ -30,7 +30,7 @@ import {
 import type { TransferFlowNotice } from "@/screens/transfer/flow-store/flow-store.type";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import { formatMoney } from "@/shared/lib/money/money";
-import { reportError } from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability/observability";
 
 import { approveWithBiometricKey } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-biometric-key/approve-with-biometric-key";
 import { approveWithPin } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-pin/approve-with-pin";

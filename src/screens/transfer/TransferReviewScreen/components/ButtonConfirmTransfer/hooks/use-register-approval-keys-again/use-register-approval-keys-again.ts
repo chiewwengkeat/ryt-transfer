@@ -9,7 +9,7 @@ import {
 } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
 import { askForApprovalPin } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { reportError } from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability/observability";
 
 export function useRegisterApprovalKeysAgain() {
   const { t } = useTranslation("transfer");

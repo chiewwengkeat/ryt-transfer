@@ -7,7 +7,7 @@ import {
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { requestJson } from "@/shared/http/transport/transport";
 import { parseWireAmount } from "@/shared/lib/money/money";
-import { trackEvent } from "@/shared/observability/observability";
+import { trackEvent } from "@/shared/observability/observability/observability";
 
 import { patchTransferInHistory } from "@/domains/transfer/api/list-transfers/list-transfers";
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";

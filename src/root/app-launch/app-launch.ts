@@ -5,7 +5,7 @@ import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import { isProductionBuild } from "@/shared/config/config";
 import { configureTransport } from "@/shared/http/transport/transport";
 import { screenTransitionOptions } from "@/shared/lib/motion/motion";
-import { reportError } from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability/observability";
 import { enableAppSwitcherBlur } from "@/shared/platform/app-switcher-blur/app-switcher-blur";
 import { kvStorage } from "@/shared/platform/kv-storage/kv-storage";
 import { blockScreenCapture } from "@/shared/platform/screen-capture/screen-capture";

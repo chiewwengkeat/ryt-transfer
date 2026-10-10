@@ -1,7 +1,7 @@
 import { createStore } from "zustand/vanilla";
 
 import { isProductionBuild } from "@/shared/config/config";
-import { trackEvent } from "@/shared/observability/observability";
+import { trackEvent } from "@/shared/observability/observability/observability";
 import {
   checkDeviceIntegrity,
   DeviceIntegrity,

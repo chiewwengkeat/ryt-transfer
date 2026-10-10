@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@/shared/config/config";
-import { reportError } from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability/observability";
 import { reportRequestOutcome } from "@/shared/platform/offline/offline";
 
 import {

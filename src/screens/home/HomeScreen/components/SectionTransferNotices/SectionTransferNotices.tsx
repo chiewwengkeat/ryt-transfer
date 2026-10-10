@@ -12,7 +12,7 @@ import {
 } from "@/domains/transfer/lib/pending-transfer-notices/pending-transfer-notices";
 import { clearPendingTransfer } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { formatMoney } from "@/shared/lib/money/money";
-import { reportError } from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability/observability";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 
 export default function SectionTransferNotices() {

@@ -10,7 +10,7 @@ import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
-import { reportError } from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability/observability";
 
 import {
   getTransferOptions,

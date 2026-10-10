@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react-native";
 import { delay, http, HttpResponse } from "msw";
 
 import { API_BASE_URL } from "@/shared/config/config";
-import { setObservabilitySink } from "@/shared/observability/observability";
+import { setObservabilitySink } from "@/shared/observability/observability/observability";
 import { useIsOffline } from "@/shared/platform/offline/offline";
 import { observedRecords } from "@/test/doubles/native-doubles";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";

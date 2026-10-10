@@ -1,4 +1,4 @@
-import { reportError } from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability/observability";
 import {
   deleteSecureRecord,
   readSecureRecord,

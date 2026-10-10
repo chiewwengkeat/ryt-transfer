@@ -8,7 +8,7 @@ import {
 import { requestJson } from "@/shared/http/transport/transport";
 import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
 import { parseWireAmount } from "@/shared/lib/money/money";
-import { trackEvent } from "@/shared/observability/observability";
+import { trackEvent } from "@/shared/observability/observability/observability";
 
 import {
   TransferFunds,

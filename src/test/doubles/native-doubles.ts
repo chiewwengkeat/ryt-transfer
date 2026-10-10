@@ -8,7 +8,7 @@ import {
 } from "react";
 import type * as ReactNativeScreens from "react-native-screens";
 
-import type { ObservedRecord } from "@/shared/observability/observability";
+import type { ObservedRecord } from "@/shared/observability/observability/observability";
 
 export const kvStoreDouble = {
   getItemSync: (key: string) => kvEntries.get(key) ?? null,

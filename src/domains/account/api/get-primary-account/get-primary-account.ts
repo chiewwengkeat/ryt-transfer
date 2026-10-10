@@ -2,7 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { requestJson } from "@/shared/http/transport/transport";
 import { parseWireAmount } from "@/shared/lib/money/money";
-import { trackEvent } from "@/shared/observability/observability";
+import { trackEvent } from "@/shared/observability/observability/observability";
 
 import { accountKeys } from "@/domains/account/api/account.keys";
 import type { GetPrimaryAccountResponse } from "./get-primary-account.type";

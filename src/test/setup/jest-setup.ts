@@ -16,7 +16,7 @@ import i18next, { changeLanguage } from "i18next";
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
-import { setObservabilitySink } from "@/shared/observability/observability";
+import { setObservabilitySink } from "@/shared/observability/observability/observability";
 import { forgetRequestOutcomes } from "@/shared/platform/offline/offline";
 import type * as RootQueryClient from "@/root/query-client/query-client";
 import "@/root/translations/translations";

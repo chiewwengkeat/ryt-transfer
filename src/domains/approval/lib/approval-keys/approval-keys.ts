@@ -11,7 +11,7 @@ import { randomUUID } from "expo-crypto";
 import { Platform } from "react-native";
 
 import type { RegisterApprovalKeysResponse } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
-import { trackEvent } from "@/shared/observability/observability";
+import { trackEvent } from "@/shared/observability/observability/observability";
 import {
   readSecureRecord,
   writeSecureRecord,

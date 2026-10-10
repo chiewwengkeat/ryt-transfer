@@ -26,7 +26,7 @@ import {
 } from "@/screens/transfer/flow-store/flow-store";
 import type { ApprovalEvent } from "@/screens/transfer/flow-store/flow-store.type";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
-import { reportError } from "@/shared/observability/observability";
+import { reportError } from "@/shared/observability/observability/observability";
 
 export async function settleApprovalAnswer({
   answer: { transfer, failure },
