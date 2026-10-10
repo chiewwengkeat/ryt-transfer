@@ -9,6 +9,7 @@ const TEST_FILES = [
 const TEST_HELPER_FILES = [
   "src/test/**/*.{ts,tsx}",
   "src/**/tests/**/*.{ts,tsx}",
+  "src/screens/*/scenarios/**/*.{ts,tsx}",
   "src/**/test-utils.{ts,tsx}",
   "src/**/*.stories.{ts,tsx}",
 ];
