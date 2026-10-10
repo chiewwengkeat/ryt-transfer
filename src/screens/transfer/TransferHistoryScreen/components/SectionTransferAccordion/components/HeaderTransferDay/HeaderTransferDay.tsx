@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import Animated, {
   ReduceMotion,
   useAnimatedStyle,
@@ -15,13 +15,10 @@ import {
   useRenderTrace,
 } from "@/shared/observability/render-trace/render-trace";
 import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion/reduce-motion";
-import {
-  colors,
-  minTouchTarget,
-  spacing,
-  typography,
-} from "@/shared/theme/theme";
+import { colors, minTouchTarget, spacing } from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
+
+import ViewAmountWrap from "@/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/components/ViewAmountWrap/ViewAmountWrap";
 
 interface Props {
   summary: ListTransfersResponse["days"][number];
@@ -37,7 +34,6 @@ export default function HeaderTransferDay({
 }: Props) {
   useRenderTrace("header", summary.date);
   const { t, i18n } = useTranslation(["transfer", "shared"]);
-  const { fontScale } = useWindowDimensions();
   const dayLabel = traceFormatCalls(formatMalaysianDayHeader)(
     summary.date,
     today,
@@ -69,29 +65,23 @@ export default function HeaderTransferDay({
       style={({ pressed }) => [styles.header, pressed && styles.headerPressed]}
     >
       <IconChevron expanded={expanded} />
-      <View style={styles.titleAndNet}>
-        <View
-          style={[
-            styles.title,
-            // Seven ems hold a long word such as "Yesterday": a net that would leave less wraps to its own line.
-            { flexBasis: 7 * typography.body.fontSize * fontScale },
-          ]}
-        >
-          <TextBody strong tone="secondary">
-            {t("header_transfer_day.title", {
-              day: dayLabel,
-              count: summary.count,
-            })}
-          </TextBody>
-        </View>
-        {netText !== null && (
-          <View style={styles.net}>
+      <ViewAmountWrap
+        columnGap={spacing.sm}
+        amount={
+          netText === null ? null : (
             <TextBody strong tone="secondary">
               {netText}
             </TextBody>
-          </View>
-        )}
-      </View>
+          )
+        }
+      >
+        <TextBody strong tone="secondary">
+          {t("header_transfer_day.title", {
+            day: dayLabel,
+            count: summary.count,
+          })}
+        </TextBody>
+      </ViewAmountWrap>
     </Pressable>
   );
 }
@@ -108,17 +98,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   headerPressed: { opacity: 0.8 },
-  titleAndNet: {
-    flex: 1,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    columnGap: spacing.sm,
-    rowGap: spacing.xs,
-  },
-  title: { flexGrow: 1, flexShrink: 1 },
-  // Shrinkable so the title's seven ems count: Yoga ignores a lone flexible child's basis.
-  net: { flexShrink: 1 },
 });
 
 interface IconChevronProps {

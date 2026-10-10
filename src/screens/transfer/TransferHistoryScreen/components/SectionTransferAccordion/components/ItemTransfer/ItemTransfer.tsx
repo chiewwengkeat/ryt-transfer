@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import {
   type Transfer,
@@ -14,9 +14,11 @@ import {
   traceFormatCalls,
   useRenderTrace,
 } from "@/shared/observability/render-trace/render-trace";
-import { colors, spacing, typography } from "@/shared/theme/theme";
+import { colors, spacing } from "@/shared/theme/theme";
 import CardPressable from "@/shared/ui/CardPressable/CardPressable";
 import TextBody from "@/shared/ui/TextBody/TextBody";
+
+import ViewAmountWrap from "@/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/components/ViewAmountWrap/ViewAmountWrap";
 
 interface Props {
   transfer: Transfer;
@@ -24,7 +26,6 @@ interface Props {
 export default function ItemTransfer({ transfer }: Props) {
   useRenderTrace("row", transfer.transferId);
   const { t } = useTranslation(["transfer", "shared"]);
-  const { fontScale } = useWindowDimensions();
   const statusWord = useTransferStatusWord(transfer);
   const parsedAmount = parseWireAmount(transfer.amount);
   const moneyMovedSign = MONEY_MOVED_SIGN[transfer.funds];
@@ -45,26 +46,10 @@ export default function ItemTransfer({ transfer }: Props) {
     >
       <View style={styles.item}>
         <IconTransferDirection direction={transfer.direction} />
-        <View style={styles.detailsAndAmount}>
-          <View
-            style={[
-              styles.details,
-              // Seven ems hold a long word such as "Unsuccessful": an amount that would leave less wraps to its own line.
-              { flexBasis: 7 * typography.body.fontSize * fontScale },
-            ]}
-          >
-            <TextBody strong>{transfer.counterparty.registeredName}</TextBody>
-            <TextBody tone="secondary">
-              {transferTime === null
-                ? statusWord
-                : t("item_transfer.time_and_status", {
-                    time: transferTime,
-                    status: statusWord,
-                  })}
-            </TextBody>
-          </View>
-          {parsedAmount && (
-            <View style={styles.amount}>
+        <ViewAmountWrap
+          columnGap={spacing.md}
+          amount={
+            parsedAmount && (
               <TextBody strong>
                 {moneyMovedSign === 0
                   ? traceFormatCalls(formatMoney)(parsedAmount)
@@ -76,9 +61,19 @@ export default function ItemTransfer({ transfer }: Props) {
                       { signDisplay: "exceptZero" },
                     )}
               </TextBody>
-            </View>
-          )}
-        </View>
+            )
+          }
+        >
+          <TextBody strong>{transfer.counterparty.registeredName}</TextBody>
+          <TextBody tone="secondary">
+            {transferTime === null
+              ? statusWord
+              : t("item_transfer.time_and_status", {
+                  time: transferTime,
+                  status: statusWord,
+                })}
+          </TextBody>
+        </ViewAmountWrap>
       </View>
     </CardPressable>
   );
@@ -91,17 +86,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
   },
-  detailsAndAmount: {
-    flex: 1,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    columnGap: spacing.md,
-    rowGap: spacing.xs,
-  },
-  details: { flexGrow: 1, flexShrink: 1 },
-  // Shrinkable so the details' seven ems count: Yoga ignores a lone flexible child's basis.
-  amount: { flexShrink: 1 },
 });
 
 interface IconTransferDirectionProps {
