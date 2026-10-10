@@ -18,7 +18,7 @@ CI also runs `production-bundle`, a job of its own that exports the app in each 
 
 ## Layout
 
-Two principles shape every rule below: an engineer reading the code should meet as little of what they do not need as possible, and no two engineers should read a rule two ways. [Decision 011](docs/decisions/011-low-mental-load.md) argues each rule, and [001](docs/decisions/001-vertical-slices.md) the slices.
+Two principles shape every rule below: an engineer reading the code should meet as little of what they do not need as possible, and no two engineers should read a rule two ways. [Decision 011](docs/deep-dives/decisions/011-low-mental-load.md) argues each rule, and [001](docs/deep-dives/decisions/001-vertical-slices.md) the slices.
 
 The app is cut into vertical slices of two kinds:
 

@@ -6,7 +6,7 @@ A bank's transfers run through more than one client: this app, a website, perhap
 
 ## Decision
 
-[`src/screens/transfer/scenarios/transfer.md`](../../src/screens/transfer/scenarios/transfer.md) is the one description of what can happen while someone sends money, and every client that sends money follows it. Transfer is the feature that gets one because it is where clients drifting apart costs a customer money. The file is written for a product owner as much as for an engineer:
+[`src/screens/transfer/scenarios/transfer.md`](../../../src/screens/transfer/scenarios/transfer.md) is the one description of what can happen while someone sends money, and every client that sends money follows it. Transfer is the feature that gets one because it is where clients drifting apart costs a customer money. The file is written for a product owner as much as for an engineer:
 
 - **One short section per scenario**, grouped by the step where it happens, under an index with one line per step. Each section says when it happens, what happened to the money, where it shows, what the person must be told and what they can do; where it matters, also what they must never be offered, what follows and why. A new attribute is one more label, never a wider table.
 - **A permanent id per scenario**, `transfer.<snake_case>`, never changed and never reused. The mock bank's scenario registry, the scenario tests, the Demo menu and the analytics outcome all use it as written, and the translations keep its words under `common.<name>`, where `<name>` is the id after `transfer.`. The matrix test fails when the registry's ids, or the step each sits under, differ from the file's, when a test declares an id the file lacks, or when no route test picks a scenario and asserts on it.

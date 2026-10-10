@@ -1,6 +1,6 @@
 # Limitations
 
-The [write-up](write-up.md#limits-and-what-id-do-next) names four limits, each with what I'd do next; this page holds the full list. Two more next steps, beyond those four: hiding the screen from accessibility services on Android 14 and newer, which needs native code, alongside the bank's server-side fraud signals; and closing the accessibility gaps under [Languages and text size](#languages-and-text-size), so that spoken announcements and the native navigation bar use the picked language, a newly shown error scrolls into view at large text, and TalkBack's focus returns to what opened a sheet.
+The [write-up](../write-up.md#limits-and-what-id-do-next) names four limits, each with what I'd do next; this page holds the full list. Two more next steps, beyond those four: hiding the screen from accessibility services on Android 14 and newer, which needs native code, alongside the bank's server-side fraud signals; and closing the accessibility gaps under [Languages and text size](#languages-and-text-size), so that spoken announcements and the native navigation bar use the picked language, a newly shown error scrolls into view at large text, and TalkBack's focus returns to what opened a sheet.
 
 ## What I could not prove
 
