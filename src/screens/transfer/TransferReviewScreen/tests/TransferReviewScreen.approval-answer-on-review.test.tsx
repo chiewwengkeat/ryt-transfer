@@ -27,7 +27,7 @@ import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 import {
   countSent,
-  waitForHomeToOfferTransfer,
+  walkToTransferReviewAndPressTransfer,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
@@ -38,7 +38,9 @@ it(
   "says on review that the approval timed out once the bank's window has passed, and keeps no record to recheck",
   scenarioTest("transfer.approval_expired", async () => {
     const balanceBeforeMinor = await readBankBalanceMinor();
-    const view = await approveRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText("The approval timed out — no money moved."),
@@ -53,7 +55,9 @@ it(
 it(
   "says on review that the approval couldn't be verified when the bank rejects its signature",
   scenarioTest("transfer.approval_not_verified", async () => {
-    const view = await approveRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText(
@@ -69,7 +73,9 @@ it(
   "says on review that the balance or limit changed when the bank finds them short as the approval arrives, and leads back to an amount step that reads both again",
   scenarioTest("transfer.balance_or_limit_short_at_approval", async () => {
     const balanceBeforeMinor = await readBankBalanceMinor();
-    const view = await approveRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText(
@@ -123,7 +129,9 @@ it("says the same on review when it is today's limit the bank finds short as the
       },
     ),
   );
-  const view = await approveRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   expect(
     await screen.findByText(
@@ -166,7 +174,9 @@ it.each([
           }),
       ),
     );
-    const view = await approveRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
     await screen.findByText(SENDING_MESSAGE);
 
     answerApproval(HttpResponse.json({ error }, { status: 403 }));
@@ -194,7 +204,9 @@ it("holds Transfer on review with the security wait's words but no time when the
     until: new Date(Date.now() - 60_000).toISOString(),
     reason: "DEVICE_PAIRED",
   });
-  await approveRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   expect(
     await screen.findByText(
@@ -211,7 +223,9 @@ it(
       code: "INVALID_REQUEST",
       message: "Test.",
     });
-    await approveRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText(
@@ -227,7 +241,8 @@ it(
   scenarioTest("transfer.approval_not_verified", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -302,7 +317,8 @@ it.each([
         ),
       ),
     );
-    const view = await openReviewOfRm100();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -320,21 +336,6 @@ it.each([
 );
 
 const SENDING_MESSAGE = "Sending your transfer. The bank's answer comes next.";
-
-async function reviewRm100Transfer() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  return view;
-}
-
-async function approveRm100Transfer() {
-  const view = await reviewRm100Transfer();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
 
 async function expectNothingToRecheckAtTheNextLaunch(
   view: Awaited<ReturnType<typeof renderRoute>>,
@@ -357,17 +358,4 @@ function answerEveryApprovalWith(
       HttpResponse.json({ error }, { status }),
     ),
   );
-}
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
 }

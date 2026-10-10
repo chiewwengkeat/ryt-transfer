@@ -13,11 +13,7 @@ import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
-import {
-  askBankToCreateRm100,
-  countSent,
-  waitForHomeToOfferTransfer,
-} from "./TransferReviewScreen.helper";
+import { askBankToCreateRm100, countSent } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -29,7 +25,8 @@ it(
     const { body } = await askBankToCreateRm100();
     const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "", t)} — a security wait after pairing this phone.`;
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -52,7 +49,8 @@ it(
     const { body } = await askBankToCreateRm100();
     const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "", t)} — a security wait after opening your account.`;
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -106,7 +104,8 @@ it.each([
         ),
       ),
     );
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -124,7 +123,8 @@ it(
   scenarioTest("transfer.cooling_off_new_account", async () => {
     const { body } = await askBankToCreateRm100();
     const holdReason = `You can send money from ${formatMalaysianDateTime(body.error.until ?? "", t)} — a security wait after opening your account.`;
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
@@ -157,7 +157,8 @@ it("words a cooling-off whose reason the app does not know as a newly paired pho
       ),
     ),
   );
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -175,7 +176,8 @@ it(
   "says the account is locked and to contact Ryt, announces it, offers no way around it, and lets Back leave",
   scenarioTest("transfer.account_locked", async () => {
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
-    const view = await openReviewOfRm100();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -200,16 +202,3 @@ it(
 );
 
 const t = getFixedT(null, ["shared"]);
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}

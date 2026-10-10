@@ -25,7 +25,8 @@ import { relaunchApp, renderRoute } from "@/test/render/render-route";
 import {
   countSent,
   RECIPIENT_MOBILE,
-  waitForHomeToOfferTransfer,
+  walkToTransferReviewAndPressTransfer,
+  walkFromHomeToTransferReview,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
@@ -36,7 +37,8 @@ it(
   "leaves only Home beneath the result once the approval's answer is lost, so review cannot send it again",
   scenarioTest("transfer.approval_unanswered", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    const view = await openReviewOfRm100("/");
+    const view = await renderRoute("/");
+    await walkFromHomeToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -52,7 +54,8 @@ it(
   "re-reads the balance after a lost answer, so Home shows the debit the bank made",
   scenarioTest("transfer.approval_unanswered", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    await openReviewOfRm100("/");
+    await renderRoute("/");
+    await walkFromHomeToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -66,7 +69,8 @@ it(
 
 it("re-reads the balance after something unexpected fails past the approval, so Home shows the debit the bank made", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100("/");
+  await renderRoute("/");
+  await walkFromHomeToTransferReview();
   // Nothing the bank answers can fail past the approval, so a navigation fault stands in.
   jest.spyOn(router, "dismissTo").mockImplementationOnce(() => {
     throw new Error("Test.");
@@ -85,7 +89,8 @@ it(
   "starts the next transfer blank after going Home from an approval whose answer was lost",
   scenarioTest("transfer.approval_unanswered", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    const view = await openReviewOfRm100();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview();
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
@@ -114,7 +119,8 @@ it("takes a lost approval answer to the result page, which never offers to send 
   mswServer.use(
     http.post("*/transfers/:transferId/approve", () => HttpResponse.error()),
   );
-  const view = await openReviewOfRm100();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -151,7 +157,8 @@ it("keeps the transfer on the phone before its approval leaves, so the next laun
       return new Promise<never>(() => undefined);
     }),
   );
-  const view = await openReviewOfRm100();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -176,7 +183,8 @@ it("keeps the transfer on the phone before its approval leaves, so the next laun
 
 it("says the approval was not sent when the phone cannot keep a record of it", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   jest
     .spyOn(secureStoreNativeDouble, "setValueWithKeyAsync")
     .mockRejectedValue(new Error("the keychain is unavailable"));
@@ -200,7 +208,8 @@ it("says the approval was not sent when the phone cannot keep a record of it", a
 it("never says no money moved when something unexpected fails after the bank answers the approval", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const balanceBeforeMinor = await readBankBalanceMinor();
-  const view = await openReviewOfRm100();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
   // Nothing the bank answers can fail past the approval, so a navigation fault stands in.
   jest.spyOn(router, "dismissTo").mockImplementationOnce(() => {
     throw new Error("Test.");
@@ -238,7 +247,8 @@ it("never offers to send again when the bank answers none of three tries at the 
       return HttpResponse.error();
     }),
   );
-  const view = await openReviewOfRm100();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -271,7 +281,10 @@ it("never offers to send again when the bank answers none of three tries at the 
 });
 
 it("closes the PIN sheet and checks the transfer on the result page, never saying no money moved, when something unexpected fails after the approval has left the phone", async () => {
-  await confirmRm100ApprovedByPin();
+  approvalSettingsStore.setState({ biometricApprovalOn: false });
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   // Nothing after the bank's answer throws by itself, so a failing navigation stands in for any throw there.
   const dismissFailingOnce = jest
     .spyOn(router, "dismissTo")
@@ -288,36 +301,4 @@ it("closes the PIN sheet and checks the transfer on the result page, never sayin
   dismissFailingOnce.mockRestore();
 });
 
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
 const DEMO_PIN = "246810";
-
-async function confirmRm100ApprovedByPin() {
-  approvalSettingsStore.setState({ biometricApprovalOn: false });
-  return confirmRm100Transfer();
-}
-
-async function pairPhoneAndOpenReviewOfRm100() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function confirmRm100Transfer() {
-  const view = await pairPhoneAndOpenReviewOfRm100();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  return view;
-}

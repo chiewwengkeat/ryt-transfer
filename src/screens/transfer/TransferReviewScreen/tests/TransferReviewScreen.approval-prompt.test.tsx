@@ -28,7 +28,8 @@ import { renderRoute } from "@/test/render/render-route";
 import {
   approveRequests,
   RECIPIENT_MOBILE,
-  waitForHomeToOfferTransfer,
+  walkToTransferReviewUntilTransferShows,
+  walkToTransferReviewAndPressTransfer,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
@@ -39,7 +40,9 @@ it(
   "says the face or fingerprint was not recognised, sends nothing, and leaves Transfer to try again or the PIN to approve",
   scenarioTest("transfer.biometrics_not_recognised", async () => {
     failNextBiometricPrompt("AUTHENTICATION_FAILED");
-    await confirmRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText(
@@ -72,7 +75,9 @@ it("offers no PIN instead while the transfer is being sent", async () => {
       { once: true },
     ),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   await screen.findByText(
     "Sending your transfer. The bank's answer comes next.",
   );
@@ -84,7 +89,9 @@ it("offers no PIN instead while the transfer is being sent", async () => {
 
 it("offers no PIN instead while face or fingerprint approval is turned off, Transfer asking for the PIN itself", async () => {
   approvalSettingsStore.setState({ biometricApprovalOn: false });
-  await pairPhoneAndOpenReviewOfRm100();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewUntilTransferShows();
 
   expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
   await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
@@ -94,7 +101,9 @@ it("offers no PIN instead while face or fingerprint approval is turned off, Tran
 });
 
 it("takes the PIN choice away once face or fingerprint approval is turned off with review open", async () => {
-  await pairPhoneAndOpenReviewOfRm100();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewUntilTransferShows();
   expect(
     screen.getByRole("button", { name: "Use PIN instead" }),
   ).toBeOnTheScreen();
@@ -108,7 +117,9 @@ it("takes the PIN choice away once face or fingerprint approval is turned off wi
 
 it("says the transfer was not sent when the prompt is closed with Android's cancel", async () => {
   failNextBiometricPrompt("USER_CANCELED");
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   expect(
     await screen.findByText("The transfer was not sent — no money moved."),
@@ -118,7 +129,9 @@ it("says the transfer was not sent when the prompt is closed with Android's canc
 
 it("says the transfer was not sent when Android cancels its own prompt", async () => {
   failNextBiometricPrompt("SYSTEM_CANCELED");
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   expect(
     await screen.findByText("The transfer was not sent — no money moved."),
@@ -130,7 +143,9 @@ it(
   "stops before anything is sent when the prompt fails in a way the app does not name",
   scenarioTest("transfer.approval_unexpected", async () => {
     failNextBiometricPrompt("SIGNATURE_CREATION_FAILED");
-    await confirmRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText(
@@ -146,7 +161,8 @@ it(
   scenarioTest("transfer.pin_chosen", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Use PIN instead" }),
@@ -171,7 +187,8 @@ it(
   "asks for a face or fingerprint only, never the phone's passcode",
   scenarioTest("transfer.biometrics_recognised", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -199,7 +216,8 @@ it(
   scenarioTest("transfer.biometrics_recognised", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -219,7 +237,8 @@ it(
   scenarioTest("transfer.biometrics_recognised", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
     const platformOs = jest.replaceProperty(Platform, "OS", "android");
 
     try {
@@ -246,7 +265,8 @@ it(
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
     cancelNextBiometricPrompt();
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -265,7 +285,8 @@ it(
 it("says face or fingerprint approval is unavailable while it is turned off, and sends no approval", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   approvalSettingsStore.setState({ biometricApprovalOn: false });
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -284,31 +305,4 @@ it("says face or fingerprint approval is unavailable while it is turned off, and
   expect(sentPaths.filter((path) => path.endsWith("/approve"))).toEqual([]);
 });
 
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
 const DEMO_PIN = "246810";
-
-async function pairPhoneAndOpenReviewOfRm100() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function confirmRm100Transfer() {
-  const view = await pairPhoneAndOpenReviewOfRm100();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  return view;
-}

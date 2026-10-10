@@ -20,11 +20,7 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 
-import {
-  countSent,
-  RECIPIENT_MOBILE,
-  waitForHomeToOfferTransfer,
-} from "./TransferReviewScreen.helper";
+import { countSent, RECIPIENT_MOBILE } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -174,7 +170,8 @@ it("takes an approval lost as the phone goes offline to the result page, which r
     ),
     http.post("*/transfers/:transferId/approve", () => HttpResponse.error()),
   );
-  const view = await openReviewOfRm100();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -213,7 +210,8 @@ it("takes an approval lost as the phone goes offline to the result page, which r
 });
 
 it("offers no PIN instead while the last request found no network, and offers it again once one is answered", async () => {
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   expect(
     await screen.findByRole("button", { name: "Use PIN instead" }),
   ).toBeOnTheScreen();
@@ -233,7 +231,8 @@ it("offers no PIN instead while the last request found no network, and offers it
 });
 
 it("pauses sending on review while the phone reports no connection", async () => {
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   const transferButton = await screen.findByRole("button", {
     name: "Transfer",
   });
@@ -261,17 +260,4 @@ async function openReviewWhileNoRequestReachesTheBank() {
   mswServer.use(http.all("*", () => HttpResponse.error()));
   await fireEvent.press(screen.getByRole("button", { name: "Review" }));
   await screen.findByRole("button", { name: "Try again" });
-}
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
 }

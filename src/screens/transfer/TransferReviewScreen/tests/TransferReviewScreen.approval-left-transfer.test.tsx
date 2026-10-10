@@ -10,17 +10,18 @@ import {
   holdNextBiometricPrompt,
 } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import {
-  enterPinAndApprove,
-  walkToTransferReview,
-} from "@/test/render/drive-app";
+import { enterPinAndApprove } from "@/test/render/drive-app";
 import {
   secureStoreNativeDouble,
   observedRecords,
 } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
-import { approveRequests } from "./TransferReviewScreen.helper";
+import {
+  approveRequests,
+  walkToTransferReviewUntilTransferShows,
+  walkToTransferReviewAndPressTransfer,
+} from "./TransferReviewScreen.helper";
 
 it("lets an approval's answer change nothing once the person has left it and started another transfer", async () => {
   let releaseFirstApproval: () => void = () => undefined;
@@ -39,7 +40,9 @@ it("lets an approval's answer change nothing once the person has left it and sta
       { once: true },
     ),
   );
-  const view = await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   await screen.findByText(
     "Sending your transfer. The bank's answer comes next.",
   );
@@ -96,7 +99,9 @@ it.each([
     const balanceBeforeMinor = await readBankBalanceMinor();
     setPromptAnswer();
     const releasePrompt = holdNextBiometricPrompt();
-    await confirmRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
     await waitFor(() => {
       expect(biometricPromptsShown()).toHaveLength(1);
     });
@@ -144,7 +149,9 @@ it("leaves a newer transfer alone when the refusal of one the person left is set
       });
       return deleteRecordForReal(key);
     });
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   // ⛔ Wait on the hold, never the spy's calls: an earlier test's spy can still be in place, having seen this test's earlier deletes.
   await waitFor(() => {
     expect(recordDeleteHeld).toBe(true);
@@ -189,7 +196,9 @@ it("leaves a newer transfer's PIN sheet alone when the bank asks for a PIN to se
       { once: true },
     ),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   await waitFor(() => {
     expect(keyRegistrationHeld).toBe(true);
   });
@@ -240,7 +249,9 @@ it("still reports setting approval up again failing unexpectedly for a transfer 
       { once: true },
     ),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   await waitFor(() => {
     expect(keyRegistrationHeld).toBe(true);
   });
@@ -296,7 +307,9 @@ it("opens no PIN sheet over Home when the bank asks for a PIN to set approval up
       { once: true },
     ),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   await waitFor(() => {
     expect(keyRegistrationHeld).toBe(true);
   });
@@ -337,7 +350,9 @@ it.each([
     const newerApprovalHeld = new Promise<void>((release) => {
       releaseNewerApproval = release;
     });
-    await pairPhoneAndOpenReviewOfRm100();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewUntilTransferShows();
     await fireEvent.press(
       screen.getByRole("button", { name: "Use PIN instead" }),
     );
@@ -429,20 +444,6 @@ it.each([
 );
 
 const DEMO_PIN = "246810";
-
-async function pairPhoneAndOpenReviewOfRm100() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function confirmRm100Transfer() {
-  const view = await pairPhoneAndOpenReviewOfRm100();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  return view;
-}
 
 async function startRm50TransferFromHomeToItsPinSheet() {
   await fireEvent.press(

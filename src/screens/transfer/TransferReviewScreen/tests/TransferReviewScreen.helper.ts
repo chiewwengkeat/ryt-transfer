@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { getLookupRecipientOptions } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
@@ -8,6 +8,7 @@ import {
   sendToBank,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
+import { walkToTransferReview } from "@/test/render/drive-app";
 import { askOpenAppToReadAgain } from "@/test/render/render-route";
 
 export const RECIPIENT_MOBILE = "012-345 6789";
@@ -17,6 +18,22 @@ export async function waitForHomeToOfferTransfer() {
   await waitFor(() => {
     expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
   });
+}
+
+export async function walkFromHomeToTransferReview() {
+  await waitForHomeToOfferTransfer();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  await walkToTransferReview();
+}
+
+export async function walkToTransferReviewUntilTransferShows() {
+  await walkToTransferReview();
+  await screen.findByRole("button", { name: "Transfer" });
+}
+
+export async function walkToTransferReviewAndPressTransfer() {
+  await walkToTransferReviewUntilTransferShows();
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
 }
 
 export function countSent(method: string, pathEnd: string) {

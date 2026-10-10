@@ -17,7 +17,6 @@ import {
   countSent,
   idempotencyKeysOfCreatesSent,
   RECIPIENT_MOBILE,
-  waitForHomeToOfferTransfer,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
@@ -33,7 +32,8 @@ it("treats a key the bank says was used for other details as something unexpecte
       ),
     ),
   );
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -50,7 +50,8 @@ it("treats a key the bank says was used for other details as something unexpecte
 it(
   "repeats an unanswered confirmation under its key, says Ryt could not be reached, and repeats it again when tried",
   scenarioTest("transfer.confirmation_unanswered", async () => {
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -106,7 +107,8 @@ it("goes on with the transfer the bank made once a repeat gets the answer that w
       { once: true },
     ),
   );
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -132,7 +134,8 @@ it("treats a server error naming no bank code as no answer, repeating the create
       ),
     ),
   );
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -168,7 +171,8 @@ it("says Ryt could not be reached while the bank is still on the create, and rep
       { once: true },
     ),
   );
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -204,7 +208,8 @@ it("repeats a create whose answer could not be read under its key, and debits on
       { once: true },
     ),
   );
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -237,7 +242,8 @@ it("sends a fresh create under a new key once review's name check, asked again a
       return HttpResponse.error();
     }),
   );
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -310,7 +316,8 @@ it.each([
         return undefined;
       }),
     );
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
@@ -345,16 +352,3 @@ it.each([
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 5_000);
   },
 );
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}

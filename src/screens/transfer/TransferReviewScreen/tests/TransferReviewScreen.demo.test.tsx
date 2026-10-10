@@ -105,7 +105,8 @@ it(
   "refuses approval on review in a demo build while the rooted phone is picked, with no face or fingerprint prompt and no transfer sent",
   scenarioTest("transfer.rooted_phone", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -125,7 +126,8 @@ it(
 
 it("refuses Use PIN instead before any PIN sheet in a demo build while the rooted phone is picked, asking the phone's own check nothing", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await pickDemoScenario("Rooted, jailbroken or tampered phone");
 
   await fireEvent.press(
@@ -147,7 +149,8 @@ it("refuses Use PIN instead before any PIN sheet in a demo build while the roote
 
 it("lets approval go ahead in a demo build with no scenario picked, without asking the phone's own check", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -160,7 +163,8 @@ it("lets approval go ahead in a demo build with no scenario picked, without aski
 
 it("lets approval go ahead in a demo build once another scenario replaces the rooted phone", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await pickDemoScenario("Rooted, jailbroken or tampered phone");
   await pickDemoScenario("Normal, no scenario");
 
@@ -175,7 +179,8 @@ it("lets approval go ahead in a demo build once another scenario replaces the ro
 it("shows the refusal with no earlier notice or button beside it that offers the PIN", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   failNextBiometricPrompt("AUTHENTICATION_FAILED");
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -196,11 +201,6 @@ const PHONE_REFUSAL =
   "This phone's security can't be confirmed, so transfers are off on it.";
 const PIN_OFFER =
   "Your face or fingerprint was not recognised. You can try again, or use your PIN.";
-
-async function openReviewOfRm100() {
-  await renderRoute("/transfer");
-  await walkToTransferReview();
-}
 
 // A resolver that answers nothing hands the request on to the bank, once released.
 function holdTheNextPostTo(path: string) {

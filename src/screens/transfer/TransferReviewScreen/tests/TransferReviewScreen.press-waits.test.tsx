@@ -22,7 +22,8 @@ import { renderRoute } from "@/test/render/render-route";
 it("creates and approves nothing when review is left while Transfer reads the sensor under the bank's PIN lock, and approves from review opened again", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await rememberApprovalPinLocked();
-  const view = await openReviewOfRm100();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
   await screen.findByRole("button", { name: "Transfer" });
   await waitFor(() => {
     expect(
@@ -67,7 +68,8 @@ it("creates and approves nothing when review is left while Transfer reads the se
 it("shows Use PIN instead's PIN-locked sheet and creates nothing when the bank's PIN lock is remembered while the phone check runs", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const answerHeldChecks = holdDeviceIntegrityChecks();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Use PIN instead" }),
@@ -92,7 +94,8 @@ it("shows Use PIN instead's PIN-locked sheet and creates nothing when the bank's
 it("offers Use PIN instead only once review's first read of the bank's PIN lock has answered", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const releasePinLockRead = holdFirstPinLockRead();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await screen.findByRole("button", { name: "Transfer" });
   const offeredWhileTheLockIsUnknown =
     screen.queryByRole("button", { name: "Use PIN instead" }) !== null;
@@ -112,7 +115,8 @@ it("creates nothing and shows the PIN-locked sheet when Transfer asks for the PI
   await rememberApprovalPinLocked();
   approvalSettingsStore.setState({ biometricApprovalOn: false });
   const releasePinLockRead = holdFirstPinLockRead();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -137,7 +141,8 @@ it("creates nothing and shows the PIN-locked sheet when Transfer asks for the PI
 
 it("frees Transfer and Use PIN instead when the phone check throws, and approves from the same review", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   jest
     .spyOn(biometricsLibraryDouble, "getDeviceIntegrityStatus")
     .mockImplementationOnce(() => {
@@ -176,7 +181,8 @@ it("asks for no approval of a transfer whose review is popped while it is being 
       await createHeld;
     }),
   );
-  const view = await openReviewOfRm100();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -204,12 +210,6 @@ it("asks for no approval of a transfer whose review is popped while it is being 
     expect.stringMatching(/^\/transfers\/[\w-]+\/approve$/),
   ]);
 });
-
-async function openReviewOfRm100() {
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  return view;
-}
 
 function holdFirstPinLockRead() {
   const readSecureRecordForReal = secureStoreNativeDouble.getValueWithKeyAsync;

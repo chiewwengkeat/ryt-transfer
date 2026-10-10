@@ -42,7 +42,8 @@ it("refuses approval in place of the prompt on a phone that reports root, leavin
     isCompromised: true,
     riskLevel: "HIGH",
   });
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -86,7 +87,8 @@ it("shows the refusal alone, with no earlier transfer's warning, no notice that 
     ),
   );
   failNextBiometricPrompt("AUTHENTICATION_FAILED");
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -112,7 +114,8 @@ it("shows the refusal alone, with no earlier transfer's warning, no notice that 
 
 it("checks the phone afresh at each press, so a phone that reports hooks after a closed prompt is refused", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   cancelNextBiometricPrompt();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -134,7 +137,8 @@ it("ignores the demo's rooted-phone pick in a production build, and approves on 
   await pairPhoneAsTheDemoLaunchDoes();
   // Set directly: a production build loads no demo layer, so no pick can reach the store any other way.
   rootedPhoneDemoPickStore.setState({ rootedPhonePicked: true });
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -147,7 +151,8 @@ it("ignores the demo's rooted-phone pick in a production build, and approves on 
 it("waits, showing Transfer busy, for a phone check still running when it is pressed, then refuses", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const answerHeldChecks = holdDeviceIntegrityChecks();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -182,7 +187,8 @@ it("waits, showing Transfer busy, for a phone check still running when it is pre
 it("lets approval go ahead when the phone check gives no clear answer, and records that once", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   failDeviceIntegrityChecks();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -199,7 +205,8 @@ it("lets approval go ahead when the phone check gives no clear answer, and recor
 it("lets approval go ahead when the phone check has not answered within 5 seconds, and records that once", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   holdDeviceIntegrityChecks();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -242,7 +249,8 @@ it.each([
   async (_, leaveReview) => {
     await pairPhoneAsTheDemoLaunchDoes();
     const answerHeldChecks = holdDeviceIntegrityChecks();
-    const view = await openReviewOfRm100();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview();
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
@@ -272,7 +280,8 @@ it.each([
 it("creates and approves nothing when an iPhone's Back or swipe starts closing review while the phone check runs", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const answerHeldChecks = holdDeviceIntegrityChecks();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -306,7 +315,8 @@ it("refuses Use PIN instead before any PIN sheet on a phone that reports root, s
     isCompromised: true,
     riskLevel: "HIGH",
   });
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   const checksBeforePress = deviceIntegrityChecksAsked();
 
   await fireEvent.press(
@@ -323,7 +333,8 @@ it("refuses Use PIN instead before any PIN sheet on a phone that reports root, s
 it("waits, showing Transfer busy and no PIN sheet, for a phone check still running when Use PIN instead is pressed, then approves with the PIN on that one check", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const answerHeldChecks = holdDeviceIntegrityChecks();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   const checksBeforePress = deviceIntegrityChecksAsked();
 
   await fireEvent.press(
@@ -351,7 +362,8 @@ it("waits, showing Transfer busy and no PIN sheet, for a phone check still runni
 it("lets Use PIN instead go ahead when the phone check has not answered within 5 seconds, and records that once", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   holdDeviceIntegrityChecks();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Use PIN instead" }),
@@ -375,7 +387,8 @@ it("lets Use PIN instead go ahead when the phone check has not answered within 5
 
 it("checks the phone afresh at each press of Use PIN instead, so a phone that reports hooks after a closed PIN sheet is refused", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   const checksBeforePresses = deviceIntegrityChecksAsked();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Use PIN instead" }),
@@ -405,12 +418,6 @@ const PIN_OFFER =
 const EARLIER_TRANSFER_UNCONFIRMED =
   /^Your last transfer is still being checked/;
 const PIN_SHEET = "Enter your bank PIN to approve this transfer.";
-
-async function openReviewOfRm100() {
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  return view;
-}
 
 async function approveWithPinFromTheSheet() {
   await screen.findByText(PIN_SHEET);

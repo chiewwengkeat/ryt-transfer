@@ -15,22 +15,24 @@ import {
   pairPhoneAsTheDemoLaunchDoes,
   pairPhoneBeforeTheBankForgetsItsKeys,
 } from "@/test/mock-bank/demo-pairing";
-import {
-  enterPinAndApprove,
-  scenarioTest,
-  walkToTransferReview,
-} from "@/test/render/drive-app";
+import { enterPinAndApprove, scenarioTest } from "@/test/render/drive-app";
 import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
-import { approveRequests } from "./TransferReviewScreen.helper";
+import {
+  approveRequests,
+  walkToTransferReviewUntilTransferShows,
+  walkToTransferReviewAndPressTransfer,
+} from "./TransferReviewScreen.helper";
 
 it(
   "sets face or fingerprint approval up again with the PIN that approved the transfer, so the next one needs no PIN",
   scenarioTest("transfer.biometrics_changed", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     changeEnrolledBiometrics();
-    await confirmRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
     await enterPinAndApprove(DEMO_PIN);
     await screen.findByText("Transfer sent");
 
@@ -62,7 +64,9 @@ it("offers the PIN again on the next transfer when face or fingerprint approval 
       { once: true },
     ),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   await enterPinAndApprove(DEMO_PIN);
   await screen.findByText("Transfer sent");
 
@@ -83,7 +87,9 @@ it("asks for the PIN again, not for a face or fingerprint the bank cannot verify
       once: true,
     }),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   await enterPinAndApprove(DEMO_PIN);
   await screen.findByText("Transfer sent");
 
@@ -104,7 +110,9 @@ it("asks for the PIN again, not for a face or fingerprint the bank cannot verify
 it("still approves with face or fingerprint set up again on its own once setting every key up again was left unfinished", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   changeEnrolledBiometrics();
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   await enterPinAndApprove(DEMO_PIN);
   await screen.findByText("Transfer sent");
   mswServer.use(
@@ -134,7 +142,9 @@ it("sets approval up again with the PIN when the bank no longer knows the phone'
   await pairPhoneBeforeTheBankForgetsItsKeys();
   await scenarioTest("transfer.approval_key_unknown", async () => {
     const balanceBeforeMinor = await readBankBalanceMinor();
-    await confirmRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText("Approval needs setting up again on this phone."),
@@ -176,7 +186,10 @@ it("sets approval up again with the PIN already entered, the sheet still only se
         { once: true },
       ),
     );
-    await confirmRm100ApprovedByPin();
+    approvalSettingsStore.setState({ biometricApprovalOn: false });
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
     const requestsBeforeApproving = sentRequests.length;
 
     await enterPinAndApprove(DEMO_PIN);
@@ -215,7 +228,9 @@ it.each([
   "sets approval up again only once with %s when the bank still does not know the new keys, then says so on review",
   async (_, approveButtonName, finishApproving) => {
     let keyRegistrations = 0;
-    await pairPhoneAndOpenReviewOfRm100();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewUntilTransferShows();
     mswServer.use(
       http.post("*/transfers/:transferId/approve", () =>
         HttpResponse.json(
@@ -268,7 +283,9 @@ it.each([
         { once: true },
       ),
     );
-    await confirmRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
     await screen.findByText(
       "Enter your PIN to set it up and approve this transfer.",
     );
@@ -285,25 +302,6 @@ it.each([
 );
 
 const DEMO_PIN = "246810";
-
-async function confirmRm100ApprovedByPin() {
-  approvalSettingsStore.setState({ biometricApprovalOn: false });
-  return confirmRm100Transfer();
-}
-
-async function pairPhoneAndOpenReviewOfRm100() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function confirmRm100Transfer() {
-  const view = await pairPhoneAndOpenReviewOfRm100();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  return view;
-}
 
 async function sendAnotherRm100TransferFromResult() {
   await fireEvent.press(screen.getByRole("button", { name: "Done" }));

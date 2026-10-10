@@ -28,7 +28,7 @@ import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 import {
   countSent,
-  waitForHomeToOfferTransfer,
+  walkToTransferReviewAndPressTransfer,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
@@ -36,7 +36,9 @@ afterEach(() => {
 });
 
 it("opens the result page straight from review, showing no other screen of the transfer between them", async () => {
-  await reviewRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   const transferButton = await screen.findByRole("button", {
     name: "Transfer",
   });
@@ -51,7 +53,9 @@ it("opens the result page straight from review, showing no other screen of the t
 });
 
 it("keeps review sending, with Transfer and Back held, from a PIN approval's answer until the result page covers it", async () => {
-  await reviewRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   // ⛔ Held shut, the result page leaves on screen what review shows until it covers review: on a phone, one commit.
   const resultPageAsked = jest.spyOn(router, "push").mockReturnValue(undefined);
   const homeAsked = jest.spyOn(router, "dismissTo").mockReturnValue(undefined);
@@ -75,7 +79,9 @@ it("keeps review sending, with Transfer and Back held, from a PIN approval's ans
 it("tells Home the transfer was sent when the result page never opens, and reopens no result at the next launch", async () => {
   const resultPageDropped = dropTheResultPageAsItOpens();
   try {
-    const view = await approveRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
     const sentNotice =
       /^Your transfer of RM 100\.00 to .+ was sent — money moved\.$/;
 
@@ -95,7 +101,9 @@ it(
   scenarioTest("transfer.processing", async () => {
     const resultPageDropped = dropTheResultPageAsItOpens();
     try {
-      const view = await approveRm100Transfer();
+      await pairPhoneAsTheDemoLaunchDoes();
+      const view = await renderRoute("/transfer");
+      await walkToTransferReviewAndPressTransfer();
       const stillBeingChecked =
         /^Your last transfer is still being checked, so don't send it again — not confirmed yet\. If you contact us, quote this reference: (?!trf_)\w+$/;
 
@@ -116,7 +124,9 @@ it(
   scenarioTest("transfer.approval_unanswered", async () => {
     const resultPageDropped = dropTheResultPageAsItOpens();
     try {
-      const view = await approveRm100Transfer();
+      await pairPhoneAsTheDemoLaunchDoes();
+      const view = await renderRoute("/transfer");
+      await walkToTransferReviewAndPressTransfer();
 
       expect(
         await screen.findByText(
@@ -156,7 +166,9 @@ it(
     );
     const resultPageDropped = dropTheResultPageAsItOpens();
     try {
-      const view = await approveRm100Transfer();
+      await pairPhoneAsTheDemoLaunchDoes();
+      const view = await renderRoute("/transfer");
+      await walkToTransferReviewAndPressTransfer();
       for (const digit of "246810")
         await fireEvent.press(
           await screen.findByRole("button", { name: digit }),
@@ -191,7 +203,9 @@ it.each([
   "takes an approval answered %s to the result page, since that answer does not say where the transfer ended",
   async (code, status) => {
     answerEveryApprovalWith(status, { code, message: "Test." });
-    const view = await approveRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText(
@@ -209,7 +223,9 @@ it.each([
   "takes a face or fingerprint approval answered %s to the result page as a lost answer, since the approval had left the phone",
   async (code, status) => {
     answerEveryApprovalWith(status, { code, message: "Test." });
-    const view = await approveRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText(
@@ -223,7 +239,9 @@ it.each([
 it(
   "takes a transfer the bank's fraud check stopped to the result page, never back to sending",
   scenarioTest("transfer.fraud_blocked", async () => {
-    const view = await approveRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByRole("button", { name: "Done" }),
@@ -236,7 +254,9 @@ it(
 it(
   "takes a transfer held for a security check to the result page",
   scenarioTest("transfer.held_for_review", async () => {
-    const view = await approveRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByRole("button", { name: "Done" }),
@@ -248,7 +268,9 @@ it(
 it(
   "takes a transfer the receiving bank declined to the result page",
   scenarioTest("transfer.recipient_account_inactive", async () => {
-    const view = await approveRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByRole("button", { name: "Done" }),
@@ -262,7 +284,8 @@ it(
   scenarioTest("transfer.approval_unknown_answer", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
-    const view = await openReviewOfRm100();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -349,7 +372,8 @@ it.each<[string, () => Response, number]>([
   async (_, answerApproval, approvesSent) => {
     await pairPhoneAsTheDemoLaunchDoes();
     mswServer.use(http.post("*/transfers/:transferId/approve", answerApproval));
-    const view = await openReviewOfRm100();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -374,7 +398,8 @@ it(
   "never says money moved when the bank answers that the transfer is still processing",
   scenarioTest("transfer.processing", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    const view = await openReviewOfRm100();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -392,21 +417,6 @@ it(
 
 const SENDING_MESSAGE = "Sending your transfer. The bank's answer comes next.";
 const RESULT_PATH = /^\/transfer\/result\/[\w-]+$/;
-
-async function reviewRm100Transfer() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  return view;
-}
-
-async function approveRm100Transfer() {
-  const view = await reviewRm100Transfer();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
 
 // ⛔ Stands in for Back skipping the result page: review holds Back until that page covers it, too late to press here.
 function dropTheResultPageAsItOpens() {
@@ -433,17 +443,4 @@ function answerEveryApprovalWith(
       HttpResponse.json({ error }, { status }),
     ),
   );
-}
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
 }

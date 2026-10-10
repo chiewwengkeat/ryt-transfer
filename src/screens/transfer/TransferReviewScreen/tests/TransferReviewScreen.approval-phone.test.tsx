@@ -24,7 +24,8 @@ import { renderRoute } from "@/test/render/render-route";
 
 import {
   countSent,
-  waitForHomeToOfferTransfer,
+  walkToTransferReviewUntilTransferShows,
+  walkToTransferReviewAndPressTransfer,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
@@ -32,7 +33,9 @@ afterEach(() => {
 });
 
 it("asks the phone again on coming back to the app, taking the PIN choice away once nothing is enrolled", async () => {
-  await pairPhoneAndOpenReviewOfRm100();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewUntilTransferShows();
   expect(
     screen.getByRole("button", { name: "Use PIN instead" }),
   ).toBeOnTheScreen();
@@ -53,7 +56,9 @@ it(
   "turns a prompt the phone locked after too many attempts into the PIN sheet, which approves",
   scenarioTest("transfer.biometrics_locked_out", async () => {
     failNextBiometricPrompt("BIOMETRIC_LOCKOUT");
-    await confirmRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText(
@@ -70,7 +75,9 @@ it(
   "reports the PIN locked, not why the PIN was wanted, when the phone locks face and fingerprint while the bank holds the PIN locked",
   scenarioTest("transfer.biometrics_locked_out", async () => {
     failNextBiometricPrompt("BIOMETRIC_LOCKOUT");
-    await pairPhoneAndOpenReviewOfRm100();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewUntilTransferShows();
     await act(rememberApprovalPinLocked);
 
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
@@ -87,7 +94,9 @@ it(
   "turns a key that cannot sign after Android's own lockout recovery into the PIN sheet, which approves",
   scenarioTest("transfer.biometrics_locked_out", async () => {
     failNextBiometricPrompt("KEY_USER_NOT_AUTHENTICATED");
-    await confirmRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText(
@@ -101,7 +110,9 @@ it(
 
 it("still offers Use PIN instead while the phone reports face and fingerprint locked", async () => {
   reportBiometricSensorUnavailable("BIOMETRY_LOCKOUT");
-  await pairPhoneAndOpenReviewOfRm100();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewUntilTransferShows();
 
   await fireEvent.press(
     screen.getByRole("button", { name: "Use PIN instead" }),
@@ -115,7 +126,9 @@ it("still offers Use PIN instead while the phone reports face and fingerprint lo
 
 it("opens the PIN sheet with no prompt while the phone reports face and fingerprint locked", async () => {
   reportBiometricSensorUnavailable("BIOMETRY_LOCKOUT");
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   expect(
     await screen.findByText(
@@ -140,7 +153,9 @@ it.each([
   "offers no PIN instead and asks for the PIN itself, saying why, when %s",
   async (_, sensorCode, reason) => {
     reportBiometricSensorUnavailable(sensorCode);
-    await pairPhoneAndOpenReviewOfRm100();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewUntilTransferShows();
 
     await waitFor(() => {
       expect(
@@ -164,7 +179,9 @@ it(
   scenarioTest("transfer.biometrics_changed", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     changeEnrolledBiometrics();
-    await confirmRm100Transfer();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
 
     expect(
       await screen.findByText(
@@ -181,7 +198,8 @@ it(
 it("offers to try again or leave when the phone cannot read its approval key", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const balanceBeforeMinor = await readBankBalanceMinor();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   jest
     .spyOn(secureStoreNativeDouble, "getValueWithKeyAsync")
     .mockRejectedValueOnce(new Error("Test."));
@@ -203,7 +221,8 @@ it("offers to try again or leave when the phone cannot read its approval key", a
 
 it("closes the PIN sheet and offers to try again or leave when the phone cannot read its approval key after the PIN", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Use PIN instead" }),
   );
@@ -230,31 +249,4 @@ it("closes the PIN sheet and offers to try again or leave when the phone cannot 
   expect(countSent("POST", "/approve")).toBe(0);
 });
 
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
 const DEMO_PIN = "246810";
-
-async function pairPhoneAndOpenReviewOfRm100() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function confirmRm100Transfer() {
-  const view = await pairPhoneAndOpenReviewOfRm100();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  return view;
-}

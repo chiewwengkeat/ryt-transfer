@@ -18,7 +18,6 @@ import { renderRoute } from "@/test/render/render-route";
 import {
   idempotencyKeysOfCreatesSent,
   RECIPIENT_MOBILE,
-  waitForHomeToOfferTransfer,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
@@ -31,7 +30,8 @@ it(
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
     loseEveryTryOfTheFirstCreate();
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
@@ -71,7 +71,8 @@ it(
   "says the details changed after Ryt did not answer when only the note changed",
   scenarioTest("transfer.details_changed_after_no_answer", async () => {
     loseEveryTryOfTheFirstCreate();
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
@@ -106,7 +107,8 @@ it(
     const otherMobile = "019-876 5432";
     const { recipient } = await lookUpTestRecipient(otherMobile);
     loseEveryTryOfTheFirstCreate();
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
@@ -145,7 +147,8 @@ it(
 
 it("reopens review without saying the details changed when the same recipient is chosen again after Ryt did not answer", async () => {
   loseEveryTryOfTheFirstCreate();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -172,7 +175,8 @@ it("reopens review without saying the details changed when the same recipient is
 it("reopens review without saying the details changed when nothing changed after Ryt did not answer", async () => {
   const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
   loseEveryTryOfTheFirstCreate();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -192,19 +196,6 @@ it("reopens review without saying the details changed when nothing changed after
     ),
   ).toBeNull();
 });
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
 
 function loseEveryTryOfTheFirstCreate() {
   // Its Transfer and both repeats.

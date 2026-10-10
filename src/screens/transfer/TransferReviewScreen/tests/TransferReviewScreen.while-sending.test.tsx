@@ -22,7 +22,7 @@ import { TransferFlowStep } from "@/screens/transfer/flow-store/flow-store";
 
 import {
   countSent,
-  waitForHomeToOfferTransfer,
+  walkFromHomeToTransferReview,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
@@ -34,7 +34,8 @@ it(
   scenarioTest("transfer.double_tap_ignored", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
     const pressTransfer = pressHandlerOf(
       await screen.findByRole("button", { name: "Transfer" }),
     );
@@ -77,7 +78,8 @@ it(
         { once: true },
       ),
     );
-    const view = await openReviewOfRm100();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -153,7 +155,8 @@ it.each<[TransferFlowStep, (stepHeld: Promise<void>) => () => void]>([
   "turns off the swipe that would close the whole transfer flow while the transfer is %s",
   async (_step, holdStep) => {
     await pairPhoneAsTheDemoLaunchDoes();
-    await openReviewOfRm100("/");
+    await renderRoute("/");
+    await walkFromHomeToTransferReview();
     let releaseStep: () => void = () => undefined;
     // Armed once review is open: the launch check for pending transfers reads the keychain too, and would take the hold.
     const expectStepHeld = holdStep(
@@ -179,7 +182,8 @@ it(
   "turns the swipe back on when the bank refuses the approval and nothing was sent",
   scenarioTest("transfer.approval_not_verified", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    await openReviewOfRm100("/");
+    await renderRoute("/");
+    await walkFromHomeToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -208,7 +212,8 @@ it("never reopens review while its transfer is being sent, even from the amount 
     ),
     http.post("*/transfers/:transferId/approve", () => HttpResponse.error()),
   );
-  const view = await openReviewOfRm100();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -241,7 +246,8 @@ it("never moves on from the recipient step while a transfer is still being creat
       return HttpResponse.error();
     }),
   );
-  const view = await openReviewOfRm100();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -288,7 +294,8 @@ it("ignores Android's Back while the transfer is being sent", async () => {
     ),
     http.post("*/transfers/:transferId/approve", () => HttpResponse.error()),
   );
-  const view = await openReviewOfRm100();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -305,19 +312,6 @@ it("ignores Android's Back while the transfer is being sent", async () => {
     await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 }),
   ).toBeOnTheScreen();
 });
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
 
 // The swipe is native and never reaches JS, so this reads the setting the native transfer screen is handed.
 function readRootTransferScreenGestureEnabled() {

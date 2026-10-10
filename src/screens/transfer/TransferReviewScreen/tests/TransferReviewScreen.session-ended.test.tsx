@@ -23,7 +23,8 @@ import {
   askOpenReviewsNameCheckAgain,
   countSent,
   RECIPIENT_MOBILE,
-  waitForHomeToOfferTransfer,
+  walkToTransferReviewUntilTransferShows,
+  walkFromHomeToTransferReview,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
@@ -35,7 +36,8 @@ it(
   scenarioTest("transfer.account_locked", async () => {
     const holdReason = "Your account is locked. Contact Ryt to unlock it.";
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
-    await openReviewOfRm100UntilTransferShows();
+    await renderRoute("/transfer");
+    await walkToTransferReviewUntilTransferShows();
     const create = holdTheNextPost("*/transfers");
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await create.waitUntilSent();
@@ -68,7 +70,8 @@ it(
     announce.mockClear();
     const timesHoldSpoken = () =>
       announce.mock.calls.filter(([words]) => words === holdReason).length;
-    await openReviewOfRm100UntilTransferShows();
+    await renderRoute("/transfer");
+    await walkToTransferReviewUntilTransferShows();
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await waitFor(() => {
       expect(timesHoldSpoken()).toBe(1);
@@ -106,7 +109,8 @@ it(
       ),
     );
     await pairPhoneAsTheDemoLaunchDoes();
-    await openReviewOfRm100UntilTransferShows();
+    await renderRoute("/transfer");
+    await walkToTransferReviewUntilTransferShows();
     await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
     await screen.findByRole(
       "header",
@@ -130,7 +134,8 @@ it(
 );
 
 it("reports only the session's end for a transfer the bank would not create because the session had ended, and offers Transfer again once signed in", async () => {
-  await openReviewOfRm100UntilTransferShows();
+  await renderRoute("/transfer");
+  await walkToTransferReviewUntilTransferShows();
   const scenariosReportedSinceTheCreate = scenariosReportedFromNowOn();
   mswServer.use(
     http.post(
@@ -169,7 +174,8 @@ it("shows, says and reports no failure of the name check an expired recipient ch
   const countNameChecks = () =>
     sentRequests.filter(({ url }) => url.endsWith("/recipients/lookup")).length;
   const { recipient } = await lookUpTestRecipient("012-345 6789");
-  await openReviewOfRm100UntilTransferShows();
+  await renderRoute("/transfer");
+  await walkToTransferReviewUntilTransferShows();
   mswServer.use(
     http.post(
       "*/transfers",
@@ -221,7 +227,8 @@ it(
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
     const releaseTransferRead = holdTheNextTransferRead();
-    const view = await openReviewOfRm100("/");
+    const view = await renderRoute("/");
+    await walkFromHomeToTransferReview();
     const transferButton = await screen.findByRole("button", {
       name: "Transfer",
     });
@@ -299,7 +306,8 @@ it("keeps the recipient review showed after signing in again, so the transfer ca
       { once: true },
     ),
   );
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -333,7 +341,8 @@ it("keeps the recipient review showed after signing in again, so the transfer ca
 
 it("asks review's name check again once they sign back in, when the ended session cut off their Try again", async () => {
   const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await screen.findByText(recipient.registeredName);
   mswServer.use(
     http.post(
@@ -378,25 +387,6 @@ it("asks review's name check again once they sign back in, when the ended sessio
   ).toBeOnTheScreen();
   expect(screen.getByText(recipient.registeredName)).toBeOnTheScreen();
 });
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
-
-async function openReviewOfRm100UntilTransferShows() {
-  await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-}
 
 // A resolver that answers nothing hands the request on to the bank, once released.
 function holdTheNextPost(path: string) {

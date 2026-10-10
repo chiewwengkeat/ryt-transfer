@@ -41,6 +41,7 @@ import { renderRoute } from "@/test/render/render-route";
 import {
   RECIPIENT_MOBILE,
   waitForHomeToOfferTransfer,
+  walkFromHomeToTransferReview,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
@@ -51,7 +52,8 @@ it(
   "shows the name and bank the bank holds for the number, and the number masked",
   scenarioTest("transfer.recipient_found", async () => {
     const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     expect(await screen.findByText(recipient.registeredName)).toBeOnTheScreen();
     expect(screen.getByText(recipient.bankName)).toBeOnTheScreen();
@@ -65,7 +67,8 @@ it(
   scenarioTest("transfer.biometrics_recognised", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
     const balanceBeforeMinor = await readBankBalanceMinor();
-    const view = await openReviewOfRm100();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -83,7 +86,8 @@ it("signs the name, masked number, bank and amount review shows, and no note", a
   await pairPhoneAsTheDemoLaunchDoes();
   const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
   const releasePrompt = holdNextBiometricPrompt();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -112,7 +116,8 @@ it("signs the name, masked number, bank and amount review shows, and no note", a
 it("signs the note review shows and sends it with the transfer, which the bank then approves", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   const releasePrompt = holdNextBiometricPrompt();
-  await openReviewOfRm100("/transfer", "Lunch");
+  await renderRoute("/transfer");
+  await walkToTransferReview({ note: "Lunch" });
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -135,7 +140,8 @@ it("signs the note review shows and sends it with the transfer, which the bank t
 
 it("reports each step of a sent transfer and each scenario it shows, with its amount, never with the recipient", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -340,7 +346,8 @@ it(
   "goes Home from the receipt on Back, and the next transfer starts blank",
   scenarioTest("transfer.completed", async () => {
     await pairPhoneAsTheDemoLaunchDoes();
-    const view = await openReviewOfRm100("/");
+    const view = await renderRoute("/");
+    await walkFromHomeToTransferReview();
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
     );
@@ -360,7 +367,8 @@ it(
 
 it("shows the note on review, and sends it to the bank trimmed", async () => {
   const createBodies = refuseCreatesKeepingTheirBodies();
-  await openReviewOfRm100("/transfer", "  Lunch with Ali  ");
+  await renderRoute("/transfer");
+  await walkToTransferReview({ note: "  Lunch with Ali  " });
 
   expect(await screen.findByText("Lunch with Ali")).toBeOnTheScreen();
   await fireEvent.press(
@@ -377,7 +385,8 @@ it("shows the note on review, and sends it to the bank trimmed", async () => {
 
 it("sends no note when the note is left blank", async () => {
   const createBodies = refuseCreatesKeepingTheirBodies();
-  await openReviewOfRm100("/transfer", "   ");
+  await renderRoute("/transfer");
+  await walkToTransferReview({ note: "   " });
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -451,19 +460,6 @@ it("tells a screen reader that the PIN keypad is in Bahasa Malaysia when the app
 
 const STILL_BEING_CHECKED =
   "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: 20261007C0FFEE00";
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}
 
 function refuseCreatesKeepingTheirBodies() {
   const createBodies: unknown[] = [];

@@ -16,7 +16,6 @@ import {
   askOpenReviewsNameCheckAgain,
   countSent,
   RECIPIENT_MOBILE,
-  waitForHomeToOfferTransfer,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {
@@ -26,7 +25,8 @@ afterEach(() => {
 it(
   "asks for a second look at the name on a first transfer to the recipient",
   scenarioTest("transfer.first_transfer_to_recipient", async () => {
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     expect(
       await screen.findByText(
@@ -39,7 +39,8 @@ it(
 it(
   "says no DuitNow account was found for the ID, and leads back to the recipient step",
   scenarioTest("transfer.recipient_not_found", async () => {
-    const view = await openReviewOfRm100();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview();
 
     expect(
       await screen.findByText("No DuitNow account was found for this ID."),
@@ -57,7 +58,8 @@ it(
 it(
   "says recipient names can't be confirmed right now, and never lets the transfer go ahead without one",
   scenarioTest("transfer.name_check_unavailable", async () => {
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     expect(
       await screen.findByText("Recipient names can't be confirmed right now."),
@@ -71,7 +73,8 @@ it(
 it(
   "asks to try again in a minute after too many name checks, and offers Try again only once that minute has passed",
   scenarioTest("transfer.too_many_name_checks", async () => {
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     expect(
       await screen.findByText(
@@ -103,7 +106,8 @@ it(
     announce.mockClear();
     const timesSaid = () =>
       announce.mock.calls.filter(([words]) => words === tooManyChecks).length;
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
     const refusal = await screen.findByText(tooManyChecks);
     const saidWhileReviewOpens = timesSaid();
     await finishOpeningScreen(refusal);
@@ -128,7 +132,8 @@ it(
     const tooManyChecks =
       "Too many name checks in a short time. Try again in a minute.";
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
     await finishOpeningScreen(await screen.findByText(tooManyChecks));
     await act(() => jest.advanceTimersByTimeAsync(60_000));
     const announcementsBeforeTryAgain = announce.mock.calls.length;
@@ -156,7 +161,8 @@ it.each([
   "stops offering Transfer once review's name check, asked again, answers %s",
   async (code, status, message) => {
     const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
     await screen.findByText(recipient.registeredName);
     mswServer.use(
       http.post("*/recipients/lookup", () =>
@@ -173,7 +179,8 @@ it.each([
 );
 
 it("offers no PIN instead while review's name check, asked again, is running, and offers it again once it answers", async () => {
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   expect(
     await screen.findByRole("button", { name: "Use PIN instead" }),
   ).toBeOnTheScreen();
@@ -225,7 +232,8 @@ it("shows no name-check notice while sending, though review's name check, asked 
       { once: true },
     ),
   );
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
   );
@@ -260,7 +268,8 @@ it("says something unexpected stopped the transfer when the name check answers i
       ),
     ),
   );
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
 
   expect(
     await screen.findByText(
@@ -273,7 +282,8 @@ it("says something unexpected stopped the transfer when the name check answers i
 it(
   "asks to confirm the recipient again once the name check has expired, and checks the name afresh",
   scenarioTest("transfer.name_check_expired", async () => {
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -290,16 +300,3 @@ it(
     expect(countSent("POST", "/recipients/lookup")).toBe(2);
   }),
 );
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}

@@ -29,7 +29,8 @@ it("offers to try again or leave when the bank's answer to the transfer cannot b
       once: true,
     }),
   );
-  const view = await openReviewOfRm100();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReview();
 
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer" }),
@@ -46,7 +47,8 @@ it("offers to try again or leave when the bank's answer to the transfer cannot b
 });
 
 it("offers to try again or leave when something unexpected fails before the transfer is sent", async () => {
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   jest
     .spyOn(
       jest.requireMock<{ randomUUID: () => string }>("expo-crypto"),
@@ -72,7 +74,8 @@ it("offers to try again or leave when something unexpected fails before the tran
 it(
   "says on review that the balance no longer covers the amount, reads it and the limits again, and leads back to the amount instead of offering Transfer",
   scenarioTest("transfer.balance_or_limit_short_at_confirmation", async () => {
-    const view = await openReviewOfRm100();
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview();
     const transferButton = await screen.findByRole("button", {
       name: "Transfer",
     });
@@ -111,7 +114,8 @@ it.each(["DAILY_LIMIT_EXCEEDED", "ABOVE_PER_TRANSFER_MAX"])(
         ),
       ),
     );
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -195,7 +199,8 @@ it.each([
         ),
       ),
     );
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -219,7 +224,8 @@ it("reads today's limit again when the bank answers Confirm with maintenance, si
       ),
     ),
   );
-  await openReviewOfRm100();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
   const transferButton = await screen.findByRole("button", {
     name: "Transfer",
   });
@@ -240,7 +246,8 @@ it("reads today's limit again when the bank answers Confirm with maintenance, si
 it(
   "says something unexpected stopped the transfer when the bank answers Confirm in a way the app does not know",
   scenarioTest("transfer.review_unexpected", async () => {
-    await openReviewOfRm100();
+    await renderRoute("/transfer");
+    await walkToTransferReview();
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -279,7 +286,8 @@ it.each([
         ),
       ),
     );
-    const view = await openReviewOfRm100("/transfer", "Lunch");
+    const view = await renderRoute("/transfer");
+    await walkToTransferReview({ note: "Lunch" });
 
     await fireEvent.press(
       await screen.findByRole("button", { name: "Transfer" }),
@@ -303,16 +311,3 @@ it.each([
 );
 
 const t = getFixedT(null, ["shared"]);
-
-async function openReviewOfRm100(
-  startPath: "/" | "/transfer" = "/transfer",
-  note?: string,
-) {
-  const view = await renderRoute(startPath);
-  if (startPath === "/") {
-    await waitForHomeToOfferTransfer();
-    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  }
-  await walkToTransferReview({ note });
-  return view;
-}

@@ -9,13 +9,13 @@ import {
   mswServer,
 } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import {
-  enterPinAndApprove,
-  walkToTransferReview,
-} from "@/test/render/drive-app";
+import { enterPinAndApprove } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
-import { approveRequests } from "./TransferReviewScreen.helper";
+import {
+  approveRequests,
+  walkToTransferReviewAndPressTransfer,
+} from "./TransferReviewScreen.helper";
 
 it("sends an approval whose answer was lost twice more, 2 and then 4 seconds on, as the same bytes under the same key", async () => {
   const approvalsSeen: { atMs: number; key: string | null; body: string }[] =
@@ -35,7 +35,9 @@ it("sends an approval whose answer was lost twice more, 2 and then 4 seconds on,
       once: true,
     }),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   expect(
     await screen.findByText("Transfer sent", {}, { timeout: 10_000 }),
@@ -67,7 +69,9 @@ it("sends an approval whose answer timed out again under the same key, and shows
       { once: true },
     ),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   await screen.findByText(
     "Sending your transfer. The bank's answer comes next.",
   );
@@ -95,7 +99,9 @@ it("never sends an approval again once the bank has answered it, a server error 
       ),
     ),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   expect(
     await screen.findByText(
@@ -111,7 +117,9 @@ it("sends an approval answered by a server error naming no bank code twice more 
       HttpResponse.text("<html>Bad gateway</html>", { status: 502 }),
     ),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   expect(
     await screen.findByText(
@@ -136,7 +144,9 @@ it("answers a server error by the bank code it names, a known one sent once", as
       ),
     ),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   expect(
     await screen.findByText("The approval timed out — no money moved."),
@@ -147,7 +157,9 @@ it("answers a server error by the bank code it names, a known one sent once", as
 it("gets the bank's first answer back for a resend whose first copy already moved the money, which moves once", async () => {
   const balanceBeforeMinor = await readBankBalanceMinor();
   deliverFirstApprovalButLoseItsAnswer();
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   expect(
     await screen.findByText("Transfer sent", {}, { timeout: 10_000 }),
@@ -160,7 +172,9 @@ it("sends an approval answered with a body it cannot read again under the same k
   deliverFirstApprovalButLoseItsAnswer(() =>
     HttpResponse.text("<html>Approved</html>", { status: 200 }),
   );
-  await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   expect(
     await screen.findByText("Transfer sent", {}, { timeout: 10_000 }),
@@ -175,7 +189,10 @@ it("sends an approval answered with a body it cannot read again under the same k
 
 it("keeps the tries left that a wrong PIN was told when its refusal answers a resend, which the bank does not count again", async () => {
   deliverFirstApprovalButLoseItsAnswer();
-  await confirmRm100ApprovedByPin();
+  approvalSettingsStore.setState({ biometricApprovalOn: false });
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
 
   await enterPinAndApprove("111111");
 
@@ -228,7 +245,9 @@ it("lets a lost approval answer change nothing once the person has left it, thou
       },
     ),
   );
-  const view = await confirmRm100Transfer();
+  await pairPhoneAsTheDemoLaunchDoes();
+  const view = await renderRoute("/transfer");
+  await walkToTransferReviewAndPressTransfer();
   await screen.findByText(
     "Sending your transfer. The bank's answer comes next.",
   );
@@ -288,25 +307,6 @@ it("lets a lost approval answer change nothing once the person has left it, thou
 });
 
 const DEMO_PIN = "246810";
-
-async function confirmRm100ApprovedByPin() {
-  approvalSettingsStore.setState({ biometricApprovalOn: false });
-  return confirmRm100Transfer();
-}
-
-async function pairPhoneAndOpenReviewOfRm100() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/transfer");
-  await walkToTransferReview();
-  await screen.findByRole("button", { name: "Transfer" });
-  return view;
-}
-
-async function confirmRm100Transfer() {
-  const view = await pairPhoneAndOpenReviewOfRm100();
-  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
-  return view;
-}
 
 // Later copies go to the bank untouched, so a resend gets back whatever the bank answered the first.
 function deliverFirstApprovalButLoseItsAnswer(
