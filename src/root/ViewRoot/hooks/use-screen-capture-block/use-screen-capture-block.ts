@@ -8,8 +8,13 @@ import {
   blockScreenCapture,
   useScreenErrorShowing,
 } from "@/shared/platform/screen-capture/screen-capture";
+import { demoLayer } from "@/root/app-launch/app-launch";
 
-export function useScreenCaptureBlock(captureBlockPicked: boolean) {
+export function useScreenCaptureBlock(
+  captureBlockScenarioId: Parameters<
+    NonNullable<typeof demoLayer>["subscribeToPhoneSidePick"]
+  >[0],
+) {
   const routePattern = `/${useSegments().join("/")}`;
   const pathname = usePathname();
   const onReceiptRoute = RECEIPT_ROUTES.has(routePattern);
@@ -26,10 +31,17 @@ export function useScreenCaptureBlock(captureBlockPicked: boolean) {
       setSettledReceiptPathname(null);
     };
   }, [onReceiptRoute, pathname]);
-  const captureBlockPickedRef = useRef(captureBlockPicked);
-  useLayoutEffect(() => {
-    captureBlockPickedRef.current = captureBlockPicked;
-  }, [captureBlockPicked]);
+  const [captureBlockPicked, setCaptureBlockPicked] = useState(false);
+  const captureBlockPickedRef = useRef(false);
+  // Before paint, so a pick saved before a restart blocks the first frame.
+  useLayoutEffect(
+    () =>
+      demoLayer?.subscribeToPhoneSidePick(captureBlockScenarioId, (picked) => {
+        captureBlockPickedRef.current = picked;
+        setCaptureBlockPicked(picked);
+      }),
+    [captureBlockScenarioId],
+  );
 
   // The crash screen that replaces this root is no receipt, so it is blocked wherever other screens are, even when a
   // receipt crashed. The pick is read through a ref: as a dependency, unpicking it on a receipt would block the receipt.

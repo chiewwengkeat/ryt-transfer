@@ -1,6 +1,6 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { StatusBar, StyleSheet, View } from "react-native";
 
 import { ApprovalDemoPinContext } from "@/domains/approval/lib/approval-demo-pin/approval-demo-pin";
@@ -35,17 +35,29 @@ import { useScreenCaptureBlock } from "./hooks/use-screen-capture-block/use-scre
 
 export default function ViewRoot() {
   usePendingTransfersAtLaunch();
-  const [captureBlockPicked, setCaptureBlockPicked] = useState(false);
-  // Before paint, so a pick saved before a restart blocks the first frame.
-  useLayoutEffect(
+  useScreenCaptureBlock(TransferScenarioId.ScreenCaptureBlocked);
+  useEffect(
     () =>
       demoLayer?.subscribeToPhoneSidePick(
-        TransferScenarioId.ScreenCaptureBlocked,
-        setCaptureBlockPicked,
+        TransferScenarioId.BiometricsUnavailable,
+        (biometricsOff) => {
+          approvalSettingsStore.setState({
+            biometricApprovalOn: !biometricsOff,
+          });
+        },
       ),
     [],
   );
-  useScreenCaptureBlock(captureBlockPicked);
+  useEffect(
+    () =>
+      demoLayer?.subscribeToPhoneSidePick(
+        TransferScenarioId.RootedPhone,
+        (rootedPhonePicked) => {
+          rootedPhoneDemoPickStore.setState({ rootedPhonePicked });
+        },
+      ),
+    [],
+  );
   const [sessionEnded, setSessionEnded] = useState(false);
   const [appSheetOpen, setAppSheetOpen] = useState(false);
   const [navigatorMounts, setNavigatorMounts] = useState(0);
@@ -67,31 +79,9 @@ export default function ViewRoot() {
   }, []);
   useEffect(
     () =>
-      demoLayer?.subscribeToPhoneSidePick(
-        TransferScenarioId.BiometricsUnavailable,
-        (biometricsOff) => {
-          approvalSettingsStore.setState({
-            biometricApprovalOn: !biometricsOff,
-          });
-        },
-      ),
-    [],
-  );
-  useEffect(
-    () =>
       demoLayer?.subscribeToScenarioChange(() => {
         readAgainEveryReadButAnsweredNameChecks({ refusalsAreAnswers: false });
       }),
-    [],
-  );
-  useEffect(
-    () =>
-      demoLayer?.subscribeToPhoneSidePick(
-        TransferScenarioId.RootedPhone,
-        (rootedPhonePicked) => {
-          rootedPhoneDemoPickStore.setState({ rootedPhonePicked });
-        },
-      ),
     [],
   );
 
