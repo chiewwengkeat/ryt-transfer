@@ -195,7 +195,7 @@
     "recovery_unexpected": {
       "body": "This transfer's outcome can't be confirmed right now. Check your transfer history before sending it again — not confirmed yet."
     },
-    "transfer_details": {
+    "detail_rows": {
       "status": "Status",
       "status_and_money": "{{status}} — {{money}}",
       "money": {

@@ -195,7 +195,7 @@
     "recovery_unexpected": {
       "body": "Keputusan pindahan ini tidak dapat disahkan buat masa ini. Semak sejarah pindahan anda sebelum menghantarnya sekali lagi — belum disahkan."
     },
-    "transfer_details": {
+    "detail_rows": {
       "status": "Status",
       "status_and_money": "{{status}} — {{money}}",
       "money": {

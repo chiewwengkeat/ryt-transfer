@@ -167,12 +167,12 @@ function SectionReviewRecipient({ recipient }: SectionReviewRecipientProps) {
   return (
     <>
       <RowDetail
-        label={t("common.transfer_details.bank")}
+        label={t("common.detail_rows.bank")}
         value={recipient.bankName}
       />
       <RowDetail
         label={t(
-          `common.transfer_details.${recipient.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+          `common.detail_rows.${recipient.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
         )}
         value={recipient.idValueMasked}
       />
@@ -188,14 +188,11 @@ function SectionReviewAmount({ draft }: SectionReviewAmountProps) {
   return (
     <>
       <RowDetail
-        label={t("common.transfer_details.amount")}
+        label={t("common.detail_rows.amount")}
         value={formatMoney(draft.amount)}
       />
       {draft.note !== undefined && (
-        <RowDetail
-          label={t("common.transfer_details.note")}
-          value={draft.note}
-        />
+        <RowDetail label={t("common.detail_rows.note")} value={draft.note} />
       )}
     </>
   );

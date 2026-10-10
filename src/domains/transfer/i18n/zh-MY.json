@@ -195,7 +195,7 @@
     "recovery_unexpected": {
       "body": "目前无法确认此转账的结果。再次转账前，请先查看您的转账记录——尚未确认。"
     },
-    "transfer_details": {
+    "detail_rows": {
       "status": "状态",
       "status_and_money": "{{status}}——{{money}}",
       "money": {
