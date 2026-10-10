@@ -1,45 +1,26 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { router, Stack } from "expo-router";
-import { useState } from "react";
+import { Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text } from "react-native";
 
-import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
-import {
-  useGetTransferLimits,
-  useTransferLimitsMaintenance,
-} from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
-import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
-import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
 import { useBalanceScenarios } from "@/domains/transfer/hooks/use-balance-scenarios/use-balance-scenarios";
-import { useOfflineNotice } from "@/domains/transfer/hooks/use-offline-notice/use-offline-notice";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
-import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
-import { APP_LANGUAGE_NAMES, AppLanguage } from "@/shared/i18n/i18n";
-import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
-import { useIsOffline } from "@/shared/platform/offline/offline";
-import {
-  colors,
-  minTouchTarget,
-  spacing,
-  typography,
-} from "@/shared/theme/theme";
-import BannerAction from "@/shared/ui/BannerAction/BannerAction";
-import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
-import BottomSheetLanguage from "./components/BottomSheetLanguage/BottomSheetLanguage";
+import ButtonLanguage from "./components/ButtonLanguage/ButtonLanguage";
+import ButtonStartTransfer from "./components/ButtonStartTransfer/ButtonStartTransfer";
+import ButtonTransferHistory from "./components/ButtonTransferHistory/ButtonTransferHistory";
+import SectionRecentRecipientsHome from "./components/SectionRecentRecipientsHome/SectionRecentRecipientsHome";
 import SectionTransferNotices from "./components/SectionTransferNotices/SectionTransferNotices";
+import { useStartTransferAvailability } from "./hooks/use-start-transfer-availability/use-start-transfer-availability";
 
 export default function HomeScreen() {
   const { t } = useTranslation("home");
   const balanceScenarios = useBalanceScenarios(
     TransferScenarioId.StartUnexpected,
   );
-  const startTransferDisabledReason = useStartTransferDisabledReason();
+  const { startTransferDisabledReason, firstReadRunning } =
+    useStartTransferAvailability();
   const queryClient = useQueryClient();
   return (
     <>
@@ -51,7 +32,10 @@ export default function HomeScreen() {
       />
       <ViewScreenFrame
         footer={
-          <ButtonStartTransfer disabledReason={startTransferDisabledReason} />
+          <ButtonStartTransfer
+            disabledReason={startTransferDisabledReason}
+            firstReadRunning={firstReadRunning}
+          />
         }
         // Home is the stack's root, so every read still active is one of its own.
         onPullToRefresh={() => queryClient.refetchQueries({ type: "active" })}
@@ -65,141 +49,4 @@ export default function HomeScreen() {
       </ViewScreenFrame>
     </>
   );
-}
-
-function ButtonLanguage() {
-  const { t, i18n } = useTranslation("home");
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const shortName = (
-    Object.entries(APP_LANGUAGE_NAMES).find(
-      ([language]) => language === i18n.language,
-    )?.[1] ?? APP_LANGUAGE_NAMES[AppLanguage.English]
-  ).short;
-  return (
-    <>
-      <Pressable
-        accessibilityRole="button"
-        // Starts with the text on screen, so voice control can press the button by what it shows.
-        accessibilityLabel={`${shortName}, ${t("button_language.label")}`}
-        accessibilityLanguage={i18n.language}
-        onPress={() => {
-          setSheetOpen(true);
-        }}
-        style={({ pressed }) => [
-          buttonLanguageStyles.button,
-          pressed && buttonLanguageStyles.pressed,
-        ]}
-      >
-        {/* The navigation bar never grows, so the label stops at what it holds. */}
-        <Text maxFontSizeMultiplier={1.5} style={buttonLanguageStyles.label}>
-          {shortName}
-        </Text>
-      </Pressable>
-      {sheetOpen && (
-        <BottomSheetLanguage
-          onClose={() => {
-            setSheetOpen(false);
-          }}
-        />
-      )}
-    </>
-  );
-}
-
-const buttonLanguageStyles = StyleSheet.create({
-  button: {
-    minWidth: minTouchTarget,
-    minHeight: minTouchTarget,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-  },
-  pressed: { opacity: 0.6 },
-  label: { ...typography.label, color: colors.accent },
-});
-
-function ButtonStartTransfer({
-  disabledReason,
-}: {
-  disabledReason: string | undefined;
-}) {
-  const { t } = useTranslation("home");
-
-  return (
-    <ButtonPrimary
-      label={t("button_start_transfer.label")}
-      disabledReason={disabledReason}
-      onPress={() => {
-        router.push("/transfer");
-      }}
-    />
-  );
-}
-
-function ButtonTransferHistory() {
-  const { t } = useTranslation("home");
-  return (
-    <ButtonSecondary
-      label={t("button_transfer_history.label")}
-      onPress={() => {
-        router.push("/transfer-history");
-      }}
-    />
-  );
-}
-
-function SectionRecentRecipientsHome({
-  startTransferDisabledReason,
-}: {
-  startTransferDisabledReason: string | undefined;
-}) {
-  const { t } = useTranslation("transfer");
-  const recents = useListRecentRecipients();
-  const { failure: recentsFailure, retry: readRecentsAgain } =
-    useRetryKeepingFailure(recents.error, () => recents.refetch());
-  // Transfer's offline line already explains a list that cannot load.
-  const offline = useIsOffline();
-
-  return (
-    <>
-      {recentsFailure !== null && !offline && (
-        <BannerAction
-          key={recents.errorUpdatedAt}
-          tone="negative"
-          announce={!isSessionEndFailure(recentsFailure)}
-          message={t("common.start_unexpected.body")}
-          action={{
-            label: t("common.start_unexpected.retry"),
-            onPress: readRecentsAgain,
-          }}
-        />
-      )}
-      <SectionRecentRecipients
-        disabledReason={startTransferDisabledReason}
-        onRecentChosen={(recentId) => {
-          router.push({ pathname: "/transfer", params: { recentId } });
-        }}
-      />
-    </>
-  );
-}
-
-function useStartTransferDisabledReason() {
-  const { t } = useTranslation(["transfer", "shared"]);
-  const offlineNotice = useOfflineNotice();
-  const account = useGetPrimaryAccount();
-  const limits = useGetTransferLimits();
-  const maintenance = useTransferLimitsMaintenance(limits);
-
-  return offlineNotice !== undefined
-    ? offlineNotice
-    : maintenance?.until !== undefined
-      ? t("common.under_maintenance.until", {
-          time: formatMalaysianDateTime(maintenance.until, t),
-        })
-      : maintenance !== undefined
-        ? t("common.under_maintenance.body")
-        : account.isSuccess && limits.isSuccess
-          ? undefined
-          : t("common.balance_unavailable.disabled_reason");
 }

@@ -11,7 +11,7 @@ import {
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
-it("says why Home's Transfer is disabled, on screen and to a screen reader, and ignores a press", async () => {
+it("keeps Home's Transfer busy, with no reason line to vanish, while the balance first loads, and ignores a press", async () => {
   const loadingReason =
     "You can send once your balance and today's limit have loaded.";
   const answerBalance = holdTheRequest("*/accounts/primary");
@@ -20,12 +20,13 @@ it("says why Home's Transfer is disabled, on screen and to a screen reader, and 
 
   await fireEvent.press(transfer);
 
+  expect(transfer).toBeBusy();
   expect(transfer).toBeDisabled();
-  expect(screen.getByHintText(loadingReason)).toBe(transfer);
-  expect(screen.getByText(loadingReason)).toBeOnTheScreen();
+  expect(screen.queryByText(loadingReason)).toBeNull();
   expect(view.getPathname()).toBe("/");
   answerBalance();
   await screen.findByText("RM 12,845.50");
+  expect(transfer).toBeEnabled();
 });
 
 it("shows Continue busy under its own name while a linked recent recipient loads, and ignores a press", async () => {
