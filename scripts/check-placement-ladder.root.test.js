@@ -140,6 +140,55 @@ test("never places the root's top level: its root view and module folders", () =
   assert.equal(exitCode, 0);
 });
 
+for (const [piece, file, users, kind] of [
+  [
+    "a shared hook only a root module uses",
+    "src/shared/hooks/use-app-active/use-app-active.ts",
+    ["src/root/app-launch/app-launch.ts"],
+    "hooks",
+  ],
+  [
+    "a shared lib module the root view and a root module use",
+    "src/shared/lib/launch-clock/launch-clock.ts",
+    ["src/root/ViewRoot/ViewRoot.tsx", "src/root/app-launch/app-launch.ts"],
+    "lib",
+  ],
+  [
+    "a domain lib module only a root module uses",
+    "src/domains/transfer/lib/launch-clock/launch-clock.ts",
+    ["src/root/app-launch/app-launch.ts"],
+    "lib",
+  ],
+  [
+    "a base component only a root module uses",
+    "src/shared/ui/ViewLaunchError/ViewLaunchError.tsx",
+    ["src/root/app-launch/app-launch.ts"],
+    "components",
+  ],
+])
+  test(`fails ${piece} whose files import no domain, naming the root view's ${kind} folder`, () => {
+    const { exitCode, errors } = runPlacementCheckOn(pieceUsedBy(file, users));
+    assert.equal(exitCode, 1);
+    assert.match(
+      errors,
+      new RegExp(
+        `^${path.posix.dirname(file)}: only src/root uses it .* - it belongs in the root view's ${kind}/$`,
+        "m",
+      ),
+    );
+  });
+
+test("passes a lib module the root view and a root module use whose files import no domain, nested in the root view", () => {
+  const { exitCode, errors } = runPlacementCheckOn(
+    pieceUsedBy("src/root/ViewRoot/lib/launch-clock/launch-clock.ts", [
+      ROOT_VIEW_FILE,
+      "src/root/app-launch/app-launch.ts",
+    ]),
+  );
+  assert.equal(errors, "");
+  assert.equal(exitCode, 0);
+});
+
 const CHECK_SCRIPT = path.join(__dirname, "check-placement-ladder.js");
 const ROOT_VIEW_FILE = "src/root/ViewRoot/ViewRoot.tsx";
 const TRANSFER_KEYS = "@/domains/transfer/api/transfer.keys";
@@ -156,6 +205,16 @@ function moduleImporting(...specifiers) {
   return specifiers
     .map((specifier, i) => `import * as Imported${i} from "${specifier}";\n`)
     .join("");
+}
+
+function pieceUsedBy(file, users) {
+  const specifier = `@/${file.slice("src/".length).replace(/\.tsx?$/, "")}`;
+  return {
+    [file]: "export const piece = 1;\n",
+    ...Object.fromEntries(
+      users.map((user) => [user, moduleImporting(specifier)]),
+    ),
+  };
 }
 
 function runPlacementCheckOn(tree) {

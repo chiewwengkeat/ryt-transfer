@@ -204,6 +204,13 @@ function checkPlacementLadder(rootDir) {
           );
         continue;
       }
+      if (owner === null) {
+        if (!isRootView(path.posix.dirname(placed.container)))
+          failures.push(
+            `${placed.path}: only src/root uses it (${shownUsers}), and its files import no domain, or more than one slice - it belongs in the root view's ${placed.kind}/`,
+          );
+        continue;
+      }
     }
     if (owner === null) {
       const atWideLevel =
