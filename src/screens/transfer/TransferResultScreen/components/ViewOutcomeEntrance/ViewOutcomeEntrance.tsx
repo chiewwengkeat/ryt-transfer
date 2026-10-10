@@ -8,7 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import type { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
-import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
+import { standardEasing } from "@/shared/lib/motion/motion";
 import { phoneReducesMotionNow } from "@/shared/platform/reduce-motion/reduce-motion";
 import { spacing } from "@/shared/theme/theme";
 
@@ -27,7 +27,7 @@ export default function ViewOutcomeEntrance({ outcome, children }: Props) {
     entranceProgress.set(0);
     entranceProgress.set(
       withTiming(1, {
-        duration: motionDurations.screenContentEntrance,
+        duration: 250,
         easing: standardEasing,
         reduceMotion: ReduceMotion.Never,
       }),

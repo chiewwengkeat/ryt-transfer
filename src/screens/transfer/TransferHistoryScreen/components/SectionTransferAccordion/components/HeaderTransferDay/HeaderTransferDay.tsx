@@ -9,7 +9,7 @@ import Animated, {
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 import { formatMalaysianDayHeader } from "@/shared/lib/dates/dates";
 import { formatMoney, parseWireAmount } from "@/shared/lib/money/money";
-import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
+import { standardEasing } from "@/shared/lib/motion/motion";
 import {
   traceFormatCalls,
   useRenderTrace,
@@ -109,7 +109,7 @@ function IconChevron({ expanded }: IconChevronProps) {
     transform: [
       {
         rotate: withTiming(expanded ? "45deg" : "-45deg", {
-          duration: motionDurations.chevronTurn,
+          duration: 200,
           easing: standardEasing,
           reduceMotion: phoneReducesMotion
             ? ReduceMotion.Always

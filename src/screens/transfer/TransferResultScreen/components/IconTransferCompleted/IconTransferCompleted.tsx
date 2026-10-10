@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import Animated, { Keyframe, ReduceMotion } from "react-native-reanimated";
 
-import { motionDurations, standardEasing } from "@/shared/lib/motion/motion";
+import { standardEasing } from "@/shared/lib/motion/motion";
 import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion/reduce-motion";
 import { colors } from "@/shared/theme/theme";
 
@@ -15,7 +15,7 @@ export default function IconTransferCompleted() {
         0: { opacity: 0, transform: [{ scale: 0.8 }] },
         100: { opacity: 1, transform: [{ scale: 1 }], easing: standardEasing },
       })
-        .duration(motionDurations.successMark)
+        .duration(400)
         .reduceMotion(
           phoneReducesMotion ? ReduceMotion.Always : ReduceMotion.Never,
         )}
