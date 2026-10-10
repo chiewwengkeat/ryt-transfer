@@ -25,7 +25,7 @@ import {
 } from "./list-transfers";
 import type { ListTransfersResponse } from "./list-transfers.type";
 
-// Not merged into list-transfers.test.tsx: its fixtures replace the Jest bank's history before every test.
+// Not merged into list-transfers.test.tsx: its fixtures replace the mock bank's history before every test.
 
 it("asks for 30 transfers at a time, and for each later page by the cursor the bank last returned", async () => {
   const history = await createQueryClientWithoutGcTimers().fetchInfiniteQuery({
