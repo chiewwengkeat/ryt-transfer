@@ -74,7 +74,7 @@ it("shows the transfers it has at once on a later open, then the newest page in 
   expect(sentTransferHistoryCursors()).toEqual([null, null]);
 });
 
-it("trims to the newest page on a later open, asking again for none of the older ones", async () => {
+it("keeps the older pages it loaded on a later open, showing them while the newest is asked for again", async () => {
   serveTransferHistoryPages([[buildHistoryTransfer()], [LIM_ON_4_OCTOBER]]);
   await renderRoute("/");
   await act(() => {
@@ -97,8 +97,8 @@ it("trims to the newest page on a later open, asking again for none of the older
     screen.getByRole("button", { name: /^Aisyah Rahman/ }),
   ).toBeOnTheScreen();
   expect(
-    screen.queryByRole("button", { name: /^Lim Wei Jie/ }),
-  ).not.toBeOnTheScreen();
+    screen.getByRole("button", { name: /^Lim Wei Jie/ }),
+  ).toBeOnTheScreen();
   releaseFirstPage();
   expect(
     await screen.findByRole("button", { name: /^Lim Wei Jie/ }),

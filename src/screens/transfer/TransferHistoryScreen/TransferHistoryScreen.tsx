@@ -8,7 +8,8 @@ import {
   getListTransfersOptions,
   isTransferHistoryCached,
   resetTransferHistory,
-  trimTransferHistoryToFirstPage,
+  TRANSFERS_KEPT_ON_REOPENING,
+  trimTransferHistory,
   useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
@@ -53,14 +54,14 @@ export default function TransferHistoryScreen() {
         setRefreshFailed(false);
     });
   }, [queryClient]);
-  // Each open fetches the newest page: people check here before paying again. Not on a cold cache, whose own
-  // first fetch is that page: a reset would cancel it and ask twice.
+  // Each open fetches the newest pages: people check here before paying again. Not on a cold cache, whose own
+  // first fetch is the first page: a reset would cancel it and ask twice.
   useEffect(() => {
     if (isTransferHistoryCached(queryClient))
-      void resetTransferHistory(queryClient);
+      void resetTransferHistory(queryClient, TRANSFERS_KEPT_ON_REOPENING);
     // The reset above runs after a first render that still draws every cached page, so closing trims too.
     return () => {
-      trimTransferHistoryToFirstPage(queryClient);
+      trimTransferHistory(queryClient, TRANSFERS_KEPT_ON_REOPENING);
     };
   }, [queryClient]);
 

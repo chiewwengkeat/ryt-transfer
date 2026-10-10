@@ -23,7 +23,7 @@ import {
   isTransferHistoryCached,
   patchTransferInHistory,
   resetTransferHistory,
-  trimTransferHistoryToFirstPage,
+  trimTransferHistory,
   useListTransfers,
 } from "./list-transfers";
 import type { ListTransfersResponse } from "./list-transfers.type";
@@ -60,7 +60,7 @@ it("keeps only the newest page of history after a transfer", async () => {
   expect(history.read()?.pageParams).toEqual([0]);
 });
 
-it("keeps only the newest page of history when History closes, writing nothing to a cold cache", () => {
+it("keeps the newest whole pages holding no more transfers than asked, writing nothing to a cold cache", () => {
   const history = historyHolding(
     [transferAt(1, TransferStatus.Completed)],
     [transferAt(1, TransferStatus.Completed)],
@@ -68,12 +68,14 @@ it("keeps only the newest page of history when History closes, writing nothing t
   );
   const coldCache = createQueryClientWithoutGcTimers();
 
-  trimTransferHistoryToFirstPage(history.queryClient);
-  trimTransferHistoryToFirstPage(coldCache);
+  trimTransferHistory(history.queryClient, 2);
+  trimTransferHistory(coldCache, 2);
 
+  expect(history.read()?.pages).toHaveLength(2);
+  expect(isTransferHistoryCached(coldCache)).toBe(false);
+  trimTransferHistory(history.queryClient);
   expect(history.read()?.pages).toHaveLength(1);
   expect(history.read()?.pageParams).toEqual([0]);
-  expect(isTransferHistoryCached(coldCache)).toBe(false);
 });
 
 it("finds history cached only once a page of it has landed", () => {

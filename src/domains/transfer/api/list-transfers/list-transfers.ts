@@ -121,23 +121,45 @@ export function countLoadedTransfersOnDay(
     : 0;
 }
 
-export function trimTransferHistoryToFirstPage(queryClient: QueryClient) {
+// Whole pages, the newest always: a refetch asks again for every page kept, one after another.
+export function trimTransferHistory(
+  queryClient: QueryClient,
+  transfersKept = 0,
+) {
   queryClient.setQueriesData<InfiniteData<ListTransfersResponse>>(
     { queryKey: transferKeys.historyAll },
-    (history) =>
-      history && {
-        pages: history.pages.slice(0, 1),
-        pageParams: history.pageParams.slice(0, 1),
-      },
+    (history) => {
+      if (!history) return history;
+      let keptPages = 1;
+      let keptTransfers = history.pages[0]?.items.length ?? 0;
+      while (
+        keptPages < history.pages.length &&
+        keptTransfers + (history.pages[keptPages]?.items.length ?? 0) <=
+          transfersKept
+      ) {
+        keptTransfers += history.pages[keptPages]?.items.length ?? 0;
+        keptPages += 1;
+      }
+      return {
+        pages: history.pages.slice(0, keptPages),
+        pageParams: history.pageParams.slice(0, keptPages),
+      };
+    },
   );
 }
 
 // After a transfer: a page fetch already under way would land on pages the new transfer has shifted.
-export async function resetTransferHistory(queryClient: QueryClient) {
+export async function resetTransferHistory(
+  queryClient: QueryClient,
+  transfersKept = 0,
+) {
   await queryClient.cancelQueries({ queryKey: transferKeys.historyAll });
-  trimTransferHistoryToFirstPage(queryClient);
+  trimTransferHistory(queryClient, transfersKept);
   await queryClient.invalidateQueries({ queryKey: transferKeys.historyAll });
 }
+
+// Enough to scroll back through on reopening; every one is drawn as History opens.
+export const TRANSFERS_KEPT_ON_REOPENING = 200;
 
 export async function patchTransferInHistory(
   queryClient: QueryClient,
