@@ -30,6 +30,12 @@ import {
   renderRoute,
 } from "@/test/render/render-route";
 
+import {
+  sendRm100FromHome,
+  transferIdIn,
+  buttonsOnTheResultPage,
+} from "./TransferResultScreen.helper";
+
 it(
   "reopens the transfer the app was closed during, quoting its id, with Home's warning beneath asking the bank nothing, then says no money moved once its window passes and leaves nothing for the next launch",
   scenarioTest("transfer.app_closed_during_approval", async () => {
@@ -41,7 +47,9 @@ it(
         { once: true },
       ),
     );
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
     await waitFor(() => {
       expect(sentRequests.some(({ url }) => url.endsWith("/approve"))).toBe(
         true,
@@ -252,30 +260,6 @@ it(
     }
   }),
 );
-
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-function transferIdIn(pathname: string | undefined) {
-  return pathname?.replace("/transfer/result/", "") ?? "";
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}
 
 async function readCustomerId() {
   const { body } = await sendToBank<GetPrimaryAccountResponse>(

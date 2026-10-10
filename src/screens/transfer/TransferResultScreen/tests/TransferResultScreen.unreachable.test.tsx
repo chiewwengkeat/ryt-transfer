@@ -11,14 +11,22 @@ import {
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { scenarioTest, walkToTransferReview } from "@/test/render/drive-app";
+import { scenarioTest } from "@/test/render/drive-app";
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
+
+import {
+  sendRm100FromHome,
+  transferIdIn,
+  buttonsOnTheResultPage,
+} from "./TransferResultScreen.helper";
 
 it(
   "says the bank is still unreachable once its reads at 2, 4, 8 and 16 seconds get no answer, quoting the transfer's id",
   scenarioTest("transfer.status_unreachable", async () => {
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
     expect(
       await screen.findByRole(
         "header",
@@ -55,6 +63,8 @@ it(
 it(
   "keeps reading after saying the bank is unreachable, and shows the outcome here once the bank answers",
   scenarioTest("transfer.status_unreachable", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
     await screen.findByRole(
       "header",
@@ -76,7 +86,9 @@ it(
 it(
   "checks a transfer the bank could not be reached about again at the next launch, after leaving it",
   scenarioTest("transfer.status_unreachable", async () => {
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
     await screen.findByRole(
       "header",
       { name: "Checking your transfer" },
@@ -100,6 +112,8 @@ it(
 it(
   "waits for the read at 16 seconds before saying the bank is unreachable, though the app came back to the foreground first",
   scenarioTest("transfer.status_unreachable", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
     await screen.findByRole(
       "header",
@@ -129,7 +143,9 @@ it(
 it(
   "reads the transfer again once a request reaches the bank, before its read at 2 seconds, yet waits for the read at 16 seconds before saying the bank is unreachable",
   scenarioTest("transfer.status_unreachable", async () => {
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
     await screen.findByRole(
       "header",
       { name: "Checking your transfer" },
@@ -272,30 +288,6 @@ it(
     ).toHaveLength(1);
   }),
 );
-
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-function transferIdIn(pathname: string | undefined) {
-  return pathname?.replace("/transfer/result/", "") ?? "";
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}
 
 const OFFLINE_NOTICE =
   "You're offline. Sending is paused until Ryt can be reached.";

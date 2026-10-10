@@ -23,16 +23,18 @@ import {
 } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
-import {
-  finishOpeningScreen,
-  scenarioTest,
-  walkToTransferReview,
-} from "@/test/render/drive-app";
+import { finishOpeningScreen, scenarioTest } from "@/test/render/drive-app";
 import { observedRecords } from "@/test/doubles/native-doubles";
 import {
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render/render-route";
+
+import {
+  sendRm100FromHome,
+  transferIdIn,
+  buttonsOnTheResultPage,
+} from "./TransferResultScreen.helper";
 
 it(
   "announces an outcome that changes in place, not the one the page opens with, and nothing from Home's banners beneath it",
@@ -41,6 +43,8 @@ it(
     announce.mockClear();
     const releaseStatusRead = holdTheNextTransferRead();
     const { recipient } = await lookUpTestRecipient("012-345 6789");
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
     expect(
       await screen.findByRole(
@@ -73,6 +77,8 @@ it(
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
     const releaseStatusRead = holdTheNextTransferRead();
     const { recipient } = await lookUpTestRecipient("012-345 6789");
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
     await screen.findByRole(
       "header",
@@ -145,7 +151,9 @@ it(
   "keeps an outcome that lands under the session-ended view for Home to announce, should the app close before signing in again",
   scenarioTest("transfer.approval_unanswered", async () => {
     const releaseStatusRead = holdTheNextTransferRead();
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
     await finishOpeningScreen(
       await screen.findByRole(
         "header",
@@ -171,6 +179,8 @@ it(
 );
 
 it("reports the outcome shown once, not again when the page is back on top after signing in again", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/");
   await sendRm100FromHome();
   await finishOpeningScreen(
     await screen.findByRole("header", { name: "Transfer sent" }),
@@ -194,6 +204,8 @@ it("reports the outcome shown once, not again when the page is back on top after
 
 it("moves a screen reader back to the outcome once signed in again, after the reader has placed its own focus", async () => {
   const outcomeFocusRequests = countOutcomeFocusRequestsFromNowOn();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/");
   await sendRm100FromHome();
   await finishOpeningScreen(
     await screen.findByRole("header", { name: "Transfer sent" }),
@@ -217,6 +229,8 @@ it("moves a screen reader back to the outcome once signed in again, after the re
 it("moves a screen reader to the outcome of a page that opened under the session-ended view only once signed in again, after the reader has placed its own focus", async () => {
   const outcomeFocusRequests = countOutcomeFocusRequestsFromNowOn();
   const releasePrompt = holdNextBiometricPrompt();
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/");
   await sendRm100FromHome();
   await waitFor(() => {
     expect(biometricPromptsShown()).toHaveLength(1);
@@ -292,7 +306,9 @@ it(
   "checks a transfer whose approval went unanswered, quoting its id, then shows how it ended",
   scenarioTest("transfer.approval_unanswered", async () => {
     const releaseStatusRead = holdTheNextTransferRead();
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
 
     expect(
       await screen.findByRole(
@@ -330,6 +346,8 @@ it("moves Home's balance when a transfer whose answer was lost turns out sent wh
       return HttpResponse.error();
     }),
   );
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/");
   await sendRm100FromHome();
   await screen.findByRole("button", { name: "Done" }, { timeout: 10_000 });
   bankCommitsApprovals = true;
@@ -351,7 +369,9 @@ it(
   "treats an approval answer the app does not know like no answer, checking it with its id to quote and only Done, then shows how it ended",
   scenarioTest("transfer.approval_unknown_answer", async () => {
     const releaseStatusRead = holdTheNextTransferRead();
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
 
     expect(
       await screen.findByRole("header", { name: "Checking your transfer" }),
@@ -400,30 +420,6 @@ it("checks a transfer whose approval drew an answer the app does not know, under
     }),
   );
 });
-
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-function transferIdIn(pathname: string | undefined) {
-  return pathname?.replace("/transfer/result/", "") ?? "";
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}
 
 // Jest has no screen reader: the focus request is the nearest thing it can see.
 function countOutcomeFocusRequestsFromNowOn() {

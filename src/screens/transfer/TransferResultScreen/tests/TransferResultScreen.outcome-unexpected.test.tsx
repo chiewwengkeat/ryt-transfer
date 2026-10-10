@@ -27,9 +27,14 @@ import {
   finishOpeningScreen,
   pressHardwareBack,
   scenarioTest,
-  walkToTransferReview,
 } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
+
+import {
+  sendRm100FromHome,
+  transferIdIn,
+  buttonsOnTheResultPage,
+} from "./TransferResultScreen.helper";
 
 it(
   "offers to load the result again, never to send again, when the bank answers with an outcome the app cannot name",
@@ -55,7 +60,9 @@ it(
         }),
       ),
     );
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
 
     expect(
       await screen.findByRole("header", { name: "Result not available" }),
@@ -105,6 +112,8 @@ it(
     answerApprovalAndReadsWithAnUnnamedOutcome(recipient, () =>
       refunded ? { version: 3, funds: TransferFunds.Refunded } : {},
     );
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
     await screen.findByRole("header", { name: "Result not available" });
     refunded = true;
@@ -122,7 +131,9 @@ it(
   scenarioTest("transfer.outcome_unexpected", async () => {
     const { recipient } = await lookUpTestRecipient("012-345 6789");
     answerApprovalAndReadsWithAnUnnamedOutcome(recipient);
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
     await screen.findByRole("header", { name: "Result not available" });
     const transferId = transferIdIn(view.getPathname());
     const readsOfTheTransfer = () =>
@@ -147,7 +158,9 @@ it(
   scenarioTest("transfer.outcome_unexpected", async () => {
     const { recipient } = await lookUpTestRecipient("012-345 6789");
     answerApprovalAndReadsWithAnUnnamedOutcome(recipient);
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
     await screen.findByRole("header", { name: "Result not available" });
     await act(() => jest.advanceTimersByTimeAsync(3_000));
 
@@ -255,30 +268,6 @@ it("keeps an earlier transfer the launch check finds with an outcome the app can
   await act(() => jest.advanceTimersByTimeAsync(1_000));
   expect(relaunched.getPathname()).toBe("/");
 });
-
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-function transferIdIn(pathname: string | undefined) {
-  return pathname?.replace("/transfer/result/", "") ?? "";
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}
 
 function answerApprovalAndReadsWithAnUnnamedOutcome(
   recipient: Awaited<ReturnType<typeof lookUpTestRecipient>>["recipient"],

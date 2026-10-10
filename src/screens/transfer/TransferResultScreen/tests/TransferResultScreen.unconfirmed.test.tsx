@@ -9,17 +9,25 @@ import {
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { scenarioTest, walkToTransferReview } from "@/test/render/drive-app";
+import { scenarioTest } from "@/test/render/drive-app";
 import {
   relaunchApp,
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render/render-route";
 
+import {
+  sendRm100FromHome,
+  transferIdIn,
+  buttonsOnTheResultPage,
+} from "./TransferResultScreen.helper";
+
 it(
   "says a transfer the bank cannot find can't be found, with its id to quote, and opens History to check it",
   scenarioTest("transfer.last_transfer_not_found", async () => {
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
 
     expect(
       await screen.findByRole(
@@ -51,7 +59,9 @@ it(
 it(
   "stops reading a transfer the bank cannot find, and leaves nothing for the next launch",
   scenarioTest("transfer.last_transfer_not_found", async () => {
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
     await screen.findByRole(
       "header",
       { name: "Transfer not found" },
@@ -77,7 +87,9 @@ it(
 it(
   "leaves an unanswered approval's outcome unconfirmed when checking it meets an answer the app does not know, and opens History from it",
   scenarioTest("transfer.recovery_unexpected", async () => {
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
 
     expect(
       await screen.findByRole(
@@ -109,6 +121,8 @@ it(
 it(
   "keeps checking on Home a transfer whose outcome was not confirmed, and announces it there once the bank answers",
   scenarioTest("transfer.recovery_unexpected", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
     await screen.findByRole(
       "header",
@@ -134,7 +148,9 @@ it(
 it(
   "reopens at the next launch a transfer whose outcome was not confirmed, and shows how it ended",
   scenarioTest("transfer.recovery_unexpected", async () => {
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
     await screen.findByRole(
       "header",
       { name: "Outcome not confirmed" },
@@ -156,6 +172,8 @@ it(
 it(
   "keeps an unconfirmed outcome and its way to History, and says nothing new, while returning to the app reads it again",
   scenarioTest("transfer.recovery_unexpected", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
     await screen.findByRole(
       "header",
@@ -185,27 +203,3 @@ it(
     expect(announcements).not.toHaveBeenCalled();
   }),
 );
-
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-function transferIdIn(pathname: string | undefined) {
-  return pathname?.replace("/transfer/result/", "") ?? "";
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}

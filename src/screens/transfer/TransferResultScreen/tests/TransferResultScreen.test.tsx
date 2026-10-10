@@ -26,7 +26,6 @@ import {
   readBankOnRealTimers,
   scenarioTest,
   turnOnPhoneReduceMotion,
-  walkToTransferReview,
   watchReduceMotionOfAnimations,
 } from "@/test/render/drive-app";
 import { observedRecords } from "@/test/doubles/native-doubles";
@@ -34,6 +33,11 @@ import {
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render/render-route";
+
+import {
+  sendRm100FromHome,
+  buttonsOnTheResultPage,
+} from "./TransferResultScreen.helper";
 
 it(
   "gives a receipt in Malaysia time with the note, offers only Done, and Home's balance and limit move with the money",
@@ -102,6 +106,8 @@ it("moves a screen reader to the outcome a moment after the page has finished op
         (target as { props?: { children?: unknown } }).props?.children ===
           "Transfer sent",
     );
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/");
   await sendRm100FromHome();
   const heading = await screen.findByRole("header", { name: "Transfer sent" });
   const focusRequestsWhileOpening = outcomeFocusRequests().length;
@@ -156,6 +162,8 @@ it("leaves out the note and reference rows when the bank sends them empty", asyn
 it(
   "says the bank stopped a transfer its fraud check blocked, and points to the bank, never back to sending",
   scenarioTest("transfer.fraud_blocked", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
 
     expect(
@@ -174,6 +182,8 @@ it(
 it(
   "says a held transfer will complete or be refunded, with the bank's reference to quote, and Home announces it once it completes",
   scenarioTest("transfer.held_for_review", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
 
     expect(
@@ -207,6 +217,8 @@ it(
 it(
   "says a transfer to an inactive account was declined, with no money moved",
   scenarioTest("transfer.recipient_account_inactive", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
 
     expect(
@@ -222,6 +234,8 @@ it(
 it(
   "says a processing transfer can take up to a business day, with the bank's reference to quote",
   scenarioTest("transfer.processing", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
 
     expect(
@@ -253,6 +267,8 @@ it(
         ),
       ),
     );
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
 
     expect(
@@ -275,7 +291,9 @@ it(
 it(
   "keeps checking a processing transfer in place and shows the receipt once it completes, leaving nothing for the next launch to warn about",
   scenarioTest("transfer.processing", async () => {
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
     await finishOpeningScreen(
       await screen.findByRole("header", { name: "Transfer processing" }),
     );
@@ -294,7 +312,9 @@ it(
 it(
   "warns on Home at the next launch, instead of reopening the page, when the app closes while a processing transfer is being checked",
   scenarioTest("transfer.processing", async () => {
-    const view = await sendRm100FromHome();
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await renderRoute("/");
+    await sendRm100FromHome();
     await screen.findByRole("header", { name: "Transfer processing" });
     await act(() => jest.advanceTimersByTimeAsync(1_000));
 
@@ -310,6 +330,8 @@ it(
 it(
   "says a processing transfer that ends unsuccessful didn't go through, with the money coming back",
   scenarioTest("transfer.refunded_after_processing", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
     await sendRm100FromHome();
     expect(
       await screen.findByRole("header", { name: "Transfer processing" }),
@@ -391,23 +413,3 @@ it("fades into a sent transfer's result and shows its outcome and tick at once w
 const t = getFixedT(null, ["shared"]);
 const BANK_REFERENCE =
   /^If you contact us, quote this reference: \d{8}[\dA-F]{8}$/;
-
-async function sendRm100FromHome() {
-  await pairPhoneAsTheDemoLaunchDoes();
-  const view = await renderRoute("/");
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  );
-  await walkToTransferReview();
-  await fireEvent.press(
-    await screen.findByRole("button", { name: "Transfer" }),
-  );
-  return view;
-}
-
-// The page's only offers: anything more could be a way to send the money twice.
-function buttonsOnTheResultPage() {
-  return screen
-    .getAllByRole("button")
-    .map((button) => button.props.accessibilityLabel as unknown);
-}
