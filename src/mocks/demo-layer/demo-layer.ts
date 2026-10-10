@@ -110,4 +110,4 @@ function subscribeToPhoneSidePick(
 }
 
 // About as long as a real bank takes, so the app's progress states show.
-const BANK_ANSWER_DELAY_MS = 1_000;
+const BANK_ANSWER_DELAY_MS = 400;
