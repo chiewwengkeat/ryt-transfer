@@ -108,6 +108,8 @@ export default function ViewScreenFrame({
         </ScrollView>
         {footer !== undefined && (
           <View
+            // Never flattened: its bar comes and goes with the footer's content, and Android can lose a view that turns from flattened to real.
+            collapsable={false}
             style={[
               styles.footer,
               footerDrawsNothing
