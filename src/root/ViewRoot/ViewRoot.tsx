@@ -87,7 +87,12 @@ export default function ViewRoot() {
 
   const appWithSessionEndedView = (
     <>
-      <View aria-hidden={sessionEnded} style={styles.app}>
+      <View
+        aria-hidden={sessionEnded}
+        // Never flattened: aria-hidden alone would add and remove this view as a session ends and begins, re-parenting the screens beneath.
+        collapsable={false}
+        style={styles.app}
+      >
         <ScreensCoveredContext value={sessionEnded}>
           <ApprovalDemoPinContext value={demoLayer?.demoPin}>
             <ViewBottomSheetHost
