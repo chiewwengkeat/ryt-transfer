@@ -12,6 +12,7 @@ import {
   useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
+import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
 import { usePhoneReportsConnection } from "@/shared/platform/offline/offline";
 import { colors, spacing } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
@@ -29,7 +30,11 @@ export default function TransferHistoryScreen() {
   const queryClient = useQueryClient();
   const transferHistory = useListTransfers();
   const phoneReportsConnection = usePhoneReportsConnection();
-  const failureIsSessionEnd = isSessionEndFailure(transferHistory.error);
+  const { failure: historyFailure, retry: readFirstPageAgain } =
+    useRetryKeepingFailure(transferHistory.error, () =>
+      resetTransferHistory(queryClient),
+    );
+  const failureIsSessionEnd = isSessionEndFailure(historyFailure);
   // Clear on each open: a failure left from an earlier visit would be announced as this one's.
   const [refreshFailed, setRefreshFailed] = useState(false);
   // The query keeps one status, which a page fetch after a failed refresh overwrites: only a refresh's outcome counts.
@@ -62,7 +67,9 @@ export default function TransferHistoryScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t("history.title") }} />
-      {transferHistory.isPending && !transferHistory.isPaused ? (
+      {transferHistory.isPending &&
+      !transferHistory.isPaused &&
+      historyFailure === null ? (
         <Loader />
       ) : transferHistory.data === undefined ? (
         <ViewScreenFrame
@@ -70,7 +77,7 @@ export default function TransferHistoryScreen() {
             phoneReportsConnection ? (
               <ButtonPrimary
                 label={t("history.retry")}
-                onPress={() => resetTransferHistory(queryClient)}
+                onPress={readFirstPageAgain}
               />
             ) : (
               <TextOffline />
@@ -78,6 +85,7 @@ export default function TransferHistoryScreen() {
           }
         >
           <BannerNotice
+            key={transferHistory.errorUpdatedAt}
             tone="negative"
             announce={!failureIsSessionEnd}
             message={t("history.first_page_failed")}

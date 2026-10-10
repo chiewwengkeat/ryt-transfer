@@ -6,6 +6,7 @@ import {
   isSessionEndFailure,
   TransportError,
 } from "@/shared/http/transport-error/transport-error";
+import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
 import { usePhoneReportsConnection } from "@/shared/platform/offline/offline";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
@@ -23,7 +24,11 @@ export default function TransferDetailsScreen() {
   const { transferQuery, transfer } =
     useGetTransferWithHistoryPlaceholder(transferId);
   const phoneReportsConnection = usePhoneReportsConnection();
-  const failureIsSessionEnd = isSessionEndFailure(transferQuery.error);
+  const { failure: readFailure, retry: readAgain } = useRetryKeepingFailure(
+    transferQuery.error,
+    () => transferQuery.refetch(),
+  );
+  const failureIsSessionEnd = isSessionEndFailure(readFailure);
 
   return (
     <>
@@ -44,10 +49,8 @@ export default function TransferDetailsScreen() {
         </ViewScreenFrame>
       ) : transfer ? (
         <ViewScreenFrame>
-          {/* A failure from an earlier visit is not this one's: shown on reopening, it would be announced as current.
-              By the last answer, not isError: a re-read clears the error while it runs, and Try again would vanish mid-press. */}
-          {((transferQuery.isFetchedAfterMount &&
-            transferQuery.errorUpdatedAt > transferQuery.dataUpdatedAt) ||
+          {/* A failure from an earlier visit is not this one's: shown on reopening, it would be announced as current. */}
+          {((readFailure !== null && transferQuery.isFetchedAfterMount) ||
             transferQuery.isPaused) && (
             <BannerOutOfDate
               // Remounted per failure, so a press that fails again says so again.
@@ -55,25 +58,23 @@ export default function TransferDetailsScreen() {
               announce={!failureIsSessionEnd}
               message={t("details.out_of_date")}
               tryAgainLabel={t("details.retry")}
-              onTryAgain={() => transferQuery.refetch()}
+              onTryAgain={readAgain}
             />
           )}
           <SectionTransferDetails transfer={transfer} />
         </ViewScreenFrame>
-      ) : transferQuery.isError || transferQuery.isPaused ? (
+      ) : readFailure !== null || transferQuery.isPaused ? (
         <ViewScreenFrame
           footer={
             phoneReportsConnection ? (
-              <ButtonPrimary
-                label={t("details.retry")}
-                onPress={() => transferQuery.refetch()}
-              />
+              <ButtonPrimary label={t("details.retry")} onPress={readAgain} />
             ) : (
               <TextOffline />
             )
           }
         >
           <BannerNotice
+            key={transferQuery.errorUpdatedAt}
             tone="negative"
             announce={!failureIsSessionEnd}
             message={t("details.failed")}

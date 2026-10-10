@@ -9,6 +9,7 @@ import SectionRecentRecipients from "@/domains/transfer/components/SectionRecent
 import { useOfflineNotice } from "@/domains/transfer/hooks/use-offline-notice/use-offline-notice";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
@@ -57,6 +58,8 @@ export default function TransferRecipientScreen() {
   );
   const [bankError, setBankError] = useState<string>();
   const recents = useListRecentRecipients();
+  const { failure: recentsFailure, retry: readRecentsAgain } =
+    useRetryKeepingFailure(recents.error, () => recents.refetch());
   const offlineNotice = useOfflineNotice();
   // Continue's offline line already explains a list that cannot load.
   const offline = offlineNotice !== undefined;
@@ -181,10 +184,11 @@ export default function TransferRecipientScreen() {
                 error={bankError}
               />
             )}
-            {((recents.isError && !offline) || chosenRecentMissing) && (
+            {((recentsFailure !== null && !offline) || chosenRecentMissing) && (
               <BannerRecipientUnexpected
-                failure={recents.error}
-                onRetry={() => recents.refetch()}
+                key={recents.errorUpdatedAt}
+                failure={recentsFailure}
+                onRetry={readRecentsAgain}
               />
             )}
             <SectionRecentRecipients onRecentChosen={setChosenRecentId} />

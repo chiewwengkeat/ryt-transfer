@@ -24,6 +24,7 @@ import {
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
 import type { TransferDraft } from "@/screens/transfer/flow-store/flow-store.type";
+import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
 import {
   isSessionEndFailure,
   TransportError,
@@ -42,12 +43,14 @@ export default function SectionReviewDetails({ draft }: Props) {
   const { t } = useTranslation("transfer");
   const lookup = useLookupRecipient(draft.recipient);
   const sending = useTransferFlow(isTransferSentOrBeingSent);
+  const { failure: lookupFailure, retry: checkNameAgain } =
+    useRetryKeepingFailure(lookup.error, () => lookup.refetch());
   const code =
-    lookup.error instanceof TransportError ? lookup.error.code : undefined;
+    lookupFailure instanceof TransportError ? lookupFailure.code : undefined;
   // Never while sending: "no money moved" can be false by then, and a retry mints a new recipient reference.
   // Never for the session's end either: sign-in asks the name check again.
   const nameCheckFailure =
-    !lookup.isError || sending || isSessionEndFailure(lookup.error)
+    lookupFailure === null || sending || isSessionEndFailure(lookupFailure)
       ? undefined
       : code === LookupRecipientErrorCode.RecipientNotFound
         ? TransferScenarioId.RecipientNotFound
@@ -104,7 +107,7 @@ export default function SectionReviewDetails({ draft }: Props) {
       clearTimeout(timer);
     };
   }, [nameCheckFailure, refusedAt]);
-  if (lookup.isPending) return <Loader />;
+  if (lookup.isPending && lookupFailure === null) return <Loader />;
   if (nameCheckFailure === TransferScenarioId.RecipientNotFound)
     return (
       <BannerAction
@@ -132,7 +135,7 @@ export default function SectionReviewDetails({ draft }: Props) {
           waitedOutRefusalAt === refusedAt
             ? {
                 label: t(`common.${scenarioWordsKey(nameCheckFailure)}.retry`),
-                onPress: () => lookup.refetch(),
+                onPress: checkNameAgain,
               }
             : undefined
         }

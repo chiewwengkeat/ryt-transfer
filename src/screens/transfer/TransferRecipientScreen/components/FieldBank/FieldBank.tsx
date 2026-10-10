@@ -11,6 +11,7 @@ import {
 
 import { useListBanks } from "@/domains/transfer/api/list-banks/list-banks";
 import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
+import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
 import { useIsOffline } from "@/shared/platform/offline/offline";
 import {
   colors,
@@ -103,6 +104,8 @@ interface BottomSheetBankProps {
 function BottomSheetBank({ onBankChosen, onClose }: BottomSheetBankProps) {
   const { t, i18n } = useTranslation("transfer");
   const banks = useListBanks();
+  const { failure: banksFailure, retry: readBanksAgain } =
+    useRetryKeepingFailure(banks.error, () => banks.refetch());
   // Continue's offline line sits under the sheet, so the sheet says why its list waits.
   const offline = useIsOffline();
   const [bankSearch, setBankSearch] = useState("");
@@ -124,18 +127,21 @@ function BottomSheetBank({ onBankChosen, onClose }: BottomSheetBankProps) {
       }}
     >
       {matchingBanks === undefined ? (
-        offline && !banks.isFetching ? (
+        offline && (!banks.isFetching || banksFailure !== null) ? (
           <BannerAction
+            // Remounted per failure, so a press that finds no network again says so again.
+            key={banks.errorUpdatedAt}
             message={t("common.offline.notice")}
             action={{
               label: t("common.recipient_unexpected.retry"),
-              onPress: () => banks.refetch(),
+              onPress: readBanksAgain,
             }}
           />
-        ) : banks.isError ? (
+        ) : banksFailure !== null ? (
           <BannerRecipientUnexpected
-            failure={banks.error}
-            onRetry={() => banks.refetch()}
+            key={banks.errorUpdatedAt}
+            failure={banksFailure}
+            onRetry={readBanksAgain}
           />
         ) : (
           <Loader />

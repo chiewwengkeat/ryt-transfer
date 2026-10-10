@@ -64,6 +64,47 @@ it("keeps a transfer's out-of-date notice, and its busy Try again, up until the 
   expect(outOfDate).not.toBeOnTheScreen();
 });
 
+it("keeps Home's recent recipients failure, and its busy Try again, up until the list it asked for answers", async () => {
+  mswServer.use(
+    http.get(
+      "*/recipients/recent",
+      () =>
+        HttpResponse.json(
+          { error: { code: "NEW_BANK_CODE", message: "Unknown to this app." } },
+          { status: 400 },
+        ),
+      { once: true },
+    ),
+  );
+  await renderRoute("/");
+  const recentsFailed = await screen.findByText(
+    "Something unexpected went wrong.",
+  );
+  let answerRecents = () => undefined as void;
+  const recentsHeld = new Promise<void>((release) => {
+    answerRecents = release;
+  });
+  mswServer.use(
+    http.get(
+      "*/recipients/recent",
+      async () => {
+        await recentsHeld;
+      },
+      { once: true },
+    ),
+  );
+
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+
+  expect(recentsFailed).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Try again" })).toBeBusy();
+  answerRecents();
+  expect(
+    await screen.findAllByRole("button", { name: /••••/ }),
+  ).not.toHaveLength(0);
+  expect(recentsFailed).not.toBeOnTheScreen();
+});
+
 function holdTheBalanceRead() {
   let answer = () => undefined as void;
   const held = new Promise<void>((release) => {

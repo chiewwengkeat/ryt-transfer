@@ -2,6 +2,12 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http } from "msw";
 
+import {
+  buildHistoryTransfer,
+  failTransferHistoryPages,
+  holdTransferHistoryPages,
+  serveTransferHistoryPages,
+} from "@/test/fixtures/transfer-responses";
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
@@ -46,6 +52,27 @@ it("shows Continue busy under its own name while a linked recent recipient loads
   expect(
     screen.queryByText("Enter a Malaysian mobile number, like 012-345 6789."),
   ).toBeNull();
+});
+
+it("keeps History's failed first page, and its busy Try again, up until the read it asked for answers", async () => {
+  serveTransferHistoryPages([[buildHistoryTransfer()]]);
+  const recoverFirstPage = failTransferHistoryPages("first");
+  await renderRoute("/transfer-history");
+  const firstPageFailed = await screen.findByText(
+    "Couldn't load your transfers.",
+  );
+  recoverFirstPage();
+  const answerFirstPage = holdTransferHistoryPages("first");
+
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+
+  expect(firstPageFailed).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Try again" })).toBeBusy();
+  answerFirstPage();
+  expect(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  ).toBeOnTheScreen();
+  expect(firstPageFailed).not.toBeOnTheScreen();
 });
 
 function holdTheRequest(path: string) {

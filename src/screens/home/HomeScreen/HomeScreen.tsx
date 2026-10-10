@@ -14,6 +14,7 @@ import SectionRecentRecipients from "@/domains/transfer/components/SectionRecent
 import { useBalanceScenarios } from "@/domains/transfer/hooks/use-balance-scenarios/use-balance-scenarios";
 import { useOfflineNotice } from "@/domains/transfer/hooks/use-offline-notice/use-offline-notice";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 import { APP_LANGUAGE_NAMES, AppLanguage } from "@/shared/i18n/i18n";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
@@ -150,19 +151,22 @@ function SectionRecentRecipientsHome({
 }) {
   const { t } = useTranslation("transfer");
   const recents = useListRecentRecipients();
+  const { failure: recentsFailure, retry: readRecentsAgain } =
+    useRetryKeepingFailure(recents.error, () => recents.refetch());
   // Transfer's offline line already explains a list that cannot load.
   const offline = useIsOffline();
 
   return (
     <>
-      {recents.isError && !offline && (
+      {recentsFailure !== null && !offline && (
         <BannerAction
+          key={recents.errorUpdatedAt}
           tone="negative"
-          announce={!isSessionEndFailure(recents.error)}
+          announce={!isSessionEndFailure(recentsFailure)}
           message={t("common.start_unexpected.body")}
           action={{
             label: t("common.start_unexpected.retry"),
-            onPress: () => recents.refetch(),
+            onPress: readRecentsAgain,
           }}
         />
       )}
