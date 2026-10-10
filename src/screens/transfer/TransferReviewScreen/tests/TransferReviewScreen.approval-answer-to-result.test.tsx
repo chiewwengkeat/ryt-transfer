@@ -1,6 +1,5 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { getFixedT } from "i18next";
 import { http, HttpResponse } from "msw";
 
 import {
@@ -8,27 +7,33 @@ import {
   approvalPinSheetStore,
 } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
-import {
-  type GetTransferResponse,
-  TransferFailureReason,
-  TransferFunds,
-  TransferStatus,
-} from "@/domains/transfer/api/get-transfer/get-transfer.type";
-import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
+import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import {
   readBankBalanceMinor,
-  sendToBank,
   mswServer,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   pressHardwareBack,
+  readBankOnRealTimers,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import { watchRoutesDrawnOnTop } from "@/test/doubles/native-doubles";
+import {
+  observedRecords,
+  watchRoutesDrawnOnTop,
+} from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
+
+import {
+  countSent,
+  waitForHomeToOfferTransfer,
+} from "./TransferReviewScreen.helper";
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 it("opens the result page straight from review, showing no other screen of the transfer between them", async () => {
   await reviewRm100Transfer();
@@ -178,194 +183,6 @@ it(
   }),
 );
 
-it(
-  "says on review that the approval timed out once the bank's window has passed, and keeps no record to recheck",
-  scenarioTest("transfer.approval_expired", async () => {
-    const balanceBeforeMinor = await readBankBalanceMinor();
-    const view = await approveRm100Transfer();
-
-    expect(
-      await screen.findByText("The approval timed out — no money moved."),
-    ).toBeOnTheScreen();
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
-    await expectNothingToRecheckAtTheNextLaunch(view);
-    jest.useRealTimers();
-    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
-  }),
-);
-
-it(
-  "says on review that the approval couldn't be verified when the bank rejects its signature",
-  scenarioTest("transfer.approval_not_verified", async () => {
-    const view = await approveRm100Transfer();
-
-    expect(
-      await screen.findByText(
-        "The approval couldn't be verified — no money moved.",
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
-    await expectNothingToRecheckAtTheNextLaunch(view);
-  }),
-);
-
-it(
-  "says on review that the balance or limit changed when the bank finds them short as the approval arrives, and leads back to an amount step that reads both again",
-  scenarioTest("transfer.balance_or_limit_short_at_approval", async () => {
-    const balanceBeforeMinor = await readBankBalanceMinor();
-    const view = await approveRm100Transfer();
-
-    expect(
-      await screen.findByText(
-        "It was not sent because your balance or limit changed — no money moved.",
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.queryByText(/— money moved\./)).toBeNull();
-    expect(view.getPathname()).toBe("/transfer/review");
-    await pressHardwareBack();
-    expect(view.getPathname()).toBe("/transfer/amount");
-    const readsAfterTheRefusal = sentRequests
-      .slice(
-        sentRequests.findLastIndex((request) =>
-          new URL(request.url).pathname.endsWith("/approve"),
-        ),
-      )
-      .filter((request) => request.method === "GET")
-      .map((request) => new URL(request.url).pathname);
-    expect(readsAfterTheRefusal).toEqual(
-      expect.arrayContaining([
-        expect.stringMatching(/\/accounts\/primary$/),
-        expect.stringMatching(/\/transfer-limits$/),
-      ]),
-    );
-    await expectNothingToRecheckAtTheNextLaunch(view);
-    jest.useRealTimers();
-    expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor);
-  }),
-);
-
-it("says the same on review when it is today's limit the bank finds short as the approval arrives", async () => {
-  // The short-at-approval scenario ends on the balance, never the limit, so the limit's answer is built here.
-  mswServer.use(
-    http.post<{ transferId: string }>(
-      "*/transfers/:transferId/approve",
-      async ({ params: { transferId } }) => {
-        const {
-          body: { transfer },
-        } = await sendToBank<GetTransferResponse>(
-          "GET",
-          `/transfers/${transferId}`,
-        );
-        return HttpResponse.json({
-          transfer: {
-            ...transfer,
-            status: TransferStatus.Unsuccessful,
-            funds: TransferFunds.NotDebited,
-            failureReason: TransferFailureReason.DailyLimitExceeded,
-          },
-        });
-      },
-    ),
-  );
-  const view = await approveRm100Transfer();
-
-  expect(
-    await screen.findByText(
-      "It was not sent because your balance or limit changed — no money moved.",
-    ),
-  ).toBeOnTheScreen();
-  expect(view.getPathname()).toBe("/transfer/review");
-});
-
-// Read against the clock the app reads: a fixed time stops being ahead once it has passed.
-// eslint-disable-next-line fe/file-layout -- read at load by an it.each table
-const securityWaitEndsAt = new Date(Date.now() + 60 * 60_000).toISOString();
-
-it.each([
-  [
-    "the account was locked",
-    { code: "ACCOUNT_LOCKED", message: "Test." },
-    "Your account is locked. Contact Ryt to unlock it.",
-  ],
-  [
-    "a security wait began",
-    {
-      code: "COOLING_OFF",
-      message: "Test.",
-      until: securityWaitEndsAt,
-      reason: "DEVICE_PAIRED",
-    },
-    `You can send money from ${formatMalaysianDateTime(securityWaitEndsAt, getFixedT(null, ["shared"]))} — a security wait after pairing this phone.`,
-  ],
-])(
-  "holds Transfer on review, saying why and offering no PIN instead, with no record to recheck, when %s after the transfer was created",
-  async (_, error, holdReason) => {
-    let answerApproval: (response: Response) => void = () => undefined;
-    mswServer.use(
-      http.post(
-        "*/transfers/:transferId/approve",
-        () =>
-          new Promise<Response>((resolve) => {
-            answerApproval = resolve;
-          }),
-      ),
-    );
-    const view = await approveRm100Transfer();
-    await screen.findByText(SENDING_MESSAGE);
-
-    answerApproval(HttpResponse.json({ error }, { status: 403 }));
-
-    await waitFor(() => {
-      expect(screen.queryByText(SENDING_MESSAGE)).toBeNull();
-    });
-    expect(view.getPathname()).toBe("/transfer/review");
-    expect(await screen.findByText(holdReason)).toBeOnTheScreen();
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
-    expect(
-      screen.queryByRole("button", { name: "Use PIN instead" }),
-    ).toBeNull();
-    expect(
-      screen.queryByText("The transfer was not sent — no money moved."),
-    ).toBeNull();
-    await expectNothingToRecheckAtTheNextLaunch(view);
-  },
-);
-
-it("holds Transfer on review with the security wait's words but no time when the wait the bank names has already ended", async () => {
-  answerEveryApprovalWith(403, {
-    code: "COOLING_OFF",
-    message: "Test.",
-    until: new Date(Date.now() - 60_000).toISOString(),
-    reason: "DEVICE_PAIRED",
-  });
-  await approveRm100Transfer();
-
-  expect(
-    await screen.findByText(
-      "You can send money later — a security wait after pairing this phone.",
-    ),
-  ).toBeOnTheScreen();
-  expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
-});
-
-it(
-  "says something unexpected stopped the approval when the bank refuses it as badly formed",
-  scenarioTest("transfer.approval_unexpected", async () => {
-    answerEveryApprovalWith(400, {
-      code: "INVALID_REQUEST",
-      message: "Test.",
-    });
-    await approveRm100Transfer();
-
-    expect(
-      await screen.findByText(
-        "Something unexpected stopped the approval — no money moved.",
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.getByRole("button", { name: "Transfer" })).toBeOnTheScreen();
-  }),
-);
-
 it.each([
   ["TRANSFER_NOT_FOUND", 404],
   ["IDEMPOTENCY_KEY_REUSED", 409],
@@ -440,6 +257,139 @@ it(
   }),
 );
 
+it(
+  "never offers to send again when the bank answers the approval with a code the app does not know",
+  scenarioTest("transfer.approval_unknown_answer", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const balanceBeforeMinor = await readBankBalanceMinor();
+    const view = await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    expect(observedRecords).toContainEqual(
+      expect.objectContaining({
+        name: "transfer_outcome",
+        properties: { scenario: "transfer.approval_unknown_answer" },
+      }),
+    );
+    expect(await readBankOnRealTimers(readBankBalanceMinor)).toBe(
+      balanceBeforeMinor - 10_000,
+    );
+  }),
+);
+
+it.each<[string, () => Response, number]>([
+  ["a 500 with no body", () => new HttpResponse(null, { status: 500 }), 3],
+  [
+    "a 502 proxy page",
+    () => new HttpResponse("<html>Bad gateway</html>", { status: 502 }),
+    3,
+  ],
+  [
+    "a 503 whose code approve does not name",
+    () =>
+      HttpResponse.json(
+        { error: { code: "SERVICE_UNAVAILABLE", message: "Test." } },
+        { status: 503 },
+      ),
+    1,
+  ],
+  ["a 200 with an empty body", () => new HttpResponse("", { status: 200 }), 3],
+  ["a 200 whose body is not JSON", () => new HttpResponse("OK"), 3],
+  ["a 200 whose body holds no transfer", () => HttpResponse.json({}), 1],
+  [
+    "404 TRANSFER_NOT_FOUND",
+    () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: ApproveTransferErrorCode.TransferNotFound,
+            message: "Test.",
+          },
+        },
+        { status: 404 },
+      ),
+    1,
+  ],
+  [
+    "409 IDEMPOTENCY_KEY_REUSED",
+    () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: ApproveTransferErrorCode.IdempotencyKeyReused,
+            message: "Test.",
+          },
+        },
+        { status: 409 },
+      ),
+    1,
+  ],
+  [
+    "409 REQUEST_IN_PROGRESS",
+    () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: ApproveTransferErrorCode.RequestInProgress,
+            message: "Test.",
+          },
+        },
+        { status: 409 },
+      ),
+    1,
+  ],
+])(
+  "never offers to send again when the bank answers the approval with %s",
+  async (_, answerApproval, approvesSent) => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    mswServer.use(http.post("*/transfers/:transferId/approve", answerApproval));
+    const view = await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "This transfer is being checked, so don't send it again — not confirmed yet.",
+        {},
+        { timeout: 10_000 },
+      ),
+    ).toBeOnTheScreen();
+    expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
+    expect(screen.queryByText(/no money moved/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Transfer" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Done" })).toBeOnTheScreen();
+    expect(countSent("POST", "/approve")).toBe(approvesSent);
+  },
+);
+
+it(
+  "never says money moved when the bank answers that the transfer is still processing",
+  scenarioTest("transfer.processing", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    const view = await openReviewOfRm100();
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Transfer" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "It's usually instant, but can take up to one business day. The result will show here and in History — not confirmed yet.",
+      ),
+    ).toBeOnTheScreen();
+    expect(view.getPathname()).toMatch(/^\/transfer\/result\/[\w-]+$/);
+    expect(screen.queryByText(/— money moved\./)).toBeNull();
+  }),
+);
+
 const SENDING_MESSAGE = "Sending your transfer. The bank's answer comes next.";
 const RESULT_PATH = /^\/transfer\/result\/[\w-]+$/;
 
@@ -456,18 +406,6 @@ async function approveRm100Transfer() {
     await screen.findByRole("button", { name: "Transfer" }),
   );
   return view;
-}
-
-async function expectNothingToRecheckAtTheNextLaunch(
-  view: Awaited<ReturnType<typeof renderRoute>>,
-) {
-  const relaunched = await relaunchApp(view);
-  expect(
-    await screen.findByRole("button", { name: "Transfer", disabled: false }),
-  ).toBeOnTheScreen();
-  await act(() => jest.advanceTimersByTimeAsync(1_000));
-  expect(relaunched.getPathname()).toBe("/");
-  expect(screen.queryByText(/still being checked/)).toBeNull();
 }
 
 // ⛔ Stands in for Back skipping the result page: review holds Back until that page covers it, too late to press here.
@@ -495,4 +433,17 @@ function answerEveryApprovalWith(
       HttpResponse.json({ error }, { status }),
     ),
   );
+}
+
+async function openReviewOfRm100(
+  startPath: "/" | "/transfer" = "/transfer",
+  note?: string,
+) {
+  const view = await renderRoute(startPath);
+  if (startPath === "/") {
+    await waitForHomeToOfferTransfer();
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  }
+  await walkToTransferReview({ note });
+  return view;
 }
