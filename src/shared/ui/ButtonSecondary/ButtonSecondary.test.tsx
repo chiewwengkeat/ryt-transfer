@@ -1,6 +1,13 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
+import {
+  buildHistoryTransfer,
+  failTransferDetails,
+  holdTransferDetails,
+  serveTransferDetails,
+  serveTransferHistoryPages,
+} from "@/test/fixtures/transfer-responses";
 import { mswServer, readsOfTheBalance } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
@@ -31,6 +38,30 @@ it("stays still while the balance card asks again by itself, offline, with nobod
   expect(readsOfTheBalance()).toBeGreaterThan(balanceReadsBefore);
   expect(tryAgain).not.toBeBusy();
   expect(tryAgain).toBeEnabled();
+});
+
+it("keeps a transfer's out-of-date notice, and its busy Try again, up until the read it asked for answers", async () => {
+  const aisyah = buildHistoryTransfer();
+  serveTransferHistoryPages([[aisyah]]);
+  serveTransferDetails({ ...aisyah, version: 2, note: "Lunch" });
+  const recoverDetails = failTransferDetails();
+  await renderRoute("/transfer-history");
+  await fireEvent.press(
+    await screen.findByRole("button", { name: /^Aisyah Rahman/ }),
+  );
+  const outOfDate = await screen.findByText(
+    "Couldn't refresh — these details may be out of date",
+  );
+  recoverDetails();
+  const answerDetails = holdTransferDetails();
+
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+
+  expect(outOfDate).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Try again" })).toBeBusy();
+  answerDetails();
+  expect(await screen.findByText("Lunch")).toBeOnTheScreen();
+  expect(outOfDate).not.toBeOnTheScreen();
 });
 
 function holdTheBalanceRead() {

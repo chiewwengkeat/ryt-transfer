@@ -44,10 +44,14 @@ export default function TransferDetailsScreen() {
         </ViewScreenFrame>
       ) : transfer ? (
         <ViewScreenFrame>
-          {/* A failure from an earlier visit is not this one's: shown on reopening, it would be announced as current. */}
-          {((transferQuery.isError && transferQuery.isFetchedAfterMount) ||
+          {/* A failure from an earlier visit is not this one's: shown on reopening, it would be announced as current.
+              By the last answer, not isError: a re-read clears the error while it runs, and Try again would vanish mid-press. */}
+          {((transferQuery.isFetchedAfterMount &&
+            transferQuery.errorUpdatedAt > transferQuery.dataUpdatedAt) ||
             transferQuery.isPaused) && (
             <BannerOutOfDate
+              // Remounted per failure, so a press that fails again says so again.
+              key={transferQuery.errorUpdatedAt}
               announce={!failureIsSessionEnd}
               message={t("details.out_of_date")}
               tryAgainLabel={t("details.retry")}
