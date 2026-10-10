@@ -12,6 +12,7 @@ import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
 import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
 import { useBalanceScenarios } from "@/domains/transfer/hooks/use-balance-scenarios/use-balance-scenarios";
+import { useOfflineNotice } from "@/domains/transfer/hooks/use-offline-notice/use-offline-notice";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 import { APP_LANGUAGE_NAMES, AppLanguage } from "@/shared/i18n/i18n";
@@ -36,6 +37,7 @@ export default function HomeScreen() {
   const balanceScenarios = useBalanceScenarios(
     TransferScenarioId.StartUnexpected,
   );
+  const startTransferDisabledReason = useStartTransferDisabledReason();
   return (
     <>
       <Stack.Screen
@@ -44,11 +46,17 @@ export default function HomeScreen() {
           headerRight: () => <ButtonLanguage />,
         }}
       />
-      <ViewScreenFrame footer={<ButtonStartTransfer />}>
+      <ViewScreenFrame
+        footer={
+          <ButtonStartTransfer disabledReason={startTransferDisabledReason} />
+        }
+      >
         <SectionTransferNotices />
         <CardBalance {...balanceScenarios} />
         <ButtonTransferHistory />
-        <SectionRecentRecipientsHome />
+        <SectionRecentRecipientsHome
+          startTransferDisabledReason={startTransferDisabledReason}
+        />
       </ViewScreenFrame>
     </>
   );
@@ -105,9 +113,12 @@ const buttonLanguageStyles = StyleSheet.create({
   label: { ...typography.label, color: colors.accent },
 });
 
-function ButtonStartTransfer() {
+function ButtonStartTransfer({
+  disabledReason,
+}: {
+  disabledReason: string | undefined;
+}) {
   const { t } = useTranslation("home");
-  const disabledReason = useStartTransferDisabledReason();
 
   return (
     <ButtonPrimary
@@ -132,12 +143,15 @@ function ButtonTransferHistory() {
   );
 }
 
-function SectionRecentRecipientsHome() {
+function SectionRecentRecipientsHome({
+  startTransferDisabledReason,
+}: {
+  startTransferDisabledReason: string | undefined;
+}) {
   const { t } = useTranslation("transfer");
   const recents = useListRecentRecipients();
-  // The root view's offline notice already explains a list that cannot load.
+  // Transfer's offline line already explains a list that cannot load.
   const offline = useIsOffline();
-  const startTransferDisabledReason = useStartTransferDisabledReason();
 
   return (
     <>
@@ -166,13 +180,13 @@ function SectionRecentRecipientsHome() {
 
 function useStartTransferDisabledReason() {
   const { t } = useTranslation(["transfer", "shared"]);
-  const offline = useIsOffline();
+  const offlineNotice = useOfflineNotice();
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
   const maintenance = useTransferLimitsMaintenance(limits);
 
-  return offline
-    ? t("common.offline.disabled_reason")
+  return offlineNotice !== undefined
+    ? offlineNotice
     : maintenance?.until !== undefined
       ? t("common.under_maintenance.until", {
           time: formatMalaysianDateTime(maintenance.until, t),

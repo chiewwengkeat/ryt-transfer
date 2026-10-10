@@ -241,9 +241,7 @@ it("pauses sending on review while the phone reports no connection", async () =>
     setPhoneNetwork({ isConnected: false, isInternetReachable: false });
   });
   expect(transferButton).toBeDisabled();
-  expect(
-    screen.getByText("You're offline, so sending is paused."),
-  ).toBeOnTheScreen();
+  expect(screen.getByText(OFFLINE_NOTICE)).toBeOnTheScreen();
 
   await act(() => {
     setPhoneNetwork({ isConnected: true, isInternetReachable: true });

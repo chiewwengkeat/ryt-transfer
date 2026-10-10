@@ -5,6 +5,8 @@ import { spacing } from "@/shared/theme/theme";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 
+import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
+
 interface Props {
   message: string;
   announce: boolean;
@@ -21,8 +23,10 @@ export default function BannerOutOfDate({
   return (
     <View style={styles.banner}>
       <BannerNotice message={message} announce={announce} />
-      {phoneReportsConnection && (
+      {phoneReportsConnection ? (
         <ButtonSecondary label={tryAgainLabel} onPress={onTryAgain} />
+      ) : (
+        <TextOffline />
       )}
     </View>
   );

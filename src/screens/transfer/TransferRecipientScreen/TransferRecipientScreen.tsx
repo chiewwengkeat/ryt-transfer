@@ -6,9 +6,9 @@ import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-reci
 import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
+import { useOfflineNotice } from "@/domains/transfer/hooks/use-offline-notice/use-offline-notice";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { useIsOffline } from "@/shared/platform/offline/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
@@ -57,13 +57,14 @@ export default function TransferRecipientScreen() {
   );
   const [bankError, setBankError] = useState<string>();
   const recents = useListRecentRecipients();
-  // The root view's offline notice already explains a list that cannot load.
-  const offline = useIsOffline();
+  const offlineNotice = useOfflineNotice();
+  // Continue's offline line already explains a list that cannot load.
+  const offline = offlineNotice !== undefined;
   const chosenRecent = recents.data?.find(
     (recent) => recent.recentId === chosenRecentId,
   );
   // Never the form in a chosen recent's place unannounced: a list that has yet to answer, or failed
-  // offline where the root view's notice says why, is waited for; else the catch-all stands until they type.
+  // offline where Continue's offline line says why, is waited for; else the catch-all stands until they type.
   // Not `isPending`: the form's own list refetches a failed list on mount, which would flip it back.
   const chosenRecentAwaited =
     chosenRecentId !== undefined &&
@@ -82,6 +83,7 @@ export default function TransferRecipientScreen() {
           <ButtonPrimary
             label={t("recipient.continue")}
             loading={chosenRecentAwaited}
+            notice={offlineNotice}
             onPress={() => {
               if (chosenRecent !== undefined) {
                 if (

@@ -9,6 +9,8 @@ import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
+import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
+
 interface Props {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
@@ -35,11 +37,13 @@ export default function ViewTransferHistoryFooter({
             announce={!isSessionEndFailure(fetchNextPageFailure)}
             message={t("view_transfer_history_footer.failed")}
           />
-          {phoneReportsConnection && (
+          {phoneReportsConnection ? (
             <ButtonSecondary
               label={t("view_transfer_history_footer.retry")}
               onPress={onRetry}
             />
+          ) : (
+            <TextOffline />
           )}
         </>
       ) : !hasNextPage ? (

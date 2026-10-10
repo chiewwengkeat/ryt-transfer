@@ -10,6 +10,7 @@ import {
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
 import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { useBalanceScenarios } from "@/domains/transfer/hooks/use-balance-scenarios/use-balance-scenarios";
+import { useOfflineNotice } from "@/domains/transfer/hooks/use-offline-notice/use-offline-notice";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { formatMoney, parseTypedAmount } from "@/shared/lib/money/money";
@@ -55,6 +56,7 @@ export default function TransferAmountScreen() {
   );
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
+  const offlineNotice = useOfflineNotice();
 
   const parsedAmount = parseTypedAmount(typedAmount);
   const ceilings = account.data &&
@@ -130,8 +132,10 @@ export default function TransferAmountScreen() {
                 (limits.data !== undefined &&
                   getTransferLimitsMaintenance(limits.error) !== undefined))
                 ? undefined
-                : t("common.balance_unavailable.disabled_reason")
+                : (offlineNotice ??
+                  t("common.balance_unavailable.disabled_reason"))
             }
+            notice={offlineNotice}
             onPress={() => {
               if (reviewPushedSinceFocusRef.current) return;
               setReviewPressed(true);

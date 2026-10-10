@@ -246,7 +246,7 @@ it(
 );
 
 it(
-  "shows and says the offline notice at most once while only the transfer's own reads go unanswered",
+  "says once, from review, that sending is paused, and never shows it on the result page while the transfer's reads go unanswered",
   scenarioTest("transfer.status_unreachable", async () => {
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
     announce.mockClear();
@@ -278,11 +278,7 @@ it(
       noticeShownEachSecond.push(screen.queryByText(OFFLINE_NOTICE) !== null);
     }
 
-    const firstSecondWithoutTheNotice = noticeShownEachSecond.indexOf(false);
-    expect(firstSecondWithoutTheNotice).not.toBe(-1);
-    expect(
-      noticeShownEachSecond.slice(firstSecondWithoutTheNotice),
-    ).not.toContain(true);
+    expect(noticeShownEachSecond).not.toContain(true);
     expect(
       announce.mock.calls.filter(([message]) => message === OFFLINE_NOTICE),
     ).toHaveLength(1);

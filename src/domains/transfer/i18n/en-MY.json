@@ -10,8 +10,8 @@
       "until": "Transfers are unavailable right now, until {{time}}."
     },
     "offline": {
-      "disabled_reason": "You're offline, so sending is paused.",
-      "notice": "You're offline. Sending is paused until Ryt can be reached."
+      "notice": "You're offline. Sending is paused until Ryt can be reached.",
+      "no_connection": "You're offline."
     },
     "earlier_transfer_unconfirmed": {
       "body": "Your last transfer is still being checked, so don't send it again — not confirmed yet. If you contact us, quote this reference: {{reference}}"

@@ -21,16 +21,19 @@ interface Props {
   onPress: () => void;
   loading?: boolean;
   disabledReason?: string;
+  notice?: string;
 }
 export default function ButtonPrimary({
   label,
   onPress,
   loading = false,
   disabledReason,
+  notice,
 }: Props) {
   const { i18n } = useTranslation();
   const hasDisabledReason = disabledReason !== undefined;
   const disabled = loading || hasDisabledReason;
+  const shownNotice = disabledReason ?? notice;
   return (
     <View style={styles.container}>
       <Pressable
@@ -38,7 +41,7 @@ export default function ButtonPrimary({
         accessibilityLabel={label}
         // On the button, not its label: the screen reader reads the button as one element, in the button's language.
         accessibilityLanguage={i18n.language}
-        accessibilityHint={disabledReason}
+        accessibilityHint={shownNotice}
         accessibilityState={{ disabled, busy: loading }}
         disabled={disabled}
         onPress={onPress}
@@ -58,9 +61,9 @@ export default function ButtonPrimary({
           </Text>
         )}
       </Pressable>
-      {hasDisabledReason && (
+      {shownNotice !== undefined && (
         <TextBody tone="warning" alignCenter>
-          {disabledReason}
+          {shownNotice}
         </TextBody>
       )}
     </View>

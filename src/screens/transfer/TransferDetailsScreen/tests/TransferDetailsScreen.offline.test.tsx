@@ -11,7 +11,7 @@ import {
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
 
-it("keeps a transfer from its History row under the notice when opened offline, offering no Try again, and shows the bank's once back online", async () => {
+it("keeps a transfer from its History row under the notice when opened offline, saying so in Try again's place, and shows the bank's once back online", async () => {
   serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });
   await renderRoute("/transfer-history");
   const aisyah = await screen.findByRole("button", { name: /^Aisyah Rahman/ });
@@ -26,6 +26,12 @@ it("keeps a transfer from its History row under the notice when opened offline, 
   expect(screen.queryByText("Lunch")).not.toBeOnTheScreen();
   expect(
     screen.queryByRole("button", { name: "Try again" }),
+  ).not.toBeOnTheScreen();
+  expect(screen.getByText("You're offline.")).toBeOnTheScreen();
+  expect(
+    screen.queryByText(
+      "You're offline. Sending is paused until Ryt can be reached.",
+    ),
   ).not.toBeOnTheScreen();
   await act(() => {
     setPhoneNetwork(ONLINE);

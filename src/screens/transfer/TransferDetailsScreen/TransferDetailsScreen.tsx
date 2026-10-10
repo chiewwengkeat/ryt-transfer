@@ -14,6 +14,7 @@ import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
 import SectionTransferDetails from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
+import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
 import { useGetTransferWithHistoryPlaceholder } from "./hooks/use-get-transfer-with-history-placeholder/use-get-transfer-with-history-placeholder";
 
 export default function TransferDetailsScreen() {
@@ -67,7 +68,9 @@ export default function TransferDetailsScreen() {
                   void transferQuery.refetch();
                 }}
               />
-            ) : undefined
+            ) : (
+              <TextOffline />
+            )
           }
         >
           <BannerNotice

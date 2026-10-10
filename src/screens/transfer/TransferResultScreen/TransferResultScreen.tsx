@@ -33,6 +33,7 @@ import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import SectionTransferDetails from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
+import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
 import IconTransferCompleted from "./components/IconTransferCompleted/IconTransferCompleted";
 import TextOutcome from "./components/TextOutcome/TextOutcome";
 import ViewOutcomeEntrance from "./components/ViewOutcomeEntrance/ViewOutcomeEntrance";
@@ -184,14 +185,16 @@ export default function TransferResultScreen() {
             />
           )}
           {scenario === TransferScenarioId.OutcomeUnexpected &&
-            phoneReportsConnection && (
+            (phoneReportsConnection ? (
               <ButtonSecondary
                 label={t("common.outcome_unexpected.load_again")}
                 onPress={() => {
                   void transfer.refetch();
                 }}
               />
-            )}
+            ) : (
+              <TextOffline />
+            ))}
         </ViewOutcomeEntrance>
       </ViewScreenFrame>
     </>

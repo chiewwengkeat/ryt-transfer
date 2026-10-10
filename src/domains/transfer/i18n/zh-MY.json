@@ -10,8 +10,8 @@
       "until": "转账服务暂时无法使用，直至 {{time}}。"
     },
     "offline": {
-      "disabled_reason": "您已离线，转账已暂停。",
-      "notice": "您已离线。在能够连接 Ryt 之前，转账已暂停。"
+      "notice": "您已离线。在能够连接 Ryt 之前，转账已暂停。",
+      "no_connection": "您已离线。"
     },
     "earlier_transfer_unconfirmed": {
       "body": "您的上一笔转账仍在核查中，请勿再次转账——尚未确认。如需联系我们，请提供此参考编号：{{reference}}"

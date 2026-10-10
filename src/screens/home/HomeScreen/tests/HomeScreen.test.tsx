@@ -221,7 +221,7 @@ it("pauses sending once a request finds no network, and resumes once a request r
   await renderRoute("/");
   const tryAgain = await screen.findByRole("button", { name: "Try again" });
   const pausedReason = screen.getByText(
-    "You're offline, so sending is paused.",
+    "You're offline. Sending is paused until Ryt can be reached.",
   );
   expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
 
@@ -292,26 +292,25 @@ it("keeps that message off Home while the phone has no connection", async () => 
 
   expect(recentsUnexpected).not.toBeOnTheScreen();
   expect(
-    screen.getByText("You're offline, so sending is paused."),
+    screen.getByText(
+      "You're offline. Sending is paused until Ryt can be reached.",
+    ),
   ).toBeOnTheScreen();
 });
 
 it(
-  "says sending is paused, and why Transfer waits, while no request reaches the bank",
+  "says once, as the reason Transfer waits, that sending is paused while no request reaches the bank",
   scenarioTest("transfer.offline", async () => {
+    const offlineReason =
+      "You're offline. Sending is paused until Ryt can be reached.";
     await renderRoute("/");
 
-    expect(
-      await screen.findByText(
-        "You're offline. Sending is paused until Ryt can be reached.",
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      await screen.findByRole("button", { name: "Transfer" }),
-    ).toBeDisabled();
-    expect(
-      screen.getByText("You're offline, so sending is paused."),
-    ).toBeOnTheScreen();
+    const transfer = await screen.findByRole("button", { name: "Transfer" });
+    await waitFor(() => {
+      expect(transfer).toBeDisabled();
+    });
+    expect(screen.getAllByText(offlineReason)).toHaveLength(1);
+    expect(screen.getByHintText(offlineReason)).toBe(transfer);
     expect(reportedScenarios()).toContain("transfer.offline");
   }),
 );

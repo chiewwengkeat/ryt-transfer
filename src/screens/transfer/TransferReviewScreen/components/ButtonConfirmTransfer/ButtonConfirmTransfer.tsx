@@ -12,6 +12,7 @@ import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inpu
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
 import type { CreateTransferResponse } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
+import { useOfflineNotice } from "@/domains/transfer/hooks/use-offline-notice/use-offline-notice";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   ApprovalPath,
@@ -23,8 +24,8 @@ import {
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
 import type { TransferDraft } from "@/screens/transfer/flow-store/flow-store.type";
-import { useIsOffline } from "@/shared/platform/offline/offline";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
+import TextBody from "@/shared/ui/TextBody/TextBody";
 
 import ButtonUsePinInstead from "./components/ButtonUsePinInstead/ButtonUsePinInstead";
 import { settleCreateFailure } from "./lib/settle-create-failure/settle-create-failure";
@@ -51,7 +52,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       flow.notice === TransferScenarioId.BalanceOrLimitShortAtConfirmation,
   );
   const holdReason = useTransferHoldReason();
-  const offline = useIsOffline();
+  const offlineNotice = useOfflineNotice();
   const { pinLocked: approvalPinLocked, isPinLockedNow } =
     useApprovalPinLocked();
   const { checkingPhone, checkPhoneAllowsThisApproval } =
@@ -59,9 +60,15 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const startWatchingForReviewLeave = useReviewLeaveWatch();
 
   // Not the data: a name check that fails on a later run keeps the earlier answer's data.
-  if (!lookup.isSuccess) return null;
-  // The notice's Change amount is the way on: the bank has just refused this amount.
-  if (amountRefusedAsShort) return null;
+  // On a short amount, the notice's Change amount is the way on: the bank has just refused this amount.
+  if (!lookup.isSuccess || amountRefusedAsShort)
+    return (
+      offlineNotice !== undefined && (
+        <TextBody tone="warning" alignCenter>
+          {offlineNotice}
+        </TextBody>
+      )
+    );
   const confirmedLookup = lookup.data;
 
   const createAndApproveTransfer = async (path: ApprovalPath) => {
@@ -154,8 +161,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     }
     await sendTransferApproval(path);
   };
-  const transferDisabledReason =
-    holdReason ?? (offline ? t("common.offline.disabled_reason") : undefined);
+  const transferDisabledReason = holdReason ?? offlineNotice;
 
   return (
     <>

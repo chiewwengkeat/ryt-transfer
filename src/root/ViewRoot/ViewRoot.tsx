@@ -28,7 +28,6 @@ import { forgetSignedInCustomer } from "./lib/forget-signed-in-customer/forget-s
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
 import "@/root/translations/translations";
 
-import BannerOffline from "@/domains/transfer/components/BannerOffline/BannerOffline";
 import ViewPinSheetHost from "@/domains/approval/components/ViewPinSheetHost/ViewPinSheetHost";
 import ViewSessionEnded from "./components/ViewSessionEnded/ViewSessionEnded";
 import { usePendingTransfersAtLaunch } from "./hooks/use-pending-transfers-at-launch/use-pending-transfers-at-launch";
@@ -93,11 +92,8 @@ export default function ViewRoot() {
                 options={{ headerShown: false, headerLeft: () => null }}
               />
             </Stack>
-            <BannerOffline />
             <ViewPinSheetHost
-              offlineDisabledReason={t(
-                "transfer:common.offline.disabled_reason",
-              )}
+              offlineDisabledReason={t("transfer:common.offline.notice")}
               demoPin={demoLayer?.demoPin}
             />
           </ViewBottomSheetHost>

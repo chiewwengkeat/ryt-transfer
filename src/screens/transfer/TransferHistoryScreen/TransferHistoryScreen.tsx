@@ -21,6 +21,7 @@ import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
+import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
 import SectionTransferAccordion from "./components/SectionTransferAccordion/SectionTransferAccordion";
 
 export default function TransferHistoryScreen() {
@@ -73,7 +74,9 @@ export default function TransferHistoryScreen() {
                   void resetTransferHistory(queryClient);
                 }}
               />
-            ) : undefined
+            ) : (
+              <TextOffline />
+            )
           }
         >
           <BannerNotice

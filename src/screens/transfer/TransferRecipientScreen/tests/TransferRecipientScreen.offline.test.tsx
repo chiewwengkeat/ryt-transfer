@@ -130,6 +130,7 @@ it(
     const view = await renderRoute("/transfer");
 
     expect(await screen.findByText(OFFLINE_NOTICE)).toBeOnTheScreen();
+    expect(screen.getAllByText(OFFLINE_NOTICE)).toHaveLength(1);
     await fireEvent.changeText(
       screen.getByLabelText("DuitNow mobile number"),
       "012-345 6789",

@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type ReactNode,
-} from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   KeyboardAvoidingView,
   ScrollView,
@@ -32,29 +25,6 @@ export default function ViewScreenFrame({ children, footer }: Props) {
   const [frameTopInWindow, setFrameTopInWindow] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollOffsetRef = useRef(0);
-  const frameId = useId();
-  const [measuredFooterHeight, setMeasuredFooterHeight] = useState(0);
-  const footerHeight = footer === undefined ? 0 : measuredFooterHeight;
-  const floatingNoticeSpace = useSyncExternalStore(
-    (reader) => {
-      floatingNoticeSpaceReaders.add(reader);
-      return () => {
-        floatingNoticeSpaceReaders.delete(reader);
-      };
-    },
-    () => reservedFloatingNoticeSpace,
-  );
-  useEffect(() => {
-    footerHeightByFrame.set(frameId, 0);
-    return () => {
-      footerHeightByFrame.delete(frameId);
-      notifyFooterHeightReaders();
-    };
-  }, [frameId]);
-  useEffect(() => {
-    footerHeightByFrame.set(frameId, footerHeight);
-    notifyFooterHeightReaders();
-  }, [frameId, footerHeight]);
 
   return (
     <View
@@ -107,20 +77,14 @@ export default function ViewScreenFrame({ children, footer }: Props) {
             styles.content,
             {
               paddingBottom:
-                (footer === undefined ? spacing.lg + bottom : spacing.md) +
-                floatingNoticeSpace,
+                footer === undefined ? spacing.lg + bottom : spacing.md,
             },
           ]}
         >
           {children}
         </ScrollView>
         {footer !== undefined && (
-          <View
-            onLayout={(event) => {
-              setMeasuredFooterHeight(event.nativeEvent.layout.height);
-            }}
-            style={[styles.footer, { paddingBottom: spacing.md + bottom }]}
-          >
+          <View style={[styles.footer, { paddingBottom: spacing.md + bottom }]}>
             {footer}
           </View>
         )}
@@ -142,31 +106,3 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
 });
-
-// In mount order, so the last entry is the screen on top: a pushed screen mounts after the one it covers.
-const footerHeightByFrame = new Map<string, number>();
-const footerHeightReaders = new Set<() => void>();
-
-function notifyFooterHeightReaders() {
-  for (const reader of footerHeightReaders) reader();
-}
-
-export function useScreenFooterHeight() {
-  return useSyncExternalStore(
-    (reader) => {
-      footerHeightReaders.add(reader);
-      return () => {
-        footerHeightReaders.delete(reader);
-      };
-    },
-    () => [...footerHeightByFrame.values()].at(-1) ?? 0,
-  );
-}
-
-let reservedFloatingNoticeSpace = 0;
-const floatingNoticeSpaceReaders = new Set<() => void>();
-
-export function reserveScreenSpaceForFloatingNotice(space: number) {
-  reservedFloatingNoticeSpace = space;
-  for (const reader of floatingNoticeSpaceReaders) reader();
-}

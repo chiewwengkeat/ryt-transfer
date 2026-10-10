@@ -10,8 +10,8 @@
       "until": "Pindahan tidak tersedia buat masa ini, sehingga {{time}}."
     },
     "offline": {
-      "disabled_reason": "Anda di luar talian, jadi penghantaran dijeda.",
-      "notice": "Anda di luar talian. Penghantaran dijeda sehingga Ryt dapat dihubungi."
+      "notice": "Anda di luar talian. Penghantaran dijeda sehingga Ryt dapat dihubungi.",
+      "no_connection": "Anda di luar talian."
     },
     "earlier_transfer_unconfirmed": {
       "body": "Pindahan terakhir anda masih disemak, jadi jangan menghantarnya sekali lagi — belum disahkan. Jika anda menghubungi kami, nyatakan rujukan ini: {{reference}}"

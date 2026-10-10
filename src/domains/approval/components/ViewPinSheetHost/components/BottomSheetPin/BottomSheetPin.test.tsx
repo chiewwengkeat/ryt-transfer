@@ -88,7 +88,9 @@ it("pauses Approve while the phone is offline, and keeps the keypad open", async
 
   expect(screen.getByRole("button", { name: "Approve" })).toBeDisabled();
   expect(
-    screen.getByText("You're offline, so sending is paused."),
+    screen.getByText(
+      "You're offline. Sending is paused until Ryt can be reached.",
+    ),
   ).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole("button", { name: "Delete" }));
   expect(screen.getByLabelText("PIN, 5 of 6 digits entered")).toBeOnTheScreen();
