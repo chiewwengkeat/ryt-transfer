@@ -6,10 +6,10 @@ import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/
 import { trackEvent } from "@/shared/observability/observability/observability";
 
 import {
-  reduceAmountAndNoteEvent,
-  reduceApprovalEvent,
-  reduceRecipientEvent,
-  reduceReviewAndCreateEvent,
+  reduceAmountAndNoteAction,
+  reduceApprovalAction,
+  reduceRecipientAction,
+  reduceReviewAndCreateAction,
 } from "./flow-store.reduce";
 import {
   type TransferFlowAction,
@@ -142,24 +142,24 @@ function reduceTransferFlow(
 ): TransferFlowState {
   switch (action.type) {
     case TransferFlowActionType.RecipientChosen:
-      return reduceRecipientEvent(flow, action);
+      return reduceRecipientAction(flow, action);
     case TransferFlowActionType.AmountEntered:
-      return reduceAmountAndNoteEvent(flow, action);
+      return reduceAmountAndNoteAction(flow, action);
     case TransferFlowActionType.Confirmed:
     case TransferFlowActionType.Created:
     case TransferFlowActionType.CreateNotSent:
     case TransferFlowActionType.CreateUnanswered:
     case TransferFlowActionType.CreateRefusedByHold:
     case TransferFlowActionType.CreateReturnedToAmount:
-      return reduceReviewAndCreateEvent(flow, action);
+      return reduceReviewAndCreateAction(flow, action);
     case TransferFlowActionType.ApprovalPathChosen:
     case TransferFlowActionType.ApprovalSent:
     case TransferFlowActionType.ApprovalAttemptRefused:
     case TransferFlowActionType.ApprovalNotSent:
-    case TransferFlowActionType.ApproveRefusedByHold:
+    case TransferFlowActionType.ApprovalRefusedByHold:
     case TransferFlowActionType.ApprovalAnswered:
     case TransferFlowActionType.AnswerLost:
-      return reduceApprovalEvent(flow, action);
+      return reduceApprovalAction(flow, action);
     case TransferFlowActionType.FlowLeft:
       // An approval that left the phone may have moved money, so its record outlives the screens.
       return flow.step === TransferFlowStep.Submitting ? flow : STARTING_FLOW;

@@ -58,7 +58,7 @@ it("gives a create stopped on review its own notice detail, never an earlier ref
 
 it.each([
   ["create", TransferFlowActionType.CreateRefusedByHold, false],
-  ["approval", TransferFlowActionType.ApproveRefusedByHold, true],
+  ["approval", TransferFlowActionType.ApprovalRefusedByHold, true],
 ] as const)(
   "returns a %s refused by a hold to review with the hold and no transfer",
   (_, type, afterCreate) => {

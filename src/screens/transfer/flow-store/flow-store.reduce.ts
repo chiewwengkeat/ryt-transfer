@@ -1,19 +1,19 @@
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 
 import {
-  type AmountAndNoteEvent,
-  type ApprovalEvent,
+  type AmountAndNoteAction,
+  type ApprovalAction,
   ApprovalPath,
-  type RecipientEvent,
-  type ReviewAndCreateEvent,
+  type RecipientAction,
+  type ReviewAndCreateAction,
   TransferFlowActionType,
   type TransferFlowState,
   TransferFlowStep,
 } from "./flow-store.type";
 
-export function reduceRecipientEvent(
+export function reduceRecipientAction(
   flow: TransferFlowState,
-  action: RecipientEvent,
+  action: RecipientAction,
 ): TransferFlowState {
   // Review offers no way back while submitting, so this is a new transfer after leaving an unconfirmed one.
   if (flow.step === TransferFlowStep.Submitting)
@@ -45,9 +45,9 @@ export function reduceRecipientEvent(
   };
 }
 
-export function reduceAmountAndNoteEvent(
+export function reduceAmountAndNoteAction(
   flow: TransferFlowState,
-  action: AmountAndNoteEvent,
+  action: AmountAndNoteAction,
 ): TransferFlowState {
   if (
     flow.step !== TransferFlowStep.Editing &&
@@ -76,9 +76,9 @@ export function reduceAmountAndNoteEvent(
   };
 }
 
-export function reduceReviewAndCreateEvent(
+export function reduceReviewAndCreateAction(
   flow: TransferFlowState,
-  action: ReviewAndCreateEvent,
+  action: ReviewAndCreateAction,
 ): TransferFlowState {
   if (action.type === TransferFlowActionType.Confirmed)
     // Only from review, so a second tap on Transfer while the first is under way starts nothing.
@@ -143,9 +143,9 @@ export function reduceReviewAndCreateEvent(
   }
 }
 
-export function reduceApprovalEvent(
+export function reduceApprovalAction(
   flow: TransferFlowState,
-  action: ApprovalEvent,
+  action: ApprovalAction,
 ): TransferFlowState {
   switch (action.type) {
     case TransferFlowActionType.ApprovalPathChosen:
@@ -181,7 +181,7 @@ export function reduceApprovalEvent(
         draft: flow.draft,
         notice: action.notice,
       };
-    case TransferFlowActionType.ApproveRefusedByHold:
+    case TransferFlowActionType.ApprovalRefusedByHold:
       if (
         flow.step !== TransferFlowStep.Approving &&
         flow.step !== TransferFlowStep.Submitting

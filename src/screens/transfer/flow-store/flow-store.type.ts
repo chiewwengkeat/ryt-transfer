@@ -32,7 +32,7 @@ export enum TransferFlowActionType {
   ApprovalSent = "approval_sent",
   ApprovalAttemptRefused = "approval_attempt_refused",
   ApprovalNotSent = "approval_not_sent",
-  ApproveRefusedByHold = "approve_refused_by_hold",
+  ApprovalRefusedByHold = "approval_refused_by_hold",
   ApprovalAnswered = "approval_answered",
   AnswerLost = "answer_lost",
   FlowLeft = "flow_left",
@@ -128,18 +128,18 @@ export type TransferFlowState =
     } & ApprovalInProgress)
   | { step: TransferFlowStep.Done; transferId: string };
 
-export type RecipientEvent = {
+export type RecipientAction = {
   type: TransferFlowActionType.RecipientChosen;
   recipient: TransferRecipient;
 };
 
-export type AmountAndNoteEvent = {
+export type AmountAndNoteAction = {
   type: TransferFlowActionType.AmountEntered;
   amount: Money;
   note?: string;
 };
 
-export type ReviewAndCreateEvent =
+export type ReviewAndCreateAction =
   | {
       type: TransferFlowActionType.Confirmed;
       lookup: LookupRecipientResponse;
@@ -167,7 +167,7 @@ export type ReviewAndCreateEvent =
       noticeDetail?: TransferNoticeDetail;
     };
 
-export type ApprovalEvent =
+export type ApprovalAction =
   | { type: TransferFlowActionType.ApprovalPathChosen; path: ApprovalPath }
   | { type: TransferFlowActionType.ApprovalSent; attemptKey: string }
   | { type: TransferFlowActionType.ApprovalAttemptRefused }
@@ -175,15 +175,15 @@ export type ApprovalEvent =
       type: TransferFlowActionType.ApprovalNotSent;
       notice: TransferFlowNotice;
     }
-  | { type: TransferFlowActionType.ApproveRefusedByHold; hold: TransferHold }
+  | { type: TransferFlowActionType.ApprovalRefusedByHold; hold: TransferHold }
   | { type: TransferFlowActionType.ApprovalAnswered }
   | { type: TransferFlowActionType.AnswerLost };
 
 export type TransferFlowAction =
-  | RecipientEvent
-  | AmountAndNoteEvent
-  | ReviewAndCreateEvent
-  | ApprovalEvent
+  | RecipientAction
+  | AmountAndNoteAction
+  | ReviewAndCreateAction
+  | ApprovalAction
   | { type: TransferFlowActionType.FlowLeft };
 
 type ApprovalInProgress = {

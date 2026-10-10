@@ -24,7 +24,7 @@ import {
   TransferHoldKind,
   transferFlowStore,
 } from "@/screens/transfer/flow-store/flow-store";
-import type { ApprovalEvent } from "@/screens/transfer/flow-store/flow-store.type";
+import type { ApprovalAction } from "@/screens/transfer/flow-store/flow-store.type";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
 import { reportError } from "@/shared/observability/observability/observability";
 
@@ -47,14 +47,14 @@ export async function settleApprovalAnswer({
     });
     return;
   }
-  const returnRefusedApprovalToReview = async (event: ApprovalEvent) => {
+  const returnRefusedApprovalToReview = async (action: ApprovalAction) => {
     await clearPendingTransfer(customerId, transferId).catch(
       (error: unknown) => {
         reportError(error, { boundary: "pending_transfer_clear" });
       },
     );
     if (!isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId))
-      dispatchTransferFlow(event);
+      dispatchTransferFlow(action);
   };
 
   if (
@@ -93,13 +93,13 @@ export async function settleApprovalAnswer({
       return;
     case ApproveTransferErrorCode.AccountLocked:
       await returnRefusedApprovalToReview({
-        type: TransferFlowActionType.ApproveRefusedByHold,
+        type: TransferFlowActionType.ApprovalRefusedByHold,
         hold: { kind: TransferHoldKind.AccountLocked },
       });
       return;
     case ApproveTransferErrorCode.CoolingOff:
       await returnRefusedApprovalToReview({
-        type: TransferFlowActionType.ApproveRefusedByHold,
+        type: TransferFlowActionType.ApprovalRefusedByHold,
         hold: {
           kind: TransferHoldKind.CoolingOff,
           ...(Date.parse(refusal.until) > Date.now() && {
