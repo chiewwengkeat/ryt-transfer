@@ -151,6 +151,15 @@ it("credits nothing outside a test file", () => {
   ).toEqual([]);
 });
 
+it("credits nothing from a repository check, even one that renders a route", () => {
+  expect(
+    findRouteTestedScenarioIds(
+      "src/screens/probe/probe.check.test.ts",
+      ROUTE_TEST,
+    ),
+  ).toEqual([]);
+});
+
 // Jest defines it; the app's types deliberately leave out Node's globals.
 declare const __dirname: string;
 
