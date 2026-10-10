@@ -112,8 +112,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     flexWrap: "wrap",
-    // Moves only a wrapped net: to the header's end, where the amounts below it end.
-    justifyContent: "flex-end",
     alignItems: "center",
     columnGap: spacing.sm,
     rowGap: spacing.xs,

@@ -95,8 +95,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     flexWrap: "wrap",
-    // Moves only a wrapped amount: to the row's end, under the amounts above it.
-    justifyContent: "flex-end",
     alignItems: "center",
     columnGap: spacing.md,
     rowGap: spacing.xs,
