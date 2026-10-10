@@ -155,7 +155,11 @@ export async function resetTransferHistory(
 ) {
   await queryClient.cancelQueries({ queryKey: transferKeys.historyAll });
   trimTransferHistory(queryClient, transfersKept);
-  await queryClient.invalidateQueries({ queryKey: transferKeys.historyAll });
+  // Closed History too: reopened after a transfer, it then shows that transfer at once.
+  await queryClient.invalidateQueries({
+    queryKey: transferKeys.historyAll,
+    refetchType: "all",
+  });
 }
 
 // Enough to scroll back through on reopening; every one is drawn as History opens.
@@ -172,58 +176,6 @@ export async function patchTransferInHistory(
       const listedTransfer = history?.pages
         .flatMap(({ items }) => items)
         .find(({ transferId }) => transferId === transfer.transferId);
-      const parsedAmount = parseWireAmount(transfer.amount);
-      const [firstPage, ...olderPages] = history?.pages ?? [];
-      const newestListed = firstPage?.items[0];
-      // Shown at once rather than after the next open's read; a transfer older than the newest row is a trimmed page's.
-      if (
-        history &&
-        firstPage &&
-        !listedTransfer &&
-        (newestListed === undefined
-          ? firstPage.nextCursor === null
-          : transfer.createdAt >= newestListed.createdAt)
-      ) {
-        const date = toMalaysianDateKey(transfer.createdAt);
-        const netMinor = parsedAmount
-          ? MONEY_MOVED_SIGN[transfer.funds] * parsedAmount.minor
-          : 0;
-        const listedDay = firstPage.days.find((day) => day.date === date);
-        return {
-          ...history,
-          pages: [
-            {
-              ...firstPage,
-              items: [transfer, ...firstPage.items],
-              days:
-                date === null
-                  ? firstPage.days
-                  : listedDay
-                    ? firstPage.days.map((day) =>
-                        day === listedDay
-                          ? {
-                              ...day,
-                              count: day.count + 1,
-                              net: {
-                                ...day.net,
-                                minor: day.net.minor + netMinor,
-                              },
-                            }
-                          : day,
-                      )
-                    : [
-                        {
-                          date,
-                          count: 1,
-                          net: { ...transfer.amount, minor: netMinor },
-                        },
-                        ...firstPage.days,
-                      ],
-            },
-            ...olderPages,
-          ],
-        };
-      }
       if (
         !history ||
         !listedTransfer ||
@@ -231,6 +183,7 @@ export async function patchTransferInHistory(
       )
         return history;
       // The bank's day net, kept true until the next reset brings its own figure.
+      const parsedAmount = parseWireAmount(transfer.amount);
       const netMoveMinor = parsedAmount
         ? (MONEY_MOVED_SIGN[transfer.funds] -
             MONEY_MOVED_SIGN[listedTransfer.funds]) *

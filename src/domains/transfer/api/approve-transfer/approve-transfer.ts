@@ -13,7 +13,6 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { getTransferOptions } from "@/domains/transfer/api/get-transfer/get-transfer";
-import { patchTransferInHistory } from "@/domains/transfer/api/list-transfers/list-transfers";
 import type {
   ApproveTransferErrorResponse,
   ApproveTransferRequest,
@@ -81,7 +80,6 @@ export function useApproveTransfer() {
       return await sendApproveRequest();
     },
     onSuccess: ({ transfer }) => {
-      void patchTransferInHistory(queryClient, transfer);
       queryClient.setQueryData(
         getTransferOptions(transfer.transferId).queryKey,
         (held) =>
