@@ -324,7 +324,7 @@ export interface TransferScenario {
   conditions?: BankConditions;
   // Given the bank's own handlers, so an overlay can let a write commit and then lose its answer.
   handlers?: (bankHandlers: RequestHandler[]) => RequestHandler[];
-  // The phone or the host app causes it, so it has no bank behaviour to change and the Demo menu lists it near the top.
+  // The phone or the host app causes it, so it has no bank behaviour to change.
   phoneSide?: true;
 }
 
