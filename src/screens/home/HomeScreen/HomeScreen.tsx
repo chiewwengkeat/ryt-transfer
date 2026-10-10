@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -39,6 +40,7 @@ export default function HomeScreen() {
     TransferScenarioId.StartUnexpected,
   );
   const startTransferDisabledReason = useStartTransferDisabledReason();
+  const queryClient = useQueryClient();
   return (
     <>
       <Stack.Screen
@@ -51,6 +53,8 @@ export default function HomeScreen() {
         footer={
           <ButtonStartTransfer disabledReason={startTransferDisabledReason} />
         }
+        // Home is the stack's root, so every read still active is one of its own.
+        onPullToRefresh={() => queryClient.refetchQueries({ type: "active" })}
       >
         <SectionTransferNotices />
         <CardBalance {...balanceScenarios} />

@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import {
   KeyboardAvoidingView,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -18,14 +19,20 @@ import {
 interface Props {
   children: ReactNode;
   footer?: ReactNode;
+  onPullToRefresh?: () => Promise<unknown>;
 }
-export default function ViewScreenFrame({ children, footer }: Props) {
+export default function ViewScreenFrame({
+  children,
+  footer,
+  onPullToRefresh,
+}: Props) {
   const { bottom } = useSafeAreaInsets();
   const frameRef = useRef<View>(null);
   const [frameTopInWindow, setFrameTopInWindow] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollOffsetRef = useRef(0);
   const [footerDrawsNothing, setFooterDrawsNothing] = useState(false);
+  const [pullRefreshing, setPullRefreshing] = useState(false);
 
   return (
     <View
@@ -45,6 +52,21 @@ export default function ViewScreenFrame({ children, footer }: Props) {
       >
         <ScrollView
           ref={scrollViewRef}
+          refreshControl={
+            onPullToRefresh && (
+              <RefreshControl
+                refreshing={pullRefreshing}
+                colors={[colors.accent]}
+                tintColor={colors.accent}
+                onRefresh={() => {
+                  setPullRefreshing(true);
+                  void onPullToRefresh().finally(() => {
+                    setPullRefreshing(false);
+                  });
+                }}
+              />
+            )
+          }
           scrollEventThrottle={16}
           onScroll={(event) => {
             scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
