@@ -77,14 +77,6 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
           onClose();
         }}
       />
-      <ItemScenarioDemo
-        label={t("bottom_sheet_demo.no_biometrics")}
-        checked={activeScenarioId === TransferScenarioId.BiometricsUnavailable}
-        onPress={() => {
-          pickTransferScenario(TransferScenarioId.BiometricsUnavailable);
-          onClose();
-        }}
-      />
       {PHONE_SIDE_SCENARIO_IDS.map((scenarioId) => (
         <ItemScenarioDemo
           key={scenarioId}

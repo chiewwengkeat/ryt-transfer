@@ -205,7 +205,10 @@ export const TRANSFER_SCENARIOS = {
   "transfer.approval_cancelled": { step: TransferStep.Approval },
   "transfer.biometrics_not_recognised": { step: TransferStep.Approval },
   "transfer.biometrics_locked_out": { step: TransferStep.Approval },
-  "transfer.biometrics_unavailable": { step: TransferStep.Approval },
+  "transfer.biometrics_unavailable": {
+    step: TransferStep.Approval,
+    phoneSide: true,
+  },
   "transfer.biometrics_changed": { step: TransferStep.Approval },
   "transfer.pin_chosen": { step: TransferStep.Approval },
   "transfer.pin_incorrect": { step: TransferStep.Approval },
@@ -321,6 +324,14 @@ export interface TransferScenario {
   conditions?: BankConditions;
   // Given the bank's own handlers, so an overlay can let a write commit and then lose its answer.
   handlers?: (bankHandlers: RequestHandler[]) => RequestHandler[];
-  // Lists the pick right after No biometrics, which is phone-side too but listed by hand: flagging it lists it twice.
+  // The phone or the host app causes it, so it has no bank behaviour to change and the Demo menu lists it near the top.
   phoneSide?: true;
 }
+
+export type PhoneSideScenarioId = {
+  [Id in TransferScenarioId]: (typeof TRANSFER_SCENARIOS)[Id] extends {
+    phoneSide: true;
+  }
+    ? Id
+    : never;
+}[TransferScenarioId];

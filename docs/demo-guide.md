@@ -10,8 +10,8 @@ The menu, top to bottom:
 
 - **Unlock PIN**, marked "Demo only", is there only while the demo PIN is locked. It stands in for the PIN reset the host app would run.
 - **Normal, no scenario**: the bank behaves normally and keeps what it holds, such as the balance and today's limit used.
-- **No biometrics**: approval goes to the PIN, as when face and fingerprint approval is turned off in the app's settings.
 - **Screenshots blocked**: production's capture block, in this build. Screenshots and screen recordings come out blank on every screen but the two receipts, the result page and a transfer's details.
+- **Face or fingerprint unavailable**: approval goes to the PIN, as when face and fingerprint approval is turned off in the app's settings.
 - **Rooted, jailbroken or tampered phone**: production's refusal, in this build. Review refuses to approve, in place of the approval prompt.
 - One heading per step, listing every scenario the bank or the connection causes, by its name in the matrix. Pick one, then walk to the step it names:
 
@@ -51,7 +51,7 @@ The rest come from what you type or do, with **Normal, no scenario** picked unle
 | Face or fingerprint not recognised                | The route tests cover it: on the emulator and the simulator a non-matching face or finger keeps the phone's own prompt open to try again, so the app hears only a cancel or, on Android, a lockout.                      |
 | Too many face or fingerprint attempts             | On the Android emulator, fail until its prompt asks for the emulator's own PIN, enter it, and the PIN sheet says there were too many attempts. The iOS simulator never locks Face ID, so there the route tests cover it. |
 | Approval cancelled                                | Cancel the prompt, or close the PIN sheet.                                                                                                                                                                               |
-| Face or fingerprint unavailable                   | Pick **No biometrics**, or remove every fingerprint from the emulator, or turn Face ID enrolment off on the simulator.                                                                                                   |
+| Face or fingerprint unavailable                   | Pick **Face or fingerprint unavailable**, or remove every fingerprint from the emulator, or turn Face ID enrolment off on the simulator.                                                                                 |
 | Fingerprints or face changed                      | On Android, add a fingerprint in the emulator's settings once the app has set approval up. The iOS simulator never ends a key when enrolment changes, so it does not show there.                                         |
 | PIN chosen instead                                | Tap **Use PIN instead** under Transfer.                                                                                                                                                                                  |
 | Incorrect PIN, PIN locked                         | Enter any PIN but the demo PIN. The third wrong one locks it; **Unlock PIN** in the Demo menu unlocks it.                                                                                                                |

@@ -33,7 +33,7 @@ it("shows on Home what a pick changes, and what returning to Normal changes back
 });
 
 it("gives the next transfer its PIN keypad back once Unlock PIN has unlocked the PIN the bank locked", async () => {
-  await lockThePinOnAnRm100TransferUnderNoBiometrics();
+  await lockThePinOnAnRm100TransferWithBiometricsUnavailable();
 
   await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
   await fireEvent.press(screen.getByRole("button", { name: "Unlock PIN" }));
@@ -43,11 +43,13 @@ it("gives the next transfer its PIN keypad back once Unlock PIN has unlocked the
   expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
 });
 
-async function lockThePinOnAnRm100TransferUnderNoBiometrics() {
+async function lockThePinOnAnRm100TransferWithBiometricsUnavailable() {
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/transfer");
   await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
-  await fireEvent.press(screen.getByRole("radio", { name: "No biometrics" }));
+  await fireEvent.press(
+    screen.getByRole("radio", { name: "Face or fingerprint unavailable" }),
+  );
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
     "012-345 6789",

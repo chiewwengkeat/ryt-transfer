@@ -186,10 +186,10 @@ it("hides the Demo header from screen readers while a screen's sheet is open, so
   expect(screen.getByRole("button", { name: "Demo menu" })).toBeOnTheScreen();
 });
 
-it("stops a transfer's approval before any face or fingerprint prompt while No biometrics is picked", async () => {
+it("stops a transfer's approval before any face or fingerprint prompt while Face or fingerprint unavailable is picked", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/transfer");
-  await pickDemoScenario("No biometrics");
+  await pickDemoScenario("Face or fingerprint unavailable");
 
   await fireEvent.changeText(
     await screen.findByLabelText("DuitNow mobile number"),
@@ -234,7 +234,7 @@ it("puts Home back to the demo's opening balance and limit, and a transfer after
 it("keeps no PIN lock past Reset demo, so the next transfer gets its keypad", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/");
-  await startRm100TransferFromHomeUnderNoBiometrics();
+  await startRm100TransferFromHomeWithBiometricsUnavailable();
   await enterPinAndApprove("111111");
   await screen.findByText("That PIN is incorrect. You have 2 tries left.");
   await enterPinAndApprove("111111");
@@ -249,19 +249,21 @@ it("keeps no PIN lock past Reset demo, so the next transfer gets its keypad", as
   await fireEvent.press(screen.getByRole("button", { name: "Reset demo" }));
   // A transfer begun while the reset runs has its flow reset beneath it.
   await act(() => jest.advanceTimersByTimeAsync(5_000));
-  await startRm100TransferFromHomeUnderNoBiometrics();
+  await startRm100TransferFromHomeWithBiometricsUnavailable();
 
   expect(await screen.findByRole("button", { name: "2" })).toBeOnTheScreen();
   expect(screen.getByLabelText("PIN, 0 of 6 digits entered")).toBeOnTheScreen();
 });
 
-it("turns face or fingerprint approval back on with Reset demo after No biometrics was picked", async () => {
+it("turns face or fingerprint approval back on with Reset demo after Face or fingerprint unavailable was picked", async () => {
   await pairPhoneAsTheDemoLaunchDoes();
   await renderRoute("/");
   await fireEvent.press(
     await screen.findByRole("button", { name: "Demo menu" }),
   );
-  await fireEvent.press(screen.getByRole("radio", { name: "No biometrics" }));
+  await fireEvent.press(
+    screen.getByRole("radio", { name: "Face or fingerprint unavailable" }),
+  );
 
   await fireEvent.press(screen.getByRole("button", { name: "Demo menu" }));
   await fireEvent.press(screen.getByRole("button", { name: "Reset demo" }));
@@ -438,11 +440,13 @@ async function sendRm100FromHomeAndReturn() {
   await fireEvent.press(await screen.findByRole("button", { name: "Done" }));
 }
 
-async function startRm100TransferFromHomeUnderNoBiometrics() {
+async function startRm100TransferFromHomeWithBiometricsUnavailable() {
   await fireEvent.press(
     await screen.findByRole("button", { name: "Demo menu" }),
   );
-  await fireEvent.press(screen.getByRole("radio", { name: "No biometrics" }));
+  await fireEvent.press(
+    screen.getByRole("radio", { name: "Face or fingerprint unavailable" }),
+  );
   await fireEvent.press(
     await screen.findByRole("button", { name: "Transfer", disabled: false }),
   );

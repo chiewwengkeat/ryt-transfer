@@ -8,9 +8,8 @@ import {
   blockScreenCapture,
   useScreenErrorShowing,
 } from "@/shared/platform/screen-capture/screen-capture";
-import { demoLayer } from "@/root/app-launch/app-launch";
 
-export function useScreenCaptureBlock() {
+export function useScreenCaptureBlock(captureBlockPicked: boolean) {
   const routePattern = `/${useSegments().join("/")}`;
   const pathname = usePathname();
   const onReceiptRoute = RECEIPT_ROUTES.has(routePattern);
@@ -27,17 +26,10 @@ export function useScreenCaptureBlock() {
       setSettledReceiptPathname(null);
     };
   }, [onReceiptRoute, pathname]);
-  const [captureBlockPicked, setCaptureBlockPicked] = useState(false);
-  const captureBlockPickedRef = useRef(false);
-  // Before paint, so a pick saved before a restart blocks the first frame.
-  useLayoutEffect(
-    () =>
-      demoLayer?.subscribeToScreenCaptureBlock((picked) => {
-        captureBlockPickedRef.current = picked;
-        setCaptureBlockPicked(picked);
-      }),
-    [],
-  );
+  const captureBlockPickedRef = useRef(captureBlockPicked);
+  useLayoutEffect(() => {
+    captureBlockPickedRef.current = captureBlockPicked;
+  }, [captureBlockPicked]);
 
   // The crash screen that replaces this root is no receipt, so it is blocked wherever other screens are, even when a
   // receipt crashed. The pick is read through a ref: as a dependency, unpicking it on a receipt would block the receipt.

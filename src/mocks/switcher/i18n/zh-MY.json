@@ -192,7 +192,6 @@
     "unlock_pin_note": "代替 Ryt 自身安全设置中的 PIN 重置。",
     "unlock_pin": "解锁 PIN",
     "normal": "正常，无情景",
-    "no_biometrics": "无生物识别",
     "step": {
       "start": "开始",
       "recipient": "收款人",

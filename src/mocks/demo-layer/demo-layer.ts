@@ -8,11 +8,11 @@ import {
   createApprovalKeys,
   saveApprovalKeyIds,
 } from "@/domains/approval/lib/approval-keys/approval-keys";
-import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { bankState } from "@/mocks/bank/state/state";
 import { handlersForActiveScenario } from "@/mocks/bank/bank";
 import { watchAmountStepOpen } from "@/mocks/scenarios/amount-step-open/amount-step-open";
 import { DEMO_PIN } from "@/mocks/bank/seed/seed";
+import type { PhoneSideScenarioId } from "@/mocks/scenarios/transfer-scenarios/transfer-scenarios";
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
 import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
 import type { Send } from "@/shared/http/transport/transport";
@@ -21,12 +21,8 @@ export default {
   demoSend: createDemoSend(handlersForActiveScenario),
   demoPin: DEMO_PIN,
   ViewDemo,
-  subscribeToBiometricsOff,
   subscribeToScenarioChange: (onChange) => switcherStore.subscribe(onChange),
-  subscribeToScreenCaptureBlock: (onChange) =>
-    subscribeToPhoneSidePick(TransferScenarioId.ScreenCaptureBlocked, onChange),
-  subscribeToRootedPhone: (onChange) =>
-    subscribeToPhoneSidePick(TransferScenarioId.RootedPhone, onChange),
+  subscribeToPhoneSidePick,
   watchAmountStepOpen,
   // Stands in for the pairing a host app made long ago, so the bank holds no cooling-off against it.
   async pairPhoneAtFirstLaunch() {
@@ -50,15 +46,10 @@ export interface DemoLayer {
     children: ReactNode;
     onResetDemo: () => Promise<void>;
   }>;
-  subscribeToBiometricsOff: (
-    onChange: (biometricsOff: boolean) => void,
-  ) => () => void;
   subscribeToScenarioChange: (onChange: () => void) => () => void;
-  subscribeToScreenCaptureBlock: (
-    onChange: (captureBlocked: boolean) => void,
-  ) => () => void;
-  subscribeToRootedPhone: (
-    onChange: (phoneRooted: boolean) => void,
+  subscribeToPhoneSidePick: (
+    scenarioId: PhoneSideScenarioId,
+    onChange: (picked: boolean) => void,
   ) => () => void;
   watchAmountStepOpen: (isAmountStepOpen: () => boolean) => void;
 }
@@ -88,15 +79,8 @@ export function createDemoSend(getHandlers: () => RequestHandler[]): Send {
   };
 }
 
-function subscribeToBiometricsOff(onChange: (biometricsOff: boolean) => void) {
-  return subscribeToPhoneSidePick(
-    TransferScenarioId.BiometricsUnavailable,
-    onChange,
-  );
-}
-
 function subscribeToPhoneSidePick(
-  scenarioId: TransferScenarioId,
+  scenarioId: PhoneSideScenarioId,
   onChange: (picked: boolean) => void,
 ) {
   // Loaded first: loading restores a pick saved before a restart, and the first answer must carry it.

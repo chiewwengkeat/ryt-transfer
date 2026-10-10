@@ -16,7 +16,7 @@ Each transfer is approved by a signature the bank checks, never by a yes-or-no p
 - **Approval is a step on the review screen**, the system's biometric prompt or the PIN sheet over review, not a route of its own, so no URL or back entry leads into a half-approved transfer.
 - **The signing library sits behind an adapter.** `@sbaiahmed1/react-native-biometrics` is pinned to an exact version, and the adapter always asks for EC P-256 and strong biometrics: without the strong setting, an iPhone key survives a newly added face or fingerprint.
 - **The mock bank verifies every signature** with `@noble/curves` (`src/mocks/bank/verification/verification.ts`), so a tampered amount is refused wherever the mock bank answers, as the bank would refuse it.
-- **The Demo menu never approves.** "No biometrics" sends approval down the PIN path, which still signs with the hardware key and still needs the PIN the bank checks; "Unlock PIN", shown only while the demo PIN is locked and marked as demo-only, unlocks it; the rooted-phone entry makes approval refuse. So no build approves a transfer without a real biometric or the PIN.
+- **The Demo menu never approves.** "Face or fingerprint unavailable" sends approval down the PIN path, which still signs with the hardware key and still needs the PIN the bank checks; "Unlock PIN", shown only while the demo PIN is locked and marked as demo-only, unlocks it; the rooted-phone entry makes approval refuse. So no build approves a transfer without a real biometric or the PIN.
 
 ## Rejected
 

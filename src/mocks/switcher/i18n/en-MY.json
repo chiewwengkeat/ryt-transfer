@@ -192,7 +192,6 @@
     "unlock_pin_note": "Stands in for the PIN reset in Ryt's own security settings.",
     "unlock_pin": "Unlock PIN",
     "normal": "Normal, no scenario",
-    "no_biometrics": "No biometrics",
     "step": {
       "start": "Start",
       "recipient": "Recipient",

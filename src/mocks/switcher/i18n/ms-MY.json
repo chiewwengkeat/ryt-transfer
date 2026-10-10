@@ -192,7 +192,6 @@
     "unlock_pin_note": "Menggantikan tetapan semula PIN dalam tetapan keselamatan Ryt sendiri.",
     "unlock_pin": "Buka kunci PIN",
     "normal": "Biasa, tiada senario",
-    "no_biometrics": "Tiada biometrik",
     "step": {
       "start": "Mula",
       "recipient": "Penerima",

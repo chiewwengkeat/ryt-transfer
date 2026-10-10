@@ -23,7 +23,7 @@ import {
 
 import ViewDemo from "./ViewDemo";
 
-it("offers no scenario, no biometrics, the other phone-side picks, then what the bank or the connection decides by step, all in matrix order", async () => {
+it("offers no scenario, the phone-side picks, then what the bank or the connection decides by step, all in matrix order", async () => {
   await renderDemoAroundAnApp();
 
   await openDemoMenu();
@@ -31,8 +31,8 @@ it("offers no scenario, no biometrics, the other phone-side picks, then what the
   const expectedEntries = [
     screen.getByRole("button", { name: "Close the demo menu" }),
     screen.getByRole("radio", { name: "Normal, no scenario" }),
-    screen.getByRole("radio", { name: "No biometrics" }),
     screen.getByRole("radio", { name: "Screenshots blocked" }),
+    screen.getByRole("radio", { name: "Face or fingerprint unavailable" }),
     screen.getByRole("radio", { name: "Rooted, jailbroken or tampered phone" }),
     ...BANK_DECIDED_HEADINGS.map((heading) =>
       screen.getByRole("radio", { name: heading }),

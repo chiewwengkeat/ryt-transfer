@@ -1,6 +1,6 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { StatusBar, StyleSheet, View } from "react-native";
 
 import { ApprovalDemoPinContext } from "@/domains/approval/lib/approval-demo-pin/approval-demo-pin";
@@ -8,6 +8,7 @@ import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approva
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   holdTransferScenarioReports,
   releaseTransferScenarioReports,
@@ -34,7 +35,17 @@ import { useScreenCaptureBlock } from "./hooks/use-screen-capture-block/use-scre
 
 export default function ViewRoot() {
   usePendingTransfersAtLaunch();
-  useScreenCaptureBlock();
+  const [captureBlockPicked, setCaptureBlockPicked] = useState(false);
+  // Before paint, so a pick saved before a restart blocks the first frame.
+  useLayoutEffect(
+    () =>
+      demoLayer?.subscribeToPhoneSidePick(
+        TransferScenarioId.ScreenCaptureBlocked,
+        setCaptureBlockPicked,
+      ),
+    [],
+  );
+  useScreenCaptureBlock(captureBlockPicked);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [appSheetOpen, setAppSheetOpen] = useState(false);
   const [navigatorMounts, setNavigatorMounts] = useState(0);
@@ -56,9 +67,14 @@ export default function ViewRoot() {
   }, []);
   useEffect(
     () =>
-      demoLayer?.subscribeToBiometricsOff((biometricsOff) => {
-        approvalSettingsStore.setState({ biometricApprovalOn: !biometricsOff });
-      }),
+      demoLayer?.subscribeToPhoneSidePick(
+        TransferScenarioId.BiometricsUnavailable,
+        (biometricsOff) => {
+          approvalSettingsStore.setState({
+            biometricApprovalOn: !biometricsOff,
+          });
+        },
+      ),
     [],
   );
   useEffect(
@@ -70,9 +86,12 @@ export default function ViewRoot() {
   );
   useEffect(
     () =>
-      demoLayer?.subscribeToRootedPhone((rootedPhonePicked) => {
-        rootedPhoneDemoPickStore.setState({ rootedPhonePicked });
-      }),
+      demoLayer?.subscribeToPhoneSidePick(
+        TransferScenarioId.RootedPhone,
+        (rootedPhonePicked) => {
+          rootedPhoneDemoPickStore.setState({ rootedPhonePicked });
+        },
+      ),
     [],
   );
 
