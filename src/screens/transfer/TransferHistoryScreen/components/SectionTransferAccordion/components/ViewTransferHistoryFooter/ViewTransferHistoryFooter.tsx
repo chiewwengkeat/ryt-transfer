@@ -28,7 +28,7 @@ export default function ViewTransferHistoryFooter({
 
   return (
     <View style={[styles.footer, { paddingBottom: spacing.md + bottom }]}>
-      {/* The failure stays up while its retry runs. */}
+      {/* The query keeps the page's error flag up while its retry runs. */}
       {fetchNextPageFailure !== null && !isFetchingNextPage ? (
         <>
           <BannerAction

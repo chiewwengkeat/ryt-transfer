@@ -112,6 +112,6 @@ export function buildSignedApprovalText(details: {
     bankCode: details.bankCode,
     amountMinor: details.amount.minor,
     currency: details.amount.currency,
-    note: details.note || null, // an empty note signs as no note
+    note: details.note || null, // ||, not ??: an empty note signs as no note
   });
 }

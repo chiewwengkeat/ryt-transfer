@@ -161,8 +161,7 @@ export default function CardBalance({
 const styles = StyleSheet.create({
   main: { padding: spacing.lg },
   floor: {
-    // The failure state's height at default text size, so a retry moves nothing below: card
-    // padding, the notice's padding and one line, the card's gap, the button.
+    // The failure state's height at default text size, so a retry moves nothing below.
     minHeight:
       2 * spacing.lg +
       2 * spacing.md +

@@ -75,7 +75,7 @@ function useRecheckEarlierTransferWhileOnTop({
     (settledTransferId: string) => {
       // Covered, not off top: under the session-ended view reads answer 401, but a check out as Home is left still owes it.
       if (screensCovered) return;
-      // Once per transfer: a settled answer row 5 cannot show, such as one no newer than the copy held, keeps it ticking.
+      // Once per transfer: a settled answer the cached notice cannot show, such as one no newer than the copy held, keeps it ticking.
       if (transferIdsToldSettledRef.current.has(settledTransferId)) return;
       transferIdsToldSettledRef.current.add(settledTransferId);
       onSettled();
