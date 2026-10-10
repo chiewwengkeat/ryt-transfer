@@ -11,7 +11,7 @@ import RowDetail from "@/screens/transfer/components/RowDetail/RowDetail";
 import { useTransferStatusWord } from "@/screens/transfer/hooks/use-transfer-status-word/use-transfer-status-word";
 import {
   MoneyState,
-  moneyStateByFundsAndStatus,
+  readSectionTransferDetailsMoneyState,
 } from "@/screens/transfer/lib/transfer-money-state/transfer-money-state";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { formatMoney } from "@/shared/lib/money/money";
@@ -24,7 +24,7 @@ export default function SectionTransferDetails({ transfer }: Props) {
   const { t } = useTranslation(["transfer", "shared"]);
   const statusWord = useTransferStatusWord(transfer);
   const isReceived = transfer.direction === TransferDirection.In;
-  const moneyState = moneyStateByFundsAndStatus(transfer);
+  const moneyState = readSectionTransferDetailsMoneyState(transfer);
   const moneyPhrase =
     moneyState &&
     {

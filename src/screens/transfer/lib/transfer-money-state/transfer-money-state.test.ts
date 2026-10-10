@@ -15,7 +15,7 @@ import { buildHistoryTransfer } from "@/test/fixtures/transfer-responses";
 import {
   MONEY_STATE_BY_OUTCOME,
   MoneyState,
-  moneyStateByFundsAndStatus,
+  readSectionTransferDetailsMoneyState,
 } from "./transfer-money-state";
 
 it("gives each outcome its matrix section's money state", () => {
@@ -64,11 +64,11 @@ it("reads a refund on its way and an undebited failure for a reason no scenario 
     failureReason: TransferFailureReason.RecipientBankRejected,
   });
 
-  expect(moneyStateByFundsAndStatus(refundOnItsWay)).toBeUndefined();
+  expect(readSectionTransferDetailsMoneyState(refundOnItsWay)).toBeUndefined();
   expect(MONEY_STATE_BY_OUTCOME[outcomeOfTransfer(refundOnItsWay)!]).toBe(
     MoneyState.MoneyReturned,
   );
-  expect(moneyStateByFundsAndStatus(undebitedForUnnamedReason)).toBe(
+  expect(readSectionTransferDetailsMoneyState(undebitedForUnnamedReason)).toBe(
     MoneyState.NoMoneyMoved,
   );
   expect(

@@ -35,9 +35,9 @@ export const MONEY_STATE_BY_OUTCOME: Record<
   [TransferScenarioId.RecoveryUnexpected]: MoneyState.NotConfirmedYet,
 };
 
-// The details card's reading: it differs from MONEY_STATE_BY_OUTCOME where marked, and may on combinations the
-// bank is not known to send. No phrase where the matrix has none.
-export function moneyStateByFundsAndStatus({
+// Differs from MONEY_STATE_BY_OUTCOME where marked, and may on combinations the bank is not known to send. No
+// phrase where the matrix has none.
+export function readSectionTransferDetailsMoneyState({
   direction,
   funds,
   status,
