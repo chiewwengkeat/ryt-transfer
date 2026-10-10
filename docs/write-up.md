@@ -45,7 +45,7 @@ Each of the 58 situations a transfer can meet is one short section of [the scena
 
 ## Fast with a long history
 
-The demo bank seeds 5,000 transfers. Pages of 30 come by cursor, and each day's count and net come from the bank, so a split day never reads short. FlashList recycles the rows. Reopened within 30 seconds of its last read, History draws what it holds and asks nothing; later, it asks once for the newest page, since someone checking before sending again needs it current. Before the latest history changes, I [counted re-renders](history-re-render-counts.md) rather than trust an emulator's frame rate: a new page or a folded day redraws no row already on screen, a status change redraws one ([009](decisions/009-history-at-scale.md)). Bank data lives in TanStack Query's cache ([010](decisions/010-query-cache-only.md)), the flow in a typed zustand reducer ([005](decisions/005-state.md)), and the React Compiler memoizes, with three hand-written memos where a reference must stay stable.
+The mock bank seeds 5,000 transfers. Pages of 30 come by cursor, and each day's count and net come from the bank, so a split day never reads short. FlashList recycles the rows. Reopened within 30 seconds of its last read, History draws what it holds and asks nothing; later, it asks once for the newest page, since someone checking before sending again needs it current. Before the latest history changes, I [counted re-renders](history-re-render-counts.md) rather than trust an emulator's frame rate: a new page or a folded day redraws no row already on screen, a status change redraws one ([009](decisions/009-history-at-scale.md)). Bank data lives in TanStack Query's cache ([010](decisions/010-query-cache-only.md)), the flow in a typed zustand reducer ([005](decisions/005-state.md)), and the React Compiler memoizes, with three hand-written memos where a reference must stay stable.
 
 **Rejected:** offset paging, where a transfer made mid-scroll repeats a row on the next page.
 
@@ -61,7 +61,7 @@ flowchart TD
     root --> screens["src/screens: one folder per flow"]
     screens --> domains["src/domains: one folder per business area"]
     domains --> shared["src/shared: knows nothing about banking"]
-    root -.->|one gated require| mocks["src/mocks: the fake bank"]
+    root -.->|one gated require| mocks["src/mocks: the mock bank"]
 ```
 
 **Rejected:** Feature-Sliced Design, whose six layers split each feature, so "which layer?" becomes a recurring call.
@@ -76,11 +76,11 @@ Development and demo builds carry a stateful mock bank that moves balances, uses
 
 **At scale:** a contract changes once for tests and demo, and QA can walk any scenario on an installed build.
 
-## The fake bank can't reach production
+## The mock bank can't reach production
 
 An unset variant means production, so an unconfigured build fails closed. Mock code is reached only by one `require` in the app's root, gated on a literal comparison of `EXPO_PUBLIC_APP_VARIANT`, the one form the bundler strips from a release build; lint lets only the root `require` it, and no app code import it but the root's type-only import of the demo contract, which carries no code. On every push, CI exports each variant and fails a production or unset bundle whose source map lists a mock or msw file; the demo export must carry them ([007](decisions/007-production-guard.md)).
 
-**Rejected:** one build with a demo mode to unlock: the fake bank would ship one unlock away from a customer.
+**Rejected:** one build with a demo mode to unlock: the mock bank would ship one unlock away from a customer.
 
 **At scale:** the check reads what was built, not what was meant, so it holds as the team grows.
 
@@ -98,7 +98,7 @@ In production, capture is blocked on every screen but the two receipts, kept as 
 
 **A bottom-sheet library, reversed on evidence.** I first picked the common library. Its issue tracker held unfixed reports, on this exact React Native and Reanimated stack, of sheets that go invisible or never reopen. The app now draws its own sheet, about 250 lines.
 
-**A production bundle could carry the fake bank.** The bundler's cache key left out the build variant, so a production build made right after a demo one reused the demo's files. The variant is now in the key, and CI fails any production bundle it exports that carries mock code.
+**A production bundle could carry the mock bank.** The bundler's cache key left out the build variant, so a production build made right after a demo one reused the demo's files. The variant is now in the key, and CI fails any production bundle it exports that carries mock code.
 
 ## Limits, and what I'd do next
 
