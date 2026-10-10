@@ -127,7 +127,7 @@ test("fails an export that wrote no source map, or one listing nothing under src
           "demo ios": [
             {
               sources: [
-                "/src/mocks/demo-bank.ts",
+                "/src/mocks/bank/bank.ts",
                 "/node_modules/msw/lib/core/http.mjs",
               ],
             },
@@ -295,7 +295,7 @@ function bundledFilesWhenEveryGateHolds({ variant }) {
     "/node_modules/.pnpm/react@19.2.0/node_modules/react/index.js",
     ...(["demo", "development"].includes(variant)
       ? [
-          "/src/mocks/demo-bank.ts",
+          "/src/mocks/bank/bank.ts",
           "/node_modules/.pnpm/msw@2.15.0/node_modules/msw/lib/core/http.mjs",
         ]
       : []),

@@ -276,7 +276,7 @@ test("fails a demo export whose source map lists no file from msw", () => {
     fakeExpoExport({
       sourceMapsFor: sourceMapExceptFor("demo android", [
         "/src/app/_layout.tsx",
-        "/src/mocks/demo-bank.ts",
+        "/src/mocks/bank/bank.ts",
       ]),
     }),
   );
@@ -293,7 +293,7 @@ test("fails a development export whose source map lists no file from msw", () =>
     fakeExpoExport({
       sourceMapsFor: sourceMapExceptFor("development android", [
         "/src/app/_layout.tsx",
-        "/src/mocks/demo-bank.ts",
+        "/src/mocks/bank/bank.ts",
       ]),
     }),
   );
@@ -310,7 +310,7 @@ test("fails an export whose source map lists files from anywhere but the project
     fakeExpoExport({
       sourceMapsFor: sourceMapExceptFor("production android", [
         "/home/runner/work/app/app/src/app/_layout.tsx",
-        "/home/runner/work/app/app/src/mocks/demo-bank.ts",
+        "/home/runner/work/app/app/src/mocks/bank/bank.ts",
       ]),
     }),
   );
@@ -343,7 +343,7 @@ test("reads the files of every source map an export writes", () => {
       sourceMapsFor: (run) =>
         exportRunLabel(run) === "demo android"
           ? [
-              { sources: ["/src/app/_layout.tsx", "/src/mocks/demo-bank.ts"] },
+              { sources: ["/src/app/_layout.tsx", "/src/mocks/bank/bank.ts"] },
               {
                 sources: [
                   "/node_modules/.pnpm/msw@2.15.0/node_modules/msw/lib/core/http.mjs",
@@ -393,7 +393,7 @@ function bundledFilesWhenEveryGateHolds({ variant }) {
     "/node_modules/.pnpm/react@19.2.0/node_modules/react/index.js",
     ...(["demo", "development"].includes(variant)
       ? [
-          "/src/mocks/demo-bank.ts",
+          "/src/mocks/bank/bank.ts",
           "/node_modules/.pnpm/msw@2.15.0/node_modules/msw/lib/core/http.mjs",
         ]
       : []),
