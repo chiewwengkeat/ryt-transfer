@@ -142,7 +142,7 @@
       "title": "Something unexpected while approving"
     },
     "completed": {
-      "title": "Transfer sent"
+      "title": "Transfer completed"
     },
     "processing": {
       "title": "Transfer processing"
