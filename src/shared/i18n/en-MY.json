@@ -25,6 +25,10 @@
   "loader": {
     "label": "Loading"
   },
+  "button_header_back": {
+    "back": "Go back",
+    "home": "Back to Home"
+  },
   "view_screen_error": {
     "title": "Something went wrong",
     "body": "This screen stopped working.",

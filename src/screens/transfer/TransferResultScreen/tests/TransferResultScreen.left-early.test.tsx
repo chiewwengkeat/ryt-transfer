@@ -73,7 +73,7 @@ it(
         `If you contact us, quote this reference: ${transferIdIn(relaunched.getPathname())}`,
       ),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Done", "Back to Home"]);
     expect(
       screen.getByText(/^Your last transfer is still being checked/, {
         includeHiddenElements: true,

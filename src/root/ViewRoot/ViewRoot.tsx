@@ -88,7 +88,10 @@ export default function ViewRoot() {
             onSheetOpenChange={demoLayer === null ? undefined : setAppSheetOpen}
           >
             <Stack key={navigatorMounts} screenOptions={stackScreenOptions}>
-              <Stack.Screen name="transfer" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="transfer"
+                options={{ headerShown: false, headerLeft: () => null }}
+              />
             </Stack>
             <BannerOffline />
             <ViewPinSheetHost

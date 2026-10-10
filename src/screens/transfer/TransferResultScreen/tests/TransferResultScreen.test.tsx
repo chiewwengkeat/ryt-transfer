@@ -83,7 +83,7 @@ it(
     expect(screen.getByText(body.transfer.reference ?? "")).toBeOnTheScreen();
     expect(screen.getByText("Note")).toBeOnTheScreen();
     expect(screen.getByText("Lunch")).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Done", "Back to Home"]);
 
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 
@@ -175,7 +175,7 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(screen.queryByText(/quote this reference/)).toBeNull();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Done", "Back to Home"]);
   }),
 );
 
@@ -195,7 +195,7 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(screen.getByText(BANK_REFERENCE)).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Done", "Back to Home"]);
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
     expect(
       await screen.findByText(/^Your last transfer is still being checked/),
@@ -247,7 +247,7 @@ it(
       ),
     ).toBeOnTheScreen();
     expect(screen.getByText(BANK_REFERENCE)).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Done", "Back to Home"]);
   }),
 );
 

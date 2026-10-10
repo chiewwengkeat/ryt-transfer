@@ -13,7 +13,6 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
-import ButtonHeaderHome from "@/screens/transfer/components/ButtonHeaderHome/ButtonHeaderHome";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
@@ -77,13 +76,7 @@ export default function TransferRecipientScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: t("recipient.title"),
-          // The flow's first step: the root stack's header, which would go back, is hidden over the flow.
-          headerLeft: (props) => <ButtonHeaderHome {...props} />,
-        }}
-      />
+      <Stack.Screen options={{ title: t("recipient.title") }} />
       <ViewScreenFrame
         footer={
           <ButtonPrimary

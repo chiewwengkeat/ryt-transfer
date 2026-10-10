@@ -56,7 +56,7 @@ it(
         `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
       ),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Done", "Back to Home"]);
   }),
 );
 

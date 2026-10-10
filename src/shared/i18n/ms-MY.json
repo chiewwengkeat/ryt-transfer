@@ -25,6 +25,10 @@
   "loader": {
     "label": "Memuatkan"
   },
+  "button_header_back": {
+    "back": "Kembali ke skrin sebelumnya",
+    "home": "Kembali ke Laman Utama"
+  },
   "view_screen_error": {
     "title": "Sesuatu tidak kena",
     "body": "Skrin ini berhenti berfungsi.",

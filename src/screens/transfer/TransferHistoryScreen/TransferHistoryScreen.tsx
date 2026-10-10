@@ -21,7 +21,6 @@ import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 
 import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
-import ButtonHeaderHome from "@/screens/transfer/components/ButtonHeaderHome/ButtonHeaderHome";
 import SectionTransferAccordion from "./components/SectionTransferAccordion/SectionTransferAccordion";
 
 export default function TransferHistoryScreen() {
@@ -61,13 +60,7 @@ export default function TransferHistoryScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: t("history.title"),
-          // First in its own stack, the root header that would go back hidden over it; a link can open it with nothing beneath.
-          headerLeft: (props) => <ButtonHeaderHome {...props} />,
-        }}
-      />
+      <Stack.Screen options={{ title: t("history.title") }} />
       {transferHistory.isPending && !transferHistory.isPaused ? (
         <Loader />
       ) : transferHistory.data === undefined ? (

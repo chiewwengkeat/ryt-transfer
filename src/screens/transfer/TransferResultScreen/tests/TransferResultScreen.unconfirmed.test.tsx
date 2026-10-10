@@ -46,7 +46,11 @@ it(
         `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
       ),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Transfer history", "Done"]);
+    expect(buttonsOnTheResultPage()).toEqual([
+      "Transfer history",
+      "Done",
+      "Back to Home",
+    ]);
 
     await fireEvent.press(
       screen.getByRole("button", { name: "Transfer history" }),
@@ -108,7 +112,11 @@ it(
         `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
       ),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Transfer history", "Done"]);
+    expect(buttonsOnTheResultPage()).toEqual([
+      "Transfer history",
+      "Done",
+      "Back to Home",
+    ]);
 
     await fireEvent.press(
       screen.getByRole("button", { name: "Transfer history" }),
@@ -199,7 +207,11 @@ it(
     expect(
       screen.getByRole("header", { name: "Outcome not confirmed" }),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Transfer history", "Done"]);
+    expect(buttonsOnTheResultPage()).toEqual([
+      "Transfer history",
+      "Done",
+      "Back to Home",
+    ]);
     expect(announcements).not.toHaveBeenCalled();
   }),
 );

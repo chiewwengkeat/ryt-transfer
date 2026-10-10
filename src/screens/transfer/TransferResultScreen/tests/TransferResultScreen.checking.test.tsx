@@ -295,7 +295,7 @@ it(
       screen
         .getAllByRole("button")
         .map((button) => button.props.accessibilityLabel as unknown),
-    ).toEqual(["Done"]);
+    ).toEqual(["Done", "Back to Home"]);
     const relaunched = await relaunchAppAndWaitForItsLaunchChecks(view);
     expect(screen.queryByText(/^Your (last )?transfer/)).toBeNull();
     expect(relaunched.getPathname()).toBe("/");
@@ -327,7 +327,7 @@ it(
         `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
       ),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Done", "Back to Home"]);
     releaseStatusRead();
 
     expect(
@@ -386,7 +386,7 @@ it(
         `If you contact us, quote this reference: ${transferIdIn(view.getPathname())}`,
       ),
     ).toBeOnTheScreen();
-    expect(buttonsOnTheResultPage()).toEqual(["Done"]);
+    expect(buttonsOnTheResultPage()).toEqual(["Done", "Back to Home"]);
     releaseStatusRead();
 
     expect(

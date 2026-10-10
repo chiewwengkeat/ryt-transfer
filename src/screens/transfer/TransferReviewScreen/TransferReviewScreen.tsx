@@ -91,7 +91,8 @@ function HeaderReview() {
     <Stack.Screen
       options={{
         title: t("header_review.title"),
-        headerBackVisible: !sending,
+        // True would draw the platform's back beside the shared one.
+        ...(sending && { headerLeft: () => null, headerBackVisible: false }),
         gestureEnabled: !sending,
       }}
     />

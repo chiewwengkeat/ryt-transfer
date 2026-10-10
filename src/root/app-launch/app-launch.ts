@@ -1,4 +1,7 @@
 /* eslint-disable fe/file-layout -- its launch steps run in order */
+import { createElement } from "react";
+import type { ColorValue } from "react-native";
+
 import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { warmUpDeviceIntegrityCheck } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
@@ -10,6 +13,7 @@ import { enableAppSwitcherBlur } from "@/shared/platform/app-switcher-blur/app-s
 import { kvStorage } from "@/shared/platform/kv-storage/kv-storage";
 import { blockScreenCapture } from "@/shared/platform/screen-capture/screen-capture";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage/secure-storage";
+import ButtonHeaderBack from "@/root/ViewRoot/components/ButtonHeaderBack/ButtonHeaderBack";
 
 const INSTALL_MARKER_KEY = "install-marker";
 
@@ -48,13 +52,37 @@ if (demoLayer !== null) {
     });
 }
 
-// Android's header pads for the status bar itself, a place the Demo header has already taken.
-export const stackScreenOptions =
-  demoLayer === null
-    ? screenTransitionOptions
-    : () => ({
-        ...screenTransitionOptions(),
+// One back button for every screen: the platform's own sits elsewhere, and a flow's first screen has none.
+function buildStackScreenOptions(firstScreenOpensHome: boolean) {
+  return ({
+    route,
+    navigation,
+  }: {
+    route: { key: string };
+    navigation: { getState: () => { routes: readonly { key: string }[] } };
+  }) => {
+    const opensHome =
+      firstScreenOpensHome &&
+      navigation.getState().routes[0]?.key === route.key;
+    return {
+      ...screenTransitionOptions(),
+      headerLeft: ({
+        tintColor,
+        canGoBack,
+      }: {
+        tintColor?: ColorValue;
+        canGoBack?: boolean;
+      }) =>
+        createElement(ButtonHeaderBack, { tintColor, canGoBack, opensHome }),
+      // Android's header pads for the status bar itself, a place the Demo header has already taken.
+      ...(demoLayer !== null && {
         unstable_nativeProps: {
           headerConfig: { disableTopInsetApplication: true },
         },
-      });
+      }),
+    };
+  };
+}
+
+export const stackScreenOptions = buildStackScreenOptions(false);
+export const flowStackScreenOptions = buildStackScreenOptions(true);

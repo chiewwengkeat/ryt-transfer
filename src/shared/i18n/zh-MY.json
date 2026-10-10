@@ -25,6 +25,10 @@
   "loader": {
     "label": "正在加载"
   },
+  "button_header_back": {
+    "back": "返回上一页",
+    "home": "返回首页"
+  },
   "view_screen_error": {
     "title": "出错了",
     "body": "此页面已停止运行。",

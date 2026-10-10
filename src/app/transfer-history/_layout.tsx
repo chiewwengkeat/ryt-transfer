@@ -1,13 +1,13 @@
 import { Stack } from "expo-router";
 
-import { stackScreenOptions } from "@/root/app-launch/app-launch";
+import { flowStackScreenOptions } from "@/root/app-launch/app-launch";
 
 export default function TransferHistoryLayout() {
   return (
     <>
       {/* Hides the root stack's header for this route: this stack draws its own. */}
-      <Stack.Screen options={{ headerShown: false }} />
-      <Stack screenOptions={stackScreenOptions} />
+      <Stack.Screen options={{ headerShown: false, headerLeft: () => null }} />
+      <Stack screenOptions={flowStackScreenOptions} />
     </>
   );
 }

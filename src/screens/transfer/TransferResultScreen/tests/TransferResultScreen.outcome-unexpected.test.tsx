@@ -81,6 +81,7 @@ it(
       "Transfer history",
       "Load the result again",
       "Done",
+      "Back to Home",
     ]);
     const transferId = transferIdIn(view.getPathname());
     const readsBefore = sentRequests.filter(({ url }) =>
@@ -208,7 +209,12 @@ it(
         .getAllByRole("button")
         .map((button) => button.props.accessibilityLabel as unknown)
         .sort(),
-    ).toEqual(["Done", "Load the result again", "Transfer history"]);
+    ).toEqual([
+      "Back to Home",
+      "Done",
+      "Load the result again",
+      "Transfer history",
+    ]);
   }),
 );
 
