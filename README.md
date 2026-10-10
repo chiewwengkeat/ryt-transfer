@@ -33,7 +33,6 @@ Build variants and checks: [CONTRIBUTING.md](CONTRIBUTING.md#build-variants) and
 ## Try the scenarios
 
 - Development and demo builds show a strip across the top of every screen. Its **Demo ▾** button opens the Demo menu, which picks one scenario at a time.
-- The demo PIN is `246810`.
 - [The demo guide](docs/demo-guide.md) shows how to reach the scenarios.
 
 ## Assumptions
