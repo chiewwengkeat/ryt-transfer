@@ -442,18 +442,18 @@ it("tells a screen reader that the PIN keypad is in Bahasa Malaysia when the app
   await fireEvent.press(
     await screen.findByRole("button", { name: "Pindahkan" }),
   );
-  const malayApprovalT = getFixedT(AppLanguage.Malay, "approval");
+  const malayTransferT = getFixedT(AppLanguage.Malay, "transfer");
 
   expect(await screen.findByRole("button", { name: "1" })).toHaveProp(
     "accessibilityLanguage",
     "ms-MY",
   );
   expect(
-    screen.getByRole("button", { name: malayApprovalT("keypad_pin.delete") }),
+    screen.getByRole("button", { name: malayTransferT("keypad_pin.delete") }),
   ).toHaveProp("accessibilityLanguage", "ms-MY");
   expect(
     screen.getByLabelText(
-      malayApprovalT("keypad_pin.digits_entered", { entered: 0, length: 6 }),
+      malayTransferT("keypad_pin.digits_entered", { entered: 0, length: 6 }),
     ),
   ).toHaveProp("accessibilityLanguage", "ms-MY");
 });

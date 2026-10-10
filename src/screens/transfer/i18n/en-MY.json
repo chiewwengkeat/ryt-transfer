@@ -68,6 +68,19 @@
     "prompt_subtitle": "{{amount}} to {{name}}",
     "prompt_cancel": "Cancel"
   },
+  "bottom_sheet_pin": {
+    "title": "Approve with your PIN",
+    "title_locked": "PIN locked",
+    "close": "Close",
+    "approve": "Approve",
+    "enter_every_digit": "Enter all {{length}} digits of your PIN.",
+    "demo_pin": "Demo PIN: {{pin}}",
+    "touch_dropped": "Another app is drawing over the screen. Close it to enter your PIN."
+  },
+  "keypad_pin": {
+    "digits_entered": "PIN, {{entered}} of {{length}} digits entered",
+    "delete": "Delete"
+  },
   "result": {
     "title": "Receipt",
     "done": "Done",

@@ -68,6 +68,19 @@
     "prompt_subtitle": "{{amount}} 转给 {{name}}",
     "prompt_cancel": "取消"
   },
+  "bottom_sheet_pin": {
+    "title": "使用您的 PIN 批准",
+    "title_locked": "PIN 已锁定",
+    "close": "关闭",
+    "approve": "批准",
+    "enter_every_digit": "请输入全部 {{length}} 位 PIN。",
+    "demo_pin": "演示 PIN：{{pin}}",
+    "touch_dropped": "另一个应用正在屏幕上层显示内容。请关闭该应用后再输入 PIN。"
+  },
+  "keypad_pin": {
+    "digits_entered": "PIN，已输入 {{entered}}/{{length}} 位",
+    "delete": "删除"
+  },
   "result": {
     "title": "收据",
     "done": "完成",

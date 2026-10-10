@@ -17,6 +17,7 @@ import {
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
 import {
+  enterPinAndApprove,
   pickDemoScenario,
   scenarioTest,
   walkToTransferReview,
@@ -197,6 +198,19 @@ it("shows the refusal with no earlier notice or button beside it that offers the
   expect(await screen.findByText(PHONE_REFUSAL)).toBeOnTheScreen();
   expect(screen.queryByText(PIN_OFFER)).toBeNull();
   expect(screen.queryByRole("button", { name: "Use PIN instead" })).toBeNull();
+});
+
+it("shows the demo PIN in a demo build, and the PIN it shows approves the transfer", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReview();
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Use PIN instead" }),
+  );
+
+  expect(await screen.findByText("Demo PIN: 246810")).toBeOnTheScreen();
+  await enterPinAndApprove("246810");
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
 });
 
 const PHONE_REFUSAL =

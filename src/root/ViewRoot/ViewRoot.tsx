@@ -1,9 +1,9 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { StatusBar, StyleSheet, View } from "react-native";
 
+import { ApprovalDemoPinContext } from "@/domains/approval/lib/approval-demo-pin/approval-demo-pin";
 import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
@@ -28,7 +28,6 @@ import { forgetSignedInCustomer } from "./lib/forget-signed-in-customer/forget-s
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
 import "@/root/translations/translations";
 
-import ViewPinSheetHost from "@/domains/approval/components/ViewPinSheetHost/ViewPinSheetHost";
 import ViewSessionEnded from "./components/ViewSessionEnded/ViewSessionEnded";
 import { usePendingTransfersAtLaunch } from "./hooks/use-pending-transfers-at-launch/use-pending-transfers-at-launch";
 import { useScreenCaptureBlock } from "./hooks/use-screen-capture-block/use-screen-capture-block";
@@ -36,7 +35,6 @@ import { useScreenCaptureBlock } from "./hooks/use-screen-capture-block/use-scre
 export default function ViewRoot() {
   usePendingTransfersAtLaunch();
   useScreenCaptureBlock();
-  const { t } = useTranslation(["transfer"]);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [appSheetOpen, setAppSheetOpen] = useState(false);
   const [navigatorMounts, setNavigatorMounts] = useState(0);
@@ -82,21 +80,21 @@ export default function ViewRoot() {
     <>
       <View aria-hidden={sessionEnded} style={styles.app}>
         <ScreensCoveredContext value={sessionEnded}>
-          <ViewBottomSheetHost
-            // Production has no Demo header to hide, so its root need not re-render as sheets open.
-            onSheetOpenChange={demoLayer === null ? undefined : setAppSheetOpen}
-          >
-            <Stack key={navigatorMounts} screenOptions={stackScreenOptions}>
-              <Stack.Screen
-                name="transfer"
-                options={{ headerShown: false, headerLeft: () => null }}
-              />
-            </Stack>
-            <ViewPinSheetHost
-              offlineDisabledReason={t("transfer:common.offline.notice")}
-              demoPin={demoLayer?.demoPin}
-            />
-          </ViewBottomSheetHost>
+          <ApprovalDemoPinContext value={demoLayer?.demoPin}>
+            <ViewBottomSheetHost
+              // Production has no Demo header to hide, so its root need not re-render as sheets open.
+              onSheetOpenChange={
+                demoLayer === null ? undefined : setAppSheetOpen
+              }
+            >
+              <Stack key={navigatorMounts} screenOptions={stackScreenOptions}>
+                <Stack.Screen
+                  name="transfer"
+                  options={{ headerShown: false, headerLeft: () => null }}
+                />
+              </Stack>
+            </ViewBottomSheetHost>
+          </ApprovalDemoPinContext>
         </ScreensCoveredContext>
       </View>
       {sessionEnded && (

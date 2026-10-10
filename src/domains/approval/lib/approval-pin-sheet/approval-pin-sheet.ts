@@ -30,7 +30,7 @@ export function askForApprovalPin(words: ApprovalPinSheetWords) {
               : {
                   step: ApprovalPinSheetStep.Sending,
                   ...words,
-                  answer: IGNORE_ANSWER,
+                  answer: () => undefined,
                 },
             true,
           );
@@ -61,8 +61,6 @@ export function showApprovalPinLocked(message: string) {
 export function closeApprovalPinSheet() {
   approvalPinSheetStore.setState(CLOSED_SHEET, true);
 }
-
-const IGNORE_ANSWER = () => undefined;
 
 type ApprovalPinSheetWords = {
   message: string;

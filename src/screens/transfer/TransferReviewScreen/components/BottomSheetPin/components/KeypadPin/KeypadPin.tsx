@@ -23,7 +23,7 @@ export default function KeypadPin({
   onPressDigit,
   onPressDelete,
 }: Props) {
-  const { t, i18n } = useTranslation("approval");
+  const { t, i18n } = useTranslation("transfer");
   const digitKey = (digit: string) => (
     <Pressable
       key={digit}

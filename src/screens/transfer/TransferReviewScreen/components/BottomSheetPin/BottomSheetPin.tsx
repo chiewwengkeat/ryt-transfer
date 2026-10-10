@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { ApprovalDemoPinContext } from "@/domains/approval/lib/approval-demo-pin/approval-demo-pin";
 import { enableObscuredTouchGuard } from "@/shared/platform/obscured-touch-guard/obscured-touch-guard";
 import { useIsOffline } from "@/shared/platform/offline/offline";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
@@ -14,8 +15,6 @@ interface Props {
   message: string;
   detail?: string;
   refusal?: string;
-  demoPin?: string;
-  offlineDisabledReason: string;
   pinLocked: boolean;
   sending: boolean;
   onSubmitPin: (pin: string) => void;
@@ -25,17 +24,16 @@ export default function BottomSheetPin({
   message,
   detail,
   refusal,
-  demoPin,
-  offlineDisabledReason,
   pinLocked,
   sending,
   onSubmitPin,
   onClose,
 }: Props) {
-  const { t } = useTranslation(["approval"]);
+  const { t } = useTranslation("transfer");
   const [pin, setPin] = useState("");
   const [touchDropped, setTouchDropped] = useState(false);
   const offline = useIsOffline();
+  const demoPin = use(ApprovalDemoPinContext);
   useEffect(
     () =>
       enableObscuredTouchGuard(() => {
@@ -47,7 +45,7 @@ export default function BottomSheetPin({
   const approveDisabledReason = sending
     ? undefined
     : offline
-      ? offlineDisabledReason
+      ? t("common.offline.notice")
       : pin.length < APPROVAL_PIN_LENGTH
         ? t("bottom_sheet_pin.enter_every_digit", {
             length: APPROVAL_PIN_LENGTH,

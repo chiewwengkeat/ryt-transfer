@@ -127,14 +127,7 @@ it("registers every English key in Malay and Chinese, with English's placeholder
   );
 
   expect(Object.keys(i18next.store.data[AppLanguage.English] ?? {})).toEqual(
-    expect.arrayContaining([
-      "shared",
-      "account",
-      "approval",
-      "home",
-      "transfer",
-      "demo",
-    ]),
+    expect.arrayContaining(["shared", "account", "home", "transfer", "demo"]),
   );
   expect(findTranslationsOutOfStep(i18next.store.data)).toEqual([]);
 });

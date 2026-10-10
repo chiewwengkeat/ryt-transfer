@@ -1,9 +1,6 @@
 import accountEnMY from "@/domains/account/i18n/en-MY.json";
 import accountMsMY from "@/domains/account/i18n/ms-MY.json";
 import accountZhMY from "@/domains/account/i18n/zh-MY.json";
-import approvalEnMY from "@/domains/approval/i18n/en-MY.json";
-import approvalMsMY from "@/domains/approval/i18n/ms-MY.json";
-import approvalZhMY from "@/domains/approval/i18n/zh-MY.json";
 import transferDomainEnMY from "@/domains/transfer/i18n/en-MY.json";
 import transferDomainMsMY from "@/domains/transfer/i18n/ms-MY.json";
 import transferDomainZhMY from "@/domains/transfer/i18n/zh-MY.json";
@@ -22,21 +19,18 @@ export const TRANSLATION_BUNDLES = {
   "en-MY": {
     shared: [sharedEnMY],
     account: [accountEnMY],
-    approval: [approvalEnMY],
     home: [homeEnMY],
     transfer: [transferScreensEnMY, transferDomainEnMY],
   },
   "ms-MY": {
     shared: [sharedMsMY],
     account: [accountMsMY],
-    approval: [approvalMsMY],
     home: [homeMsMY],
     transfer: [transferScreensMsMY, transferDomainMsMY],
   },
   "zh-MY": {
     shared: [sharedZhMY],
     account: [accountZhMY],
-    approval: [approvalZhMY],
     home: [homeZhMY],
     transfer: [transferScreensZhMY, transferDomainZhMY],
   },
@@ -50,7 +44,6 @@ declare module "i18next" {
     resources: {
       shared: typeof sharedEnMY;
       account: typeof accountEnMY;
-      approval: typeof approvalEnMY;
       home: typeof homeEnMY;
       transfer: typeof transferScreensEnMY & typeof transferDomainEnMY;
     };

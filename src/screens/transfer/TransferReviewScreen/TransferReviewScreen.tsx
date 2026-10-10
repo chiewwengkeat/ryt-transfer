@@ -3,9 +3,15 @@ import { Stack, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BackHandler } from "react-native";
+import { useStore } from "zustand";
 
+import {
+  ApprovalPinSheetStep,
+  approvalPinSheetStore,
+} from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import BannerEarlierTransferUnconfirmed from "@/domains/transfer/components/BannerEarlierTransferUnconfirmed/BannerEarlierTransferUnconfirmed";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import ButtonHeaderBack from "@/shared/ui/ButtonHeaderBack/ButtonHeaderBack";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
@@ -18,6 +24,7 @@ import {
   transferFlowStore,
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
+import BottomSheetPin from "./components/BottomSheetPin/BottomSheetPin";
 import ButtonConfirmTransfer from "./components/ButtonConfirmTransfer/ButtonConfirmTransfer";
 import SectionReviewDetails from "./components/SectionReviewDetails/SectionReviewDetails";
 
@@ -64,6 +71,7 @@ export default function TransferReviewScreen() {
           <BannerFlowNotice step={TransferFlowStep.Reviewing} />
         )}
       </ViewScreenFrame>
+      <ViewPinSheetHost />
     </>
   );
 }
@@ -119,4 +127,44 @@ function TextSendingTransfer() {
   );
   if (!approvalSent) return null;
   return <TextBody>{t("common.biometrics_recognised.body")}</TextBody>;
+}
+
+function ViewPinSheetHost() {
+  const pinSheet = useStore(approvalPinSheetStore);
+  // An ended session or review going away closes the sheet with its flow; only review's going away answers as the
+  // person closing it would, since the session's end has a report of its own.
+  useEffect(() => {
+    const answerShownSheetAsClosed = (closedAnswer: null | undefined) => {
+      const shown = approvalPinSheetStore.getState();
+      if (shown.step !== ApprovalPinSheetStep.Closed)
+        shown.answer(closedAnswer);
+    };
+    const removeUnauthorizedListener = addUnauthorizedListener(() => {
+      answerShownSheetAsClosed(undefined);
+    });
+    return () => {
+      removeUnauthorizedListener();
+      answerShownSheetAsClosed(null);
+      // A sending sheet ignores the answer, and review opened afresh must not find it still open.
+      approvalPinSheetStore.setState(
+        approvalPinSheetStore.getInitialState(),
+        true,
+      );
+    };
+  }, []);
+
+  if (pinSheet.step === ApprovalPinSheetStep.Closed) return null;
+  return (
+    <BottomSheetPin
+      message={pinSheet.message}
+      detail={pinSheet.detail}
+      refusal={pinSheet.refusal}
+      pinLocked={pinSheet.step === ApprovalPinSheetStep.PinLocked}
+      sending={pinSheet.step === ApprovalPinSheetStep.Sending}
+      onSubmitPin={pinSheet.answer}
+      onClose={() => {
+        pinSheet.answer(null);
+      }}
+    />
+  );
 }
