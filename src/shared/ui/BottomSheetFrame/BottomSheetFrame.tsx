@@ -50,6 +50,7 @@ interface Props {
     onChangeText: (text: string) => void;
   };
   children: ReactNode;
+  footer?: ReactNode;
 }
 export default function BottomSheetFrame({
   title,
@@ -58,6 +59,7 @@ export default function BottomSheetFrame({
   dismissable = true,
   searchField,
   children,
+  footer,
 }: Props) {
   const sheetHost = use(BottomSheetHostContext);
   if (sheetHost === null)
@@ -190,6 +192,7 @@ export default function BottomSheetFrame({
             >
               {children}
             </ScrollView>
+            {footer}
           </Animated.View>
         </KeyboardAvoidingView>
       </Animated.View>,

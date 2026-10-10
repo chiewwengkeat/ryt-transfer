@@ -43,6 +43,15 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
       title={t("bottom_sheet_demo.title")}
       closeLabel={t("bottom_sheet_demo.close")}
       onClose={onClose}
+      footer={
+        <ButtonSecondary
+          label={t("bottom_sheet_demo.reset")}
+          onPress={() => {
+            onClose();
+            void resetDemoBank().then(notifyApprovalPinReset).then(onResetDemo);
+          }}
+        />
+      }
     >
       {demoPinLocked && (
         <>
@@ -109,13 +118,6 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
           ))}
         </Fragment>
       ))}
-      <ButtonSecondary
-        label={t("bottom_sheet_demo.reset")}
-        onPress={() => {
-          onClose();
-          void resetDemoBank().then(notifyApprovalPinReset).then(onResetDemo);
-        }}
-      />
     </BottomSheetFrame>
   );
 }
