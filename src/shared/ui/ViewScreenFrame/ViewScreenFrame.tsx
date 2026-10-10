@@ -137,7 +137,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
-    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+    backgroundColor: colors.surface,
   },
 });
 

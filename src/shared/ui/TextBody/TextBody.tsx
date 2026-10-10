@@ -6,15 +6,17 @@ import { colors, typography } from "@/shared/theme/theme";
 
 interface Props {
   children: ReactNode;
-  tone?: "primary" | "secondary" | "negative";
+  tone?: "primary" | "secondary" | "negative" | "warning";
   strong?: boolean;
   alignEnd?: boolean;
+  alignCenter?: boolean;
 }
 export default function TextBody({
   children,
   tone = "primary",
   strong = false,
   alignEnd = false,
+  alignCenter = false,
 }: Props) {
   const { i18n } = useTranslation();
   return (
@@ -25,6 +27,7 @@ export default function TextBody({
         styles[tone],
         strong && styles.strong,
         alignEnd && styles.alignEnd,
+        alignCenter && styles.alignCenter,
       ]}
     >
       {children}
@@ -37,6 +40,8 @@ const styles = StyleSheet.create({
   primary: { color: colors.textPrimary },
   secondary: { color: colors.textSecondary },
   negative: { color: colors.negative },
+  warning: { color: colors.warning },
   strong: { fontWeight: "600" },
   alignEnd: { textAlign: "right" },
+  alignCenter: { textAlign: "center" },
 });

@@ -2,6 +2,8 @@ export const colors = {
   background: "#F4F5F7",
   surface: "#FFFFFF",
   surfacePressed: "#DBDBDB",
+  surfaceDisabled: "#E4E7EC",
+  divider: "#D0D5DD",
   textPrimary: "#16181D",
   textSecondary: "#4F5562",
   // At least 3:1 on surface and background: WCAG 2.2 AA asks it of an input's outline.

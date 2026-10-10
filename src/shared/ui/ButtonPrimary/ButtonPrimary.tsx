@@ -59,7 +59,9 @@ export default function ButtonPrimary({
         )}
       </Pressable>
       {hasDisabledReason && (
-        <TextBody tone="secondary">{disabledReason}</TextBody>
+        <TextBody tone="warning" alignCenter>
+          {disabledReason}
+        </TextBody>
       )}
     </View>
   );
@@ -76,7 +78,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     backgroundColor: colors.accent,
   },
-  buttonDisabled: { backgroundColor: colors.background },
+  buttonDisabled: { backgroundColor: colors.surfaceDisabled },
   buttonPressed: { opacity: 0.8 },
   label: { ...typography.label, color: colors.onAccent, textAlign: "center" },
   labelDisabled: { color: colors.textSecondary },
