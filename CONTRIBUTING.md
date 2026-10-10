@@ -57,7 +57,7 @@ App code outside a domain reaches it only through its public files: an endpoint'
 
 Tests are not app code. The harness in `src/test/` may import from any slice, the mock bank included. A repository check, named `.check.test.ts(x)`, may also import `src/mocks/` and `src/root/` directly. Any other test keeps the import rules of the code beside it and may also import the harness.
 
-Inside a folder, import with `./`; once an import leaves the folder, with `@/`, so every importer outside a folder spells a module's path the same way. Lint fails any `../` in `src/`; the matrix scanner's one climb, to `.config/test-files.js`, says why on its line.
+Inside a folder, import with `./`; once an import leaves the folder, with `@/`, so every importer outside a folder spells a module's path the same way. Lint fails a `../` path in `src/` written as a quoted string in an import, an export, a `require`, an `import()` or a `jest.mock`-family call, though not one in a template literal or passed to `require.resolve`; the matrix scanner's one climb, to `.config/test-files.js`, says why on its line.
 
 `.config/eslint/boundaries.mjs` holds the slice rules and `.config/eslint/bans.mjs` the import bans; `pnpm lint` fails a breach of either.
 
@@ -76,7 +76,7 @@ Every module and hook sits in a folder of its own, named for it, with its test a
 
 A piece that only one other piece uses nests in that piece's own `components/`, `hooks/` or `lib/`, but a hook or `lib/` module owns no nested pieces: a module only it uses is placed by the component or screen that owns it. A piece only `src/root/` uses lives in the one domain its files import; one that imports none, or more than one slice, nests in the root view that uses it, as the session-ended view nests in `src/root/ViewRoot/components/`. A piece moves up a rung in the commit that gives it a user at the wider level, and only app code counts as a user, never a test.
 
-`scripts/check-placement-ladder.js` fails a component, hook or `lib/` module placed higher than its users need, or one no app code uses, and the import rules fail one placed too low. It checks every piece in a `components/`, `hooks/` or `lib/` folder of a screens folder, a domain, shared code and `src/root/` below its top level. A base component directly in `src/shared/ui/` passes with no user at all, since it can be built before any screen uses it, and fails once every user sits in one slice. The check also fails any test file under `src/app/`, which Expo Router would bundle as a route. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case of who uses a piece, the script is the authority, not this summary. It cannot tell whether a piece knows about banking: that call is the reviewer's.
+`scripts/check-placement-ladder.js` fails a component, hook or `lib/` module placed higher than its users need, or one no app code uses, and the import rules fail one placed too low. It checks every piece in a folder of its own inside a `components/`, `hooks/` or `lib/` folder of a screens folder, a domain, shared code and `src/root/` below its top level. A file loose in such a folder escapes it: lint fails a loose component, and review a loose hook or module. A base component directly in `src/shared/ui/` passes with no user at all, since it can be built before any screen uses it, and fails once every user sits in one slice. The check also fails any test file under `src/app/`, which Expo Router would bundle as a route. It runs in `pnpm lint`, and so in CI, and in the pre-commit hook. On an edge case of who uses a piece, the script is the authority, not this summary. It cannot tell whether a piece knows about banking: that call is the reviewer's.
 
 ## Sizes and folds
 
@@ -111,7 +111,7 @@ Lint fails a breach of each of these (`eslint.config.mjs`, with the repository's
 - A hook file is kebab-case and named for the hook it exports: `use-send-transfer-approval.ts` exports `useSendTransferApproval`.
 - Only files inside a component's folder import its internal files; code elsewhere imports the component itself.
 
-Review holds the rules no tool checks: a folder per module and per hook, only `use-*` modules in `hooks/`, where tests and their helpers sit, role files imported only from inside their folder, every size limit but the test cap, how a folded piece is written, the namespace rule for `t`, the `.check.test` suffix for repository checks only, and whether a piece knows about banking.
+Review holds the rules no tool checks: a folder per module and per hook, a `../` path lint cannot see, only `use-*` modules in `hooks/`, where tests and their helpers sit, role files imported only from inside their folder, every size limit but the test cap, how a folded piece is written, the namespace rule for `t`, the `.check.test` suffix for repository checks only, and whether a piece knows about banking.
 
 ## Adding a scenario
 
