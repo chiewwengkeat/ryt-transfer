@@ -3,10 +3,6 @@ import { act, renderHook } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { createElement, type ReactNode } from "react";
 
-import {
-  buildSignedApprovalText,
-  useApproveTransfer,
-} from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import { getTransferOptions } from "@/domains/transfer/api/get-transfer/get-transfer";
 import {
   TransferDirection,
@@ -17,6 +13,11 @@ import {
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
+
+import {
+  buildSignedApprovalText,
+  useApproveTransfer,
+} from "./approve-transfer";
 
 it("signs the reviewed details as JSON in the fixed key order", () => {
   expect(buildSignedApprovalText({ ...REVIEWED_TRANSFER, note: "Lunch" })).toBe(

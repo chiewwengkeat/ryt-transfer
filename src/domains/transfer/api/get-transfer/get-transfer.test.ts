@@ -3,22 +3,20 @@ import { renderHook, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { createElement, type ReactNode } from "react";
 
-import {
-  getTransferOptions,
-  useGetTransfer,
-} from "@/domains/transfer/api/get-transfer/get-transfer";
-import {
-  TransferDirection,
-  TransferFunds,
-  TransferStatus,
-  type Transfer,
-} from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { startTestTransfer, mswServer } from "@/test/mock-bank/mock-bank";
 import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
 
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
+
+import { getTransferOptions, useGetTransfer } from "./get-transfer";
+import {
+  TransferDirection,
+  TransferFunds,
+  TransferStatus,
+  type Transfer,
+} from "./get-transfer.type";
 
 it.each([
   { relation: "the same version as", versionOfNext: 3 },
