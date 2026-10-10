@@ -128,7 +128,7 @@ export function resetNativeDoubles() {
   secureStoreEntries.clear();
   uuidsIssued = 0;
   phoneNetwork = CONNECTED_NETWORK;
-  // As a production launch leaves it, since the shell's block at load runs once per file rather than per test.
+  // As a production launch leaves it, since the root's block at load runs once per file rather than per test.
   // Never the reverse: the library would see its key still held and skip blocking again.
   screenCaptureBlocked = true;
 }

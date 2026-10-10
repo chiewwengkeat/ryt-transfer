@@ -18,7 +18,7 @@ import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrit
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { setObservabilitySink } from "@/shared/observability/observability";
 import { forgetRequestOutcomes } from "@/shared/platform/offline/offline";
-import type * as ShellQueryClient from "@/root/query-client/query-client";
+import type * as RootQueryClient from "@/root/query-client/query-client";
 import "@/root/translations/translations";
 
 import type * as BiometricsDouble from "@/test/doubles/biometrics-double";
@@ -133,7 +133,7 @@ jest.mock("react-native-screens", () =>
 // gives up after 1 s, before TanStack's first two retries have run.
 let mockQueryClient: QueryClient | undefined;
 jest.mock("@/root/query-client/query-client", () => {
-  const actual = jest.requireActual<typeof ShellQueryClient>(
+  const actual = jest.requireActual<typeof RootQueryClient>(
     "@/root/query-client/query-client",
   );
   // Defined after the spread: Babel's object spread reads a getter once and keeps the value.

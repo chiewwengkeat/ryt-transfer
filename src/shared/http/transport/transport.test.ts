@@ -278,7 +278,7 @@ it("rejects as aborted when its caller gives up", async () => {
   });
 });
 
-it("sends through the send the shell injects instead of fetch", async () => {
+it("sends through the send the root injects instead of fetch", async () => {
   configureTransport({
     send: () => Promise.resolve(HttpResponse.json({ from: "injected" })),
   });

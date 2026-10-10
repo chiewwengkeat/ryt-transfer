@@ -138,5 +138,5 @@ it("answers that biometrics are off at once when the app restarts with No biomet
 
 const PROBE_URL = `${API_BASE_URL}/probe`;
 const activeHandlers: RequestHandler[] = [];
-// ⛔ A fresh array per call, as the demo bank hands out: a shared one passes a send that reads it once.
+// ⛔ A fresh array per call, as the mock bank hands out: a shared one passes a send that reads it once.
 const demoSend = createDemoSend(() => [...activeHandlers]);

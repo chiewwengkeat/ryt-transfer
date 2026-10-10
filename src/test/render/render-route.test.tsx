@@ -88,7 +88,7 @@ it("keeps the app's write rule: a write goes once, at once, even offline", async
   );
 });
 
-// Probed through the shell's own behaviour, so the test outlives whatever the home route shows.
+// Probed through the root's own behaviour, so the test outlives whatever the home route shows.
 it("mounts the app's own routes and root layout when given none", async () => {
   await renderRoute("/");
   mswServer.use(
