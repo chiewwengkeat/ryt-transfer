@@ -1,6 +1,12 @@
 import { use, useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { AccessibilityInfo, Platform, StyleSheet, Text } from "react-native";
+import {
+  AccessibilityInfo,
+  Platform,
+  StyleSheet,
+  Text,
+  TextStyle,
+} from "react-native";
 
 import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import { colors, typography } from "@/shared/theme/theme";
@@ -8,8 +14,13 @@ import { colors, typography } from "@/shared/theme/theme";
 interface Props {
   children: ReactNode;
   autoFocus?: boolean;
+  style?: TextStyle;
 }
-export default function TextHeading({ children, autoFocus = false }: Props) {
+export default function TextHeading({
+  children,
+  autoFocus = false,
+  style: propStyle,
+}: Props) {
   const { i18n } = useTranslation();
   const headingRef = useRef<Text>(null);
   // The covered signal alone, not the screen's focus: a sheet or a view the root lays over the app draws this outside any screen.
@@ -45,7 +56,7 @@ export default function TextHeading({ children, autoFocus = false }: Props) {
       accessibilityLanguage={i18n.language}
       // Grown further, a title's longest word outgrows a small phone's line and breaks mid-word.
       maxFontSizeMultiplier={2}
-      style={styles.heading}
+      style={[styles.heading, propStyle]}
     >
       {children}
     </Text>

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, StyleSheet } from "react-native";
 
 import {
   type TransferOutcomeScenario,
@@ -56,10 +56,12 @@ export default function TextOutcome({
 
   return (
     <>
-      <TextHeading autoFocus={pageOpened}>{outcomeHeading}</TextHeading>
-      <TextBody>{outcomeBody}</TextBody>
+      <TextHeading style={styles.textHeading} autoFocus={pageOpened}>
+        {outcomeHeading}
+      </TextHeading>
+      <TextBody style={styles.textBody}>{outcomeBody}</TextBody>
       {moneyNotConfirmedYet && (
-        <TextBody tone="secondary">
+        <TextBody tone="secondary" style={styles.textBody}>
           {t("text_outcome.reference_to_quote", {
             reference: transfer?.reference ?? transferId,
           })}
@@ -68,3 +70,12 @@ export default function TextOutcome({
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  textHeading: {
+    textAlign: "center",
+  },
+  textBody: {
+    textAlign: "center",
+  },
+});

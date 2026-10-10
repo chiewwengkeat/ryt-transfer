@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, TextStyle } from "react-native";
 
 import { colors, typography } from "@/shared/theme/theme";
 
@@ -10,6 +10,7 @@ interface Props {
   strong?: boolean;
   alignEnd?: boolean;
   alignCenter?: boolean;
+  style?: TextStyle;
 }
 export default function TextBody({
   children,
@@ -17,6 +18,7 @@ export default function TextBody({
   strong = false,
   alignEnd = false,
   alignCenter = false,
+  style: propStyle,
 }: Props) {
   const { i18n } = useTranslation();
   return (
@@ -28,6 +30,7 @@ export default function TextBody({
         strong && styles.strong,
         alignEnd && styles.alignEnd,
         alignCenter && styles.alignCenter,
+        propStyle,
       ]}
     >
       {children}

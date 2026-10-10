@@ -34,6 +34,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.accent,
+    alignSelf: "center",
   },
   tick: {
     width: 14,
@@ -43,5 +44,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 5,
     // Lifted: once turned, the stroke's weight sits below the box's centre.
     transform: [{ translateY: -4 }, { rotate: "45deg" }],
+    alignSelf: "center",
   },
 });
