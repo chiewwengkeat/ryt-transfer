@@ -92,6 +92,12 @@ test("passes lib/ in a screens folder and a domain, the transfer folder's flow-s
   assert.equal(exitCode, 0);
 });
 
+test("keeps the eslint-rules/ marker at the repository's root, without which coding-agent tooling switches its guards off", () => {
+  assert.ok(
+    fs.existsSync(path.join(__dirname, "..", "eslint-rules", "README.md")),
+  );
+});
+
 const PLACEHOLDER_COMPONENT_SOURCE =
   "export default function Placeholder() {\n  return null;\n}\n";
 
