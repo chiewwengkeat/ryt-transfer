@@ -5,8 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 import { usePhoneReportsConnection } from "@/shared/platform/offline/offline";
 import { colors, spacing } from "@/shared/theme/theme";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
+import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
 import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
@@ -32,19 +31,20 @@ export default function ViewTransferHistoryFooter({
       {/* The failure stays up while its retry runs. */}
       {fetchNextPageFailure !== null && !isFetchingNextPage ? (
         <>
-          <BannerNotice
+          <BannerAction
             tone="negative"
             announce={!isSessionEndFailure(fetchNextPageFailure)}
             message={t("view_transfer_history_footer.failed")}
+            action={
+              phoneReportsConnection
+                ? {
+                    label: t("view_transfer_history_footer.retry"),
+                    onPress: onRetry,
+                  }
+                : undefined
+            }
           />
-          {phoneReportsConnection ? (
-            <ButtonSecondary
-              label={t("view_transfer_history_footer.retry")}
-              onPress={onRetry}
-            />
-          ) : (
-            <TextOffline />
-          )}
+          {!phoneReportsConnection && <TextOffline />}
         </>
       ) : !hasNextPage ? (
         <TextBody tone="secondary">

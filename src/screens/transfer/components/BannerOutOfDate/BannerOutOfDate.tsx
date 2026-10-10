@@ -2,8 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { usePhoneReportsConnection } from "@/shared/platform/offline/offline";
 import { spacing } from "@/shared/theme/theme";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
+import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 
 import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
 
@@ -22,12 +21,16 @@ export default function BannerOutOfDate({
   const phoneReportsConnection = usePhoneReportsConnection();
   return (
     <View style={styles.banner}>
-      <BannerNotice message={message} announce={announce} />
-      {phoneReportsConnection ? (
-        <ButtonSecondary label={tryAgainLabel} onPress={onTryAgain} />
-      ) : (
-        <TextOffline />
-      )}
+      <BannerAction
+        message={message}
+        announce={announce}
+        action={
+          phoneReportsConnection
+            ? { label: tryAgainLabel, onPress: onTryAgain }
+            : undefined
+        }
+      />
+      {!phoneReportsConnection && <TextOffline />}
     </View>
   );
 }
