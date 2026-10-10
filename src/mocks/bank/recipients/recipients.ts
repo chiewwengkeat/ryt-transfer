@@ -9,7 +9,7 @@ import {
   LookupRecipientErrorCode,
   RecipientIdType,
   type LookupRecipientErrorResponse,
-  type LookupRecipientInput,
+  type LookupRecipientRequest,
   type LookupRecipientResponse,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 
@@ -30,7 +30,9 @@ export function lookupBankRecipient({
   body: Record<string, unknown>;
   nowMs: number;
 }): BankAnswer<LookupRecipientResponse | LookupRecipientErrorResponse> {
-  const request = body as Partial<LookupRecipientInput>;
+  const request = body as Partial<
+    Extract<LookupRecipientRequest, { idType: unknown }> & { recentId: unknown }
+  >;
   let counterpartyId: BankTransferRecord["counterpartyId"];
   if (request.recentId !== undefined) {
     const recent = recentRecipients().find(
