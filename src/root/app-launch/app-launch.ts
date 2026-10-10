@@ -61,19 +61,21 @@ function buildStackScreenOptions(firstScreenOpensHome: boolean) {
     route: { key: string };
     navigation: { getState: () => { routes: readonly { key: string }[] } };
   }) => {
-    const opensHome =
-      firstScreenOpensHome &&
-      navigation.getState().routes[0]?.key === route.key;
+    const firstInStack = navigation.getState().routes[0]?.key === route.key;
+    const opensHome = firstScreenOpensHome && firstInStack;
     return {
       ...screenTransitionOptions(),
-      headerLeft: ({
-        tintColor,
-        canGoBack,
-      }: {
-        tintColor?: ColorValue;
-        canGoBack?: boolean;
-      }) =>
-        createElement(ButtonHeaderBack, { tintColor, canGoBack, opensHome }),
+      // None at all where there is no way back: iOS draws an empty button round a header-left that renders nothing.
+      ...((opensHome || !firstInStack) && {
+        headerLeft: ({
+          tintColor,
+          canGoBack,
+        }: {
+          tintColor?: ColorValue;
+          canGoBack?: boolean;
+        }) =>
+          createElement(ButtonHeaderBack, { tintColor, canGoBack, opensHome }),
+      }),
       // Android's header pads for the status bar itself, a place the Demo header has already taken.
       ...(demoLayer !== null && {
         unstable_nativeProps: {
