@@ -48,11 +48,3 @@ Build variants and checks: [CONTRIBUTING.md](CONTRIBUTING.md#build-variants) and
 ## Why it's built this way
 
 The [write-up](docs/write-up.md) gives the calls that shaped the module, and the [decision records](docs/decisions/) hold each one's full argument.
-
-## How this was built
-
-I built this with Claude Code, Anthropic's coding agent, and this section is where I say who did what. No commit carries an AI co-author line: the repository's `commit-msg` hook refuses any trailer, and this section discloses it instead.
-
-- **What I decided.** Every library, every feature and every rule here was my call. Before any code, Claude Code put the open questions to me in rounds, each with its options, what each would cost and a recommendation, and I picked one, sometimes against the recommendation, or answered in my own words. Questions that came up while building came back to me the same way. The [decision records](docs/decisions/) set out the larger choices and the options they beat.
-- **What Claude Code did.** It wrote the code, the tests, the scenario matrix and these documents from those decisions. The work ran as parallel sessions on separate branches, each piece handed to its own agent with a written plan, and each commit is one slice of it.
-- **How each step was checked.** CI runs the typecheck, lint, placement check and tests on every push. Review agents that wrote none of the code audited each piece against its plan and the source, and their fixes landed as commits of their own. The app ran on an Android emulator and an iOS simulator, never on a physical phone; the [write-up](docs/write-up.md) says what that leaves unproven.

@@ -47,7 +47,7 @@ Outside `src/`, `.config/` holds the tooling's configuration: Metro's, commitlin
 - A flow's layout in `src/app/` holds the flow's navigator, the guard on which of its routes may open, and what leaving the flow does.
 - A slice's strings go in its `i18n/` folder, one bundle per language, registered in `src/root/translations/translations.ts`. The Demo menu's own strings, the `demo` namespace in `src/mocks/switcher/i18n/`, are the exception: app code may not import `src/mocks/`, so the menu registers them itself the first time it renders.
 
-The placement check fails any other entry in a slice or at the top of `src/root/` (`scripts/slice-layout.js`).
+The placement check fails any other entry directly in a screens folder or a domain, or at the top of `src/root/` (`scripts/slice-layout.js`). What a screen's folder holds is review's to hold.
 
 ### Imports
 
@@ -111,7 +111,7 @@ Lint fails a breach of each of these (`eslint.config.mjs`, with the repository's
 - A hook file is kebab-case and named for the hook it exports: `use-send-transfer-approval.ts` exports `useSendTransferApproval`.
 - Only files inside a component's folder import its internal files; code elsewhere imports the component itself.
 
-Review holds the rules no tool checks: a folder per module and per hook, a `../` path lint cannot see, only `use-*` modules in `hooks/`, where tests and their helpers sit, role files imported only from inside their folder, every size limit but the test cap, how a folded piece is written, the namespace rule for `t`, the `.check.test` suffix for repository checks only, and whether a piece knows about banking.
+Review holds the rules no tool checks: what a screen's folder holds, a folder per module and per hook, a `../` path lint cannot see, only `use-*` modules in `hooks/`, where tests and their helpers sit, role files imported only from inside their folder, every size limit but the test cap, how a folded piece is written, the namespace rule for `t`, the `.check.test` suffix for repository checks only, and whether a piece knows about banking.
 
 ## Adding a scenario
 

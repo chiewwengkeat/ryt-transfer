@@ -78,7 +78,7 @@ Development and demo builds carry a stateful mock bank that moves balances, uses
 
 ## The fake bank can't reach production
 
-An unset variant means production, so an unconfigured build fails closed. Mock code is reached only by one `require` in the app's root, gated on a literal comparison of `EXPO_PUBLIC_APP_VARIANT`, the one form the bundler strips from a release build; lint lets only the root `require` it, and no app code import it. On every push, CI exports each variant and fails a production or unset bundle whose source map lists a mock or msw file; the demo export must carry them ([007](decisions/007-production-guard.md)).
+An unset variant means production, so an unconfigured build fails closed. Mock code is reached only by one `require` in the app's root, gated on a literal comparison of `EXPO_PUBLIC_APP_VARIANT`, the one form the bundler strips from a release build; lint lets only the root `require` it, and no app code import it but the root's type-only import of the demo contract, which carries no code. On every push, CI exports each variant and fails a production or unset bundle whose source map lists a mock or msw file; the demo export must carry them ([007](decisions/007-production-guard.md)).
 
 **Rejected:** one build with a demo mode to unlock: the fake bank would ship one unlock away from a customer.
 
