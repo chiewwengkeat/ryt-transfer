@@ -1,3 +1,7 @@
+import {
+  scenarioWordsKey,
+  type TransferScenarioId,
+} from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { AppLanguage } from "@/shared/i18n/i18n";
 import { TRANSLATION_BUNDLES } from "@/root/translations/translations";
 
@@ -192,7 +196,9 @@ function findMoneyMessagesWithoutTheirPhrase(
         phrases[language].toLowerCase(),
       ).filter((other) => other !== phrase && other.includes(phrase));
       const phraseCarried = Object.values(
-        commonByLanguage[language]?.[id.replace(/^transfer\./, "")] ?? {},
+        commonByLanguage[language]?.[
+          scenarioWordsKey(id as `${TransferScenarioId}`)
+        ] ?? {},
       ).some((text) =>
         longerPhrases
           .reduce(
@@ -224,7 +230,9 @@ function findRetryWordsOnPressableLabels(
       Object.values(AppLanguage).flatMap((language) =>
         RETRY_WORDS.flatMap(({ word }) =>
           Object.entries(
-            commonByLanguage[language]?.[id.replace(/^transfer\./, "")] ?? {},
+            commonByLanguage[language]?.[
+              scenarioWordsKey(id as `${TransferScenarioId}`)
+            ] ?? {},
           )
             .filter(
               ([role, text]) =>

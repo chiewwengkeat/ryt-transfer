@@ -2,6 +2,10 @@ import { render } from "@testing-library/react-native";
 import i18next, { type Resource } from "i18next";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import {
+  scenarioWordsKey,
+  type TransferScenarioId,
+} from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
 import type { initTranslations } from "@/shared/i18n/i18n";
 import { AppLanguage } from "@/shared/i18n/i18n";
@@ -171,7 +175,7 @@ it("finds a matrix id with no title in the Demo menu's bundle, whether its group
   const [missingId = "", untitledId = ""] = MATRIX_IDS;
   const common = Object.fromEntries(
     MATRIX_IDS.filter((id) => id !== missingId).map((id) => [
-      id.replace(/^transfer\./, ""),
+      scenarioWordsKey(id as `${TransferScenarioId}`),
       id === untitledId ? {} : { title: id },
     ]),
   );
@@ -374,8 +378,9 @@ function findMatrixIdsWithoutTitle(demoBundle: {
 }) {
   return MATRIX_IDS.filter(
     (id) =>
-      typeof demoBundle.common?.[id.replace(/^transfer\./, "")]?.title !==
-      "string",
+      typeof demoBundle.common?.[
+        scenarioWordsKey(id as `${TransferScenarioId}`)
+      ]?.title !== "string",
   );
 }
 
