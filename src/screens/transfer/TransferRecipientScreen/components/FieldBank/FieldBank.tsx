@@ -103,7 +103,7 @@ interface BottomSheetBankProps {
 function BottomSheetBank({ onBankChosen, onClose }: BottomSheetBankProps) {
   const { t, i18n } = useTranslation("transfer");
   const banks = useListBanks();
-  // The shell's offline notice sits under the sheet, so the sheet says why its list waits.
+  // The root view's offline notice sits under the sheet, so the sheet says why its list waits.
   const offline = useIsOffline();
   const [bankSearch, setBankSearch] = useState("");
   const matchingBanks =

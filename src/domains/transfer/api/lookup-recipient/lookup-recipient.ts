@@ -15,7 +15,7 @@ export enum RecipientIdCharacters {
   LettersAndDigits = "letters_and_digits",
 }
 
-// The bank's own rules: the fake bank imports them, so the app never accepts an ID the bank refuses.
+// The bank's own rules: the mock bank imports them, so the app never accepts an ID the bank refuses.
 export const RECIPIENT_ID_FORMATS: Record<
   RecipientIdType,
   {

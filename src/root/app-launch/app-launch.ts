@@ -24,7 +24,7 @@ const installChecked = (async () => {
   reportError(error, { boundary: "install_marker" });
 });
 
-// At load, ahead of the shell's guard, so the block is in place before anything renders.
+// At load, ahead of the root view's guard, so the block is in place before anything renders.
 if (isProductionBuild) void blockScreenCapture();
 void enableAppSwitcherBlur();
 warmUpDeviceIntegrityCheck();
@@ -38,7 +38,7 @@ export const demoLayer =
     : null;
 
 if (demoLayer !== null) {
-  // At module scope, never in an effect: a screen's effects run before the shell's, so its first request would miss it.
+  // At module scope, never in an effect: a screen's effects run before the root view's, so its first request would miss it.
   configureTransport({ send: demoLayer.demoSend });
   // After the install check, whose wipe would delete keys paired while it ran.
   void installChecked

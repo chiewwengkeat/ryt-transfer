@@ -135,7 +135,7 @@ function ButtonTransferHistory() {
 function SectionRecentRecipientsHome() {
   const { t } = useTranslation("transfer");
   const recents = useListRecentRecipients();
-  // The shell's offline notice already explains a list that cannot load.
+  // The root view's offline notice already explains a list that cannot load.
   const offline = useIsOffline();
   const startTransferDisabledReason = useStartTransferDisabledReason();
 

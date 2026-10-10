@@ -12,7 +12,7 @@ interface Props {
 export default function TextHeading({ children, autoFocus = false }: Props) {
   const { i18n } = useTranslation();
   const headingRef = useRef<Text>(null);
-  // The covered signal alone, not the screen's focus: a sheet or a shell view draws this outside any screen.
+  // The covered signal alone, not the screen's focus: a sheet or a view the root lays over the app draws this outside any screen.
   const screensCovered = use(ScreensCoveredContext);
   const screensCoveredBeforeRef = useRef<boolean>(undefined);
   useEffect(() => {

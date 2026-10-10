@@ -58,13 +58,13 @@ export default function TransferRecipientScreen() {
   );
   const [bankError, setBankError] = useState<string>();
   const recents = useListRecentRecipients();
-  // The shell's offline notice already explains a list that cannot load.
+  // The root view's offline notice already explains a list that cannot load.
   const offline = useIsOffline();
   const chosenRecent = recents.data?.find(
     (recent) => recent.recentId === chosenRecentId,
   );
   // Never the form in a chosen recent's place unannounced: a list that has yet to answer, or failed
-  // offline where the shell's notice says why, is waited for; else the catch-all stands until they type.
+  // offline where the root view's notice says why, is waited for; else the catch-all stands until they type.
   // Not `isPending`: the form's own list refetches a failed list on mount, which would flip it back.
   const chosenRecentAwaited =
     chosenRecentId !== undefined &&
