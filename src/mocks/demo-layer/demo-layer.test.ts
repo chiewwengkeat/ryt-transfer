@@ -115,17 +115,23 @@ it("answers that biometrics are off at once when the app restarts with No biomet
   pickTransferScenario("transfer.biometrics_unavailable");
   const answersAfterRestart: boolean[] = [];
 
+  const fetchOfThisApp = globalThis.fetch;
   // A fresh module registry is a fresh app: nothing survives it but what the bank saved.
-  jest.isolateModules(() => {
-    jest
-      .requireActual<typeof BankPorts>("@/mocks/bank/ports/ports")
-      .bindBankPorts(bankPorts());
-    jest
-      .requireActual<typeof DemoLayerModule>("./demo-layer")
-      .default.subscribeToBiometricsOff((biometricsOff) => {
-        answersAfterRestart.push(biometricsOff);
-      })();
-  });
+  try {
+    jest.isolateModules(() => {
+      jest
+        .requireActual<typeof BankPorts>("@/mocks/bank/ports/ports")
+        .bindBankPorts(bankPorts());
+      jest
+        .requireActual<typeof DemoLayerModule>("./demo-layer")
+        .default.subscribeToBiometricsOff((biometricsOff) => {
+          answersAfterRestart.push(biometricsOff);
+        })();
+    });
+  } finally {
+    // The fresh app's Expo runtime installs its own fetch, which Jest's server does not intercept.
+    globalThis.fetch = fetchOfThisApp;
+  }
 
   expect(answersAfterRestart).toEqual([true]);
 });
