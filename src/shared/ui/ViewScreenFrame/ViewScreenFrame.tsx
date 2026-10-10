@@ -25,6 +25,7 @@ export default function ViewScreenFrame({ children, footer }: Props) {
   const [frameTopInWindow, setFrameTopInWindow] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollOffsetRef = useRef(0);
+  const [footerDrawsNothing, setFooterDrawsNothing] = useState(false);
 
   return (
     <View
@@ -84,8 +85,23 @@ export default function ViewScreenFrame({ children, footer }: Props) {
           {children}
         </ScrollView>
         {footer !== undefined && (
-          <View style={[styles.footer, { paddingBottom: spacing.md + bottom }]}>
-            {footer}
+          <View
+            style={[
+              styles.footer,
+              footerDrawsNothing
+                ? { paddingBottom: bottom }
+                : [styles.footerBar, { paddingBottom: spacing.md + bottom }],
+            ]}
+          >
+            <View
+              // A footer element can render nothing, as review's does while the name check runs: no empty bar then.
+              onLayout={(event) => {
+                setFooterDrawsNothing(event.nativeEvent.layout.height === 0);
+              }}
+              style={styles.footerContent}
+            >
+              {footer}
+            </View>
           </View>
         )}
       </KeyboardAvoidingView>
@@ -97,12 +113,12 @@ const styles = StyleSheet.create({
   frame: { flex: 1, backgroundColor: colors.background },
   keyboardClear: { flex: 1 },
   content: { gap: spacing.md, padding: spacing.md },
-  footer: {
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
+  footer: { paddingHorizontal: spacing.md },
+  footerBar: {
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.divider,
     backgroundColor: colors.surface,
   },
+  footerContent: { gap: spacing.sm },
 });
