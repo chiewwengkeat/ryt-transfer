@@ -6,9 +6,7 @@ Every situation a transfer can meet is described once, in the [scenario matrix](
 
 ## Demo video
 
-<!-- Replace the next line with the video's link once it is uploaded. -->
-
-The demo video is linked here once it is uploaded.
+[![The demo, 14 minutes, narrated](docs/deep-dives/demo-video.jpg)](https://youtu.be/JoYJbxgE1o0)
 
 ## Install the demo
 
