@@ -46,4 +46,4 @@ Build variants and checks: [CONTRIBUTING.md](CONTRIBUTING.md#build-variants) and
 
 ## Why it's built this way
 
-The [write-up](docs/write-up.md) gives the calls that shaped the module, and the [decision records](docs/deep-dives/decisions/) hold each one's full argument.
+The [write-up](docs/write-up.md) gives the calls that shaped the module, and the [decision records](docs/deep-dives/design-decisions/) hold each one's full argument.
