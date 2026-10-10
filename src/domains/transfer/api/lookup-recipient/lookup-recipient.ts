@@ -4,6 +4,7 @@ import { requestJson } from "@/shared/http/transport/transport";
 
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 import {
+  type LookupRecipientInput,
   type LookupRecipientRequest,
   type LookupRecipientResponse,
   RecipientIdType,
@@ -64,11 +65,7 @@ export function parseRecipientId(idType: RecipientIdType, typedId: string) {
   return idType === RecipientIdType.Mobile ? `+60${match[1]}` : compactId;
 }
 
-export const getLookupRecipientOptions = (
-  recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }> & {
-    recentId?: string;
-  },
-) =>
+export const getLookupRecipientOptions = (recipient: LookupRecipientInput) =>
   queryOptions({
     queryKey: transferKeys.lookup(recipient),
     queryFn: ({ signal }) =>
@@ -89,10 +86,6 @@ export const getLookupRecipientOptions = (
     gcTime: 0,
   });
 
-export function useLookupRecipient(
-  recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }> & {
-    recentId?: string;
-  },
-) {
+export function useLookupRecipient(recipient: LookupRecipientInput) {
   return useQuery(getLookupRecipientOptions(recipient));
 }

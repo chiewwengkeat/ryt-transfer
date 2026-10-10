@@ -3,9 +3,8 @@ import type {
   CreateTransferErrorCode,
 } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import type {
-  LookupRecipientRequest,
+  LookupRecipientInput,
   LookupRecipientResponse,
-  RecipientIdType,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import type { Money } from "@/shared/lib/money/money";
@@ -71,13 +70,8 @@ export type TransferFlowNotice = Extract<
   | TransferScenarioId.ApprovalUnexpected
 >;
 
-export type TransferRecipient = Extract<
-  LookupRecipientRequest,
-  { idType: RecipientIdType }
-> & { recentId?: string };
-
 export type TransferDraft = {
-  recipient: TransferRecipient;
+  recipient: LookupRecipientInput;
   amount: Money;
   note?: string;
 };
@@ -130,7 +124,7 @@ export type TransferFlowState =
 
 export type RecipientAction = {
   type: TransferFlowActionType.RecipientChosen;
-  recipient: TransferRecipient;
+  recipient: LookupRecipientInput;
 };
 
 export type AmountAndNoteAction = {

@@ -1,7 +1,4 @@
-import type {
-  LookupRecipientRequest,
-  RecipientIdType,
-} from "./lookup-recipient/lookup-recipient.type";
+import type { LookupRecipientInput } from "./lookup-recipient/lookup-recipient.type";
 
 export const transferKeys = {
   all: ["transfers"] as const,
@@ -15,11 +12,7 @@ export const transferKeys = {
   // Off the transfers prefix: a broad refetch would mint a new recipient reference under an open review.
   lookupAll: ["recipient-lookup"] as const,
   // One account number at two banks is two recipients.
-  lookup: (
-    recipient: Extract<LookupRecipientRequest, { idType: RecipientIdType }> & {
-      recentId?: string;
-    },
-  ) =>
+  lookup: (recipient: LookupRecipientInput) =>
     [
       "recipient-lookup",
       recipient.idType,

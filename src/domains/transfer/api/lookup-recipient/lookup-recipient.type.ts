@@ -11,6 +11,11 @@ export type LookupRecipientRequest =
   | { idType: RecipientIdType; idValue: string; bankCode?: string }
   | { recentId: string };
 
+export type LookupRecipientInput = Extract<
+  LookupRecipientRequest,
+  { idType: RecipientIdType }
+> & { recentId?: string };
+
 export interface LookupRecipientResponse {
   recipient: {
     registeredName: string;
