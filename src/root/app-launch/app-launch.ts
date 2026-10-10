@@ -5,6 +5,10 @@ import type { ColorValue } from "react-native";
 import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { warmUpDeviceIntegrityCheck } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
+import {
+  TransferFlowStep,
+  transferFlowStore,
+} from "@/screens/transfer/flow-store/flow-store";
 import { isProductionBuild } from "@/shared/config/config";
 import { configureTransport } from "@/shared/http/transport/transport";
 import { screenTransitionOptions } from "@/shared/lib/motion/motion";
@@ -44,6 +48,13 @@ export const demoLayer =
 if (demoLayer !== null) {
   // At module scope, never in an effect: a screen's effects run before the root view's, so its first request would miss it.
   configureTransport({ send: demoLayer.demoSend });
+  demoLayer.watchAmountStepOpen(() => {
+    const flow = transferFlowStore.getState();
+    return (
+      flow.step === TransferFlowStep.Editing &&
+      flow.draft.recipient !== undefined
+    );
+  });
   // After the install check, whose wipe would delete keys paired while it ran.
   void installChecked
     .then(demoLayer.pairPhoneAtFirstLaunch)

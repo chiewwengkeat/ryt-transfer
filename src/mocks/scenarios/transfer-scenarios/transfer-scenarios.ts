@@ -14,6 +14,7 @@ import {
   type BankConditions,
 } from "@/mocks/bank/conditions/conditions";
 import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
+import { isAmountStepOpen } from "@/mocks/scenarios/amount-step-open/amount-step-open";
 
 import {
   commitThenAnswer,
@@ -91,7 +92,11 @@ export const TRANSFER_SCENARIOS = {
   "transfer.amount_too_high": { step: TransferStep.Amount },
   "transfer.amount_unexpected": {
     step: TransferStep.Amount,
-    handlers: () => [http.get(BANK_PATHS.transferLimits, unknownCodeAnswer)],
+    handlers: () => [
+      http.get(BANK_PATHS.transferLimits, () =>
+        isAmountStepOpen() ? unknownCodeAnswer() : undefined,
+      ),
+    ],
   },
 
   "transfer.recipient_found": { step: TransferStep.Review },

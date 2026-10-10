@@ -11,6 +11,7 @@ import {
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { bankState } from "@/mocks/bank/state/state";
 import { handlersForActiveScenario } from "@/mocks/bank/bank";
+import { watchAmountStepOpen } from "@/mocks/scenarios/amount-step-open/amount-step-open";
 import { DEMO_PIN } from "@/mocks/bank/seed/seed";
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
 import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
@@ -26,6 +27,7 @@ export default {
     subscribeToPhoneSidePick(TransferScenarioId.ScreenCaptureBlocked, onChange),
   subscribeToRootedPhone: (onChange) =>
     subscribeToPhoneSidePick(TransferScenarioId.RootedPhone, onChange),
+  watchAmountStepOpen,
   // Stands in for the pairing a host app made long ago, so the bank holds no cooling-off against it.
   async pairPhoneAtFirstLaunch() {
     if (await hasApprovalKeysOnFile()) return;
@@ -58,6 +60,7 @@ export interface DemoLayer {
   subscribeToRootedPhone: (
     onChange: (phoneRooted: boolean) => void,
   ) => () => void;
+  watchAmountStepOpen: (isAmountStepOpen: () => boolean) => void;
 }
 
 // Stays exported: the bundle check finds this name in demo builds, and minify keeps only an export's.
