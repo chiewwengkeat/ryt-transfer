@@ -102,7 +102,7 @@ In production, capture is blocked on every screen but the two receipts, kept as 
 
 ## Limits, and what I'd do next
 
-- Nothing ran on a physical phone. Next: prove the hardware keys, the Secure Enclave and the screenshot block on real devices.
+- Only the screens' layout was checked on a physical phone, which also recorded the demo video. Next: prove the hardware keys, the Secure Enclave and the screenshot block on real devices.
 - The phone's integrity is checked on the phone. Next: the bank verifies it server-side, with Play Integrity and App Attest.
 - Malay and Chinese are machine translations no one reviewed. Next: a native speaker's review.
 - The API is a proposed contract. Next: agree it with the bank's backend.

@@ -4,7 +4,7 @@ The [write-up](write-up.md#limits-and-what-id-do-next) names four limits, each w
 
 ## What I could not prove
 
-Nothing here ran on a physical phone: every device check used an Android emulator, on Google's own image at API level 37, or an iOS 26.5 simulator, and some of this module's security only a real phone can prove.
+Only the screens' layout was checked on a physical phone, one Android phone that also recorded the demo video: every other device check used an Android emulator, on Google's own image at API level 37, or an iOS 26.5 simulator, and some of this module's security only a real phone can prove.
 
 - **Device-only security is not device-verified.** On the iOS simulator the keys are software, the signing library draws its own prompt, there is no Secure Enclave, and the keychain ignores the setting that should demand authentication. On the Android emulator the keystore is software too, so the hardware guarantee needs a real phone. Release builds of the demo and production variants ran on the emulator and the simulator; physical devices, Android 16 and older, and the next Expo SDK remain untested.
 - **No key attestation.** Nothing yet proves to the bank that a signing key lives in a phone's secure hardware: Android key attestation and Apple App Attest are production steps, and the Secure Enclave and manufacturers' Android builds are unverified on real devices.
