@@ -222,7 +222,6 @@ function checkPlacementLadder(rootDir) {
         );
       }
     } else if (placed.isBaseComponent) {
-      // Users spread over several shared modules keep a base component in src/shared/ui/.
       if (!/^src\/shared\/[^/]+$/.test(owner))
         failures.push(
           `${placed.path}: every user sits in ${owner}/ (${shownUsers}) - it belongs in ${owner}/components/ until a second slice uses it`,

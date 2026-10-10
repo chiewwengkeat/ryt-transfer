@@ -13,7 +13,7 @@ const listed = spawnSync(
 const files =
   listed.status === 0 ? listed.stdout.split("\0").filter(Boolean) : ["."];
 
-// eslint-disable-next-line fe/file-layout -- read at load by process.exitCode
+// eslint-disable-next-line fe/file-layout -- read at load by the statement that sets the exit code
 const prettier = spawnSync(
   path.join(__dirname, "..", "node_modules", ".bin", "prettier"),
   ["--check", "--ignore-unknown", "--no-error-on-unmatched-pattern", ...files],

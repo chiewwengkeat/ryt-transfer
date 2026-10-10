@@ -1,6 +1,5 @@
 // The one definition of test code. Jest runs TEST_FILES; lint applies its test rules to both
 // lists and lets both import the harness; the placement check never counts either as a user.
-// A repo check among TEST_FILES may also import src/mocks and src/root, and earns no matrix credit.
 const TEST_FILES = [
   "src/**/*.test.{ts,tsx}",
   "src/**/*.spec.{ts,tsx}",
