@@ -192,7 +192,7 @@ it("finds a group under the transfer bundle's common that names no matrix id and
     findScenarioGroupsNamingNoMatrixId({
       common: {
         offline: { body: "You're offline." },
-        section_transfer_details: { status: "Status" },
+        transfer_details: { status: "Status" },
         offline_before_rename: { body: "You're offline." },
       },
     }),
@@ -336,7 +336,7 @@ const MATRIX_IDS = [
     "utf8",
   ).matchAll(/^### .+\n`(transfer\.[a-z0-9_]+)`$/gm),
 ].map(([, id = ""]) => id);
-const WORDS_TWO_MODULES_SHARE = ["section_transfer_details", "close_sheet"];
+const WORDS_TWO_MODULES_SHARE = ["transfer_details", "close_sheet"];
 
 // Raw text, never parsed: JSON.parse keeps only the last of a repeated key, so no parsed check sees one.
 function findKeysRepeatedInOneObject(bundleText: string) {

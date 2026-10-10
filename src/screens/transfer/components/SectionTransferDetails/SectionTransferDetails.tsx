@@ -29,28 +29,24 @@ export default function SectionTransferDetails({ transfer }: Props) {
     moneyState &&
     {
       [MoneyState.NoMoneyMoved]: t(
-        "common.section_transfer_details.money.no_money_moved",
+        "common.transfer_details.money.no_money_moved",
       ),
-      [MoneyState.MoneyMoved]: t(
-        "common.section_transfer_details.money.money_moved",
-      ),
+      [MoneyState.MoneyMoved]: t("common.transfer_details.money.money_moved"),
       [MoneyState.NotConfirmedYet]: t(
-        "common.section_transfer_details.money.not_confirmed_yet",
+        "common.transfer_details.money.not_confirmed_yet",
       ),
       [MoneyState.MoneyReturned]: t(
-        "common.section_transfer_details.money.money_returned",
+        "common.transfer_details.money.money_returned",
       ),
     }[moneyState];
   const settledLabel = (
     {
       [TransferStatus.AwaitingApproval]: undefined,
       [TransferStatus.Processing]: undefined,
-      [TransferStatus.Completed]: t(
-        "common.section_transfer_details.completed_at",
-      ),
+      [TransferStatus.Completed]: t("common.transfer_details.completed_at"),
       [TransferStatus.Unsuccessful]:
         transfer.funds === TransferFunds.Refunded
-          ? t("common.section_transfer_details.refunded_at")
+          ? t("common.transfer_details.refunded_at")
           : undefined,
       [TransferStatus.Expired]: undefined,
     } satisfies Record<TransferStatus, string | undefined>
@@ -66,47 +62,47 @@ export default function SectionTransferDetails({ transfer }: Props) {
   return (
     <Card>
       <RowDetail
-        label={t("common.section_transfer_details.status")}
+        label={t("common.transfer_details.status")}
         value={
           moneyPhrase === undefined
             ? statusWord
-            : t("common.section_transfer_details.status_and_money", {
+            : t("common.transfer_details.status_and_money", {
                 status: statusWord,
                 money: moneyPhrase,
               })
         }
       />
       <RowDetail
-        label={t("common.section_transfer_details.amount")}
+        label={t("common.transfer_details.amount")}
         value={formatMoney(transfer.amount)}
       />
       <RowDetail
         label={
           isReceived
-            ? t("common.section_transfer_details.received_from")
-            : t("common.section_transfer_details.sent_to")
+            ? t("common.transfer_details.received_from")
+            : t("common.transfer_details.sent_to")
         }
         value={transfer.counterparty.registeredName}
       />
       <RowDetail
         label={t(
-          `common.section_transfer_details.${transfer.counterparty.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+          `common.transfer_details.${transfer.counterparty.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
         )}
         value={transfer.counterparty.idValueMasked}
       />
       <RowDetail
-        label={t("common.section_transfer_details.bank")}
+        label={t("common.transfer_details.bank")}
         value={transfer.counterparty.bankName}
       />
       {transfer.note && (
         <RowDetail
-          label={t("common.section_transfer_details.note")}
+          label={t("common.transfer_details.note")}
           value={transfer.note}
         />
       )}
       {transfer.reference && (
         <RowDetail
-          label={t("common.section_transfer_details.reference")}
+          label={t("common.transfer_details.reference")}
           value={transfer.reference}
         />
       )}
@@ -114,8 +110,8 @@ export default function SectionTransferDetails({ transfer }: Props) {
         <RowDetail
           label={
             isReceived
-              ? t("common.section_transfer_details.received_at")
-              : t("common.section_transfer_details.sent_at")
+              ? t("common.transfer_details.received_at")
+              : t("common.transfer_details.sent_at")
           }
           value={sentAt}
         />
