@@ -31,6 +31,12 @@ it(
   }),
 );
 
+it("shows no demo PIN outside a demo build", async () => {
+  await openPinSheetWithBiometricsOff();
+
+  expect(screen.queryByText(/Demo PIN|246810/)).toBeNull();
+});
+
 it("keeps Approve off until all six digits are in, counting them without showing them", async () => {
   await openPinSheetWithBiometricsOff();
 

@@ -14,6 +14,7 @@ interface Props {
   message: string;
   detail?: string;
   refusal?: string;
+  demoPin?: string;
   offlineDisabledReason: string;
   pinLocked: boolean;
   sending: boolean;
@@ -24,6 +25,7 @@ export default function BottomSheetPin({
   message,
   detail,
   refusal,
+  demoPin,
   offlineDisabledReason,
   pinLocked,
   sending,
@@ -75,6 +77,11 @@ export default function BottomSheetPin({
       )}
       {!pinLocked && (
         <>
+          {demoPin !== undefined && (
+            <TextBody tone="secondary">
+              {t("bottom_sheet_pin.demo_pin", { pin: demoPin })}
+            </TextBody>
+          )}
           <KeypadPin
             pinLength={APPROVAL_PIN_LENGTH}
             digitsEntered={pin.length}

@@ -5,6 +5,7 @@
     "close": "Tutup",
     "approve": "Luluskan",
     "enter_every_digit": "Masukkan kesemua {{length}} digit PIN anda.",
+    "demo_pin": "PIN demo: {{pin}}",
     "touch_dropped": "Aplikasi lain sedang memaparkan sesuatu di atas skrin. Tutup aplikasi itu untuk memasukkan PIN anda."
   },
   "keypad_pin": {

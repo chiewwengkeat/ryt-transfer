@@ -5,6 +5,7 @@
     "close": "关闭",
     "approve": "批准",
     "enter_every_digit": "请输入全部 {{length}} 位 PIN。",
+    "demo_pin": "演示 PIN：{{pin}}",
     "touch_dropped": "另一个应用正在屏幕上层显示内容。请关闭该应用后再输入 PIN。"
   },
   "keypad_pin": {

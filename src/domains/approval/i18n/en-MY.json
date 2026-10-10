@@ -5,6 +5,7 @@
     "close": "Close",
     "approve": "Approve",
     "enter_every_digit": "Enter all {{length}} digits of your PIN.",
+    "demo_pin": "Demo PIN: {{pin}}",
     "touch_dropped": "Another app is drawing over the screen. Close it to enter your PIN."
   },
   "keypad_pin": {

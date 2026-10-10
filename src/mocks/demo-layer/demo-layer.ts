@@ -11,12 +11,14 @@ import {
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { bankState } from "@/mocks/bank/state/state";
 import { handlersForActiveScenario } from "@/mocks/bank/bank";
+import { DEMO_PIN } from "@/mocks/bank/seed/seed";
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
 import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
 import type { Send } from "@/shared/http/transport/transport";
 
 export default {
   demoSend: createDemoSend(handlersForActiveScenario),
+  demoPin: DEMO_PIN,
   ViewDemo,
   subscribeToBiometricsOff,
   subscribeToScenarioChange: (onChange) => switcherStore.subscribe(onChange),
@@ -39,6 +41,7 @@ export default {
 
 export interface DemoLayer {
   demoSend: Send;
+  demoPin: string;
   pairPhoneAtFirstLaunch: () => Promise<void>;
   ViewDemo: ComponentType<{
     appSheetOpen: boolean;

@@ -98,6 +98,7 @@ export default function ViewRoot() {
               offlineDisabledReason={t(
                 "transfer:common.offline.disabled_reason",
               )}
+              demoPin={demoLayer?.demoPin}
             />
           </ViewBottomSheetHost>
         </ScreensCoveredContext>
