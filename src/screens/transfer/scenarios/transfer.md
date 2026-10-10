@@ -83,7 +83,7 @@ Every situation someone can meet while sending money, from opening a transfer to
 `transfer.offline`
 - **When:** the phone reports no connection, or a request failed for lack of one
 - **Money:** no money moved
-- **Shown as:** on the home screen and each transfer step, with sending paused
+- **Shown as:** once, at the foot of the home screen and of each transfer step, with sending paused; a screen that sends nothing says only that they're offline, where its Try again would be
 - **Tell them:** they're offline and sending is paused
 - **They can:** wait, or try again where the bank list waits for them; it clears once a request reaches the bank
 - **Why:** a phone can report a connection that doesn't reach the bank, so only a request that gets through ends the offline state
