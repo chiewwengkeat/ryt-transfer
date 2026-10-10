@@ -8,17 +8,24 @@ interface Props {
   children: ReactNode;
   tone?: "primary" | "secondary" | "negative";
   strong?: boolean;
+  alignEnd?: boolean;
 }
 export default function TextBody({
   children,
   tone = "primary",
   strong = false,
+  alignEnd = false,
 }: Props) {
   const { i18n } = useTranslation();
   return (
     <Text
       accessibilityLanguage={i18n.language}
-      style={[styles.body, styles[tone], strong && styles.strong]}
+      style={[
+        styles.body,
+        styles[tone],
+        strong && styles.strong,
+        alignEnd && styles.alignEnd,
+      ]}
     >
       {children}
     </Text>
@@ -31,4 +38,5 @@ const styles = StyleSheet.create({
   secondary: { color: colors.textSecondary },
   negative: { color: colors.negative },
   strong: { fontWeight: "600" },
+  alignEnd: { textAlign: "right" },
 });
