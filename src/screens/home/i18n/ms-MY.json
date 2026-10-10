@@ -9,7 +9,8 @@
   },
 
   "home": {
-    "title": "Laman Utama"
+    "title": "Laman Utama",
+    "close_toast": "Tekan Kembali sekali lagi untuk menutup aplikasi"
   },
   "button_start_transfer": {
     "label": "Pindahan"

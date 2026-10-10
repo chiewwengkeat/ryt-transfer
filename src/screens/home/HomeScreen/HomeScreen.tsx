@@ -12,10 +12,12 @@ import ButtonStartTransfer from "./components/ButtonStartTransfer/ButtonStartTra
 import ButtonTransferHistory from "./components/ButtonTransferHistory/ButtonTransferHistory";
 import SectionRecentRecipientsHome from "./components/SectionRecentRecipientsHome/SectionRecentRecipientsHome";
 import SectionTransferNotices from "./components/SectionTransferNotices/SectionTransferNotices";
+import { useBackTwiceToCloseApp } from "./hooks/use-back-twice-to-close-app/use-back-twice-to-close-app";
 import { useStartTransferAvailability } from "./hooks/use-start-transfer-availability/use-start-transfer-availability";
 
 export default function HomeScreen() {
   const { t } = useTranslation("home");
+  useBackTwiceToCloseApp();
   const balanceScenarios = useBalanceScenarios(
     TransferScenarioId.StartUnexpected,
   );

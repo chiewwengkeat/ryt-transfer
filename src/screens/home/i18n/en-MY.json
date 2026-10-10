@@ -9,7 +9,8 @@
   },
 
   "home": {
-    "title": "Home"
+    "title": "Home",
+    "close_toast": "Press Back again to close the app"
   },
   "button_start_transfer": {
     "label": "Transfer"

@@ -9,7 +9,8 @@
   },
 
   "home": {
-    "title": "首页"
+    "title": "首页",
+    "close_toast": "再按一次返回键以关闭应用"
   },
   "button_start_transfer": {
     "label": "转账"

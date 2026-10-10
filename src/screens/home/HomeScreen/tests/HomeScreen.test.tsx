@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
-import { AccessibilityInfo, BackHandler } from "react-native";
+import { AccessibilityInfo, BackHandler, ToastAndroid } from "react-native";
 
 import {
   lookUpTestRecipient,
@@ -125,6 +125,9 @@ it(
   "says something unexpected went wrong when the bank answers the balance in a way the app does not know, and lets Back leave",
   scenarioTest("transfer.start_unexpected", async () => {
     const leaveApp = jest.spyOn(BackHandler, "exitApp");
+    const showToast = jest
+      .spyOn(ToastAndroid, "show")
+      .mockImplementation(() => undefined);
     await renderRoute("/");
 
     expect(
@@ -134,10 +137,36 @@ it(
     expect(screen.getByRole("button", { name: "Transfer" })).toBeDisabled();
     expect(reportedScenarios()).toContain("transfer.start_unexpected");
     await pressHardwareBack();
+    await pressHardwareBack();
     expect(leaveApp).toHaveBeenCalledTimes(1);
     leaveApp.mockRestore();
+    showToast.mockRestore();
   }),
 );
+
+it("keeps the app open on the first Back on Home and says to press Back again, and closes it on a second Back within two seconds", async () => {
+  const leaveApp = jest.spyOn(BackHandler, "exitApp");
+  const showToast = jest
+    .spyOn(ToastAndroid, "show")
+    .mockImplementation(() => undefined);
+  await renderRoute("/");
+  await screen.findByText("RM 12,845.50");
+
+  await pressHardwareBack();
+  expect(leaveApp).not.toHaveBeenCalled();
+  expect(showToast).toHaveBeenLastCalledWith(
+    "Press Back again to close the app",
+    expect.any(Number),
+  );
+  await act(() => jest.advanceTimersByTimeAsync(2_000));
+  await pressHardwareBack();
+  expect(leaveApp).not.toHaveBeenCalled();
+  expect(showToast).toHaveBeenCalledTimes(2);
+  await pressHardwareBack();
+  expect(leaveApp).toHaveBeenCalledTimes(1);
+  leaveApp.mockRestore();
+  showToast.mockRestore();
+});
 
 it("reports only the session's end when Home's own reads answer that it has ended", async () => {
   mswServer.use(http.all("*", () => new HttpResponse(null, { status: 401 })));
