@@ -1,5 +1,5 @@
 import { randomUUID } from "expo-crypto";
-import { getResponse, HttpResponse, type RequestHandler } from "msw";
+import { delay, getResponse, HttpResponse, type RequestHandler } from "msw";
 import type { ComponentType, ReactNode } from "react";
 
 import { registerApprovalKeys } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
@@ -63,6 +63,8 @@ export interface DemoLayer {
 // Stays exported: the bundle check finds this name in demo builds, and minify keeps only an export's.
 export function createDemoSend(getHandlers: () => RequestHandler[]): Send {
   return async (request) => {
+    // Never under Jest: a demo build's route tests run on fake timers, which would hold every request.
+    if (process.env.NODE_ENV !== "test") await delay(BANK_ANSWER_DELAY_MS);
     let response: Response | undefined;
     try {
       response = await getResponse(getHandlers(), request);
@@ -103,3 +105,6 @@ function subscribeToPhoneSidePick(
     if (isPicked(pick) !== isPicked(previousPick)) onChange(isPicked(pick));
   });
 }
+
+// About as long as a real bank takes, so the app's progress states show.
+const BANK_ANSWER_DELAY_MS = 1_000;
