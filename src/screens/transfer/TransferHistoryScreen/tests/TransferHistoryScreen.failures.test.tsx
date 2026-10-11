@@ -2,14 +2,14 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { AccessibilityInfo } from "react-native";
 
-import { sentRequests } from "@/test/mock-bank/mock-bank";
-import { renderRoute } from "@/test/render/render-route";
 import {
   buildHistoryTransfer,
   failTransferHistoryPages,
   holdTransferHistoryPages,
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
+import { sentRequests } from "@/test/mock-bank/mock-bank";
+import { renderRoute } from "@/test/render/render-route";
 
 import { OUT_OF_DATE } from "./TransferHistoryScreen.helper";
 

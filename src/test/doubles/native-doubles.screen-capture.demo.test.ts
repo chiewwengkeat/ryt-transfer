@@ -1,4 +1,5 @@
 import "@/test/setup/demo-build";
+
 import { blockScreenCapture } from "@/shared/platform/screen-capture/screen-capture";
 
 import { isScreenCaptureBlocked } from "./native-doubles";

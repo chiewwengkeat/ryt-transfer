@@ -16,18 +16,19 @@ import {
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
 import {
-  lookUpTestRecipient,
-  readBankBalanceMinor,
-  sendToBank,
-  startTestTransfer,
-  mswServer,
-  sentRequests,
-} from "@/test/mock-bank/mock-bank";
-import {
   biometricPromptsShown,
   holdNextBiometricPrompt,
 } from "@/test/doubles/biometrics-double";
+import { observedRecords } from "@/test/doubles/native-doubles";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import {
+  lookUpTestRecipient,
+  mswServer,
+  readBankBalanceMinor,
+  sendToBank,
+  sentRequests,
+  startTestTransfer,
+} from "@/test/mock-bank/mock-bank";
 import {
   findAccessibleGroupAround,
   pressHardwareBack,
@@ -35,7 +36,6 @@ import {
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import { observedRecords } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
 import {

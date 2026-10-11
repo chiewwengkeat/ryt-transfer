@@ -14,11 +14,11 @@ import { parseTypedAmount } from "@/shared/lib/money/money";
 import { setPickedContactPhones } from "@/test/doubles/contacts-native-double";
 import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { mswServer } from "@/test/mock-bank/mock-bank";
-import { renderRoute } from "@/test/render/render-route";
 import {
   findAccessibleGroupAround,
   scenarioTest,
 } from "@/test/render/drive-app";
+import { renderRoute } from "@/test/render/render-route";
 
 import {
   dispatchTransferFlow,

@@ -1,10 +1,9 @@
 /* eslint-disable fe/file-layout -- a config file built at load */
 import path from "node:path";
 
-import js from "@eslint/js";
 import eslintReact from "@eslint-react/eslint-plugin";
+import js from "@eslint/js";
 import pluginQuery from "@tanstack/eslint-plugin-query";
-import { defineConfig } from "eslint/config";
 import prettier from "eslint-config-prettier";
 import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import expo from "eslint-plugin-expo";
@@ -12,6 +11,7 @@ import { importX } from "eslint-plugin-import-x";
 import jest from "eslint-plugin-jest";
 import reactHooks from "eslint-plugin-react-hooks";
 import testingLibrary from "eslint-plugin-testing-library";
+import { defineConfig } from "eslint/config";
 import globals from "globals";
 import * as tseslint from "typescript-eslint";
 

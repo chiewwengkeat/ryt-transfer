@@ -2,25 +2,25 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
-import { mswServer } from "@/test/mock-bank/mock-bank";
 import {
   biometricPromptsShown,
   holdNextBiometricPrompt,
 } from "@/test/doubles/biometrics-double";
 import {
+  observedRecords,
+  reportedScenarios,
+} from "@/test/doubles/native-doubles";
+import {
   pairPhoneAsTheDemoLaunchDoes,
   pairPhoneBeforeTheBankForgetsItsKeys,
 } from "@/test/mock-bank/demo-pairing";
-import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
+import { mswServer } from "@/test/mock-bank/mock-bank";
 import {
   enterPinAndApprove,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import {
-  observedRecords,
-  reportedScenarios,
-} from "@/test/doubles/native-doubles";
+import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
 import { renderRoute } from "@/test/render/render-route";
 
 import {

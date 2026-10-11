@@ -8,9 +8,9 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import {
+  mswServer,
   sendToBank,
   startTestTransfer,
-  mswServer,
 } from "@/test/mock-bank/mock-bank";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 

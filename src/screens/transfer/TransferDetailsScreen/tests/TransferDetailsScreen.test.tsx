@@ -10,16 +10,16 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
-import { pressHardwareBack } from "@/test/render/drive-app";
-import { sentRequests } from "@/test/mock-bank/mock-bank";
-import { renderRoute } from "@/test/render/render-route";
 import {
+  buildHistoryTransfer,
   failTransferDetails,
   holdTransferDetails,
   serveTransferDetails,
-  buildHistoryTransfer,
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
+import { sentRequests } from "@/test/mock-bank/mock-bank";
+import { pressHardwareBack } from "@/test/render/drive-app";
+import { renderRoute } from "@/test/render/render-route";
 
 // eslint-disable-next-line fe/file-layout -- read at load by an it.each table
 const SENT_AT = "5 Oct 2026, 3:42 pm";

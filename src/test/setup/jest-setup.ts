@@ -5,6 +5,7 @@ jest.mock("react-native-worklets", () =>
 );
 // Its mocks run at require time, so they must load before any test module imports expo-router.
 import "expo-router/testing-library";
+
 import {
   focusManager,
   onlineManager,
@@ -15,11 +16,11 @@ import i18next, { changeLanguage } from "i18next";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
+import type * as RootQueryClient from "@/root/query-client/query-client";
+import "@/root/translations/translations";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { forgetRequestOutcomes } from "@/shared/http/offline/offline";
 import { setObservabilitySink } from "@/shared/observability/observability/observability";
-import type * as RootQueryClient from "@/root/query-client/query-client";
-import "@/root/translations/translations";
 
 import type * as BiometricsDouble from "@/test/doubles/biometrics-double";
 import { resetBiometricsDouble } from "@/test/doubles/biometrics-double";
@@ -28,15 +29,15 @@ import {
   resetContactsNativeDouble,
 } from "@/test/doubles/contacts-native-double";
 import type * as NativeDoubles from "@/test/doubles/native-doubles";
+import type * as ScreenStackDouble from "@/test/doubles/native-doubles";
 import {
-  resetNativeDoubles,
   obscuredTouchGuardNativeDouble,
-  resetObscuredTouchGuardDouble,
   observedRecords,
   recordObservation,
+  resetNativeDoubles,
+  resetObscuredTouchGuardDouble,
   resetScreenStackDouble,
 } from "@/test/doubles/native-doubles";
-import type * as ScreenStackDouble from "@/test/doubles/native-doubles";
 import {
   mswServer,
   recordUnhandledRequest,

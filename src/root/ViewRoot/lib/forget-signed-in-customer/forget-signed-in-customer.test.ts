@@ -6,9 +6,9 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
-import { sendToBank, startTestTransfer } from "@/test/mock-bank/mock-bank";
 import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { sendToBank, startTestTransfer } from "@/test/mock-bank/mock-bank";
 import { pressHardwareBack } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 

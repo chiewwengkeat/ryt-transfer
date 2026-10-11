@@ -13,14 +13,15 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
+import { observedRecords } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   lookUpTestRecipient,
-  sendToBank,
-  startTestTransfer,
   mswServer,
+  sendToBank,
   sentRequests,
+  startTestTransfer,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   finishOpeningScreen,
   readBankOnRealTimers,
@@ -28,15 +29,14 @@ import {
   turnOnPhoneReduceMotion,
   watchReduceMotionOfAnimations,
 } from "@/test/render/drive-app";
-import { observedRecords } from "@/test/doubles/native-doubles";
 import {
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render/render-route";
 
 import {
-  sendRm100FromHome,
   buttonsOnTheResultPage,
+  sendRm100FromHome,
 } from "./TransferResultScreen.helper";
 
 it(

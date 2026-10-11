@@ -1,20 +1,20 @@
-import { delay, http, HttpResponse } from "msw";
 import type { RequestHandler } from "msw";
+import { delay, http, HttpResponse } from "msw";
 
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { bankPorts } from "@/mocks/bank/ports/ports";
-import type * as BankPorts from "@/mocks/bank/ports/ports";
 import { clearTransferScenario, pickTransferScenario } from "@/mocks/bank/bank";
+import type * as BankPorts from "@/mocks/bank/ports/ports";
+import { bankPorts } from "@/mocks/bank/ports/ports";
 import { API_BASE_URL } from "@/shared/config/config";
+import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import {
   configureTransport,
   requestJson,
 } from "@/shared/http/transport/transport";
-import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import { mswServer } from "@/test/mock-bank/mock-bank";
 
-import demoLayer, { createDemoSend } from "./demo-layer";
 import type * as DemoLayerModule from "./demo-layer";
+import demoLayer, { createDemoSend } from "./demo-layer";
 
 afterEach(() => {
   activeHandlers.splice(0);

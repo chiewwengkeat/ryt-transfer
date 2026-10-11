@@ -1,5 +1,5 @@
-import type { RequestHandler } from "msw";
 import type * as Msw from "msw";
+import type { RequestHandler } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
@@ -15,11 +15,11 @@ import {
   type BankErrorBody,
 } from "@/test/mock-bank/mock-bank";
 
-import { bankPorts } from "./ports/ports";
-import type * as BankPorts from "./ports/ports";
-import { pickTransferScenario } from "./bank";
-import type * as DemoBank from "./bank";
 import type * as SwitcherStore from "@/mocks/switcher/switcher-store/switcher-store";
+import type * as DemoBank from "./bank";
+import { pickTransferScenario } from "./bank";
+import type * as BankPorts from "./ports/ports";
+import { bankPorts } from "./ports/ports";
 
 it("keeps a completed transfer and its debit across a restart", async () => {
   const { biometricKeyId } = await pairTestPhone();

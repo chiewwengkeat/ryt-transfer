@@ -2,6 +2,8 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
+import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   holdTheNextTransferRead,
   lookUpTestRecipient,
@@ -9,14 +11,12 @@ import {
   readBankBalanceMinor,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
 import {
   readBankOnRealTimers,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
 import { renderRoute } from "@/test/render/render-route";
 
 import {
@@ -24,8 +24,8 @@ import {
   countSent,
   holdTheNextPost,
   RECIPIENT_MOBILE,
-  walkToTransferReviewUntilTransferShows,
   walkFromHomeToTransferReview,
+  walkToTransferReviewUntilTransferShows,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {

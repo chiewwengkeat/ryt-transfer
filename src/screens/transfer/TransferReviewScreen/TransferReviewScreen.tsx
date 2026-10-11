@@ -1,29 +1,27 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { Stack, useNavigation } from "expo-router";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { BackHandler } from "react-native";
-import { useStore } from "zustand";
-
 import {
   ApprovalPinSheetStep,
   approvalPinSheetStore,
 } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import BannerEarlierTransferUnconfirmed from "@/domains/transfer/components/BannerEarlierTransferUnconfirmed/BannerEarlierTransferUnconfirmed";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { addUnauthorizedListener } from "@/shared/http/transport/transport";
-import ButtonHeaderBack from "@/shared/ui/ButtonHeaderBack/ButtonHeaderBack";
-import TextBody from "@/shared/ui/TextBody/TextBody";
-import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
-
 import BannerFlowNotice from "@/screens/transfer/components/BannerFlowNotice/BannerFlowNotice";
-import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
 import {
   isTransferSentOrBeingSent,
   TransferFlowStep,
   transferFlowStore,
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
+import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
+import { addUnauthorizedListener } from "@/shared/http/transport/transport";
+import ButtonHeaderBack from "@/shared/ui/ButtonHeaderBack/ButtonHeaderBack";
+import TextBody from "@/shared/ui/TextBody/TextBody";
+import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
+import { useQueryClient } from "@tanstack/react-query";
+import { Stack, useNavigation } from "expo-router";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { BackHandler } from "react-native";
+import { useStore } from "zustand";
 import BottomSheetPin from "./components/BottomSheetPin/BottomSheetPin";
 import ButtonConfirmTransfer from "./components/ButtonConfirmTransfer/ButtonConfirmTransfer";
 import SectionReviewDetails from "./components/SectionReviewDetails/SectionReviewDetails";

@@ -2,13 +2,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
 import { useTranslation } from "react-i18next";
 
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   BiometricSignOutcome,
   readBiometricSensorRefusal,
 } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { isApprovalPinLocked } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
 import { showApprovalPinLocked } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
-import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { useCreateTransfer } from "@/domains/transfer/api/create-transfer/create-transfer";
 import type { CreateTransferResponse } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
@@ -28,13 +28,13 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 
 import ButtonUsePinInstead from "./components/ButtonUsePinInstead/ButtonUsePinInstead";
-import { settleCreateFailure } from "./lib/settle-create-failure/settle-create-failure";
-import { settleUnexpectedConfirmFailure } from "./lib/settle-unexpected-confirm-failure/settle-unexpected-confirm-failure";
 import { useApprovalPinLocked } from "./hooks/use-approval-pin-locked/use-approval-pin-locked";
 import { usePhoneCheckBeforeApproval } from "./hooks/use-phone-check-before-approval/use-phone-check-before-approval";
 import { useReviewLeaveWatch } from "./hooks/use-review-leave-watch/use-review-leave-watch";
 import { useSendTransferApproval } from "./hooks/use-send-transfer-approval/use-send-transfer-approval";
 import { useTransferHoldReason } from "./hooks/use-transfer-hold-reason/use-transfer-hold-reason";
+import { settleCreateFailure } from "./lib/settle-create-failure/settle-create-failure";
+import { settleUnexpectedConfirmFailure } from "./lib/settle-unexpected-confirm-failure/settle-unexpected-confirm-failure";
 
 interface Props {
   draft: TransferDraft;

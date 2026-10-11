@@ -4,8 +4,8 @@ import {
   clearPendingTransfer,
   listPendingTransfers,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
-import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { queryClient } from "@/root/query-client/query-client";
+import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 
 // ⛔ Never on a 401: after signing in again, a transfer still being checked needs its record.
 export async function forgetSignedInCustomer() {

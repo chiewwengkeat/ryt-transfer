@@ -1,8 +1,8 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { requestJson } from "@/shared/http/transport/transport";
 import { TransportError } from "@/shared/http/transport-error/transport-error";
+import { requestJson } from "@/shared/http/transport/transport";
 import { parseWireAmount } from "@/shared/lib/money/money";
 import { trackEvent } from "@/shared/observability/observability/observability";
 

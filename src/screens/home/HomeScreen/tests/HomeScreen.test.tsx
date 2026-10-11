@@ -3,22 +3,22 @@ import { http, HttpResponse } from "msw";
 import { AccessibilityInfo, BackHandler, ToastAndroid } from "react-native";
 
 import {
-  lookUpTestRecipient,
-  sendToBank,
-  clearTransferScenario,
-  mswServer,
-} from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import {
-  pressHardwareBack,
-  moveAppTo,
-  scenarioTest,
-} from "@/test/render/drive-app";
-import {
-  setPhoneNetwork,
   observedRecords,
   reportedScenarios,
+  setPhoneNetwork,
 } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import {
+  clearTransferScenario,
+  lookUpTestRecipient,
+  mswServer,
+  sendToBank,
+} from "@/test/mock-bank/mock-bank";
+import {
+  moveAppTo,
+  pressHardwareBack,
+  scenarioTest,
+} from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
 
 import { pressEveryRecentRecipientExpectingItDisabled } from "./HomeScreen.helper";

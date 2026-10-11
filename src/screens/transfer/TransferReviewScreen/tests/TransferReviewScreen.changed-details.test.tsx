@@ -1,18 +1,18 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
+import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   lookUpTestRecipient,
-  readBankBalanceMinor,
   mswServer,
+  readBankBalanceMinor,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   pressHardwareBack,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
 import {

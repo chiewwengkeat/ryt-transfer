@@ -1,15 +1,15 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
 import { useMutation } from "@tanstack/react-query";
-import { Stack, router } from "expo-router";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { router, Stack } from "expo-router";
 import { http, HttpResponse } from "msw";
 import { Pressable, Text } from "react-native";
 
-import { requestJson } from "@/shared/http/transport/transport";
+import { queryClient } from "@/root/query-client/query-client";
 import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
-import { queryClient } from "@/root/query-client/query-client";
+import { requestJson } from "@/shared/http/transport/transport";
 
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";

@@ -9,8 +9,8 @@ import {
   isSettledTransferOutcome,
   outcomeOfTransfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
-import { listPendingTransfers } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
+import { listPendingTransfers } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { reportError } from "@/shared/observability/observability/observability";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";

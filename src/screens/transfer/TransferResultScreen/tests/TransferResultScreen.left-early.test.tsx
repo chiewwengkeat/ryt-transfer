@@ -7,15 +7,16 @@ import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
+import { setPhoneNetwork } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
+  mswServer,
   pairTestPhone,
   sendToBank,
+  sentRequests,
   signTestApproval,
   startTestTransfer,
-  mswServer,
-  sentRequests,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   finishOpeningScreen,
   moveAppTo,
@@ -23,7 +24,6 @@ import {
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import {
   relaunchApp,
   relaunchAppAndWaitForItsLaunchChecks,
@@ -31,9 +31,9 @@ import {
 } from "@/test/render/render-route";
 
 import {
+  buttonsOnTheResultPage,
   sendRm100FromHome,
   transferIdIn,
-  buttonsOnTheResultPage,
 } from "./TransferResultScreen.helper";
 
 it(

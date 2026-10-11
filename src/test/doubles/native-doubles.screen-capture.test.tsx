@@ -3,8 +3,8 @@ import { router } from "expo-router";
 
 import { renderRoute } from "@/test/render/render-route";
 
-import { isScreenCaptureBlocked } from "./native-doubles";
 import { waitPastReceiptSettle } from "@/test/render/drive-app";
+import { isScreenCaptureBlocked } from "./native-doubles";
 
 // ⛔ Keep these two alone in this file, in this order: the first sees the app's own launch, the second
 // what the first leaves behind.

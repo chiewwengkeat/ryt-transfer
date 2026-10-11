@@ -15,6 +15,9 @@ import {
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { requestJson } from "@/shared/http/transport/transport";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
+import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
+import { isScreenCaptureBlocked } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   lookUpTestRecipient,
   mswServer,
@@ -22,9 +25,6 @@ import {
   sentNameChecks,
   startTestTransfer,
 } from "@/test/mock-bank/mock-bank";
-import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
-import { isScreenCaptureBlocked } from "@/test/doubles/native-doubles";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   enterPinAndApprove,
   pickDemoScenario,

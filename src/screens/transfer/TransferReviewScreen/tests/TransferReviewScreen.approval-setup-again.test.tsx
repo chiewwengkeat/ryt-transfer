@@ -3,26 +3,26 @@ import { http, HttpResponse } from "msw";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
-  readBankBalanceMinor,
-  mswServer,
-  sentRequests,
-} from "@/test/mock-bank/mock-bank";
-import {
   biometricPromptsShown,
   changeEnrolledBiometrics,
 } from "@/test/doubles/biometrics-double";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
 import {
   pairPhoneAsTheDemoLaunchDoes,
   pairPhoneBeforeTheBankForgetsItsKeys,
 } from "@/test/mock-bank/demo-pairing";
+import {
+  mswServer,
+  readBankBalanceMinor,
+  sentRequests,
+} from "@/test/mock-bank/mock-bank";
 import { enterPinAndApprove, scenarioTest } from "@/test/render/drive-app";
-import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
 import {
   approveRequests,
-  walkToTransferReviewUntilTransferShows,
   walkToTransferReviewAndPressTransfer,
+  walkToTransferReviewUntilTransferShows,
 } from "./TransferReviewScreen.helper";
 
 it(

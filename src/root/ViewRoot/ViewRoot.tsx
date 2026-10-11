@@ -4,27 +4,27 @@ import { useEffect, useState } from "react";
 import { StatusBar, StyleSheet, View } from "react-native";
 
 import { ApprovalDemoPinContext } from "@/domains/approval/lib/approval-demo-pin/approval-demo-pin";
-import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
+import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { demoLayer, stackScreenOptions } from "@/root/app-launch/app-launch";
+import { queryClient } from "@/root/query-client/query-client";
 import {
   holdTransferScenarioReports,
   releaseTransferScenarioReports,
   transferFlowStore,
 } from "@/screens/transfer/flow-store/flow-store";
 import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
-import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import {
   isSessionEndFailure,
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
+import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
-import { demoLayer, stackScreenOptions } from "@/root/app-launch/app-launch";
-import { queryClient } from "@/root/query-client/query-client";
 import { forgetSignedInCustomer } from "./lib/forget-signed-in-customer/forget-signed-in-customer";
 // At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
 import "@/root/translations/translations";

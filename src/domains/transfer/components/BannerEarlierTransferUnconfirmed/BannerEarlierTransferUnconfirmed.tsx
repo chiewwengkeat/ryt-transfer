@@ -11,6 +11,7 @@ import { reportError } from "@/shared/observability/observability/observability"
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 
 import { isSettledTransferOutcome } from "@/domains/transfer/api/get-transfer/get-transfer";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import {
   refreshPendingTransferNotices,
   usePendingTransferNotices,
@@ -19,7 +20,6 @@ import {
   checkPendingTransferOnce,
   UNSETTLED_TRANSFER_READ_INTERVAL_MS,
 } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
-import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 
 interface Props {
   onEarlierTransferSettled: () => void;

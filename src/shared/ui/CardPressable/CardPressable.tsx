@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 
 import { colors, minTouchTarget } from "@/shared/theme/theme";
 import Card from "@/shared/ui/Card/Card";

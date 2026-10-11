@@ -15,14 +15,14 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { clearPendingTransfer } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
-import { settlePendingTransfer } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { settlePendingTransfer } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
 import {
   dispatchTransferFlow,
   isFlowNoLongerOnTransfer,
   TransferFlowActionType,
-  TransferHoldKind,
   transferFlowStore,
+  TransferHoldKind,
 } from "@/screens/transfer/flow-store/flow-store";
 import type { ApprovalAction } from "@/screens/transfer/flow-store/flow-store.type";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";

@@ -1,15 +1,15 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 
-import { moveAppTo } from "@/test/render/drive-app";
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
-import { sentRequests } from "@/test/mock-bank/mock-bank";
-import { renderRoute } from "@/test/render/render-route";
 import {
   buildHistoryTransfer,
   failTransferHistoryPages,
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
+import { sentRequests } from "@/test/mock-bank/mock-bank";
+import { moveAppTo } from "@/test/render/drive-app";
+import { renderRoute } from "@/test/render/render-route";
 
 import { OUT_OF_DATE } from "./TransferHistoryScreen.helper";
 

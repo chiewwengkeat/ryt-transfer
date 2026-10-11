@@ -2,13 +2,13 @@ import { usePathname, useSegments } from "expo-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
 
+import { demoLayer } from "@/root/app-launch/app-launch";
 import { isProductionBuild } from "@/shared/config/config";
 import {
   allowScreenCapture,
   blockScreenCapture,
   useScreenErrorShowing,
 } from "@/shared/platform/screen-capture/screen-capture";
-import { demoLayer } from "@/root/app-launch/app-launch";
 
 export function useScreenCaptureBlock(
   captureBlockScenarioId: Parameters<

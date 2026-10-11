@@ -5,8 +5,8 @@ import {
   type GetTransferResponse,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { toMalaysiaIso } from "@/mocks/bank/malaysia-time/malaysia-time";
 import { clearTransferScenario, pickTransferScenario } from "@/mocks/bank/bank";
+import { toMalaysiaIso } from "@/mocks/bank/malaysia-time/malaysia-time";
 import {
   BANK_ORIGIN,
   lookUpTestRecipient,

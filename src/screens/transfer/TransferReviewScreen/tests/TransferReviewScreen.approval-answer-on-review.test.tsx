@@ -10,13 +10,13 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
+  mswServer,
   readBankBalanceMinor,
   sendToBank,
-  mswServer,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   pressHardwareBack,
   readBankOnRealTimers,

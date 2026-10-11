@@ -18,6 +18,12 @@ import {
 import { approveBankTransfer } from "./transfer-approval/transfer-approval";
 import { createBankTransfer } from "./transfer-creation/transfer-creation";
 
+import {
+  answerBankRead,
+  answerBankWrite,
+} from "@/mocks/handlers/answer-from-bank/answer-from-bank";
+import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
+import { NO_SCENARIO_PICK } from "@/mocks/switcher/switcher-store/switcher-store";
 import { DEMO_PIN_ATTEMPTS } from "./seed/seed";
 import {
   activeTransferScenario,
@@ -26,12 +32,6 @@ import {
   resetBankState,
   saveScenarioPick,
 } from "./state/state";
-import {
-  answerBankRead,
-  answerBankWrite,
-} from "@/mocks/handlers/answer-from-bank/answer-from-bank";
-import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
-import { NO_SCENARIO_PICK } from "@/mocks/switcher/switcher-store/switcher-store";
 
 // Stays exported: the bundle check finds this name in demo builds, and minify keeps only an export's.
 export const transferHandlers = [

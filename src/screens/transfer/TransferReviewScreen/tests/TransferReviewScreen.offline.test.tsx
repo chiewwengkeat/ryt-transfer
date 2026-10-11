@@ -4,21 +4,21 @@ import { http, HttpResponse } from "msw";
 import { reportRequestOutcome } from "@/shared/http/offline/offline";
 import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import { requestJson } from "@/shared/http/transport/transport";
-import {
-  lookUpTestRecipient,
-  clearTransferScenario,
-  mswServer,
-  sentRequests,
-  pickTransferScenario,
-} from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
-import { renderRoute } from "@/test/render/render-route";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
-  scenarioTest,
+  clearTransferScenario,
+  lookUpTestRecipient,
+  mswServer,
+  pickTransferScenario,
+  sentRequests,
+} from "@/test/mock-bank/mock-bank";
+import {
   enterTransferRecipientAndAmount,
+  scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
+import { renderRoute } from "@/test/render/render-route";
 
 import { countSent, RECIPIENT_MOBILE } from "./TransferReviewScreen.helper";
 

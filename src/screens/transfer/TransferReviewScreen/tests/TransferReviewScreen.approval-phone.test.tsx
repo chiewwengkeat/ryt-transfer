@@ -7,6 +7,10 @@ import {
   failNextBiometricPrompt,
   reportBiometricSensorUnavailable,
 } from "@/test/doubles/biometrics-double";
+import {
+  reportedScenarios,
+  secureStoreNativeDouble,
+} from "@/test/doubles/native-doubles";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { readBankBalanceMinor } from "@/test/mock-bank/mock-bank";
 import {
@@ -16,16 +20,12 @@ import {
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import {
-  reportedScenarios,
-  secureStoreNativeDouble,
-} from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
 import {
   countSent,
-  walkToTransferReviewUntilTransferShows,
   walkToTransferReviewAndPressTransfer,
+  walkToTransferReviewUntilTransferShows,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {

@@ -4,11 +4,15 @@ import { http, HttpResponse } from "msw";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
-  readBankBalanceMinor,
+  observedRecords,
+  secureStoreNativeDouble,
+} from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import {
   mswServer,
+  readBankBalanceMinor,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   enterPinAndApprove,
   pressHardwareBack,
@@ -16,17 +20,13 @@ import {
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import {
-  secureStoreNativeDouble,
-  observedRecords,
-} from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 import {
   countSent,
   RECIPIENT_MOBILE,
-  walkToTransferReviewAndPressTransfer,
   walkFromHomeToTransferReview,
+  walkToTransferReviewAndPressTransfer,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {

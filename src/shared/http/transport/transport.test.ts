@@ -8,14 +8,14 @@ import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 
 import { useIsOffline } from "@/shared/http/offline/offline";
 import {
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport-error/transport-error";
+import {
   addUnauthorizedListener,
   configureTransport,
   requestJson,
 } from "./transport";
-import {
-  TransportError,
-  TransportErrorKind,
-} from "@/shared/http/transport-error/transport-error";
 
 afterEach(() => {
   configureTransport();

@@ -3,12 +3,12 @@ import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
+  mswServer,
   readBankBalanceMinor,
   sendToBank,
-  mswServer,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { enterPinAndApprove } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 

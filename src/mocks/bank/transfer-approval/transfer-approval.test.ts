@@ -5,9 +5,9 @@ import {
   TransferStatus,
   type GetTransferResponse,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { demoBankNotifications, unlockDemoPin } from "@/mocks/bank/bank";
 import { bankPorts, bindBankPorts } from "@/mocks/bank/ports/ports";
 import { DEMO_PIN } from "@/mocks/bank/seed/seed";
-import { demoBankNotifications, unlockDemoPin } from "@/mocks/bank/bank";
 import {
   pairTestPhone,
   readBankBalanceMinor,

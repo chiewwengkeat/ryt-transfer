@@ -1,5 +1,5 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { useQuery } from "@tanstack/react-query";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo, AppState, Pressable, Text } from "react-native";
@@ -9,25 +9,25 @@ import {
   type GetTransferResponse,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import {
   PendingTransferStage,
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
-import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { requestJson } from "@/shared/http/transport/transport";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
-  sendToBank,
-  startTestTransfer,
   clearTransferScenario,
   mswServer,
+  sendToBank,
+  startTestTransfer,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { pressHardwareBack, scenarioTest } from "@/test/render/drive-app";
 import { endSessionWithAnyRequest } from "@/test/render/interrupt-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
-import { pressHardwareBack, scenarioTest } from "@/test/render/drive-app";
 
 it(
   "covers the app with its own screen, offering only to sign in again, when the bank says the session has ended",

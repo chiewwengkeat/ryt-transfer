@@ -1,5 +1,5 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { delay, http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
@@ -15,18 +15,18 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { requestJson } from "@/shared/http/transport/transport";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
-  sendToBank,
-  startTestTransfer,
   clearTransferScenario,
   mswServer,
-  sentRequests,
   readsOfTheBalance,
+  sendToBank,
+  sentRequests,
+  startTestTransfer,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { reportedScenarios } from "@/test/doubles/native-doubles";
-import { relaunchApp, renderRoute } from "@/test/render/render-route";
 import { scenarioTest } from "@/test/render/drive-app";
+import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 it.each([
   ["sent", { status: TransferStatus.Completed }, "was sent — money moved."],

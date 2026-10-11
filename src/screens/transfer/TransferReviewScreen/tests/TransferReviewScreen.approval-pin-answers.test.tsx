@@ -3,40 +3,40 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
-import { rememberApprovalPinLocked } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
-import { approvalPinSheetStore } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import {
   approvalSettingsStore,
   notifyApprovalPinReset,
 } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
+import { rememberApprovalPinLocked } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
+import { approvalPinSheetStore } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import { listPendingTransfers } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
-import {
-  readBankBalanceMinor,
-  sendToBank,
-  mswServer,
-  sentRequests,
-} from "@/test/mock-bank/mock-bank";
 import {
   biometricPromptsShown,
   changeEnrolledBiometrics,
   reportBiometricSensorUnavailable,
 } from "@/test/doubles/biometrics-double";
 import {
-  pairPhoneAsTheDemoLaunchDoes,
-  pairPhoneBeforeTheBankForgetsItsKeys,
-} from "@/test/mock-bank/demo-pairing";
-import { enterPinAndApprove, scenarioTest } from "@/test/render/drive-app";
-import {
   observedRecords,
   reportedScenarios,
 } from "@/test/doubles/native-doubles";
+import {
+  pairPhoneAsTheDemoLaunchDoes,
+  pairPhoneBeforeTheBankForgetsItsKeys,
+} from "@/test/mock-bank/demo-pairing";
+import {
+  mswServer,
+  readBankBalanceMinor,
+  sendToBank,
+  sentRequests,
+} from "@/test/mock-bank/mock-bank";
+import { enterPinAndApprove, scenarioTest } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 import {
   approveRequests,
-  walkToTransferReviewUntilTransferShows,
   walkToTransferReviewAndPressTransfer,
+  walkToTransferReviewUntilTransferShows,
 } from "./TransferReviewScreen.helper";
 
 it(

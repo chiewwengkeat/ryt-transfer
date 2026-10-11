@@ -9,31 +9,31 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import {
+  biometricPromptsShown,
+  holdNextBiometricPrompt,
+} from "@/test/doubles/biometrics-double";
+import { observedRecords } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import {
+  holdTheNextTransferRead,
   lookUpTestRecipient,
+  mswServer,
   pairTestPhone,
   sendToBank,
   signTestApproval,
   startTestTransfer,
-  holdTheNextTransferRead,
-  mswServer,
 } from "@/test/mock-bank/mock-bank";
-import {
-  biometricPromptsShown,
-  holdNextBiometricPrompt,
-} from "@/test/doubles/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
 import { finishOpeningScreen, scenarioTest } from "@/test/render/drive-app";
-import { observedRecords } from "@/test/doubles/native-doubles";
+import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
 import {
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render/render-route";
 
 import {
+  buttonsOnTheResultPage,
   sendRm100FromHome,
   transferIdIn,
-  buttonsOnTheResultPage,
 } from "./TransferResultScreen.helper";
 
 it(

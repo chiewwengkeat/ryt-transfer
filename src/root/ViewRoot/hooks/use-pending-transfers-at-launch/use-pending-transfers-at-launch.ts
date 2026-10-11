@@ -9,11 +9,11 @@ import {
   listPendingTransfers,
   PendingTransferStage,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
-import { checkPendingTransferOnce } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { checkPendingTransferOnce } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
+import { queryClient } from "@/root/query-client/query-client";
 import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import { reportError } from "@/shared/observability/observability/observability";
-import { queryClient } from "@/root/query-client/query-client";
 
 export function usePendingTransfersAtLaunch() {
   useEffect(() => {

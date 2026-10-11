@@ -4,12 +4,12 @@ import { http, HttpResponse } from "msw";
 
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
+import { mswServer } from "@/test/mock-bank/mock-bank";
 import {
   pressHardwareBack,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
 import {

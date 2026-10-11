@@ -2,20 +2,20 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
-import { readBankBalanceMinor, mswServer } from "@/test/mock-bank/mock-bank";
 import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
+  observedRecords,
+  secureStoreNativeDouble,
+} from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { mswServer, readBankBalanceMinor } from "@/test/mock-bank/mock-bank";
+import {
+  pressHandlerOf,
   pressHardwareBack,
   readBankOnRealTimers,
-  pressHandlerOf,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import {
-  secureStoreNativeDouble,
-  observedRecords,
-} from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
 import { TransferFlowStep } from "@/screens/transfer/flow-store/flow-store";

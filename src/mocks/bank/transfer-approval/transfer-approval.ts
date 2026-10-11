@@ -15,8 +15,8 @@ import {
   lockOrCoolingOffRefusal,
   transferLimitsAt,
 } from "@/mocks/bank/account/account";
-import { tryDemoPin } from "@/mocks/bank/approval-keys/approval-keys";
 import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
+import { tryDemoPin } from "@/mocks/bank/approval-keys/approval-keys";
 import { ApprovalOutcome } from "@/mocks/bank/conditions/conditions";
 import {
   malaysianIsoDate,

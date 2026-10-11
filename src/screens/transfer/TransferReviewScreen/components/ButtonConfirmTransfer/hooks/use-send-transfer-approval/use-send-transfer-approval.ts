@@ -4,20 +4,20 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   ApprovalPinSheetStep,
   approvalPinSheetStore,
   closeApprovalPinSheet,
   showApprovalPinLocked,
 } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
-import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   buildSignedApprovalText,
   useApproveTransfer,
 } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import type { ApproveTransferRequest } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
-import { clearPendingTransfer } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
+import { clearPendingTransfer } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   ApprovalPath,
@@ -32,10 +32,10 @@ import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-scr
 import { formatMoney } from "@/shared/lib/money/money";
 import { reportError } from "@/shared/observability/observability/observability";
 
+import { useRegisterApprovalKeysAgain } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/hooks/use-register-approval-keys-again/use-register-approval-keys-again";
 import { approveWithBiometricKey } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-biometric-key/approve-with-biometric-key";
 import { approveWithPin } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-pin/approve-with-pin";
 import { settleApprovalAnswer } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/settle-approval-answer/settle-approval-answer";
-import { useRegisterApprovalKeysAgain } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/hooks/use-register-approval-keys-again/use-register-approval-keys-again";
 
 export function useSendTransferApproval() {
   const { t } = useTranslation("transfer");

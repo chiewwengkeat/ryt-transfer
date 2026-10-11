@@ -1,14 +1,14 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { delay, http } from "msw";
 import { AccessibilityInfo } from "react-native";
 
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   clearTransferScenario,
   mswServer,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { scenarioTest } from "@/test/render/drive-app";
 import {
   relaunchApp,
@@ -17,9 +17,9 @@ import {
 } from "@/test/render/render-route";
 
 import {
+  buttonsOnTheResultPage,
   sendRm100FromHome,
   transferIdIn,
-  buttonsOnTheResultPage,
 } from "./TransferResultScreen.helper";
 
 it(

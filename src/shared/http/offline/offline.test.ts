@@ -2,8 +2,8 @@ import { act, renderHook } from "@testing-library/react-native";
 
 import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import {
-  setPhoneNetwork,
   observedRecords,
+  setPhoneNetwork,
 } from "@/test/doubles/native-doubles";
 
 import {

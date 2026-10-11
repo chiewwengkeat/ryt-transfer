@@ -3,14 +3,14 @@ import { http } from "msw";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { pressHardwareBack, scenarioTest } from "@/test/render/drive-app";
 import {
-  setPhoneNetwork,
   isObscuredTouchGuardOn,
+  setPhoneNetwork,
   touchThroughOverlay,
 } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
+import { pressHardwareBack, scenarioTest } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
 
 it(

@@ -9,19 +9,19 @@ import {
   deviceIntegrityChecksAsked,
   failNextBiometricPrompt,
 } from "@/test/doubles/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
-  secureStoreNativeDouble,
   reportedScenarios,
+  secureStoreNativeDouble,
 } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
-import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
 import {
   enterPinAndApprove,
   pickDemoScenario,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
+import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
 
 import { holdTheNextPost } from "./TransferReviewScreen.helper";
 

@@ -1,24 +1,24 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
+import { setPhoneNetwork } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
-  startTestTransfer,
   clearTransferScenario,
   mswServer,
   sentRequests,
+  startTestTransfer,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { scenarioTest } from "@/test/render/drive-app";
-import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 import {
+  buttonsOnTheResultPage,
   sendRm100FromHome,
   transferIdIn,
-  buttonsOnTheResultPage,
 } from "./TransferResultScreen.helper";
 
 it(

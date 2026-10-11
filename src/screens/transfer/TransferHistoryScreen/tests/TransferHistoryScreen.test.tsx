@@ -24,17 +24,17 @@ import {
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
 import { observedRecords } from "@/test/doubles/native-doubles";
 import {
-  findAccessibleGroupAround,
-  turnOnPhoneReduceMotion,
-  watchReduceMotionOfAnimations,
-} from "@/test/render/drive-app";
-import { renderRoute } from "@/test/render/render-route";
-import {
   buildHistoryTransfer,
   failTransferHistoryPages,
   holdTransferHistoryPages,
   serveTransferHistoryPages,
 } from "@/test/fixtures/transfer-responses";
+import {
+  findAccessibleGroupAround,
+  turnOnPhoneReduceMotion,
+  watchReduceMotionOfAnimations,
+} from "@/test/render/drive-app";
+import { renderRoute } from "@/test/render/render-route";
 
 afterEach(() => {
   Dimensions.set({ window: WINDOW_AT_LAUNCH, screen: SCREEN_AT_LAUNCH });

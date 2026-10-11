@@ -2,13 +2,13 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
+  mswServer,
   readBankBalanceMinor,
   sendToBank,
-  mswServer,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { scenarioTest, walkToTransferReview } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
 

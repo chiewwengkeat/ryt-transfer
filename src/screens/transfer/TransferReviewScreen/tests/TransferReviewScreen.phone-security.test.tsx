@@ -12,17 +12,6 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import {
-  approveFromReviewOpenedAgain,
-  pressHardwareBack,
-  walkToTransferReview,
-} from "@/test/render/drive-app";
-import {
-  sendToBank,
-  startTestTransfer,
-  mswServer,
-  transferWritesSent,
-} from "@/test/mock-bank/mock-bank";
-import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
   deviceIntegrityChecksAsked,
@@ -31,8 +20,19 @@ import {
   holdDeviceIntegrityChecks,
   reportDeviceIntegrity,
 } from "@/test/doubles/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { observedRecords } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import {
+  mswServer,
+  sendToBank,
+  startTestTransfer,
+  transferWritesSent,
+} from "@/test/mock-bank/mock-bank";
+import {
+  approveFromReviewOpenedAgain,
+  pressHardwareBack,
+  walkToTransferReview,
+} from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
 
 it("refuses approval in place of the prompt on a phone that reports root, leaving no way to approve and sending nothing, then approves from review opened again once the phone reports clean", async () => {

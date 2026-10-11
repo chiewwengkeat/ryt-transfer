@@ -4,13 +4,13 @@ import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { mswServer } from "@/test/mock-bank/mock-bank";
 import {
   pressHardwareBack,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import { reportedScenarios } from "@/test/doubles/native-doubles";
-import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
 
 import { askBankToCreateRm100, countSent } from "./TransferReviewScreen.helper";

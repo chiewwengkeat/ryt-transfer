@@ -6,8 +6,8 @@ import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
-import { moveAppTo } from "@/test/render/drive-app";
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
+import { moveAppTo } from "@/test/render/drive-app";
 
 import { createQueryClient } from "./query-client";
 

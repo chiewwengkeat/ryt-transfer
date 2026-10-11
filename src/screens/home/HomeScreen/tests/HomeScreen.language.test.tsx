@@ -3,8 +3,8 @@ import * as Localization from "expo-localization";
 import { http, HttpResponse } from "msw";
 
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
-import { findAccessibleGroupAround } from "@/test/render/drive-app";
 import { mswServer } from "@/test/mock-bank/mock-bank";
+import { findAccessibleGroupAround } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 afterEach(() => {

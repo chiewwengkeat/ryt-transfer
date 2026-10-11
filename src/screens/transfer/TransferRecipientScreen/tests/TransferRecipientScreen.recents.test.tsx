@@ -7,15 +7,15 @@ import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-r
 import type { LookupRecipientResponse } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { requestJson } from "@/shared/http/transport/transport";
 import {
-  pressHardwareBack,
-  moveAppTo,
-  scenarioTest,
-} from "@/test/render/drive-app";
-import {
-  setPhoneNetwork,
   reportedScenarios,
+  setPhoneNetwork,
 } from "@/test/doubles/native-doubles";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
+import {
+  moveAppTo,
+  pressHardwareBack,
+  scenarioTest,
+} from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
 
 import { UNKNOWN_BANK_CODE } from "./TransferRecipientScreen.helper";

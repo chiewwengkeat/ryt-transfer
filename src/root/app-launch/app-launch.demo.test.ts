@@ -1,4 +1,5 @@
 import "@/test/setup/demo-build";
+
 import { checkDeviceIntegrity } from "@/shared/platform/device-integrity/device-integrity";
 import { blockScreenCapture } from "@/shared/platform/screen-capture/screen-capture";
 import { deviceIntegrityChecksAsked } from "@/test/doubles/biometrics-double";

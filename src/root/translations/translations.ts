@@ -11,9 +11,9 @@ import transferScreensEnMY from "@/screens/transfer/i18n/en-MY.json";
 import transferScreensMsMY from "@/screens/transfer/i18n/ms-MY.json";
 import transferScreensZhMY from "@/screens/transfer/i18n/zh-MY.json";
 import sharedEnMY from "@/shared/i18n/en-MY.json";
+import { initTranslations } from "@/shared/i18n/i18n";
 import sharedMsMY from "@/shared/i18n/ms-MY.json";
 import sharedZhMY from "@/shared/i18n/zh-MY.json";
-import { initTranslations } from "@/shared/i18n/i18n";
 
 export const TRANSLATION_BUNDLES = {
   "en-MY": {

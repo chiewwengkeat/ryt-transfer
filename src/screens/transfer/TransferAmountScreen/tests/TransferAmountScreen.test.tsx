@@ -10,20 +10,21 @@ import { AccessibilityInfo } from "react-native";
 import { accountKeys } from "@/domains/account/api/account.keys";
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   type BankErrorBody,
+  clearTransferScenario,
+  mswServer,
   readBankBalanceMinor,
   sendToBank,
 } from "@/test/mock-bank/mock-bank";
-import { clearTransferScenario, mswServer } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
-  pressHardwareBack,
   pressHandlerOf,
+  pressHardwareBack,
   readBankOnRealTimers,
   scenarioTest,
 } from "@/test/render/drive-app";
-import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
 
 it(

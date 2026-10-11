@@ -1,8 +1,8 @@
 import { getLocales } from "expo-localization";
 import {
+  use as addI18nextPlugin,
   changeLanguage,
   init,
-  use as addI18nextPlugin,
   type Resource,
   type ResourceLanguage,
 } from "i18next";

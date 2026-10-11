@@ -1,5 +1,5 @@
-import { http } from "msw";
 import type { RequestHandler } from "msw";
+import { http } from "msw";
 
 import { GetTransferLimitsErrorCode } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import {

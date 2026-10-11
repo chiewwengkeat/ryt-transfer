@@ -1,5 +1,5 @@
-import { bindBankPorts } from "@/mocks/bank/ports/ports";
 import { resetDemoBank } from "@/mocks/bank/bank";
+import { bindBankPorts } from "@/mocks/bank/ports/ports";
 import { createSeededRandom } from "@/mocks/bank/seed/seed";
 
 beforeEach(() => {

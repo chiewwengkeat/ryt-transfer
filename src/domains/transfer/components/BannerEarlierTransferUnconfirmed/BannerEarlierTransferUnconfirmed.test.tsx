@@ -1,5 +1,5 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { focusManager } from "@tanstack/react-query";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { delay, http, HttpResponse } from "msw";
 
 import {
@@ -12,17 +12,17 @@ import {
   writePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { requestJson } from "@/shared/http/transport/transport";
-import {
-  sendToBank,
-  startTestTransfer,
-  mswServer,
-  sentRequests,
-  readsOfTheBalance,
-} from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { reportedScenarios } from "@/test/doubles/native-doubles";
-import { relaunchApp, renderRoute } from "@/test/render/render-route";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import {
+  mswServer,
+  readsOfTheBalance,
+  sendToBank,
+  sentRequests,
+  startTestTransfer,
+} from "@/test/mock-bank/mock-bank";
 import { scenarioTest } from "@/test/render/drive-app";
+import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 it(
   "warns on review that the last transfer is still being checked, and still lets them send this one",

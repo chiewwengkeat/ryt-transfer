@@ -1,5 +1,5 @@
-import { HttpResponse } from "msw";
 import type { JsonBodyType } from "msw";
+import { HttpResponse } from "msw";
 
 export function bankError<Code extends string>(
   status: number,

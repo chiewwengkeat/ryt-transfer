@@ -2,28 +2,28 @@ import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
+import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   ApprovalPinSheetStep,
   approvalPinSheetStore,
 } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
-import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import {
-  readBankBalanceMinor,
+  observedRecords,
+  watchRoutesDrawnOnTop,
+} from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import {
   mswServer,
+  readBankBalanceMinor,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   pressHardwareBack,
   readBankOnRealTimers,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import {
-  observedRecords,
-  watchRoutesDrawnOnTop,
-} from "@/test/doubles/native-doubles";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 import {

@@ -2,12 +2,12 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
-import { moveAppTo, scenarioTest } from "@/test/render/drive-app";
 import {
-  setPhoneNetwork,
   reportedScenarios,
+  setPhoneNetwork,
 } from "@/test/doubles/native-doubles";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
+import { moveAppTo, scenarioTest } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
 
 import { UNKNOWN_BANK_CODE } from "./TransferRecipientScreen.helper";

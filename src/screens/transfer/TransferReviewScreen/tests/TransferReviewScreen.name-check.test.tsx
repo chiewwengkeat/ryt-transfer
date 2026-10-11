@@ -2,14 +2,14 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { http, HttpResponse } from "msw";
 import { AccessibilityInfo } from "react-native";
 
-import { lookUpTestRecipient, mswServer } from "@/test/mock-bank/mock-bank";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { lookUpTestRecipient, mswServer } from "@/test/mock-bank/mock-bank";
 import {
   finishOpeningScreen,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
 import {

@@ -4,32 +4,32 @@ import { Platform } from "react-native";
 
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
+  biometricPromptsShown,
+  cancelNextBiometricPrompt,
+  failNextBiometricPrompt,
+  phoneKeyOptions,
+} from "@/test/doubles/biometrics-double";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import {
   lookUpTestRecipient,
   mswServer,
   readBankBalanceMinor,
   sentRequests,
 } from "@/test/mock-bank/mock-bank";
 import {
-  biometricPromptsShown,
-  cancelNextBiometricPrompt,
-  failNextBiometricPrompt,
-  phoneKeyOptions,
-} from "@/test/doubles/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import {
   enterPinAndApprove,
   readBankOnRealTimers,
   scenarioTest,
   walkToTransferReview,
 } from "@/test/render/drive-app";
-import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 
 import {
   approveRequests,
   RECIPIENT_MOBILE,
-  walkToTransferReviewUntilTransferShows,
   walkToTransferReviewAndPressTransfer,
+  walkToTransferReviewUntilTransferShows,
 } from "./TransferReviewScreen.helper";
 
 afterEach(() => {

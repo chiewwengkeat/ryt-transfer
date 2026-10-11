@@ -2,25 +2,25 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { http, HttpResponse } from "msw";
 
-import { readBankBalanceMinor, mswServer } from "@/test/mock-bank/mock-bank";
 import {
   biometricPromptsShown,
   cancelNextBiometricPrompt,
   failNextBiometricPrompt,
   holdNextBiometricPrompt,
 } from "@/test/doubles/biometrics-double";
-import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
-import { enterPinAndApprove } from "@/test/render/drive-app";
 import {
-  secureStoreNativeDouble,
   observedRecords,
+  secureStoreNativeDouble,
 } from "@/test/doubles/native-doubles";
+import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
+import { mswServer, readBankBalanceMinor } from "@/test/mock-bank/mock-bank";
+import { enterPinAndApprove } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
 
 import {
   approveRequests,
-  walkToTransferReviewUntilTransferShows,
   walkToTransferReviewAndPressTransfer,
+  walkToTransferReviewUntilTransferShows,
 } from "./TransferReviewScreen.helper";
 
 it("lets an approval's answer change nothing once the person has left it and started another transfer", async () => {

@@ -6,7 +6,6 @@ import {
 import { PermissionStatus } from "expo";
 import { Linking } from "react-native";
 
-import { moveAppTo, scenarioTest } from "@/test/render/drive-app";
 import {
   setContactsPermission,
   setContactsPickerFailingOnce,
@@ -14,6 +13,7 @@ import {
   setPickedContactUnreadable,
 } from "@/test/doubles/contacts-native-double";
 import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { moveAppTo, scenarioTest } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
 
 afterEach(() => {

@@ -1,4 +1,4 @@
 pnpm-lock.yaml
 pnpm-workspace.yaml
 assets/
-src/screens/*/scenarios/
+src/screens/*/scenarios/*.md

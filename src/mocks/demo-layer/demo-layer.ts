@@ -4,14 +4,14 @@ import type { ComponentType, ReactNode } from "react";
 
 import { registerApprovalKeys } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
 import {
-  hasApprovalKeysOnFile,
   createApprovalKeys,
+  hasApprovalKeysOnFile,
   saveApprovalKeyIds,
 } from "@/domains/approval/lib/approval-keys/approval-keys";
-import { bankState } from "@/mocks/bank/state/state";
 import { handlersForActiveScenario } from "@/mocks/bank/bank";
-import { watchAmountStepOpen } from "@/mocks/scenarios/amount-step-open/amount-step-open";
 import { DEMO_PIN } from "@/mocks/bank/seed/seed";
+import { bankState } from "@/mocks/bank/state/state";
+import { watchAmountStepOpen } from "@/mocks/scenarios/amount-step-open/amount-step-open";
 import type { PhoneSideScenarioId } from "@/mocks/scenarios/transfer-scenarios/transfer-scenarios";
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
 import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";

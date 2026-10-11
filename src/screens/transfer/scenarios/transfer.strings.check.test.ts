@@ -2,8 +2,8 @@ import {
   scenarioWordsKey,
   type TransferScenarioId,
 } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { AppLanguage } from "@/shared/i18n/i18n";
 import { TRANSLATION_BUNDLES } from "@/root/translations/translations";
+import { AppLanguage } from "@/shared/i18n/i18n";
 
 import {
   MONEY_PHRASES,
