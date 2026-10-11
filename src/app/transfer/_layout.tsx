@@ -11,7 +11,7 @@ import { useEffect } from "react";
 
 export default function TransferLayout() {
   // Open through Done: the result page replaces this stack a commit later, and closing first shows the recipient step.
-  const draftStepsOpen = useTransferFlow(
+  const canOpenDraftSteps = useTransferFlow(
     (flow) => isTransferDraftOpen(flow) || flow.step === TransferFlowStep.Done,
   );
   // Leaving the flow abandons its draft, so a draft nobody returns to never blocks a link.
@@ -24,7 +24,7 @@ export default function TransferLayout() {
 
   return (
     <Stack screenOptions={flowStackScreenOptions}>
-      <Stack.Protected guard={draftStepsOpen}>
+      <Stack.Protected guard={canOpenDraftSteps}>
         <Stack.Screen name="amount" />
         <Stack.Screen name="review" />
       </Stack.Protected>

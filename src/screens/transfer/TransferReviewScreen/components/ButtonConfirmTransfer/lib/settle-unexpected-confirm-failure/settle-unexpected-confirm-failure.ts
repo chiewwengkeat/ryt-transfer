@@ -40,8 +40,8 @@ export async function settleUnexpectedConfirmFailure(queryClient: QueryClient) {
     openResultPageOfSentApproval({
       queryClient,
       transferId: flow.transferId,
-      answered: false,
-      unknownAnswer: false,
+      wasAnswered: false,
+      isUnknownAnswer: false,
     });
     return;
   }

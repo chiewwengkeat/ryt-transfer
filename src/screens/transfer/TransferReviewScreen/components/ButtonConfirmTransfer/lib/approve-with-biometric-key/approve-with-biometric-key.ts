@@ -13,7 +13,7 @@ import { Platform } from "react-native";
 export async function approveWithBiometricKey(
   approval: Parameters<typeof approveWithPin>[0],
   amountAndName: { amount: string; name: string },
-  keysSetUpAgain = false,
+  didSetUpKeysAgain = false,
 ) {
   const { t, leaveApprovalNotSent } = approval;
   const signing = await signWithBiometricKey(approval.signedText, {
@@ -37,7 +37,7 @@ export async function approveWithBiometricKey(
       if (
         readApproveTransferRefusal(attempt.failure)?.code ===
           ApproveTransferErrorCode.KeyNotRegistered &&
-        !keysSetUpAgain
+        !didSetUpKeysAgain
       ) {
         const keys = await approval.setUpApprovalAgain();
         if (keys.notice !== undefined)
@@ -52,7 +52,7 @@ export async function approveWithBiometricKey(
               message: t("common.approval_key_unknown.body"),
               detail: t("common.approval_key_unknown.pin"),
             },
-            { pinInHand: keys.pin, keysSetUpAgain: true },
+            { pinInHand: keys.pin, didSetUpKeysAgain: true },
           );
         return;
       }

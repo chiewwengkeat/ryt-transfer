@@ -6,24 +6,27 @@ import { useEffect, useRef, useState } from "react";
 
 export function useApprovalPinLocked() {
   // Unknown, not unlocked, until the first read answers: a guess could create a transfer only a PIN could approve.
-  const [pinLocked, setPinLocked] = useState<boolean>();
+  const [isPinLocked, setIsPinLocked] = useState<boolean>();
   const pinLockedNowRef = useRef<boolean>(undefined);
   useEffect(() => {
-    let mountReadOutdated = false;
-    const unsubscribe = subscribeToApprovalPinLock((pinLockedNow) => {
-      mountReadOutdated = true;
-      pinLockedNowRef.current = pinLockedNow;
-      setPinLocked(pinLockedNow);
+    let isMountReadOutdated = false;
+    const unsubscribe = subscribeToApprovalPinLock((isLocked) => {
+      isMountReadOutdated = true;
+      pinLockedNowRef.current = isLocked;
+      setIsPinLocked(isLocked);
     });
-    void isApprovalPinLocked().then((pinLockedAtMount) => {
-      if (mountReadOutdated) return;
-      pinLockedNowRef.current = pinLockedAtMount;
-      setPinLocked(pinLockedAtMount);
+    void isApprovalPinLocked().then((isLockedAtMount) => {
+      if (isMountReadOutdated) return;
+      pinLockedNowRef.current = isLockedAtMount;
+      setIsPinLocked(isLockedAtMount);
     });
     return () => {
-      mountReadOutdated = true;
+      isMountReadOutdated = true;
       unsubscribe();
     };
   }, []);
-  return { pinLocked, isPinLockedNow: () => pinLockedNowRef.current };
+  return {
+    pinLocked: isPinLocked,
+    isPinLockedNow: () => pinLockedNowRef.current,
+  };
 }

@@ -89,7 +89,7 @@ export default function TransferResultScreen() {
           outcome,
           reference: transfer.data?.reference,
           // Back can pop the page as it opens, and Home then announces the outcome the person never saw.
-          keepSettled: !isOutcomeShown,
+          shouldKeepSettled: !isOutcomeShown,
         });
     })().catch((error: unknown) => {
       reportError(error, { boundary: "pending_transfer" });

@@ -58,16 +58,16 @@ export async function settlePendingTransfer({
   transferId,
   outcome,
   reference,
-  keepSettled = false,
+  shouldKeepSettled = false,
 }: {
   queryClient: QueryClient;
   customerId: string;
   transferId: string;
   outcome?: ReturnType<typeof outcomeOfTransfer>;
   reference?: string;
-  keepSettled?: boolean;
+  shouldKeepSettled?: boolean;
 }) {
-  if (isSettledTransferOutcome(outcome) && !keepSettled)
+  if (isSettledTransferOutcome(outcome) && !shouldKeepSettled)
     await clearPendingTransfer(customerId, transferId);
   else
     await recordPendingTransferAnswer(

@@ -47,11 +47,13 @@ export function lookupBankRecipient({
     counterpartyId = recent.record.counterpartyId;
   } else {
     const { idType, idValue, bankCode } = request;
-    const knownBank = DUITNOW_BANKS.some((bank) => bank.bankCode === bankCode);
+    const isKnownBank = DUITNOW_BANKS.some(
+      (bank) => bank.bankCode === bankCode,
+    );
     if (
       !Object.values(RecipientIdType).includes(idType as RecipientIdType) ||
       typeof idValue !== "string" ||
-      (idType === RecipientIdType.AccountNumber && !knownBank)
+      (idType === RecipientIdType.AccountNumber && !isKnownBank)
     ) {
       return bankError(
         400,

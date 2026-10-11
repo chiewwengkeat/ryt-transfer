@@ -68,14 +68,16 @@ export function useSendTransferApproval() {
     };
     const leaveApprovalNotSent = async (
       notice: TransferFlowNotice,
-      { closedBySessionEnd = false }: { closedBySessionEnd?: boolean } = {},
+      {
+        wasClosedBySessionEnd = false,
+      }: { wasClosedBySessionEnd?: boolean } = {},
     ) => {
       if (noLongerOnThisTransfer()) return;
       closeApprovalPinSheet();
       dispatchTransferFlow(
         { type: TransferFlowActionType.ApprovalNotSent, notice },
         // Not their cancel: the session's end closed the sheet, and its own report says so.
-        { reported: !closedBySessionEnd },
+        { shouldReport: !wasClosedBySessionEnd },
       );
       // ⛔ Shown after the dispatch, which reports the scenario: a locked PIN is reported as its sheet opens.
       if (notice === TransferScenarioId.PinLocked)

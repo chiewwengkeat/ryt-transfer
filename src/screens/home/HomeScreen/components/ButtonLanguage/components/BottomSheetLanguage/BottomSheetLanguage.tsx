@@ -33,24 +33,24 @@ export default function BottomSheetLanguage({ onClose }: Props) {
         {
           label: t("bottom_sheet_language.phone_language"),
           language: i18n.language,
-          checked: pickedLanguage === undefined,
+          isChecked: pickedLanguage === undefined,
           pick: followPhoneLanguage,
         },
         ...Object.values(AppLanguage).map((language) => ({
           label: APP_LANGUAGE_NAMES[language].full,
           language,
-          checked: pickedLanguage === language,
+          isChecked: pickedLanguage === language,
           pick: () => {
             pickAppLanguage(language);
           },
         })),
-      ].map(({ label, language, checked, pick }) => (
+      ].map(({ label, language, isChecked, pick }) => (
         <Pressable
           key={label}
           accessibilityRole="radio"
           accessibilityLabel={label}
           accessibilityLanguage={language}
-          accessibilityState={{ checked }}
+          accessibilityState={{ checked: isChecked }}
           onPress={() => {
             pick();
             onClose();
@@ -61,7 +61,7 @@ export default function BottomSheetLanguage({ onClose }: Props) {
           ]}
         >
           <Text style={styles.textLabel}>{label}</Text>
-          {checked && <Text style={styles.textTick}>✓</Text>}
+          {isChecked && <Text style={styles.textTick}>✓</Text>}
         </Pressable>
       ))}
     </BottomSheetFrame>

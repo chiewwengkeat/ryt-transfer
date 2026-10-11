@@ -10,14 +10,14 @@ import type { QueryClient } from "@tanstack/react-query";
 // the check limit; a Demo pick asks it again, since the picked scenario may answer it otherwise.
 export function readAgainEveryReadButAnsweredNameChecks(
   queryClient: QueryClient,
-  { refusalsAreAnswers }: { refusalsAreAnswers: boolean },
+  { isRefusalAnAnswer }: { isRefusalAnAnswer: boolean },
 ) {
   void queryClient.invalidateQueries({
     predicate: ({ queryKey, state: { status, error } }) =>
       queryKey[0] !== transferKeys.lookupAll[0] ||
       status === "pending" ||
       (status === "error" &&
-        (!refusalsAreAnswers ||
+        (!isRefusalAnAnswer ||
           isSessionEndFailure(error) ||
           (error instanceof TransportError &&
             ([

@@ -65,7 +65,7 @@ export async function registerApprovalKeysAgain(
     if (typeof askedPin !== "string")
       return {
         notice: TransferScenarioId.ApprovalCancelled,
-        closedBySessionEnd: askedPin === undefined,
+        wasClosedBySessionEnd: askedPin === undefined,
       } as const;
     pin = askedPin;
   }

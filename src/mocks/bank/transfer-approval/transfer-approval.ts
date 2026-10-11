@@ -96,14 +96,14 @@ export function approveBankTransfer(
       "No approval key with this id is registered.",
     );
   }
-  const verified =
+  const isVerified =
     !conditions.signaturesRejected &&
     verifyApprovalSignature({
       signedText: buildSignedApprovalText(record.approval.signedDetails),
       signatureBase64: signature,
       publicKeySpkiBase64: key.spkiBase64,
     });
-  if (!verified) {
+  if (!isVerified) {
     return bankError(
       403,
       ApproveTransferErrorCode.ApprovalInvalid,
@@ -138,13 +138,16 @@ export function approveBankTransfer(
       failureReason,
     };
   };
-  const debitAndHold = (change: PendingTransferChange, underReview = false) => {
+  const debitAndHold = (
+    change: PendingTransferChange,
+    isUnderReview = false,
+  ) => {
     state.balanceMinor -= amountMinor;
     record.transfer = {
       ...executed,
       status: TransferStatus.Processing,
       funds: TransferFunds.Debited,
-      ...(underReview && { underReview }),
+      ...(isUnderReview && { underReview: true }),
     };
     record.pendingChange = { atMs: nowMs + SETTLES_AFTER_MS, change };
   };

@@ -65,7 +65,7 @@ export default function ViewRoot() {
               setHasSessionEnded(false);
               releaseTransferScenarioReports(transferFlowStore.getState());
               readAgainEveryReadButAnsweredNameChecks(queryClient, {
-                refusalsAreAnswers: true,
+                isRefusalAnAnswer: true,
               });
             }}
           />
@@ -116,7 +116,7 @@ export default function ViewRoot() {
     () =>
       demoLayer?.subscribeToScenarioChange(() => {
         readAgainEveryReadButAnsweredNameChecks(queryClient, {
-          refusalsAreAnswers: false,
+          isRefusalAnAnswer: false,
         });
       }),
     [],

@@ -37,13 +37,13 @@ export const transferFlowStore = createStore<TransferFlowState>()(
 
 export function dispatchTransferFlow(
   action: TransferFlowAction,
-  { reported = true } = {},
+  { shouldReport = true } = {},
 ) {
   const flow = transferFlowStore.getState();
   const nextFlow = reduceTransferFlow(flow, action);
   if (nextFlow === flow) return false;
   transferFlowStore.setState(nextFlow, true);
-  if (reported) trackTransferStepOrScenarioChange(flow, nextFlow);
+  if (shouldReport) trackTransferStepOrScenarioChange(flow, nextFlow);
   return true;
 }
 

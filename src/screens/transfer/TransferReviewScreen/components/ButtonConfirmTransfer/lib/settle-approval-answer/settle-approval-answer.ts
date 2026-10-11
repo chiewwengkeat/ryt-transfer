@@ -132,7 +132,7 @@ export async function settleApprovalAnswer({
     transferId,
     outcome: transfer && outcomeOfTransfer(transfer),
     reference: transfer?.reference,
-    keepSettled: true,
+    shouldKeepSettled: true,
   }).catch((error: unknown) => {
     reportError(error, { boundary: "pending_transfer" });
   });
@@ -142,8 +142,8 @@ export async function settleApprovalAnswer({
   openResultPageOfSentApproval({
     queryClient,
     transferId,
-    answered: transfer !== undefined,
-    unknownAnswer:
+    wasAnswered: transfer !== undefined,
+    isUnknownAnswer:
       refusal !== undefined &&
       !Object.values<string>(ApproveTransferErrorCode).includes(refusal.code),
   });
@@ -153,13 +153,13 @@ export async function settleApprovalAnswer({
 export function openResultPageOfSentApproval({
   queryClient,
   transferId,
-  answered,
-  unknownAnswer,
+  wasAnswered,
+  isUnknownAnswer,
 }: {
   queryClient: QueryClient;
   transferId: string;
-  answered: boolean;
-  unknownAnswer: boolean;
+  wasAnswered: boolean;
+  isUnknownAnswer: boolean;
 }) {
   void refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
   // From Home, so Back from the result never reopens a transfer already sent.
@@ -168,13 +168,13 @@ export function openResultPageOfSentApproval({
     pathname: "/transfer/result/[transferId]",
     params: {
       transferId,
-      ...(unknownAnswer && {
+      ...(isUnknownAnswer && {
         checking: TransferScenarioId.ApprovalUnknownAnswer,
       }),
     },
   });
   dispatchTransferFlow({
-    type: answered
+    type: wasAnswered
       ? TransferFlowActionType.ApprovalAnswered
       : TransferFlowActionType.AnswerLost,
   });

@@ -29,7 +29,7 @@ export async function approveWithPin(
     trackScenarioShownWhileOnTop: (scenario: TransferScenarioId) => void;
     leaveApprovalNotSent: (
       notice: TransferFlowNotice,
-      sheet?: { closedBySessionEnd?: boolean },
+      sheet?: { wasClosedBySessionEnd?: boolean },
     ) => Promise<void>;
     forgetPendingTransfer: () => Promise<void>;
     sendApproval: (
@@ -44,7 +44,7 @@ export async function approveWithPin(
   },
   scenario: TransferScenarioId,
   words: { message: string; detail?: string },
-  afterSetUp: { pinInHand?: string; keysSetUpAgain?: boolean } = {},
+  afterSetUp: { pinInHand?: string; didSetUpKeysAgain?: boolean } = {},
 ) {
   const {
     t,
@@ -58,7 +58,7 @@ export async function approveWithPin(
     path: ApprovalPath.Pin,
   });
   let refusal: string | undefined;
-  let { pinInHand, keysSetUpAgain = false } = afterSetUp;
+  let { pinInHand, didSetUpKeysAgain = false } = afterSetUp;
   // No new try at a PIN the bank has locked; a PIN already in hand is one the bank has just accepted.
   if (pinInHand === undefined && (await isApprovalPinLocked())) {
     await leaveApprovalNotSent(TransferScenarioId.PinLocked);
@@ -71,7 +71,7 @@ export async function approveWithPin(
     if (typeof pin !== "string") {
       await approval.forgetPendingTransfer();
       await leaveApprovalNotSent(TransferScenarioId.ApprovalCancelled, {
-        closedBySessionEnd: pin === undefined,
+        wasClosedBySessionEnd: pin === undefined,
       });
       return null;
     }
@@ -113,7 +113,7 @@ export async function approveWithPin(
     }
     if (
       pinRefusal?.code === ApproveTransferErrorCode.KeyNotRegistered &&
-      !keysSetUpAgain
+      !didSetUpKeysAgain
     ) {
       const keys = await approval.setUpApprovalAgain(pin);
       if (keys.notice !== undefined) {
@@ -121,7 +121,7 @@ export async function approveWithPin(
         return null;
       }
       pinInHand = keys.pin;
-      keysSetUpAgain = true;
+      didSetUpKeysAgain = true;
       continue;
     }
     await approval.settleAnswer(attempt);

@@ -7,12 +7,15 @@ import { createStore } from "zustand/vanilla";
 const reduceMotionStore = createStore(() => ({
   phoneReducesMotion: false,
 }));
-void AccessibilityInfo.isReduceMotionEnabled().then((reduces) => {
-  reduceMotionStore.setState({ phoneReducesMotion: reduces });
+void AccessibilityInfo.isReduceMotionEnabled().then((doesPhoneReduceMotion) => {
+  reduceMotionStore.setState({ phoneReducesMotion: doesPhoneReduceMotion });
 });
-AccessibilityInfo.addEventListener("reduceMotionChanged", (reduces) => {
-  reduceMotionStore.setState({ phoneReducesMotion: reduces });
-});
+AccessibilityInfo.addEventListener(
+  "reduceMotionChanged",
+  (doesPhoneReduceMotion) => {
+    reduceMotionStore.setState({ phoneReducesMotion: doesPhoneReduceMotion });
+  },
+);
 
 // Re-renders on a change mid-session: Reanimated's own default reads the setting once, at launch.
 export function usePhoneReducesMotion() {

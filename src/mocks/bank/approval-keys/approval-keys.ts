@@ -71,8 +71,8 @@ export function registerBankApprovalKeys({
   }
 
   const state = bankState();
-  const replacesKeys = state.approvalKeys.length > 0;
-  if (replacesKeys) {
+  const isReplacingKeys = state.approvalKeys.length > 0;
+  if (isReplacingKeys) {
     if (pin === undefined) {
       return bankError(
         403,
@@ -93,7 +93,7 @@ export function registerBankApprovalKeys({
     ];
     keyIds[`${kind}KeyId` as const] = keyId;
   }
-  if (replacesKeys) {
+  if (isReplacingKeys) {
     notifyCustomer(
       nowMs,
       "The way you approve transfers changed on your phone. If this wasn't you, lock your account.",
