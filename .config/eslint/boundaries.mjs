@@ -6,6 +6,7 @@ import {
   TEST_FILES,
   TEST_HELPER_FILES,
 } from "../test-files.js";
+import diskChanges from "./disk-changes.js";
 
 export const SOURCE_FILES = ["src/**/*.{ts,tsx}"];
 
@@ -243,8 +244,12 @@ export default [
       ],
       "boundaries/legacy-templates": false,
       "boundaries/root-path": REPO_ROOT,
+      "import/cache": diskChanges.importCache,
       "import/resolver": {
-        typescript: { alwaysTryTypes: true, project: TSCONFIG_PATH },
+        [path.join(import.meta.dirname, "disk-changes.js")]: {
+          alwaysTryTypes: true,
+          project: TSCONFIG_PATH,
+        },
       },
     },
     rules: {

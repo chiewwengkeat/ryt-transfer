@@ -3,7 +3,6 @@ import eslintReact from "@eslint-react/eslint-plugin";
 import js from "@eslint/js";
 import pluginQuery from "@tanstack/eslint-plugin-query";
 import prettier from "eslint-config-prettier";
-import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import expo from "eslint-plugin-expo";
 import { importX } from "eslint-plugin-import-x";
 import jest from "eslint-plugin-jest";
@@ -15,6 +14,7 @@ import path from "node:path";
 import * as tseslint from "typescript-eslint";
 import appCodeBans from "./.config/eslint/bans.mjs";
 import sliceBoundaries, { SOURCE_FILES } from "./.config/eslint/boundaries.mjs";
+import diskChanges from "./.config/eslint/disk-changes.js";
 import fe from "./.config/eslint/rules/index.js";
 import { TEST_FILES, TEST_HELPER_FILES } from "./.config/test-files.js";
 
@@ -63,6 +63,7 @@ export default defineConfig(
     files: ["**/*.{ts,tsx}"],
     extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
+      parser: diskChanges.typescriptParser,
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
@@ -93,11 +94,12 @@ export default defineConfig(
     extends: [importX.flatConfigs.recommended, importX.flatConfigs.typescript],
     settings: {
       "import-x/resolver-next": [
-        createTypeScriptImportResolver({
+        diskChanges.typescriptImportResolver({
           alwaysTryTypes: true,
           project: TSCONFIG_PATH,
         }),
       ],
+      "import-x/cache": diskChanges.importCache,
     },
     rules: {
       "import-x/no-extraneous-dependencies": [
