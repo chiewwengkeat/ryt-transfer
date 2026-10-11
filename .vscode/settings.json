@@ -1,8 +1,10 @@
 {
-  // Pinned per language, defaults included, and code actions as an empty list: VS Code merges these
-  // with each person's own settings, so a missing key or an object would let theirs run on save too.
+  // Pinned, defaults included, per language where a setting allows it: VS Code merges these with each
+  // person's own settings, objects key by key, so anything left out would let theirs change what a save
+  // does or what the editor reports. Code actions are an empty list rather than an object for that reason.
   "[typescript]": {
     "editor.codeActionsOnSave": [],
+    "js/ts.validate.enabled": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
@@ -12,6 +14,7 @@
   },
   "[typescriptreact]": {
     "editor.codeActionsOnSave": [],
+    "js/ts.validate.enabled": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
@@ -21,6 +24,7 @@
   },
   "[javascript]": {
     "editor.codeActionsOnSave": [],
+    "js/ts.validate.enabled": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
@@ -30,6 +34,7 @@
   },
   "[javascriptreact]": {
     "editor.codeActionsOnSave": [],
+    "js/ts.validate.enabled": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
@@ -78,6 +83,41 @@
   "prettier.ignorePath": ".prettierignore",
   "prettier.prettierPath": "./node_modules/prettier",
   "prettier.useEditorConfig": true,
+  "eslint.enable": true,
+  "eslint.quiet": false,
+  "eslint.rules.customizations": [],
+  "eslint.useFlatConfig": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.probe": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+  "eslint.nodePath": null,
+  "eslint.nodeEnv": null,
+  "eslint.useRealpaths": false,
+  "eslint.onIgnoredFiles": "off",
+  "eslint.bulkSuppression.enable": false,
+  "eslint.options": {
+    "allowInlineConfig": true,
+    "baseConfig": null,
+    "flags": [],
+    "ignore": true,
+    "ignorePatterns": null,
+    "overrideConfig": null,
+    "overrideConfigFile": null
+  },
+  "js/ts.experimental.useTsgo": false,
+  "js/ts.implicitProjectConfig.checkJs": false,
+  "js/ts.reportStyleChecksAsWarnings": false,
+  "js/ts.tsserver.useSyntaxServer": "auto",
   "js/ts.preferences.organizeImports": {
     "caseSensitivity": "auto",
     "typeOrder": "auto",
