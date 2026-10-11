@@ -185,7 +185,10 @@ export default defineConfig(
     files: SOURCE_FILES,
     ignores: TEST_CODE_FILES,
     plugins: { fe },
-    rules: { "fe/no-component-file-helpers": "error" },
+    rules: {
+      "fe/no-component-file-helpers": "error",
+      "no-nested-ternary": "error",
+    },
   },
   {
     files: ["**/*.{js,mjs,cjs,ts,tsx}"],

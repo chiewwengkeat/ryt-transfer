@@ -48,24 +48,7 @@ export function seedTransferHistory(
     list[Math.floor(nextRandom() * list.length)]!;
 
   const regularCounterparties = Array.from({ length: 30 }, (_, index) => {
-    const id =
-      index % 6 < 3
-        ? {
-            idType: RecipientIdType.Mobile,
-            idValue: `+601${pickRandom([..."012346789"])}${randomDigits(7)}`,
-          }
-        : index % 6 === 3
-          ? { idType: RecipientIdType.Nric, idValue: randomDigits(12) }
-          : index % 6 === 4
-            ? {
-                idType: RecipientIdType.AccountNumber,
-                idValue: randomDigits(12),
-                bankCode: pickRandom(DUITNOW_BANKS).bankCode,
-              }
-            : {
-                idType: RecipientIdType.Brn,
-                idValue: `2019${randomDigits(8)}`,
-              };
+    const id = drawRegularCounterpartyId(index, pickRandom, randomDigits);
     const entry = directoryEntryFor(id);
     return {
       counterpartyId: { ...id, bankCode: entry.bankCode },
@@ -178,3 +161,27 @@ const SEEDED_OUTCOMES = [
     },
   },
 ];
+
+function drawRegularCounterpartyId(
+  index: number,
+  pickRandom: <T>(list: readonly T[]) => T,
+  randomDigits: (length: number) => string,
+) {
+  if (index % 6 < 3) {
+    return {
+      idType: RecipientIdType.Mobile,
+      idValue: `+601${pickRandom([..."012346789"])}${randomDigits(7)}`,
+    };
+  }
+  if (index % 6 === 3) {
+    return { idType: RecipientIdType.Nric, idValue: randomDigits(12) };
+  }
+  if (index % 6 === 4) {
+    return {
+      idType: RecipientIdType.AccountNumber,
+      idValue: randomDigits(12),
+      bankCode: pickRandom(DUITNOW_BANKS).bankCode,
+    };
+  }
+  return { idType: RecipientIdType.Brn, idValue: `2019${randomDigits(8)}` };
+}
