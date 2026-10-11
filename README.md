@@ -7,15 +7,15 @@ Android and iOS, React Native, Expo SDK 57, TypeScript. Features:
 
 All handled transfer scenarios are detailed in the [scenario matrix](src/screens/transfer/scenarios/transfer.md)
 
-## Demo video
-
-[![External Link](docs/deep-dives/demo-video.jpg)](https://youtu.be/JoYJbxgE1o0)
-
 ## Install direct from APK
 
 1. Download [ryt-transfer-demo.apk](https://github.com/chiewwengkeat/ryt-transfer/releases/latest) and install on your Android phone
 2. Full-featured: all are BE API calls simulated with an API layer
-3. See `Demo` button on top right of screen, to simulate many scenarios. [See demo video above](#demo-video)
+3. See `Demo` button on top right of screen, to simulate many scenarios. [See demo video below](#demo-video)
+
+## Demo video
+
+[![External Link](docs/deep-dives/demo-video.jpg)](https://youtu.be/JoYJbxgE1o0)
 
 ## Write-ups
 
