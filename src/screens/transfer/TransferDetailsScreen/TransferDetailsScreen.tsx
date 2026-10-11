@@ -1,3 +1,4 @@
+import { useGetTransferWithHistoryPlaceholder } from "@/domains/transfer/api/get-transfer/get-transfer";
 import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
 import SectionTransferDetails from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
@@ -14,26 +15,29 @@ import Loader from "@/shared/ui/Loader/Loader";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { useGetTransferWithHistoryPlaceholder } from "./hooks/use-get-transfer-with-history-placeholder/use-get-transfer-with-history-placeholder";
 
 export default function TransferDetailsScreen() {
   const { t } = useTranslation("transfer");
   const { transferId } = useLocalSearchParams<{ transferId: string }>();
+
   const { transferQuery, transfer } =
     useGetTransferWithHistoryPlaceholder(transferId);
-  const phoneReportsConnection = usePhoneReportsConnection();
-  const readFailure = useQueryError(
+  const doesPhoneReportConnection = usePhoneReportsConnection();
+  const failure = useQueryError(
     transferQuery.error,
     transferQuery.fetchStatus !== "idle",
   );
-  const readAgain = () => transferQuery.refetch({ cancelRefetch: false });
-  const failureIsSessionEnd = isSessionEndFailure(readFailure);
 
-  return (
-    <>
-      <Stack.Screen options={{ title: t("details.title") }} />
-      {readFailure instanceof TransportError &&
-      readFailure.code === GetTransferErrorCode.TransferNotFound ? (
+  const isFailureSessionEnd = isSessionEndFailure(failure);
+
+  const readAgain = () => transferQuery.refetch({ cancelRefetch: false });
+
+  const content = (() => {
+    if (
+      failure instanceof TransportError &&
+      failure.code === GetTransferErrorCode.TransferNotFound
+    )
+      return (
         <ViewScreenFrame
           footer={
             <ButtonPrimary
@@ -46,15 +50,17 @@ export default function TransferDetailsScreen() {
         >
           <BannerNotice tone="negative" message={t("details.not_found")} />
         </ViewScreenFrame>
-      ) : transfer ? (
+      );
+    if (transfer)
+      return (
         <ViewScreenFrame>
           {/* A failure from an earlier visit is not this one's: shown on reopening, it would be announced as current. */}
-          {((readFailure !== null && transferQuery.isFetchedAfterMount) ||
+          {((failure !== null && transferQuery.isFetchedAfterMount) ||
             transferQuery.isPaused) && (
             <BannerOutOfDate
               // Remounted per failure, so a press that fails again says so again.
               key={transferQuery.errorUpdatedAt}
-              announce={!failureIsSessionEnd}
+              announce={!isFailureSessionEnd}
               message={t("details.out_of_date")}
               tryAgainLabel={t("details.retry")}
               onTryAgain={readAgain}
@@ -62,10 +68,12 @@ export default function TransferDetailsScreen() {
           )}
           <SectionTransferDetails transfer={transfer} />
         </ViewScreenFrame>
-      ) : readFailure !== null || transferQuery.isPaused ? (
+      );
+    if (failure !== null || transferQuery.isPaused)
+      return (
         <ViewScreenFrame
           footer={
-            phoneReportsConnection ? (
+            doesPhoneReportConnection ? (
               <ButtonPrimary label={t("details.retry")} onPress={readAgain} />
             ) : (
               <TextOffline />
@@ -75,13 +83,17 @@ export default function TransferDetailsScreen() {
           <BannerNotice
             key={transferQuery.errorUpdatedAt}
             tone="negative"
-            announce={!failureIsSessionEnd}
+            announce={!isFailureSessionEnd}
             message={t("details.failed")}
           />
         </ViewScreenFrame>
-      ) : (
-        <Loader />
-      )}
+      );
+    return <Loader />;
+  })();
+  return (
+    <>
+      <Stack.Screen options={{ title: t("details.title") }} />
+      {content}
     </>
   );
 }

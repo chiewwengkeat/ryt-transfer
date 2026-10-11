@@ -21,11 +21,12 @@ interface Props {
 }
 export default function SectionTransferAccordion({ transferHistory }: Props) {
   const queryClient = useQueryClient();
-  const malaysianToday = useMalaysianToday();
   // A collapsed day's loaded row count at collapse: more rows landing in it open it again.
   const [collapsedDayRowCounts, setCollapsedDayRowCounts] = useState<
     Record<string, number | undefined>
   >({});
+
+  const malaysianToday = useMalaysianToday();
 
   const transfers = transferHistory.data?.transfers ?? [];
   const transfersByDate = new Map<string, typeof transfers>();
@@ -36,16 +37,15 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
   }
   const dataItems = [...transfersByDate].flatMap(([date, dayTransfers]) => {
     const collapsedAt = collapsedDayRowCounts[date];
-    const expanded =
+    const isExpanded =
       collapsedAt === undefined || dayTransfers.length > collapsedAt;
     const summary = transferHistory.data?.daySummaries[date];
     const header = summary
-      ? [reuseTransferDayHeaderRow(summary, expanded)]
+      ? [reuseTransferDayHeaderRow(summary, isExpanded)]
       : [];
-    return expanded ? [...header, ...dayTransfers] : header;
+    return isExpanded ? [...header, ...dayTransfers] : header;
   });
   const listRef = useRef<FlashListRef<(typeof dataItems)[number]>>(null);
-
   // Counted from the cache, not this render's rows: closing over those would redraw every row on each page.
   const toggleTransferDay = (date: string, wasExpanded: boolean) => {
     setCollapsedDayRowCounts((counts) => ({

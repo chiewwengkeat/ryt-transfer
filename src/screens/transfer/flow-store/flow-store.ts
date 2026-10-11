@@ -75,7 +75,7 @@ export function isFlowNoLongerOnTransfer(
 }
 
 export function holdTransferScenarioReports() {
-  scenarioReportsHeld = true;
+  isScenarioReportingHeld = true;
 }
 
 // Reports the held scenario only if the flow still shows it; with no flow, as the root goes away, nothing shows.
@@ -83,13 +83,13 @@ export function releaseTransferScenarioReports(
   flowShownNow?: TransferFlowState,
 ) {
   const flowReached = flowReachedWhileReportsHeld;
-  scenarioReportsHeld = false;
+  isScenarioReportingHeld = false;
   flowReachedWhileReportsHeld = undefined;
   if (flowReached !== undefined && flowReached === flowShownNow)
     trackTransferStep(flowReached, findScenarioTheFlowShows(flowReached));
 }
 
-let scenarioReportsHeld = false;
+let isScenarioReportingHeld = false;
 let flowReachedWhileReportsHeld: TransferFlowState | undefined;
 
 function trackTransferStepOrScenarioChange(
@@ -102,7 +102,7 @@ function trackTransferStepOrScenarioChange(
     (scenario === undefined || scenario === findScenarioTheFlowShows(flow))
   )
     return;
-  if (scenarioReportsHeld && scenario !== undefined) {
+  if (isScenarioReportingHeld && scenario !== undefined) {
     flowReachedWhileReportsHeld = nextFlow;
     return;
   }

@@ -20,15 +20,18 @@ interface Props {
   transfer: Transfer;
 }
 export default function ItemTransfer({ transfer }: Props) {
-  useRenderTrace("row", transfer.transferId);
   const { t } = useTranslation(["transfer", "shared"]);
+
   const statusWord = useTransferStatusWord(transfer);
+
   const parsedAmount = parseWireAmount(transfer.amount);
   const moneyMovedSign = MONEY_MOVED_SIGN[transfer.funds];
   const transferTime = traceFormatCalls(formatMalaysianTime)(
     transfer.createdAt,
     t,
   );
+
+  useRenderTrace("row", transfer.transferId);
 
   return (
     <CardPressable

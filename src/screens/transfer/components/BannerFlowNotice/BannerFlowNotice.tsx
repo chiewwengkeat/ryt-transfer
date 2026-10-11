@@ -18,12 +18,14 @@ interface Props {
 }
 export default function BannerFlowNotice({ step }: Props) {
   const { t } = useTranslation(["transfer", "shared"]);
+
   const notice = useTransferFlow((flow) =>
     flow.step === step ? flow.notice : undefined,
   );
   const noticeDetail = useTransferFlow((flow) =>
     flow.step === step ? flow.noticeDetail : undefined,
   );
+
   if (notice === undefined) return null;
   // The field the bank's refusal names says it there, so a banner would say it twice.
   if (
@@ -31,20 +33,26 @@ export default function BannerFlowNotice({ step }: Props) {
     noticeDetail?.code !== undefined
   )
     return null;
-  const message =
-    notice === TransferScenarioId.UnderMaintenance &&
-    noticeDetail?.until !== undefined
-      ? t("common.under_maintenance.until", {
-          time: formatMalaysianDateTime(noticeDetail.until, t),
-        })
-      : notice === TransferScenarioId.BalanceOrLimitShortAtConfirmation &&
-          noticeDetail?.code !== undefined
-        ? t(
-            noticeDetail.code === CreateTransferErrorCode.InsufficientFunds
-              ? "common.balance_or_limit_short_at_confirmation.over_balance"
-              : "common.balance_or_limit_short_at_confirmation.over_limit",
-          )
-        : t(`common.${scenarioWordsKey(notice)}.body`);
+
+  const message = (() => {
+    if (
+      notice === TransferScenarioId.UnderMaintenance &&
+      noticeDetail?.until !== undefined
+    )
+      return t("common.under_maintenance.until", {
+        time: formatMalaysianDateTime(noticeDetail.until, t),
+      });
+    if (
+      notice === TransferScenarioId.BalanceOrLimitShortAtConfirmation &&
+      noticeDetail?.code !== undefined
+    )
+      return t(
+        noticeDetail.code === CreateTransferErrorCode.InsufficientFunds
+          ? "common.balance_or_limit_short_at_confirmation.over_balance"
+          : "common.balance_or_limit_short_at_confirmation.over_limit",
+      );
+    return t(`common.${scenarioWordsKey(notice)}.body`);
+  })();
   if (notice === TransferScenarioId.BalanceOrLimitShortAtConfirmation)
     return (
       <BannerAction

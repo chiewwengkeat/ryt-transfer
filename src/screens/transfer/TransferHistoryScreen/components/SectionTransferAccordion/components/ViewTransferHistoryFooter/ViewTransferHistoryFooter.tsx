@@ -21,20 +21,21 @@ export default function ViewTransferHistoryFooter({
   onRetry,
 }: Props) {
   const { t, i18n } = useTranslation("transfer");
-  const { bottom } = useSafeAreaInsets();
-  const phoneReportsConnection = usePhoneReportsConnection();
 
-  return (
-    <View style={[styles.main, { paddingBottom: spacing.md + bottom }]}>
-      {/* The query keeps the page's error flag up while its retry runs. */}
-      {fetchNextPageFailure !== null && !isFetchingNextPage ? (
+  const { bottom } = useSafeAreaInsets();
+  const doesPhoneReportConnection = usePhoneReportsConnection();
+
+  const content = (() => {
+    // The query keeps the page's error flag up while its retry runs.
+    if (fetchNextPageFailure !== null && !isFetchingNextPage)
+      return (
         <>
           <BannerAction
             tone="negative"
             announce={!isSessionEndFailure(fetchNextPageFailure)}
             message={t("view_transfer_history_footer.failed")}
             action={
-              phoneReportsConnection
+              doesPhoneReportConnection
                 ? {
                     label: t("view_transfer_history_footer.retry"),
                     onPress: onRetry,
@@ -42,21 +43,28 @@ export default function ViewTransferHistoryFooter({
                 : undefined
             }
           />
-          {!phoneReportsConnection && <TextOffline />}
+          {!doesPhoneReportConnection && <TextOffline />}
         </>
-      ) : !hasNextPage ? (
+      );
+    if (!hasNextPage)
+      return (
         <TextBody tone="secondary">
           {t("view_transfer_history_footer.end")}
         </TextBody>
-      ) : (
-        isFetchingNextPage && (
-          <ActivityIndicator
-            accessibilityLabel={t("view_transfer_history_footer.loading")}
-            accessibilityLanguage={i18n.language}
-            color={colors.accent}
-          />
-        )
-      )}
+      );
+    return (
+      isFetchingNextPage && (
+        <ActivityIndicator
+          accessibilityLabel={t("view_transfer_history_footer.loading")}
+          accessibilityLanguage={i18n.language}
+          color={colors.accent}
+        />
+      )
+    );
+  })();
+  return (
+    <View style={[styles.main, { paddingBottom: spacing.md + bottom }]}>
+      {content}
     </View>
   );
 }

@@ -24,32 +24,34 @@ export default function HeaderTransferDay({
   today,
   onToggle,
 }: Props) {
-  useRenderTrace("header", summary.date);
   const { t, i18n } = useTranslation(["transfer", "shared"]);
-  const dayLabel = traceFormatCalls(formatMalaysianDayHeader)(
+
+  const labelDay = traceFormatCalls(formatMalaysianDayHeader)(
     summary.date,
     today,
     t,
   );
   const parsedNet = parseWireAmount(summary.net);
-  const netText =
+  const textNet =
     parsedNet &&
     traceFormatCalls(formatMoney)(parsedNet, { signDisplay: "exceptZero" });
+
+  useRenderTrace("header", summary.date);
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ expanded }}
       accessibilityLabel={
-        netText === null
+        textNet === null
           ? t("header_transfer_day.label_without_net", {
-              day: dayLabel,
+              day: labelDay,
               count: summary.count,
             })
           : t("header_transfer_day.label", {
-              day: dayLabel,
+              day: labelDay,
               count: summary.count,
-              net: netText,
+              net: textNet,
             })
       }
       accessibilityLanguage={i18n.language}
@@ -60,16 +62,16 @@ export default function HeaderTransferDay({
       <ViewAmountWrap
         columnGap={spacing.sm}
         amount={
-          netText === null ? null : (
+          textNet === null ? null : (
             <TextBody strong tone="secondary">
-              {netText}
+              {textNet}
             </TextBody>
           )
         }
       >
         <TextBody strong tone="secondary">
           {t("header_transfer_day.title", {
-            day: dayLabel,
+            day: labelDay,
             count: summary.count,
           })}
         </TextBody>

@@ -5,7 +5,7 @@ import { StyleSheet, View } from "react-native";
 import Animated, { Keyframe, ReduceMotion } from "react-native-reanimated";
 
 export default function IconTransferCompleted() {
-  const phoneReducesMotion = usePhoneReducesMotion();
+  const doesPhoneReduceMotion = usePhoneReducesMotion();
 
   return (
     <Animated.View
@@ -16,7 +16,7 @@ export default function IconTransferCompleted() {
       })
         .duration(400)
         .reduceMotion(
-          phoneReducesMotion ? ReduceMotion.Always : ReduceMotion.Never,
+          doesPhoneReduceMotion ? ReduceMotion.Always : ReduceMotion.Never,
         )}
       style={styles.main}
     >

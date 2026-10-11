@@ -26,7 +26,7 @@ export function reduceRecipientAction(
   )
     return flow;
   const { recipient } = flow.draft;
-  const recipientChanged =
+  const hasRecipientChanged =
     recipient?.idType !== action.recipient.idType ||
     recipient.idValue !== action.recipient.idValue ||
     recipient.bankCode !== action.recipient.bankCode ||
@@ -36,7 +36,7 @@ export function reduceRecipientAction(
     draft: { ...flow.draft, recipient: action.recipient },
     ...(((flow.step === TransferFlowStep.Reviewing &&
       flow.createKeyToReuse !== undefined &&
-      recipientChanged) ||
+      hasRecipientChanged) ||
       (flow.step === TransferFlowStep.Editing &&
         flow.detailsChangedAfterNoAnswer)) && {
       detailsChangedAfterNoAnswer: true,

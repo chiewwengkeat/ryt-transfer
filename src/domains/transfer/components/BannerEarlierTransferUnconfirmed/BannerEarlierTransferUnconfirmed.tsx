@@ -26,50 +26,53 @@ export default function BannerEarlierTransferUnconfirmed({
   onEarlierTransferSettled,
 }: Props) {
   const { t } = useTranslation("transfer");
+  const queryClient = useQueryClient();
+
+  const transferIdsToldSettledRef = useRef(new Set<string>());
   const {
     customerId,
     unconfirmed: [newestUnconfirmed],
   } = usePendingTransferNotices();
-  // Drawn before the transfer is read, but reported only after: a record kept from before this launch may have ended since.
-  useTrackScenarioShown(
-    newestUnconfirmed?.checkedWithBank
-      ? TransferScenarioId.EarlierTransferUnconfirmed
-      : undefined,
-  );
-  const queryClient = useQueryClient();
-  const screenOnTop = useIsScreenOnTop();
-  const screensCovered = use(ScreensCoveredContext);
-  const transferIdsToldSettledRef = useRef(new Set<string>());
-  const transferId = newestUnconfirmed?.transferId;
+  const isScreenOnTop = useIsScreenOnTop();
+  const isScreenCovered = use(ScreensCoveredContext);
   const tellEarlierTransferSettled = useEffectEvent(
     (settledTransferId: string) => {
       // Covered, not off top: under the session-ended view reads answer 401, but a check out as Home is left still owes it.
-      if (screensCovered) return;
+      if (isScreenCovered) return;
       // Once per transfer: a settled answer the cached notice cannot show, such as one no newer than the copy held, keeps it ticking.
       if (transferIdsToldSettledRef.current.has(settledTransferId)) return;
       transferIdsToldSettledRef.current.add(settledTransferId);
       onEarlierTransferSettled();
     },
   );
+
+  const transferId = newestUnconfirmed?.transferId;
+
+  // Drawn before the transfer is read, but reported only after: a record kept from before this launch may have ended since.
+  useTrackScenarioShown(
+    newestUnconfirmed?.checkedWithBank
+      ? TransferScenarioId.EarlierTransferUnconfirmed
+      : undefined,
+  );
   // The bank can answer long after Result was left. Only on top: a Result over this counts each failed read it sees.
   useEffect(() => {
-    if (!screenOnTop || customerId === undefined || transferId === undefined)
+    if (!isScreenOnTop || customerId === undefined || transferId === undefined)
       return;
-    let stopped = false;
+    let isStopped = false;
     const timer = setInterval(() => {
       // Not during a write: an approval in flight has a record too, and only its own answer may read or list it.
       if (!focusManager.isFocused() || queryClient.isMutating() > 0) return;
       // Nor once one starts while this tick is out, or the session's end clears the cache, which shows only as removals.
-      let overtaken = false;
+      let isOvertaken = false;
       const stopWatchingWrites = queryClient
         .getMutationCache()
         .subscribe(({ type }) => {
-          overtaken ||= type === "added";
+          isOvertaken ||= type === "added";
         });
       const stopWatchingClears = queryClient
         .getQueryCache()
         .subscribe(({ type }) => {
-          overtaken ||= type === "removed";
+          isOvertaken ||= type === "removed";
         });
       void (async () => {
         if (
@@ -81,7 +84,7 @@ export default function BannerEarlierTransferUnconfirmed({
         await refreshPendingTransferNotices(
           queryClient,
           customerId,
-          () => stopped || overtaken,
+          () => isStopped || isOvertaken,
         );
       })()
         .catch((error: unknown) => {
@@ -93,10 +96,11 @@ export default function BannerEarlierTransferUnconfirmed({
         });
     }, UNSETTLED_TRANSFER_READ_INTERVAL_MS);
     return () => {
-      stopped = true;
+      isStopped = true;
       clearInterval(timer);
     };
-  }, [screenOnTop, customerId, transferId, queryClient]);
+  }, [isScreenOnTop, customerId, transferId, queryClient]);
+
   if (newestUnconfirmed === undefined) return null;
 
   return (

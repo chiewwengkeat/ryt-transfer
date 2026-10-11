@@ -14,12 +14,12 @@ export function useMalaysianToday() {
           : now,
       );
     };
-    let midnightTimer: ReturnType<typeof setTimeout> | undefined;
+    let timerMidnight: ReturnType<typeof setTimeout> | undefined;
     const waitForMalaysianMidnight = () => {
       const tomorrow = toMalaysianDateKey(
         new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       );
-      midnightTimer = setTimeout(
+      timerMidnight = setTimeout(
         () => {
           showTodayIfTheDateMoved();
           waitForMalaysianMidnight();
@@ -33,7 +33,7 @@ export function useMalaysianToday() {
       if (state === "active") showTodayIfTheDateMoved();
     });
     return () => {
-      clearTimeout(midnightTimer);
+      clearTimeout(timerMidnight);
       subscription.remove();
     };
   }, []);

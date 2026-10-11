@@ -39,49 +39,64 @@ interface Props {
 }
 export default function SectionReviewDetails({ draft }: Props) {
   const { t } = useTranslation("transfer");
+  const navigation =
+    useNavigation<NativeStackNavigationProp<Record<string, object>>>();
+  const [isFailureAnnouncementDue, setIsFailureAnnouncementDue] =
+    useState(false);
+  const [waitedOutRefusalAt, setWaitedOutRefusalAt] = useState<number>();
+
   const lookup = useLookupRecipient(draft.recipient);
-  const sending = useTransferFlow(isTransferSentOrBeingSent);
-  const lookupFailure = useQueryError(
+  const isSending = useTransferFlow(isTransferSentOrBeingSent);
+  const failureLookup = useQueryError(
     lookup.error,
     lookup.fetchStatus !== "idle",
   );
-  const code =
-    lookupFailure instanceof TransportError ? lookupFailure.code : undefined;
-  // Never while sending: "no money moved" can be false by then, and a retry mints a new recipient reference.
-  // Never for the session's end either: sign-in asks the name check again.
-  const nameCheckFailure =
-    lookupFailure === null || sending || isSessionEndFailure(lookupFailure)
-      ? undefined
-      : code === LookupRecipientErrorCode.RecipientNotFound
-        ? TransferScenarioId.RecipientNotFound
-        : code === LookupRecipientErrorCode.NameEnquiryUnavailable
-          ? TransferScenarioId.NameCheckUnavailable
-          : code === LookupRecipientErrorCode.TooManyLookups
-            ? TransferScenarioId.TooManyNameChecks
-            : TransferScenarioId.ReviewUnexpected;
+
+  const failureNameCheck = (() => {
+    // Never while sending: "no money moved" can be false by then, and a retry mints a new recipient reference.
+    // Never for the session's end either: sign-in asks the name check again.
+    if (
+      failureLookup === null ||
+      isSending ||
+      isSessionEndFailure(failureLookup)
+    )
+      return undefined;
+    if (!(failureLookup instanceof TransportError))
+      return TransferScenarioId.ReviewUnexpected;
+    switch (failureLookup.code) {
+      case LookupRecipientErrorCode.RecipientNotFound:
+        return TransferScenarioId.RecipientNotFound;
+      case LookupRecipientErrorCode.NameEnquiryUnavailable:
+        return TransferScenarioId.NameCheckUnavailable;
+      case LookupRecipientErrorCode.TooManyLookups:
+        return TransferScenarioId.TooManyNameChecks;
+      case undefined:
+      default:
+        return TransferScenarioId.ReviewUnexpected;
+    }
+  })();
+  const refusedAt = lookup.errorUpdatedAt;
+
   useTrackScenarioShown(
-    nameCheckFailure === undefined
+    failureNameCheck === undefined
       ? lookup.data && TransferScenarioId.RecipientFound
-      : nameCheckFailure,
+      : failureNameCheck,
   );
   useTrackScenarioShown(
-    nameCheckFailure === undefined && lookup.data?.firstTransfer
+    failureNameCheck === undefined && lookup.data?.firstTransfer
       ? TransferScenarioId.FirstTransferToRecipient
       : undefined,
   );
-  const navigation =
-    useNavigation<NativeStackNavigationProp<Record<string, object>>>();
-  const [failureAnnouncementDue, setFailureAnnouncementDue] = useState(false);
   // Said while review opens, a failure is cut off by the screen reader's own focus move, which follows the push.
   useEffect(() => {
-    let announcementTimer: ReturnType<typeof setTimeout> | undefined;
+    let timerAnnouncement: ReturnType<typeof setTimeout> | undefined;
     const stopListening = navigation.addListener(
       "transitionEnd",
       ({ data }) => {
         if (data.closing) return;
-        announcementTimer = setTimeout(
+        timerAnnouncement = setTimeout(
           () => {
-            setFailureAnnouncementDue(true);
+            setIsFailureAnnouncementDue(true);
           },
           Platform.select({ ios: READERS_OWN_FOCUS_WAIT_MS, default: 0 }),
         );
@@ -89,14 +104,12 @@ export default function SectionReviewDetails({ draft }: Props) {
     );
     return () => {
       stopListening();
-      clearTimeout(announcementTimer);
+      clearTimeout(timerAnnouncement);
     };
   }, [navigation]);
-  const refusedAt = lookup.errorUpdatedAt;
-  const [waitedOutRefusalAt, setWaitedOutRefusalAt] = useState<number>();
   // Try again only after the minute the words ask for: the bank limits name checks on purpose.
   useEffect(() => {
-    if (nameCheckFailure !== TransferScenarioId.TooManyNameChecks) return;
+    if (failureNameCheck !== TransferScenarioId.TooManyNameChecks) return;
     const timer = setTimeout(
       () => {
         setWaitedOutRefusalAt(refusedAt);
@@ -106,13 +119,14 @@ export default function SectionReviewDetails({ draft }: Props) {
     return () => {
       clearTimeout(timer);
     };
-  }, [nameCheckFailure, refusedAt]);
-  if (lookup.isPending && lookupFailure === null) return <Loader />;
-  if (nameCheckFailure === TransferScenarioId.RecipientNotFound)
+  }, [failureNameCheck, refusedAt]);
+
+  if (lookup.isPending && failureLookup === null) return <Loader />;
+  if (failureNameCheck === TransferScenarioId.RecipientNotFound)
     return (
       <BannerAction
         tone="negative"
-        announce={failureAnnouncementDue}
+        announce={isFailureAnnouncementDue}
         message={t("common.recipient_not_found.body")}
         action={{
           label: t("common.recipient_not_found.change_recipient"),
@@ -123,18 +137,18 @@ export default function SectionReviewDetails({ draft }: Props) {
       />
     );
   // One banner per refusal, whether or not Try again shows: a remounted one announces its words again.
-  if (nameCheckFailure !== undefined)
+  if (failureNameCheck !== undefined)
     return (
       <BannerAction
         key={refusedAt}
         tone="negative"
-        announce={failureAnnouncementDue}
-        message={t(`common.${scenarioWordsKey(nameCheckFailure)}.body`)}
+        announce={isFailureAnnouncementDue}
+        message={t(`common.${scenarioWordsKey(failureNameCheck)}.body`)}
         action={
-          nameCheckFailure !== TransferScenarioId.TooManyNameChecks ||
+          failureNameCheck !== TransferScenarioId.TooManyNameChecks ||
           waitedOutRefusalAt === refusedAt
             ? {
-                label: t(`common.${scenarioWordsKey(nameCheckFailure)}.retry`),
+                label: t(`common.${scenarioWordsKey(failureNameCheck)}.retry`),
                 onPress: () => lookup.refetch({ cancelRefetch: false }),
               }
             : undefined
@@ -143,14 +157,14 @@ export default function SectionReviewDetails({ draft }: Props) {
     );
   if (!lookup.data) return null;
 
-  const { recipient, firstTransfer } = lookup.data;
+  const { recipient } = lookup.data;
   return (
     <Card>
       <RowDetail
         label={t("section_review_details.recipient_name")}
         value={recipient.registeredName}
       />
-      {firstTransfer && (
+      {lookup.data.firstTransfer && (
         <BannerNotice message={t("common.first_transfer_to_recipient.body")} />
       )}
       <RowDetail

@@ -28,37 +28,40 @@ export default function TextOutcome({
   pageOpened,
 }: Props) {
   const { t } = useTranslation("transfer");
+
+  const spokenScenarioRef = useRef(scenario);
+  const isScreenOnTop = useIsScreenOnTop();
+
   const scenarioName = scenarioWordsKey(scenario);
   // While the money is not confirmed yet, support needs something to look the transfer up by.
-  const moneyNotConfirmedYet =
+  const isMoneyNotConfirmedYet =
     MONEY_STATE_BY_OUTCOME[scenario] === MoneyState.NotConfirmedYet;
-  const outcomeHeading = t(`text_outcome.heading.${scenarioName}`);
-  const outcomeBody = t(`common.${scenarioName}.body`, {
+  const headingOutcome = t(`text_outcome.heading.${scenarioName}`);
+  const bodyOutcome = t(`common.${scenarioName}.body`, {
     amount: transfer && formatMoney(transfer.amount),
     name: transfer?.counterparty.registeredName,
   });
-  const screenOnTop = useIsScreenOnTop();
+
   // Never the outcome the page opens with: the heading's focus reads that, and announcing it too says it twice.
   // One that changes while the screen is covered waits until it is back on top.
-  const spokenScenarioRef = useRef(scenario);
   useEffect(() => {
-    if (!screenOnTop || spokenScenarioRef.current === scenario) return;
+    if (!isScreenOnTop || spokenScenarioRef.current === scenario) return;
     spokenScenarioRef.current = scenario;
     AccessibilityInfo.announceForAccessibility(
       t("text_outcome.announcement", {
-        heading: outcomeHeading,
-        body: outcomeBody,
+        heading: headingOutcome,
+        body: bodyOutcome,
       }),
     );
-  }, [scenario, outcomeHeading, outcomeBody, t, screenOnTop]);
+  }, [scenario, headingOutcome, bodyOutcome, t, isScreenOnTop]);
 
   return (
     <>
       <TextHeading style={styles.textHeading} autoFocus={pageOpened}>
-        {outcomeHeading}
+        {headingOutcome}
       </TextHeading>
-      <TextBody style={styles.textBody}>{outcomeBody}</TextBody>
-      {moneyNotConfirmedYet && (
+      <TextBody style={styles.textBody}>{bodyOutcome}</TextBody>
+      {isMoneyNotConfirmedYet && (
         <TextBody tone="secondary" style={styles.textBody}>
           {t("text_outcome.reference_to_quote", {
             reference: transfer?.reference ?? transferId,

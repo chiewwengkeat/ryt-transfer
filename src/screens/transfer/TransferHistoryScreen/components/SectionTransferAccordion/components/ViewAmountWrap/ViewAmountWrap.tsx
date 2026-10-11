@@ -9,6 +9,7 @@ interface Props {
 }
 export default function ViewAmountWrap({ children, amount, columnGap }: Props) {
   const { fontScale } = useWindowDimensions();
+
   return (
     <View style={[styles.main, { columnGap }]}>
       <View

@@ -12,14 +12,14 @@ interface Props {
   expanded: boolean;
 }
 export default function IconChevron({ expanded }: Props) {
-  const phoneReducesMotion = usePhoneReducesMotion();
+  const doesPhoneReduceMotion = usePhoneReducesMotion();
   const turnStyle = useAnimatedStyle(() => ({
     transform: [
       {
         rotate: withTiming(expanded ? "45deg" : "-45deg", {
           duration: 200,
           easing: standardEasing,
-          reduceMotion: phoneReducesMotion
+          reduceMotion: doesPhoneReduceMotion
             ? ReduceMotion.Always
             : ReduceMotion.Never,
         }),

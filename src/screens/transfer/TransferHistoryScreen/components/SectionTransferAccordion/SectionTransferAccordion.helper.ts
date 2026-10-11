@@ -3,12 +3,15 @@ import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfer
 // One object per summary and flag: a header's cell redraws only when its day's summary or open state changes.
 export function reuseTransferDayHeaderRow(
   summary: ListTransfersResponse["days"][number],
-  expanded: boolean,
+  isExpanded: boolean,
 ) {
-  const dayHeaderRows = expanded
+  const dayHeaderRows = isExpanded
     ? expandedDayHeaderRows
     : collapsedDayHeaderRows;
-  const dayHeaderRow = dayHeaderRows.get(summary) ?? { summary, expanded };
+  const dayHeaderRow = dayHeaderRows.get(summary) ?? {
+    summary,
+    expanded: isExpanded,
+  };
   dayHeaderRows.set(summary, dayHeaderRow);
   return dayHeaderRow;
 }

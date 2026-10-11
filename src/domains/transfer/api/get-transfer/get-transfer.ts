@@ -1,4 +1,7 @@
-import { patchTransferInHistory } from "@/domains/transfer/api/list-transfers/list-transfers";
+import {
+  findTransferInHistory,
+  patchTransferInHistory,
+} from "@/domains/transfer/api/list-transfers/list-transfers";
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
@@ -9,6 +12,7 @@ import {
   type InfiniteData,
   queryOptions,
   useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
 import {
   type GetTransferResponse,
@@ -101,6 +105,32 @@ export function useGetTransfer(
     select: selectTransferWithOutcome,
     ...options,
   });
+}
+
+export function useGetTransferWithHistoryPlaceholder(transferId: string) {
+  const queryClient = useQueryClient();
+  const findReadableHistoryRow = () => {
+    const historyRow = findTransferInHistory(queryClient, transferId);
+    // The select runs on a placeholder too, and its throw would show as a failure while the fetch is on its way.
+    return historyRow && parseWireAmount(historyRow.amount)
+      ? historyRow
+      : undefined;
+  };
+  const transferQuery = useQuery({
+    ...getTransferOptions(transferId),
+    placeholderData: findReadableHistoryRow,
+    select: selectTransferWithOutcome,
+  });
+  // TanStack drops a placeholder once its fetch fails, but a row already on screen stays there.
+  const keptHistoryRow = transferQuery.isLoadingError
+    ? findReadableHistoryRow()
+    : undefined;
+  return {
+    transferQuery,
+    transfer:
+      transferQuery.data ??
+      (keptHistoryRow && selectTransferWithOutcome(keptHistoryRow)),
+  };
 }
 
 export function selectTransferWithOutcome(transfer: Transfer) {
