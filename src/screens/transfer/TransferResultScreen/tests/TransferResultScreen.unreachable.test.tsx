@@ -202,6 +202,39 @@ it("still says the bank is unreachable once it stops answering, after answering 
 });
 
 it(
+  "still says the bank is unreachable while the phone has no connection and its next read waits for one",
+  scenarioTest("transfer.status_unreachable", async () => {
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/");
+    await sendRm100FromHome();
+    await screen.findByRole(
+      "header",
+      { name: "Checking your transfer" },
+      { timeout: 10_000 },
+    );
+    await act(() => jest.advanceTimersByTimeAsync(17_000));
+    await screen.findByRole("header", { name: "Still checking your transfer" });
+    await act(() => {
+      setPhoneNetwork({ isConnected: false, isInternetReachable: false });
+    });
+
+    const checkingShownEachSecond: boolean[] = [];
+    for (let second = 0; second < 20; second += 1) {
+      await act(() => jest.advanceTimersByTimeAsync(1_000));
+      checkingShownEachSecond.push(
+        screen.queryByRole("header", { name: "Checking your transfer" }) !==
+          null,
+      );
+    }
+
+    expect(checkingShownEachSecond).not.toContain(true);
+    expect(
+      screen.getByRole("header", { name: "Still checking your transfer" }),
+    ).toBeOnTheScreen();
+  }),
+);
+
+it(
   "offers no load-again while the phone has no connection, and offers it again once the phone is back",
   scenarioTest("transfer.outcome_unexpected", async () => {
     await pairPhoneAsTheDemoLaunchDoes();

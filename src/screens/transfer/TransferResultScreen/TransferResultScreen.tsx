@@ -3,11 +3,12 @@ import {
   isSettledTransferOutcome,
   type TransferOutcomeScenario,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
+import { refreshPendingTransferNotices } from "@/domains/transfer/lib/pending-transfer-notices/pending-transfer-notices";
+import { clearPendingTransfer } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   settlePendingTransfer,
   TransferReadFailure,
-  useTransferStatusCheck,
 } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
 import SectionTransferDetails from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
 import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
@@ -39,84 +40,80 @@ import { useTranslation } from "react-i18next";
 import IconTransferCompleted from "./components/IconTransferCompleted/IconTransferCompleted";
 import TextOutcome from "./components/TextOutcome/TextOutcome";
 import ViewOutcomeEntrance from "./components/ViewOutcomeEntrance/ViewOutcomeEntrance";
+import { useTransferOutcomeScenario } from "./hooks/use-transfer-outcome-scenario/use-transfer-outcome-scenario";
 
 export default function TransferResultScreen() {
   const { t } = useTranslation("transfer");
   const queryClient = useQueryClient();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<Record<string, object>>>();
   const { transferId, checking } = useLocalSearchParams<{
     transferId: string;
     checking?: string;
   }>();
+  const [isPageOpened, setIsPageOpened] = useState(false);
+
+  const reportedScenarioRef = useRef<TransferOutcomeScenario>(undefined);
   const customerId = useGetPrimaryAccount().data?.customerId;
-  const navigation =
-    useNavigation<NativeStackNavigationProp<Record<string, object>>>();
-  const [pageOpened, setPageOpened] = useState(false);
+  const isScreenOnTop = useIsScreenOnTop();
+  const doesPhoneReportConnection = usePhoneReportsConnection();
+  const { transfer, failureLatestRead, scenario } = useTransferOutcomeScenario(
+    transferId,
+    checking,
+  );
+
+  const isOutcomeShown = isPageOpened && isScreenOnTop;
+  const outcome = transfer.data?.outcome;
+  const isOutcomeSettled = isSettledTransferOutcome(outcome);
+  const wasSettledRef = useRef(isOutcomeSettled);
+  const displayedMoneyState = MONEY_STATE_BY_OUTCOME[scenario];
+
   useEffect(
     () =>
       navigation.addListener("transitionEnd", ({ data }) => {
-        if (!data.closing) setPageOpened(true);
+        if (!data.closing) setIsPageOpened(true);
       }),
     [navigation],
   );
-  const screenOnTop = useIsScreenOnTop();
-  const phoneReportsConnection = usePhoneReportsConnection();
-  const outcomeShown = pageOpened && screenOnTop;
-  const { transfer, readFailure, bankUnreachable } = useTransferStatusCheck(
-    transferId,
+  useEffect(() => {
+    if (customerId === undefined) return;
+    void (async () => {
+      if (failureLatestRead === TransferReadFailure.NotFound) {
+        await clearPendingTransfer(customerId, transferId);
+        await refreshPendingTransferNotices(queryClient, customerId);
+      } else
+        await settlePendingTransfer({
+          queryClient,
+          customerId,
+          transferId,
+          outcome,
+          reference: transfer.data?.reference,
+          // Back can pop the page as it opens, and Home then announces the outcome the person never saw.
+          keepSettled: !isOutcomeShown,
+        });
+    })().catch((error: unknown) => {
+      reportError(error, { boundary: "pending_transfer" });
+    });
+  }, [
     customerId,
-    outcomeShown,
-  );
-  // Opened without the approve call's answer in hand, nothing has confirmed what the approval did.
-  const [checkingUnansweredApproval] = useState(
-    () => checking !== undefined || transfer.dataUpdatedAt === 0,
-  );
-  const outcome = transfer.data?.outcome;
-  // A later read that fails never hides an outcome the bank has already settled.
-  const outcomeSettled = isSettledTransferOutcome(outcome);
-  const [openedSettled] = useState(outcomeSettled);
-  const latestScenario = outcomeSettled
-    ? outcome
-    : readFailure === TransferReadFailure.NotFound
-      ? TransferScenarioId.LastTransferNotFound
-      : readFailure === TransferReadFailure.Unexpected ||
-          outcome === TransferScenarioId.OutcomeUnexpected
-        ? checkingUnansweredApproval
-          ? TransferScenarioId.RecoveryUnexpected
-          : TransferScenarioId.OutcomeUnexpected
-        : (outcome ??
-          (bankUnreachable
-            ? TransferScenarioId.StatusUnreachable
-            : ((
-                [
-                  TransferScenarioId.ApprovalUnknownAnswer,
-                  TransferScenarioId.AppClosedDuringApproval,
-                ] as const
-              ).find((reason) => reason === checking) ??
-              TransferScenarioId.ApprovalUnanswered)));
-  // A refetch with no data clears the query's error until it answers, which would flip the page back to checking.
-  const readingAgainAfterFailure =
-    transfer.data === undefined &&
-    transfer.isFetching &&
-    transfer.errorUpdateCount > 0;
-  const [heldScenario, setHeldScenario] =
-    useState<TransferOutcomeScenario>(latestScenario);
-  if (!readingAgainAfterFailure && heldScenario !== latestScenario)
-    setHeldScenario(latestScenario);
-  const scenario = readingAgainAfterFailure ? heldScenario : latestScenario;
-
-  const reportedScenarioRef = useRef<TransferOutcomeScenario>(undefined);
+    transferId,
+    outcome,
+    transfer.data?.reference,
+    failureLatestRead,
+    queryClient,
+    isOutcomeShown,
+  ]);
   // Held while covered, never dropped: after sign-in the outcome is still on screen, so what shows then is reported.
   useEffect(() => {
-    if (!screenOnTop || reportedScenarioRef.current === scenario) return;
+    if (!isScreenOnTop || reportedScenarioRef.current === scenario) return;
     reportedScenarioRef.current = scenario;
     trackEvent("transfer_outcome", { scenario });
-  }, [scenario, screenOnTop]);
+  }, [scenario, isScreenOnTop]);
   useEffect(() => {
     // Settled after opening: any refresh the approve call made predates it, and it may have moved money.
-    if (outcomeSettled && !openedSettled)
+    if (isOutcomeSettled && !wasSettledRef.current)
       void refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
-  }, [outcomeSettled, openedSettled, queryClient]);
-  const displayedMoneyState = MONEY_STATE_BY_OUTCOME[scenario];
+  }, [isOutcomeSettled, queryClient]);
   useEffect(() => {
     switch (displayedMoneyState) {
       case MoneyState.MoneyMoved:
@@ -142,7 +139,11 @@ export default function TransferResultScreen() {
             onPress={() => {
               void (async () => {
                 // Cleared before Home shows, or Home announces the outcome again.
-                if (outcomeSettled && !outcomeShown && customerId !== undefined)
+                if (
+                  isOutcomeSettled &&
+                  !isOutcomeShown &&
+                  customerId !== undefined
+                )
                   await settlePendingTransfer({
                     queryClient,
                     customerId,
@@ -165,7 +166,7 @@ export default function TransferResultScreen() {
             scenario={scenario}
             transfer={transfer.data}
             transferId={transferId}
-            pageOpened={pageOpened}
+            pageOpened={isPageOpened}
           />
           {scenario === TransferScenarioId.Completed && transfer.data && (
             <SectionTransferDetails transfer={transfer.data} />
@@ -183,7 +184,7 @@ export default function TransferResultScreen() {
             />
           )}
           {scenario === TransferScenarioId.OutcomeUnexpected &&
-            (phoneReportsConnection ? (
+            (doesPhoneReportConnection ? (
               <ButtonSecondary
                 label={t("common.outcome_unexpected.load_again")}
                 onPress={() => transfer.refetch()}
