@@ -3,6 +3,7 @@ const {
   componentName,
   isDefaultReExport,
   isComponentTsxFile,
+  isStyleSheetCreate,
 } = require("./_component");
 
 /** @type {import("eslint").Rule.RuleModule} */
@@ -199,13 +200,7 @@ function isStylesCreate(stmt) {
   return (
     d.id.type === "Identifier" &&
     d.id.name === "styles" &&
-    d.init &&
-    d.init.type === "CallExpression" &&
-    d.init.callee.type === "MemberExpression" &&
-    d.init.callee.object.type === "Identifier" &&
-    d.init.callee.object.name === "StyleSheet" &&
-    d.init.callee.property.type === "Identifier" &&
-    d.init.callee.property.name === "create"
+    isStyleSheetCreate(d.init)
   );
 }
 

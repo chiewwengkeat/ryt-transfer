@@ -178,6 +178,7 @@ export default defineConfig(
       ],
       "fe/sibling-basename-tracks-folder": "error",
       "fe/singular-role-suffix": "error",
+      "fe/style-key-names": "error",
     },
   },
   {

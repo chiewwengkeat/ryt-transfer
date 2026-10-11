@@ -90,20 +90,10 @@ function isComponentTsxFile(context) {
   return !base.includes(".test.") && !base.includes(".spec.");
 }
 
-module.exports = {
-  componentExport,
-  componentName,
-  isDefaultReExport,
-  isComponentTsxFile,
-  isFnExpr,
-};
-
 /** PascalCase or anonymous: a default-exported `useThing` is a hook module, which these rules leave alone. */
 function isComponentName(name) {
   return !name || /^[A-Z]/.test(name);
 }
-
-const WRAPPERS = new Set(["memo", "forwardRef"]);
 
 function memoOrForwardRefName(callee) {
   if (callee.type === "Identifier")
@@ -115,6 +105,31 @@ function memoOrForwardRefName(callee) {
     return WRAPPERS.has(callee.property.name) ? callee.property.name : "";
   return "";
 }
+
+function isStyleSheetCreate(node) {
+  return (
+    Boolean(node) &&
+    node.type === "CallExpression" &&
+    node.callee.type === "MemberExpression" &&
+    node.callee.object.type === "Identifier" &&
+    node.callee.object.name === "StyleSheet" &&
+    node.callee.property.type === "Identifier" &&
+    node.callee.property.name === "create"
+  );
+}
+
+module.exports = {
+  componentExport,
+  componentName,
+  isDefaultReExport,
+  isComponentName,
+  isComponentTsxFile,
+  isFnExpr,
+  isStyleSheetCreate,
+  memoOrForwardRefName,
+};
+
+const WRAPPERS = new Set(["memo", "forwardRef"]);
 
 /** Taken by POSITION from `arguments[0]`: scanning for the first function picks the
  * comparator out of `memo(Chip, areEqual)`, and the empty name then misplaces `ChipProps`. */
