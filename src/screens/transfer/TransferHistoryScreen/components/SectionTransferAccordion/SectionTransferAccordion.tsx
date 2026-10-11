@@ -22,7 +22,7 @@ interface Props {
 export default function SectionTransferAccordion({ transferHistory }: Props) {
   const queryClient = useQueryClient();
   // A collapsed day's loaded row count at collapse: more rows landing in it open it again.
-  const [collapsedDayRowCounts, setCollapsedDayRowCounts] = useState<
+  const [countsAtCollapse, setCountsAtCollapse] = useState<
     Record<string, number | undefined>
   >({});
 
@@ -36,7 +36,7 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
     else transfersByDate.set(transfer.malaysianDate, [transfer]);
   }
   const dataItems = [...transfersByDate].flatMap(([date, dayTransfers]) => {
-    const collapsedAt = collapsedDayRowCounts[date];
+    const collapsedAt = countsAtCollapse[date];
     const isExpanded =
       collapsedAt === undefined || dayTransfers.length > collapsedAt;
     const summary = transferHistory.data?.daySummaries[date];
@@ -48,7 +48,7 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
   const listRef = useRef<FlashListRef<(typeof dataItems)[number]>>(null);
   // Counted from the cache, not this render's rows: closing over those would redraw every row on each page.
   const toggleTransferDay = (date: string, wasExpanded: boolean) => {
-    setCollapsedDayRowCounts((counts) => ({
+    setCountsAtCollapse((counts) => ({
       ...counts,
       [date]: wasExpanded
         ? countLoadedTransfersOnDay(queryClient, date)
@@ -104,7 +104,7 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
       refreshing={transferHistory.isRefetching}
       onRefresh={() => {
         // A day reopened by a later page's rows would close again once the refresh trims them away.
-        setCollapsedDayRowCounts((counts) =>
+        setCountsAtCollapse((counts) =>
           Object.fromEntries(
             Object.entries(counts).filter(
               ([date, collapsedAt]) =>
