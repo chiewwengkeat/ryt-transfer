@@ -24,21 +24,21 @@ All handled transfer scenarios are detailed in the [scenario matrix](src/screens
    1. [Folder architecture](docs/deep-dives/design-decisions/001-vertical-slices.md)
    2. [Architectural principle](docs/deep-dives/design-decisions/011-low-mental-load.md)
 
-## Run from source
+## Run locally
 
-You need Node 22.14 or later on the 22 line (see `.nvmrc`) and pnpm, which the repo pins at 10.33.0. Node ships Corepack: run `corepack enable pnpm` once and `pnpm` starts the pinned version. A pnpm 10.5 or later installed another way (<https://pnpm.io/installation>) switches itself to the pin; an older one stops with `packages field missing or empty`, so enable Corepack instead. Then, for the platform you build:
+You need:
 
-- iOS: Xcode 16.1 or later with an iOS simulator, and CocoaPods (`brew install cocoapods`).
-- Android: JDK 17, and Android Studio with an emulator, with `ANDROID_HOME` set to its Android SDK (on a Mac, `export ANDROID_HOME=$HOME/Library/Android/sdk`).
+1. Node 22.13 or later
+2. pnpm 10.5 or later
+3. For Android: Android Studio with an emulator, JDK 17, and `ANDROID_HOME` set (on a Mac: `export ANDROID_HOME=$HOME/Library/Android/sdk`)
+4. For iOS: Xcode 16.1 or later, and CocoaPods (`brew install cocoapods`)
+
+Then:
 
 ```sh
 pnpm install
-pnpm ios        # or: pnpm android. Leave it running: it serves the app's code.
+pnpm android   # or: pnpm ios. Keep this terminal open while you use the app.
 ```
-
-Once `pnpm ios` or `pnpm android` has built the development app, `pnpm start` serves it: its QR code and its `a` key open Ryt Transfer Dev, never Expo Go, which cannot run this app.
-
-Build variants and checks: [CONTRIBUTING.md](CONTRIBUTING.md#build-variants) and its [checks](CONTRIBUTING.md#checks).
 
 ## Assumptions
 
