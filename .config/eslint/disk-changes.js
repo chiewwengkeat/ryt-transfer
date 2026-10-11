@@ -71,13 +71,14 @@ function watch(root) {
   if (STATES.has(key)) return STATES.get(key);
   const state = { changed: new Set(), parsed: new Map(), moves: 0 };
   try {
-    fs.watch(key, { recursive: true }, (event, filename) => {
+    // Not unref(): on Linux, Node's recursive watcher ignores it and keeps the process alive.
+    fs.watch(key, { recursive: true, persistent: false }, (event, filename) => {
       const relative = filename?.split(path.sep).join("/");
       if (!relative || IGNORED.test(relative) || !COUNTED.test(`/${relative}`))
         return;
       state.changed.add(path.join(key, relative));
       if (event === "rename") state.moves++;
-    }).unref();
+    });
   } catch {
     STATES.set(key, undefined);
     return undefined;
