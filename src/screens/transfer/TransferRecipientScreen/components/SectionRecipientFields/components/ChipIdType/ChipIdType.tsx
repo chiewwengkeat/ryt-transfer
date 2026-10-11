@@ -15,6 +15,7 @@ interface Props {
 }
 export default function ChipIdType({ idType, onIdTypeChange }: Props) {
   const { t, i18n } = useTranslation("transfer");
+
   return (
     <View
       accessibilityRole="radiogroup"

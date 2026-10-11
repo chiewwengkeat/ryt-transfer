@@ -12,7 +12,9 @@ interface Props {
 }
 export default function CardRecentRecipientChosen({ recent, onChange }: Props) {
   const { t } = useTranslation("transfer");
+
   useTrackScenarioShown(TransferScenarioId.RecentRecipientChosen);
+
   return (
     <Card>
       <TextBody strong>{recent.registeredName}</TextBody>

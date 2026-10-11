@@ -21,6 +21,7 @@ export default function ButtonContacts({ onMobilePicked }: Props) {
     useState<
       ComponentProps<typeof BottomSheetContactMobiles>["contactMobiles"]
     >();
+
   useTrackScenarioShown(
     contactsOutcome === ContactsOutcome.WithoutMobile
       ? TransferScenarioId.ContactWithoutMobile

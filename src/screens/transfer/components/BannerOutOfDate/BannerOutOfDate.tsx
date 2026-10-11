@@ -16,19 +16,20 @@ export default function BannerOutOfDate({
   tryAgainLabel,
   onTryAgain,
 }: Props) {
-  const phoneReportsConnection = usePhoneReportsConnection();
+  const doesPhoneReportConnection = usePhoneReportsConnection();
+
   return (
     <View style={styles.main}>
       <BannerAction
         message={message}
         announce={announce}
         action={
-          phoneReportsConnection
+          doesPhoneReportConnection
             ? { label: tryAgainLabel, onPress: onTryAgain }
             : undefined
         }
       />
-      {!phoneReportsConnection && <TextOffline />}
+      {!doesPhoneReportConnection && <TextOffline />}
     </View>
   );
 }

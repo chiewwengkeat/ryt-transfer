@@ -26,9 +26,12 @@ import { useTranslation } from "react-i18next";
 
 export default function TransferAmountScreen() {
   const { t } = useTranslation("transfer");
-  const balanceScenarios = useBalanceScenarios(
-    TransferScenarioId.AmountUnexpected,
-  );
+  const [wasReviewPressed, setWasReviewPressed] = useState(false);
+
+  // A ref, not state: two presses before a redraw read the same state, and each would push a review.
+  const reviewPushedSinceFocusRef = useRef(false);
+  const account = useGetPrimaryAccount();
+  const limits = useGetTransferLimits();
   const enteredAmount = useTransferFlow((flow) =>
     "draft" in flow ? flow.draft.amount : undefined,
   );
@@ -44,17 +47,10 @@ export default function TransferAmountScreen() {
       ? flow.noticeDetail?.code
       : undefined,
   );
-  const [reviewPressed, setReviewPressed] = useState(false);
-  // A ref, not state: two presses before a redraw read the same state, and each would push a review.
-  const reviewPushedSinceFocusRef = useRef(false);
-  useFocusEffect(
-    useCallback(() => {
-      reviewPushedSinceFocusRef.current = false;
-    }, []),
+  const noticeOffline = useOfflineNotice();
+  const balanceScenarios = useBalanceScenarios(
+    TransferScenarioId.AmountUnexpected,
   );
-  const account = useGetPrimaryAccount();
-  const limits = useGetTransferLimits();
-  const offlineNotice = useOfflineNotice();
 
   const parsedAmount = parseTypedAmount(typedAmount);
   const ceilings = account.data &&
@@ -82,38 +78,49 @@ export default function TransferAmountScreen() {
   const lowestCeiling = ceilings?.reduce((lowest, ceiling) =>
     ceiling.limit.minor < lowest.limit.minor ? ceiling : lowest,
   );
-  const amountBadlyFormed = typedAmount !== "" && parsedAmount === null;
-  const amountRefusedByBank =
+  const isAmountBadlyFormed = typedAmount !== "" && parsedAmount === null;
+  const isAmountRefusedByBank =
     bankRefusal === CreateTransferErrorCode.AmountInvalid &&
     parsedAmount?.minor === enteredAmount?.minor;
-  const amountTooHigh =
+  const isAmountTooHigh =
     parsedAmount !== null &&
     lowestCeiling !== undefined &&
     parsedAmount.minor > lowestCeiling.limit.minor;
-  const amountError = amountBadlyFormed
-    ? t("common.badly_formed_input.amount")
-    : amountRefusedByBank
-      ? t("common.badly_formed_input.amount_refused")
-      : amountTooHigh
-        ? lowestCeiling.message
-        : reviewPressed && (parsedAmount === null || parsedAmount.minor === 0)
-          ? t("amount.amount_missing")
-          : undefined;
+  const errorAmount = (() => {
+    if (isAmountBadlyFormed) return t("common.badly_formed_input.amount");
+    if (isAmountRefusedByBank)
+      return t("common.badly_formed_input.amount_refused");
+    if (isAmountTooHigh) return lowestCeiling.message;
+    if (wasReviewPressed && (parsedAmount === null || parsedAmount.minor === 0))
+      return t("amount.amount_missing");
+    return undefined;
+  })();
   // The bank's own rule: DuitNow carries the note onto the recipient's statement as it is typed.
-  const noteBadlyFormed = !/^[A-Za-z0-9 ]*$/.test(typedNote);
-  const noteError = noteBadlyFormed
-    ? t("common.badly_formed_input.note")
-    : bankRefusal === CreateTransferErrorCode.NoteInvalid &&
-        typedNote.trim() === (enteredNote ?? "")
-      ? t("common.badly_formed_input.note_refused")
-      : undefined;
+  const isNoteBadlyFormed = !/^[A-Za-z0-9 ]*$/.test(typedNote);
+  const errorNote = (() => {
+    if (isNoteBadlyFormed) return t("common.badly_formed_input.note");
+    if (
+      bankRefusal === CreateTransferErrorCode.NoteInvalid &&
+      typedNote.trim() === (enteredNote ?? "")
+    )
+      return t("common.badly_formed_input.note_refused");
+    return undefined;
+  })();
+
+  useFocusEffect(
+    useCallback(() => {
+      reviewPushedSinceFocusRef.current = false;
+    }, []),
+  );
   // Not the bank's refusals: the flow already reported each as it came back to this step.
   useTrackScenarioShown(
-    amountBadlyFormed || noteBadlyFormed
-      ? TransferScenarioId.BadlyFormedInput
-      : !amountRefusedByBank && amountTooHigh
-        ? TransferScenarioId.AmountTooHigh
-        : undefined,
+    (() => {
+      if (isAmountBadlyFormed || isNoteBadlyFormed)
+        return TransferScenarioId.BadlyFormedInput;
+      if (!isAmountRefusedByBank && isAmountTooHigh)
+        return TransferScenarioId.AmountTooHigh;
+      return undefined;
+    })(),
   );
 
   return (
@@ -130,18 +137,18 @@ export default function TransferAmountScreen() {
                 (limits.data !== undefined &&
                   getTransferLimitsMaintenance(limits.error) !== undefined))
                 ? undefined
-                : (offlineNotice ??
+                : (noticeOffline ??
                   t("common.balance_unavailable.disabled_reason"))
             }
-            notice={offlineNotice}
+            notice={noticeOffline}
             onPress={() => {
               if (reviewPushedSinceFocusRef.current) return;
-              setReviewPressed(true);
+              setWasReviewPressed(true);
               if (
                 parsedAmount === null ||
                 parsedAmount.minor === 0 ||
-                amountError ||
-                noteError
+                errorAmount ||
+                errorNote
               )
                 return;
               const note = typedNote.trim();
@@ -167,16 +174,16 @@ export default function TransferAmountScreen() {
           value={typedAmount}
           onChangeText={(text) => {
             setTypedAmount(text);
-            setReviewPressed(false);
+            setWasReviewPressed(false);
           }}
-          error={amountError}
+          error={errorAmount}
           keyboardType="decimal-pad"
         />
         <FieldText
           label={t("amount.note_label")}
           value={typedNote}
           onChangeText={setTypedNote}
-          error={noteError}
+          error={errorNote}
           maxLength={30}
         />
       </ViewScreenFrame>

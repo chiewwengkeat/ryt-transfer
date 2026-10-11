@@ -11,10 +11,12 @@ interface Props {
 }
 export default function BannerContactsRefused({ onAccessGranted }: Props) {
   const { t } = useTranslation("transfer");
-  useTrackScenarioShown(TransferScenarioId.ContactsAccessRefused);
+
   const recheckContactsAccess = useEffectEvent(async () => {
     if ((await getPermissionsAsync()).granted) onAccessGranted();
   });
+
+  useTrackScenarioShown(TransferScenarioId.ContactsAccessRefused);
   // Access is granted in the phone's Settings, outside the app, so the only sign of it is the app coming back.
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (appState) => {

@@ -9,6 +9,7 @@ interface Props {
 }
 export default function RowDetail({ label, value }: Props) {
   const { i18n } = useTranslation();
+
   return (
     <View
       accessible

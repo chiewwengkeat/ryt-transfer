@@ -53,6 +53,7 @@ export default function BannerFlowNotice({ step }: Props) {
       );
     return t(`common.${scenarioWordsKey(notice)}.body`);
   })();
+
   if (notice === TransferScenarioId.BalanceOrLimitShortAtConfirmation)
     return (
       <BannerAction

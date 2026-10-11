@@ -16,7 +16,8 @@ interface Props {
 }
 export default function FieldRecipientId({ idType, ...fieldProps }: Props) {
   const { t } = useTranslation("transfer");
-  const [fieldFocused, setFieldFocused] = useState(false);
+  const [isFieldFocused, setIsFieldFocused] = useState(false);
+
   const { characters, longestIdLength } = RECIPIENT_ID_FORMATS[idType];
   const keyboardProps = (
     {
@@ -37,12 +38,12 @@ export default function FieldRecipientId({ idType, ...fieldProps }: Props) {
     <FieldText
       // A new field per keyboard, taking the old one's focus: iOS keeps a focused field's keys, and Android its case.
       key={characters}
-      autoFocus={fieldFocused}
+      autoFocus={isFieldFocused}
       onFocus={() => {
-        setFieldFocused(true);
+        setIsFieldFocused(true);
       }}
       onBlur={() => {
-        setFieldFocused(false);
+        setIsFieldFocused(false);
       }}
       {...fieldProps}
       {...keyboardProps}

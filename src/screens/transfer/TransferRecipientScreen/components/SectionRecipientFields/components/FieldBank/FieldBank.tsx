@@ -26,10 +26,13 @@ interface Props {
 }
 export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
   const { t, i18n } = useTranslation("transfer");
+  const [isBankSheetOpen, setIsBankSheetOpen] = useState(false);
+
   const banks = useListBanks();
-  const [bankSheetOpen, setBankSheetOpen] = useState(false);
+
   const bankName =
     bankCode === undefined ? undefined : banks.data?.get(bankCode)?.name;
+
   // A screen reader stays on Continue, so an error that appears here would go unheard.
   useEffect(() => {
     if (error !== undefined) AccessibilityInfo.announceForAccessibility(error);
@@ -49,7 +52,7 @@ export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
         onPress={() => {
           // This tap lands with the keyboard up; left up, it would cover Continue after a pick.
           Keyboard.dismiss();
-          setBankSheetOpen(true);
+          setIsBankSheetOpen(true);
         }}
         style={[styles.btnField, error !== undefined && styles.btnFieldInvalid]}
       >
@@ -62,14 +65,14 @@ export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
         </Text>
       </Pressable>
       {error !== undefined && <TextBody tone="negative">{error}</TextBody>}
-      {bankSheetOpen && (
+      {isBankSheetOpen && (
         <BottomSheetBank
           onBankChosen={(chosenBankCode) => {
-            setBankSheetOpen(false);
+            setIsBankSheetOpen(false);
             onBankChosen(chosenBankCode);
           }}
           onClose={() => {
-            setBankSheetOpen(false);
+            setIsBankSheetOpen(false);
           }}
         />
       )}

@@ -21,7 +21,9 @@ interface Props {
 }
 export default function SectionTransferDetails({ transfer }: Props) {
   const { t } = useTranslation(["transfer", "shared"]);
+
   const statusWord = useTransferStatusWord(transfer);
+
   const isReceived = transfer.direction === TransferDirection.In;
   const moneyState = readSectionTransferDetailsMoneyState(transfer);
   const moneyPhrase =
@@ -34,7 +36,7 @@ export default function SectionTransferDetails({ transfer }: Props) {
       ),
       [MoneyState.MoneyReturned]: t("common.detail_rows.money.money_returned"),
     }[moneyState];
-  const settledLabel = (
+  const labelSettled = (
     {
       [TransferStatus.AwaitingApproval]: undefined,
       [TransferStatus.Processing]: undefined,
@@ -108,10 +110,10 @@ export default function SectionTransferDetails({ transfer }: Props) {
           value={sentAt}
         />
       )}
-      {settledLabel !== undefined &&
+      {labelSettled !== undefined &&
         settledAt !== undefined &&
         settledAt !== sentAt && (
-          <RowDetail label={settledLabel} value={settledAt} />
+          <RowDetail label={labelSettled} value={settledAt} />
         )}
     </Card>
   );

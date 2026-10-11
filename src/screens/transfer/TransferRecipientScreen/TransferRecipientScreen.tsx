@@ -19,17 +19,17 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import BannerRecipientUnexpected from "./components/BannerRecipientUnexpected/BannerRecipientUnexpected";
-import ButtonContacts from "./components/ButtonContacts/ButtonContacts";
 import CardRecentRecipientChosen from "./components/CardRecentRecipientChosen/CardRecentRecipientChosen";
-import ChipIdType from "./components/ChipIdType/ChipIdType";
-import FieldBank from "./components/FieldBank/FieldBank";
-import FieldRecipientId from "./components/FieldRecipientId/FieldRecipientId";
+import SectionRecipientFields from "./components/SectionRecipientFields/SectionRecipientFields";
 
 export default function TransferRecipientScreen() {
   const { t } = useTranslation("transfer");
   const { recentId: linkedRecentId } = useLocalSearchParams<{
     recentId?: string;
   }>();
+  const [errorRecipientId, setErrorRecipientId] = useState<string>();
+  const [errorBank, setErrorBank] = useState<string>();
+
   // Never an unconfirmed transfer's recipient: offering it again invites paying twice.
   const draftRecipient = useTransferFlow((flow) =>
     flow.step === TransferFlowStep.Editing ||
@@ -50,34 +50,83 @@ export default function TransferRecipientScreen() {
   const [chosenRecentId, setChosenRecentId] = useState(
     linkedRecentId ?? draftRecipient?.recentId,
   );
-  const [idError, setIdError] = useState<string>();
-  useTrackScenarioShown(
-    idError === undefined ? undefined : TransferScenarioId.BadlyFormedInput,
-  );
-  const [bankError, setBankError] = useState<string>();
   const recents = useListRecentRecipients();
-  const recentsFailure = useQueryError(
+  const failureRecents = useQueryError(
     recents.error,
     recents.fetchStatus !== "idle",
   );
-  const offlineNotice = useOfflineNotice();
+  const noticeOffline = useOfflineNotice();
+
   // Continue's offline line already explains a list that cannot load.
-  const offline = offlineNotice !== undefined;
+  const isOffline = noticeOffline !== undefined;
   const chosenRecent = recents.data?.find(
     (recent) => recent.recentId === chosenRecentId,
   );
   // Never the form in a chosen recent's place unannounced: a list that has yet to answer, or failed
   // offline where Continue's offline line says why, is waited for; else the catch-all stands until they type.
   // Not `isPending`: the form's own list refetches a failed list on mount, which would flip it back.
-  const chosenRecentAwaited =
+  const isChosenRecentAwaited =
     chosenRecentId !== undefined &&
     recents.data === undefined &&
-    (!recents.isFetched || offline);
-  const chosenRecentMissing =
+    (!recents.isFetched || isOffline);
+  const isChosenRecentMissing =
     chosenRecentId !== undefined &&
     chosenRecent === undefined &&
-    !chosenRecentAwaited;
+    !isChosenRecentAwaited;
 
+  useTrackScenarioShown(
+    errorRecipientId === undefined
+      ? undefined
+      : TransferScenarioId.BadlyFormedInput,
+  );
+
+  const recipientInput = (() => {
+    if (chosenRecent !== undefined)
+      return (
+        <CardRecentRecipientChosen
+          recent={chosenRecent}
+          onChange={() => {
+            setChosenRecentId(undefined);
+          }}
+        />
+      );
+    if (isChosenRecentAwaited) return <Loader />;
+    return (
+      <>
+        <SectionRecipientFields
+          idType={idType}
+          typedId={typedId}
+          idError={errorRecipientId}
+          bankCode={bankCode}
+          bankError={errorBank}
+          onIdTypeChange={(chosenIdType) => {
+            setIdType(chosenIdType);
+            setTypedId("");
+            setErrorRecipientId(undefined);
+            setErrorBank(undefined);
+            setChosenRecentId(undefined);
+          }}
+          onTypedIdChange={(recipientId) => {
+            setTypedId(recipientId);
+            setErrorRecipientId(undefined);
+            setChosenRecentId(undefined);
+          }}
+          onBankChosen={(chosenBankCode) => {
+            setBankCode(chosenBankCode);
+            setErrorBank(undefined);
+          }}
+        />
+        {((failureRecents !== null && !isOffline) || isChosenRecentMissing) && (
+          <BannerRecipientUnexpected
+            key={recents.errorUpdatedAt}
+            failure={failureRecents}
+            onRetry={() => recents.refetch({ cancelRefetch: false })}
+          />
+        )}
+        <SectionRecentRecipients onRecentChosen={setChosenRecentId} />
+      </>
+    );
+  })();
   return (
     <>
       <Stack.Screen options={{ title: t("recipient.title") }} />
@@ -85,8 +134,8 @@ export default function TransferRecipientScreen() {
         footer={
           <ButtonPrimary
             label={t("recipient.continue")}
-            loading={chosenRecentAwaited}
-            notice={offlineNotice}
+            loading={isChosenRecentAwaited}
+            notice={noticeOffline}
             onPress={() => {
               if (chosenRecent !== undefined) {
                 if (
@@ -103,20 +152,20 @@ export default function TransferRecipientScreen() {
                 return;
               }
               const idValue = parseRecipientId(idType, typedId);
-              const bankMissing =
+              const isBankMissing =
                 idType === RecipientIdType.AccountNumber &&
                 bankCode === undefined;
-              setIdError(
+              setErrorRecipientId(
                 idValue === null
                   ? t(
                       `common.badly_formed_input.${idType.toLowerCase() as Lowercase<RecipientIdType>}`,
                     )
                   : undefined,
               );
-              setBankError(
-                bankMissing ? t("recipient.bank_missing") : undefined,
+              setErrorBank(
+                isBankMissing ? t("recipient.bank_missing") : undefined,
               );
-              if (idValue === null || bankMissing) return;
+              if (idValue === null || isBankMissing) return;
               if (
                 dispatchTransferFlow({
                   type: TransferFlowActionType.RecipientChosen,
@@ -134,66 +183,7 @@ export default function TransferRecipientScreen() {
           />
         }
       >
-        {chosenRecent !== undefined ? (
-          <CardRecentRecipientChosen
-            recent={chosenRecent}
-            onChange={() => {
-              setChosenRecentId(undefined);
-            }}
-          />
-        ) : chosenRecentAwaited ? (
-          <Loader />
-        ) : (
-          <>
-            <ChipIdType
-              idType={idType}
-              onIdTypeChange={(chosenIdType) => {
-                setIdType(chosenIdType);
-                setTypedId("");
-                setIdError(undefined);
-                setBankError(undefined);
-                setChosenRecentId(undefined);
-              }}
-            />
-            <FieldRecipientId
-              idType={idType}
-              value={typedId}
-              onChangeText={(text) => {
-                setTypedId(text);
-                setIdError(undefined);
-                setChosenRecentId(undefined);
-              }}
-              error={idError}
-            />
-            {idType === RecipientIdType.Mobile && (
-              <ButtonContacts
-                onMobilePicked={(mobileId) => {
-                  setTypedId(mobileId);
-                  setIdError(undefined);
-                  setChosenRecentId(undefined);
-                }}
-              />
-            )}
-            {idType === RecipientIdType.AccountNumber && (
-              <FieldBank
-                bankCode={bankCode}
-                onBankChosen={(chosenBankCode) => {
-                  setBankCode(chosenBankCode);
-                  setBankError(undefined);
-                }}
-                error={bankError}
-              />
-            )}
-            {((recentsFailure !== null && !offline) || chosenRecentMissing) && (
-              <BannerRecipientUnexpected
-                key={recents.errorUpdatedAt}
-                failure={recentsFailure}
-                onRetry={() => recents.refetch({ cancelRefetch: false })}
-              />
-            )}
-            <SectionRecentRecipients onRecentChosen={setChosenRecentId} />
-          </>
-        )}
+        {recipientInput}
       </ViewScreenFrame>
     </>
   );
