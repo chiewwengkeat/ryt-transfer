@@ -94,7 +94,7 @@ export default function TransferHistoryScreen() {
           />
         </ViewScreenFrame>
       ) : (
-        <View style={styles.history}>
+        <View style={styles.main}>
           {(refreshFailed || transferHistory.isPaused) && (
             <View style={styles.outOfDate}>
               <BannerOutOfDate
@@ -121,6 +121,6 @@ export default function TransferHistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  history: { flex: 1 },
+  main: { flex: 1 },
   outOfDate: { padding: spacing.md, backgroundColor: colors.background },
 });

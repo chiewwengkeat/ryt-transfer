@@ -40,10 +40,12 @@ export default function ButtonSecondary({
           setPressAnswerAwaited(false);
         });
       }}
-      style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+      style={({ pressed }) => [styles.main, pressed && styles.pressed]}
     >
       {/* Hidden, not removed: its lines keep the button's height while the spinner shows. */}
-      <Text style={[styles.label, pressAnswerAwaited && styles.labelHidden]}>
+      <Text
+        style={[styles.textLabel, pressAnswerAwaited && styles.textLabelHidden]}
+      >
         {label}
       </Text>
       {pressAnswerAwaited && (
@@ -54,7 +56,7 @@ export default function ButtonSecondary({
 }
 
 const styles = StyleSheet.create({
-  button: {
+  main: {
     minHeight: minTouchTarget,
     alignItems: "center",
     justifyContent: "center",
@@ -65,8 +67,8 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
     backgroundColor: colors.surface,
   },
-  buttonPressed: { opacity: 0.8, backgroundColor: colors.surfacePressed },
-  label: { ...typography.label, color: colors.accent, textAlign: "center" },
-  labelHidden: { opacity: 0 },
+  pressed: { opacity: 0.8, backgroundColor: colors.surfacePressed },
+  textLabel: { ...typography.label, color: colors.accent, textAlign: "center" },
+  textLabelHidden: { opacity: 0 },
   spinner: StyleSheet.absoluteFill,
 });

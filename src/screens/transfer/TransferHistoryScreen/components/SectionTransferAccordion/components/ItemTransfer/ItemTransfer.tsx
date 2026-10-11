@@ -91,7 +91,7 @@ interface IconTransferDirectionProps {
 }
 function IconTransferDirection({ direction }: IconTransferDirectionProps) {
   return (
-    <View aria-hidden style={iconTransferDirectionStyles.circle}>
+    <View aria-hidden style={iconTransferDirectionStyles.main}>
       <View
         style={[
           iconTransferDirectionStyles.arrow,
@@ -108,7 +108,7 @@ function IconTransferDirection({ direction }: IconTransferDirectionProps) {
 }
 
 const iconTransferDirectionStyles = StyleSheet.create({
-  circle: {
+  main: {
     width: 40,
     height: 40,
     borderRadius: 20,

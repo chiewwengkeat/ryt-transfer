@@ -31,10 +31,12 @@ export default function SectionRecentRecipients({
               onRecentChosen(recent.recentId);
             }}
           >
-            <Text style={[styles.name, disabled && styles.nameDisabled]}>
+            <Text
+              style={[styles.textName, disabled && styles.textNameDisabled]}
+            >
               {recent.registeredName}
             </Text>
-            <Text style={styles.account}>
+            <Text style={styles.textAccount}>
               {`${recent.bankName} · ${recent.idValueMasked}`}
             </Text>
           </CardPressable>
@@ -49,7 +51,7 @@ const styles = StyleSheet.create({
   sectionList: {
     gap: spacing.sm,
   },
-  name: { ...typography.label, color: colors.textPrimary },
-  nameDisabled: { color: colors.textSecondary },
-  account: { ...typography.body, color: colors.textSecondary },
+  textName: { ...typography.label, color: colors.textPrimary },
+  textNameDisabled: { color: colors.textSecondary },
+  textAccount: { ...typography.body, color: colors.textSecondary },
 });

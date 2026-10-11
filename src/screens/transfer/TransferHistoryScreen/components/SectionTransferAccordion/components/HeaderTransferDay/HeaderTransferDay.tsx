@@ -60,7 +60,7 @@ export default function HeaderTransferDay({
       }
       accessibilityLanguage={i18n.language}
       onPress={onToggle}
-      style={({ pressed }) => [styles.header, pressed && styles.headerPressed]}
+      style={({ pressed }) => [styles.main, pressed && styles.pressed]}
     >
       <IconChevron expanded={expanded} />
       <ViewAmountWrap
@@ -85,7 +85,7 @@ export default function HeaderTransferDay({
 }
 
 const styles = StyleSheet.create({
-  header: {
+  main: {
     minHeight: minTouchTarget,
     flexDirection: "row",
     alignItems: "center",
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     backgroundColor: colors.background,
   },
-  headerPressed: { opacity: 0.8 },
+  pressed: { opacity: 0.8 },
 });
 
 interface IconChevronProps {
@@ -118,12 +118,12 @@ function IconChevron({ expanded }: IconChevronProps) {
   }));
 
   return (
-    <Animated.View aria-hidden style={[iconChevronStyles.chevron, turnStyle]} />
+    <Animated.View aria-hidden style={[iconChevronStyles.main, turnStyle]} />
   );
 }
 
 const iconChevronStyles = StyleSheet.create({
-  chevron: {
+  main: {
     width: 8,
     height: 8,
     borderRightWidth: 2,

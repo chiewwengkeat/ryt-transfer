@@ -16,12 +16,12 @@ export default function Card({
   styles: propStyles,
 }: Props) {
   return (
-    <View style={[styles.card, propStyle, propStyles?.main]}>{children}</View>
+    <View style={[styles.main, propStyle, propStyles?.main]}>{children}</View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  main: {
     gap: spacing.sm,
     padding: spacing.md,
     borderRadius: radii.md,

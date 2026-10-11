@@ -26,14 +26,14 @@ export default function BannerNotice({
   }, [message, screenOnTop, announce]);
 
   return (
-    <View accessibilityRole="alert" style={[styles.banner, styles[tone]]}>
+    <View accessibilityRole="alert" style={[styles.main, styles[tone]]}>
       <TextBody>{message}</TextBody>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  banner: {
+  main: {
     padding: spacing.md,
     borderLeftWidth: spacing.xs,
     borderRadius: radii.sm,

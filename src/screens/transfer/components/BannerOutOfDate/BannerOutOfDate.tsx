@@ -18,7 +18,7 @@ export default function BannerOutOfDate({
 }: Props) {
   const phoneReportsConnection = usePhoneReportsConnection();
   return (
-    <View style={styles.banner}>
+    <View style={styles.main}>
       <BannerAction
         message={message}
         announce={announce}
@@ -34,5 +34,5 @@ export default function BannerOutOfDate({
 }
 
 const styles = StyleSheet.create({
-  banner: { gap: spacing.sm },
+  main: { gap: spacing.sm },
 });

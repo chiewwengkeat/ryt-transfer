@@ -70,9 +70,9 @@ function HeaderDemo({ appSheetOpen, onOpenMenu }: HeaderDemoProps) {
       // Above the app, this would take a screen reader's first focus from an open sheet.
       aria-hidden={appSheetOpen}
       style={[
-        headerDemoStyles.header,
+        headerDemoStyles.main,
         { paddingTop: top },
-        scenarioId !== null && headerDemoStyles.headerWithScenario,
+        scenarioId !== null && headerDemoStyles.withScenario,
       ]}
     >
       {scenarioId !== null && (
@@ -82,7 +82,7 @@ function HeaderDemo({ appSheetOpen, onOpenMenu }: HeaderDemoProps) {
             accessibilityLanguage={i18n.language}
             maxFontSizeMultiplier={1.5}
             numberOfLines={3}
-            style={headerDemoStyles.scenarioMessage}
+            style={headerDemoStyles.textScenarioMessage}
           >
             {t("header_demo.banner.message", {
               title: scenarioTitle(scenarioId),
@@ -93,12 +93,12 @@ function HeaderDemo({ appSheetOpen, onOpenMenu }: HeaderDemoProps) {
             accessibilityLabel={t("header_demo.banner.clear")}
             accessibilityLanguage={i18n.language}
             onPress={clearTransferScenario}
-            style={headerDemoStyles.clearButton}
+            style={headerDemoStyles.btnClear}
           >
             <Text
               aria-hidden
               maxFontSizeMultiplier={1.5}
-              style={headerDemoStyles.clearMark}
+              style={headerDemoStyles.textClearMark}
             >
               ✕
             </Text>
@@ -110,9 +110,12 @@ function HeaderDemo({ appSheetOpen, onOpenMenu }: HeaderDemoProps) {
         accessibilityLabel={t("header_demo.pill.open_menu")}
         accessibilityLanguage={i18n.language}
         onPress={onOpenMenu}
-        style={headerDemoStyles.menuButton}
+        style={headerDemoStyles.btnMenu}
       >
-        <Text maxFontSizeMultiplier={1.5} style={headerDemoStyles.menuLabel}>
+        <Text
+          maxFontSizeMultiplier={1.5}
+          style={headerDemoStyles.textMenuLabel}
+        >
           {t("header_demo.pill.label")} ▾
         </Text>
       </Pressable>
@@ -121,7 +124,7 @@ function HeaderDemo({ appSheetOpen, onOpenMenu }: HeaderDemoProps) {
 }
 
 const headerDemoStyles = StyleSheet.create({
-  header: {
+  main: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
@@ -130,16 +133,16 @@ const headerDemoStyles = StyleSheet.create({
     paddingBottom: spacing.xs,
     backgroundColor: colors.surface,
   },
-  headerWithScenario: { backgroundColor: colors.warning },
-  scenarioMessage: { ...typography.label, flex: 1, color: colors.onAccent },
-  clearButton: {
+  withScenario: { backgroundColor: colors.warning },
+  textScenarioMessage: { ...typography.label, flex: 1, color: colors.onAccent },
+  btnClear: {
     minWidth: minTouchTarget,
     minHeight: minTouchTarget,
     alignItems: "center",
     justifyContent: "center",
   },
-  clearMark: { ...typography.label, color: colors.onAccent },
-  menuButton: {
+  textClearMark: { ...typography.label, color: colors.onAccent },
+  btnMenu: {
     minWidth: minTouchTarget,
     minHeight: minTouchTarget,
     alignItems: "center",
@@ -148,5 +151,5 @@ const headerDemoStyles = StyleSheet.create({
     borderRadius: minTouchTarget / 2,
     backgroundColor: colors.textPrimary,
   },
-  menuLabel: { ...typography.label, color: colors.surface },
+  textMenuLabel: { ...typography.label, color: colors.surface },
 });

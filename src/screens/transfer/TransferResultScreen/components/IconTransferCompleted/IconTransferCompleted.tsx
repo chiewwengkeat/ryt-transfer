@@ -18,7 +18,7 @@ export default function IconTransferCompleted() {
         .reduceMotion(
           phoneReducesMotion ? ReduceMotion.Always : ReduceMotion.Never,
         )}
-      style={styles.circle}
+      style={styles.main}
     >
       <View style={styles.tick} />
     </Animated.View>
@@ -26,7 +26,7 @@ export default function IconTransferCompleted() {
 }
 
 const styles = StyleSheet.create({
-  circle: {
+  main: {
     width: 64,
     height: 64,
     borderRadius: 32,

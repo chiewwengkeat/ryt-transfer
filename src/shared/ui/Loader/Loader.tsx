@@ -5,7 +5,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 export default function Loader() {
   const { t, i18n } = useTranslation(["shared"]);
   return (
-    <View style={styles.container}>
+    <View style={styles.main}>
       <ActivityIndicator
         accessibilityLabel={t("shared:loader.label")}
         accessibilityLanguage={i18n.language}
@@ -17,7 +17,7 @@ export default function Loader() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  main: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",

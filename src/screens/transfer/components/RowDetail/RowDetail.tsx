@@ -14,7 +14,7 @@ export default function RowDetail({ label, value }: Props) {
       accessible
       // The row, not its texts: a screen reader reads the row as one element, in the row's language.
       accessibilityLanguage={i18n.language}
-      style={styles.row}
+      style={styles.main}
     >
       <View style={styles.label}>
         <TextBody tone="secondary">{label}</TextBody>
@@ -31,7 +31,7 @@ export default function RowDetail({ label, value }: Props) {
 // Columns sized by the row, never by their text: Android 15 lays a line out by its glyphs' ink, which on
 // some system fonts is wider than React Native measured, so a box sized to its own text wraps inside itself.
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", flexWrap: "wrap", columnGap: spacing.sm },
+  main: { flexDirection: "row", flexWrap: "wrap", columnGap: spacing.sm },
   label: { flex: 1, flexShrink: 0, minWidth: "40%" },
   value: { flex: 1.2, flexShrink: 0, minWidth: "40%" },
 });

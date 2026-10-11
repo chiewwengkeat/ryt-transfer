@@ -55,7 +55,7 @@ export default function ViewBottomSheetHost({
         aria-hidden={sheetOpen}
         // Never flattened: aria-hidden alone would add and remove this view with each sheet, re-parenting the screens beneath.
         collapsable={false}
-        style={styles.layer}
+        style={styles.main}
       >
         {children}
       </View>
@@ -67,7 +67,7 @@ export default function ViewBottomSheetHost({
 }
 
 const styles = StyleSheet.create({
-  layer: { ...StyleSheet.absoluteFill, pointerEvents: "box-none" },
+  main: { ...StyleSheet.absoluteFill, pointerEvents: "box-none" },
 });
 
 export const BottomSheetHostContext = createContext<{

@@ -25,7 +25,7 @@ export default function ViewTransferHistoryFooter({
   const phoneReportsConnection = usePhoneReportsConnection();
 
   return (
-    <View style={[styles.footer, { paddingBottom: spacing.md + bottom }]}>
+    <View style={[styles.main, { paddingBottom: spacing.md + bottom }]}>
       {/* The query keeps the page's error flag up while its retry runs. */}
       {fetchNextPageFailure !== null && !isFetchingNextPage ? (
         <>
@@ -62,5 +62,5 @@ export default function ViewTransferHistoryFooter({
 }
 
 const styles = StyleSheet.create({
-  footer: { gap: spacing.sm, paddingVertical: spacing.md },
+  main: { gap: spacing.sm, paddingVertical: spacing.md },
 });

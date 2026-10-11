@@ -34,14 +34,14 @@ export default function KeypadPin({
       onPress={() => {
         onPressDigit(digit);
       }}
-      style={({ pressed }) => [styles.key, pressed && styles.keyPressed]}
+      style={({ pressed }) => [styles.btnKey, pressed && styles.btnKeyPressed]}
     >
-      <Text style={styles.keyLabel}>{digit}</Text>
+      <Text style={styles.textKeyLabel}>{digit}</Text>
     </Pressable>
   );
 
   return (
-    <View style={styles.keypad}>
+    <View style={styles.main}>
       <View
         accessible
         accessibilityLabel={t("keypad_pin.digits_entered", {
@@ -64,7 +64,7 @@ export default function KeypadPin({
         </View>
       ))}
       <View style={styles.row}>
-        <View style={styles.key} />
+        <View style={styles.keySpacer} />
         {digitKey("0")}
         <Pressable
           accessibilityRole="button"
@@ -73,9 +73,12 @@ export default function KeypadPin({
           accessibilityState={{ disabled }}
           disabled={disabled}
           onPress={onPressDelete}
-          style={({ pressed }) => [styles.key, pressed && styles.keyPressed]}
+          style={({ pressed }) => [
+            styles.btnKey,
+            pressed && styles.btnKeyPressed,
+          ]}
         >
-          <Text aria-hidden style={styles.keyLabel}>
+          <Text aria-hidden style={styles.textKeyLabel}>
             ⌫
           </Text>
         </Pressable>
@@ -85,7 +88,7 @@ export default function KeypadPin({
 }
 
 const styles = StyleSheet.create({
-  keypad: { gap: spacing.sm },
+  main: { gap: spacing.sm },
   dots: {
     flexDirection: "row",
     justifyContent: "center",
@@ -101,15 +104,16 @@ const styles = StyleSheet.create({
   },
   dotFilled: { backgroundColor: colors.textPrimary },
   row: { flexDirection: "row", gap: spacing.sm },
-  key: {
+  keySpacer: { flex: 1, minHeight: minTouchTarget },
+  btnKey: {
     flex: 1,
     minHeight: minTouchTarget,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radii.sm,
   },
-  keyPressed: { backgroundColor: colors.background },
-  keyLabel: { ...typography.heading, color: colors.textPrimary },
+  btnKeyPressed: { backgroundColor: colors.background },
+  textKeyLabel: { ...typography.heading, color: colors.textPrimary },
 });
 
 const DIGIT_ROWS = [

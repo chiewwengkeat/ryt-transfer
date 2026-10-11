@@ -34,7 +34,7 @@ export default function ViewSessionEnded({ onSignIn }: Props) {
   }, []);
 
   return (
-    <View style={StyleSheet.absoluteFill}>
+    <View style={styles.main}>
       <ViewMessage
         fullScreen
         title={t("shared:view_session_ended.title")}
@@ -52,6 +52,10 @@ export default function ViewSessionEnded({ onSignIn }: Props) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  main: StyleSheet.absoluteFill,
+});
 
 function TextLastTransferReference() {
   const { t } = useTranslation("transfer");

@@ -10,7 +10,7 @@ interface Props {
 export default function ViewAmountWrap({ children, amount, columnGap }: Props) {
   const { fontScale } = useWindowDimensions();
   return (
-    <View style={[styles.wrap, { columnGap }]}>
+    <View style={[styles.main, { columnGap }]}>
       <View
         style={[
           styles.start,
@@ -26,7 +26,7 @@ export default function ViewAmountWrap({ children, amount, columnGap }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: {
+  main: {
     flex: 1,
     flexDirection: "row",
     flexWrap: "wrap",

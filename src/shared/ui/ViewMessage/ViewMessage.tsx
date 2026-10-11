@@ -20,7 +20,7 @@ export default function ViewMessage({
 }: Props) {
   const { top } = useSafeAreaInsets();
   return (
-    <View style={[styles.container, fullScreen && { paddingTop: top }]}>
+    <View style={[styles.main, fullScreen && { paddingTop: top }]}>
       <ViewScreenFrame footer={actions}>
         <TextHeading autoFocus>{title}</TextHeading>
         <TextBody>{message}</TextBody>
@@ -30,5 +30,5 @@ export default function ViewMessage({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  main: { flex: 1, backgroundColor: colors.background },
 });

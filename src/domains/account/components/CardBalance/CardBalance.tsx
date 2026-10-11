@@ -141,7 +141,7 @@ export default function CardBalance({
         <Text
           // Grown further, the balance outgrows a small phone's line and breaks inside the number.
           maxFontSizeMultiplier={2}
-          style={styles.balance}
+          style={styles.textBalance}
         >
           {formatMoney(account.data.balance)}
         </Text>
@@ -169,5 +169,5 @@ const styles = StyleSheet.create({
       minTouchTarget,
     justifyContent: "center",
   },
-  balance: { ...typography.heading, color: colors.textPrimary },
+  textBalance: { ...typography.heading, color: colors.textPrimary },
 });

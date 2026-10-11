@@ -55,7 +55,7 @@ export default function TextHeading({
       accessibilityLanguage={i18n.language}
       // Grown further, a title's longest word outgrows a small phone's line and breaks mid-word.
       maxFontSizeMultiplier={2}
-      style={[styles.heading, propStyle]}
+      style={[styles.main, propStyle]}
     >
       {children}
     </Text>
@@ -63,7 +63,7 @@ export default function TextHeading({
 }
 
 const styles = StyleSheet.create({
-  heading: { ...typography.heading, color: colors.textPrimary },
+  main: { ...typography.heading, color: colors.textPrimary },
 });
 
 // A screen reader places its own focus up to half a second after what it reads changes, and the later request wins:

@@ -54,10 +54,13 @@ export default function BottomSheetLanguage({ onClose }: Props) {
             pick();
             onClose();
           }}
-          style={({ pressed }) => [styles.item, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.btnItem,
+            pressed && styles.btnPressed,
+          ]}
         >
-          <Text style={styles.label}>{label}</Text>
-          {checked && <Text style={styles.tick}>✓</Text>}
+          <Text style={styles.textLabel}>{label}</Text>
+          {checked && <Text style={styles.textTick}>✓</Text>}
         </Pressable>
       ))}
     </BottomSheetFrame>
@@ -65,13 +68,13 @@ export default function BottomSheetLanguage({ onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  item: {
+  btnItem: {
     minHeight: minTouchTarget,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
   },
-  pressed: { opacity: 0.6 },
-  label: { ...typography.body, flex: 1, color: colors.textPrimary },
-  tick: { ...typography.body, color: colors.accent },
+  btnPressed: { opacity: 0.6 },
+  textLabel: { ...typography.body, flex: 1, color: colors.textPrimary },
+  textTick: { ...typography.body, color: colors.accent },
 });

@@ -33,10 +33,10 @@ export default function BottomSheetContactMobiles({
           onPress={() => {
             onMobileChosen(contactMobile.mobileId);
           }}
-          style={styles.mobile}
+          style={styles.btnMobile}
         >
-          <Text style={styles.label}>{contactMobile.label}</Text>
-          <Text style={styles.number}>{contactMobile.number}</Text>
+          <Text style={styles.textLabel}>{contactMobile.label}</Text>
+          <Text style={styles.textNumber}>{contactMobile.number}</Text>
         </Pressable>
       ))}
     </BottomSheetFrame>
@@ -44,7 +44,7 @@ export default function BottomSheetContactMobiles({
 }
 
 const styles = StyleSheet.create({
-  mobile: { minHeight: minTouchTarget, justifyContent: "center" },
-  label: { ...typography.label, color: colors.textSecondary },
-  number: { ...typography.body, color: colors.textPrimary },
+  btnMobile: { minHeight: minTouchTarget, justifyContent: "center" },
+  textLabel: { ...typography.label, color: colors.textSecondary },
+  textNumber: { ...typography.body, color: colors.textPrimary },
 });

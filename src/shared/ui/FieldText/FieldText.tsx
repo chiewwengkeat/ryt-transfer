@@ -33,7 +33,7 @@ export default function FieldText({ label, error, ...inputProps }: Props) {
   }, [error]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.main}>
       {/* Hidden from screen readers: the input below is named by it, so it would be read twice. */}
       <View aria-hidden>
         <TextBody strong>{label}</TextBody>
@@ -43,7 +43,10 @@ export default function FieldText({ label, error, ...inputProps }: Props) {
         accessibilityHint={error}
         accessibilityLanguage={i18n.language}
         placeholderTextColor={colors.textSecondary}
-        style={[styles.input, error !== undefined && styles.inputInvalid]}
+        style={[
+          styles.textInput,
+          error !== undefined && styles.textInputInvalid,
+        ]}
         {...inputProps}
       />
       {error !== undefined && <TextBody tone="negative">{error}</TextBody>}
@@ -52,8 +55,8 @@ export default function FieldText({ label, error, ...inputProps }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing.xs },
-  input: {
+  main: { gap: spacing.xs },
+  textInput: {
     ...typography.body,
     minHeight: minTouchTarget,
     paddingHorizontal: spacing.md,
@@ -64,5 +67,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     color: colors.textPrimary,
   },
-  inputInvalid: { borderColor: colors.negative, borderWidth: 2 },
+  textInputInvalid: { borderColor: colors.negative, borderWidth: 2 },
 });

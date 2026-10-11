@@ -28,10 +28,10 @@ export default function ButtonLanguage() {
         onPress={() => {
           setSheetOpen(true);
         }}
-        style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.main, pressed && styles.pressed]}
       >
         {/* The navigation bar never grows, so the label stops at what it holds. */}
-        <Text maxFontSizeMultiplier={1.5} style={styles.label}>
+        <Text maxFontSizeMultiplier={1.5} style={styles.textLabel}>
           {shortName}
         </Text>
       </Pressable>
@@ -47,7 +47,7 @@ export default function ButtonLanguage() {
 }
 
 const styles = StyleSheet.create({
-  button: {
+  main: {
     minWidth: minTouchTarget,
     minHeight: minTouchTarget,
     alignItems: "center",
@@ -55,5 +55,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   pressed: { opacity: 0.6 },
-  label: { ...typography.label, color: colors.accent },
+  textLabel: { ...typography.label, color: colors.accent },
 });

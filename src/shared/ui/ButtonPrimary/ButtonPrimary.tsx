@@ -37,7 +37,7 @@ export default function ButtonPrimary({
   const disabled = busy || hasDisabledReason;
   const shownNotice = disabledReason ?? notice;
   return (
-    <View style={styles.container}>
+    <View style={styles.main}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
@@ -55,17 +55,17 @@ export default function ButtonPrimary({
           });
         }}
         style={({ pressed }) => [
-          styles.button,
-          hasDisabledReason && styles.buttonDisabled,
-          pressed && styles.buttonPressed,
+          styles.btn,
+          hasDisabledReason && styles.btnDisabled,
+          pressed && styles.btnPressed,
         ]}
       >
         {/* Hidden, not removed: its lines keep the button's height while the spinner shows. */}
         <Text
           style={[
-            styles.label,
-            disabled && styles.labelDisabled,
-            busy && styles.labelHidden,
+            styles.textLabel,
+            disabled && styles.textLabelDisabled,
+            busy && styles.textLabelHidden,
           ]}
         >
           {label}
@@ -87,8 +87,8 @@ export default function ButtonPrimary({
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing.xs },
-  button: {
+  main: { gap: spacing.xs },
+  btn: {
     minHeight: minTouchTarget,
     alignItems: "center",
     justifyContent: "center",
@@ -97,10 +97,14 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     backgroundColor: colors.accent,
   },
-  buttonDisabled: { backgroundColor: colors.surfaceDisabled },
-  buttonPressed: { opacity: 0.8 },
-  label: { ...typography.label, color: colors.onAccent, textAlign: "center" },
-  labelDisabled: { color: colors.textSecondary },
-  labelHidden: { opacity: 0 },
+  btnDisabled: { backgroundColor: colors.surfaceDisabled },
+  btnPressed: { opacity: 0.8 },
+  textLabel: {
+    ...typography.label,
+    color: colors.onAccent,
+    textAlign: "center",
+  },
+  textLabelDisabled: { color: colors.textSecondary },
+  textLabelHidden: { opacity: 0 },
   spinner: StyleSheet.absoluteFill,
 });

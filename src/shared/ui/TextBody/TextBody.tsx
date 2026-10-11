@@ -24,7 +24,7 @@ export default function TextBody({
     <Text
       accessibilityLanguage={i18n.language}
       style={[
-        styles.body,
+        styles.main,
         styles[tone],
         strong && styles.strong,
         alignEnd && styles.alignEnd,
@@ -38,7 +38,7 @@ export default function TextBody({
 }
 
 const styles = StyleSheet.create({
-  body: typography.body,
+  main: typography.body,
   primary: { color: colors.textPrimary },
   secondary: { color: colors.textSecondary },
   negative: { color: colors.negative },

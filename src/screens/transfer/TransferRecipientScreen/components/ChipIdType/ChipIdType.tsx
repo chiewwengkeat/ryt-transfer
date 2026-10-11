@@ -19,7 +19,7 @@ export default function ChipIdType({ idType, onIdTypeChange }: Props) {
     <View
       accessibilityRole="radiogroup"
       accessibilityLabel={t("chip_id_type.label")}
-      style={styles.chips}
+      style={styles.main}
     >
       {[
         RecipientIdType.Mobile,
@@ -37,12 +37,15 @@ export default function ChipIdType({ idType, onIdTypeChange }: Props) {
           onPress={() => {
             onIdTypeChange(chipIdType);
           }}
-          style={[styles.chip, chipIdType === idType && styles.chipChosen]}
+          style={[
+            styles.btnChip,
+            chipIdType === idType && styles.btnChipChosen,
+          ]}
         >
           <Text
             style={[
-              styles.chipLabel,
-              chipIdType === idType && styles.chipLabelChosen,
+              styles.textChipLabel,
+              chipIdType === idType && styles.textChipLabelChosen,
             ]}
           >
             {t(
@@ -56,8 +59,8 @@ export default function ChipIdType({ idType, onIdTypeChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  chip: {
+  main: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  btnChip: {
     minHeight: minTouchTarget,
     justifyContent: "center",
     paddingHorizontal: spacing.md,
@@ -66,7 +69,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     backgroundColor: colors.surface,
   },
-  chipChosen: { borderColor: colors.accent, backgroundColor: colors.accent },
-  chipLabel: { ...typography.label, color: colors.textPrimary },
-  chipLabelChosen: { color: colors.onAccent },
+  btnChipChosen: { borderColor: colors.accent, backgroundColor: colors.accent },
+  textChipLabel: { ...typography.label, color: colors.textPrimary },
+  textChipLabelChosen: { color: colors.onAccent },
 });

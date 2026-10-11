@@ -42,7 +42,7 @@ export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
   }, [error]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.main}>
       <View aria-hidden>
         <TextBody strong>{t("field_bank.label")}</TextBody>
       </View>
@@ -57,9 +57,13 @@ export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
           Keyboard.dismiss();
           setBankSheetOpen(true);
         }}
-        style={[styles.field, error !== undefined && styles.fieldInvalid]}
+        style={[styles.btnField, error !== undefined && styles.btnFieldInvalid]}
       >
-        <Text style={bankName === undefined ? styles.placeholder : styles.bank}>
+        <Text
+          style={
+            bankName === undefined ? styles.textPlaceholder : styles.textBank
+          }
+        >
           {bankName ?? t("field_bank.placeholder")}
         </Text>
       </Pressable>
@@ -80,8 +84,8 @@ export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing.xs },
-  field: {
+  main: { gap: spacing.xs },
+  btnField: {
     minHeight: minTouchTarget,
     justifyContent: "center",
     paddingHorizontal: spacing.md,
@@ -91,9 +95,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  fieldInvalid: { borderColor: colors.negative, borderWidth: 2 },
-  bank: { ...typography.body, color: colors.textPrimary },
-  placeholder: { ...typography.body, color: colors.textSecondary },
+  btnFieldInvalid: { borderColor: colors.negative, borderWidth: 2 },
+  textBank: { ...typography.body, color: colors.textPrimary },
+  textPlaceholder: { ...typography.body, color: colors.textSecondary },
 });
 
 interface BottomSheetBankProps {
@@ -156,9 +160,9 @@ function BottomSheetBank({ onBankChosen, onClose }: BottomSheetBankProps) {
             onPress={() => {
               onBankChosen(bank.bankCode);
             }}
-            style={bottomSheetBankStyles.bank}
+            style={bottomSheetBankStyles.btnBank}
           >
-            <Text style={bottomSheetBankStyles.bankName}>{bank.name}</Text>
+            <Text style={bottomSheetBankStyles.textBankName}>{bank.name}</Text>
           </Pressable>
         ))
       )}
@@ -167,6 +171,6 @@ function BottomSheetBank({ onBankChosen, onClose }: BottomSheetBankProps) {
 }
 
 const bottomSheetBankStyles = StyleSheet.create({
-  bank: { minHeight: minTouchTarget, justifyContent: "center" },
-  bankName: { ...typography.body, color: colors.textPrimary },
+  btnBank: { minHeight: minTouchTarget, justifyContent: "center" },
+  textBankName: { ...typography.body, color: colors.textPrimary },
 });

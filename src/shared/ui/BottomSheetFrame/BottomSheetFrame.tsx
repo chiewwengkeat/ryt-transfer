@@ -123,7 +123,7 @@ export default function BottomSheetFrame({
         onAccessibilityEscape={() => {
           if (dismissable) onClose();
         }}
-        style={styles.sheetLayer}
+        style={styles.main}
       >
         {/* Hidden too: TalkBack stops on any pressable view whatever `accessible` says. ✕ and Back still close. */}
         <Pressable
@@ -131,7 +131,7 @@ export default function BottomSheetFrame({
           aria-hidden
           disabled={!dismissable}
           onPress={onClose}
-          style={styles.backdrop}
+          style={styles.btnBackdrop}
         />
         <KeyboardAvoidingView
           behavior="padding"
@@ -156,9 +156,9 @@ export default function BottomSheetFrame({
                   // On the button, not its ✕: the screen reader reads the button as one element, in its language.
                   accessibilityLanguage={i18n.language}
                   onPress={onClose}
-                  style={styles.closeButton}
+                  style={styles.btnClose}
                 >
-                  <Text aria-hidden style={styles.closeMark}>
+                  <Text aria-hidden style={styles.textCloseMark}>
                     ✕
                   </Text>
                 </Pressable>
@@ -210,8 +210,8 @@ export default function BottomSheetFrame({
 }
 
 const styles = StyleSheet.create({
-  sheetLayer: StyleSheet.absoluteFill,
-  backdrop: {
+  main: StyleSheet.absoluteFill,
+  btnBackdrop: {
     ...StyleSheet.absoluteFill,
     backgroundColor: colors.textPrimary,
     opacity: 0.5,
@@ -232,13 +232,13 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   title: { flex: 1 },
-  closeButton: {
+  btnClose: {
     minWidth: minTouchTarget,
     minHeight: minTouchTarget,
     alignItems: "center",
     justifyContent: "center",
   },
-  closeMark: { ...typography.heading, color: colors.textPrimary },
+  textCloseMark: { ...typography.heading, color: colors.textPrimary },
   body: { flexShrink: 1 },
   bodyContent: { gap: spacing.sm },
 });

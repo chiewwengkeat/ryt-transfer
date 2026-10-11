@@ -38,12 +38,12 @@ export default function ViewOutcomeEntrance({ outcome, children }: Props) {
   }));
 
   return (
-    <Animated.View style={[styles.outcome, entranceStyle]}>
+    <Animated.View style={[styles.main, entranceStyle]}>
       {children}
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  outcome: { gap: spacing.md },
+  main: { gap: spacing.md },
 });

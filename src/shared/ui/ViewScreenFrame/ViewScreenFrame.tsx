@@ -41,7 +41,7 @@ export default function ViewScreenFrame({
           setFrameTopInWindow(y);
         });
       }}
-      style={styles.frame}
+      style={styles.main}
     >
       <KeyboardAvoidingView
         behavior="padding"
@@ -133,7 +133,7 @@ export default function ViewScreenFrame({
 }
 
 const styles = StyleSheet.create({
-  frame: { flex: 1, backgroundColor: colors.background },
+  main: { flex: 1, backgroundColor: colors.background },
   keyboardClear: { flex: 1 },
   content: { gap: spacing.md, padding: spacing.md },
   footer: { paddingHorizontal: spacing.md },

@@ -127,7 +127,7 @@ function ItemScenarioDemo({ label, checked, onPress }: ItemScenarioDemoProps) {
       accessibilityLanguage={i18n.language}
       accessibilityState={{ checked }}
       onPress={onPress}
-      style={itemScenarioDemoStyles.item}
+      style={itemScenarioDemoStyles.main}
     >
       <View
         style={[
@@ -135,13 +135,13 @@ function ItemScenarioDemo({ label, checked, onPress }: ItemScenarioDemoProps) {
           checked && itemScenarioDemoStyles.markChecked,
         ]}
       />
-      <Text style={itemScenarioDemoStyles.label}>{label}</Text>
+      <Text style={itemScenarioDemoStyles.textLabel}>{label}</Text>
     </Pressable>
   );
 }
 
 const itemScenarioDemoStyles = StyleSheet.create({
-  item: {
+  main: {
     minHeight: minTouchTarget,
     flexDirection: "row",
     alignItems: "center",
@@ -155,7 +155,7 @@ const itemScenarioDemoStyles = StyleSheet.create({
     borderColor: colors.border,
   },
   markChecked: { borderWidth: 6, borderColor: colors.accent },
-  label: { ...typography.body, flex: 1, color: colors.textPrimary },
+  textLabel: { ...typography.body, flex: 1, color: colors.textPrimary },
 });
 
 // Picking an unlisted scenario does nothing: those are the bank acting normally, or happen on the phone.
