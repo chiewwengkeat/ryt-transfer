@@ -54,6 +54,16 @@ const IGNORED =
 const COUNTED = /(\.(ts|tsx|js|mjs|cjs|json)|\/[^./]+)$/;
 const STATES = new Map();
 const RESOLVER_PATH = require.resolve("eslint-import-resolver-typescript");
+// Node keeps every module it has loaded, so changed rules reach only a fresh process: VS Code
+// restarts a language server that exits, but stops after 5 exits in 3 minutes.
+const LANGUAGE_SERVER = process.argv.some((arg) =>
+  arg.startsWith("--clientProcessId="),
+);
+const RESTART_ON =
+  /^(eslint\.config\.mjs|tsconfig\.json|package\.json|node_modules\/\.modules\.yaml|\.config\/.+)$/;
+const QUIET_MS = 2000;
+const MIN_UPTIME_MS = Number(process.env.DISK_CHANGES_MIN_UPTIME_MS ?? 60_000);
+let restartTimer;
 
 // A one-off run sees no file change; typescript-eslint draws the same line for its own watching.
 function oneShot() {
@@ -74,8 +84,9 @@ function watch(root) {
     // Not unref(): on Linux, Node's recursive watcher ignores it and keeps the process alive.
     fs.watch(key, { recursive: true, persistent: false }, (event, filename) => {
       const relative = filename?.split(path.sep).join("/");
-      if (!relative || IGNORED.test(relative) || !COUNTED.test(`/${relative}`))
-        return;
+      if (!relative || IGNORED.test(relative)) return;
+      if (LANGUAGE_SERVER && RESTART_ON.test(relative)) restartWhenQuiet();
+      if (!COUNTED.test(`/${relative}`)) return;
       state.changed.add(path.join(key, relative));
       if (event === "rename") state.moves++;
     });
@@ -85,6 +96,12 @@ function watch(root) {
   }
   STATES.set(key, state);
   return state;
+}
+
+function restartWhenQuiet() {
+  clearTimeout(restartTimer);
+  const wait = Math.max(QUIET_MS, MIN_UPTIME_MS - process.uptime() * 1000);
+  restartTimer = setTimeout(() => process.exit(0), wait);
 }
 
 // A file whose disk text is what the editor last handed the parser is the editor's own save, which

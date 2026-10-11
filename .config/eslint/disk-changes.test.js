@@ -1,4 +1,6 @@
 const assert = require("node:assert/strict");
+const { spawn } = require("node:child_process");
+const { once } = require("node:events");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -40,6 +42,57 @@ test("disk-changes: a long-running ESLint resolves a module that reappears on di
 
   assert.deepEqual(await lintUntilClean(eslint, project), []);
 });
+
+test("disk-changes: an editor's ESLint server exits once its lint config changes, for VS Code to restart", async () => {
+  const project = makeProject({});
+  const env = { ...process.env, DISK_CHANGES_MIN_UPTIME_MS: "0" };
+  delete env.CI;
+  const server = spawn(
+    process.execPath,
+    ["-e", languageServer(project), "--", "--clientProcessId=1"],
+    { env, stdio: ["ignore", "pipe", "inherit"] },
+  );
+  try {
+    await once(server.stdout, "data");
+
+    fs.writeFileSync(
+      path.join(project, "eslint.config.mjs"),
+      "export default [];\n",
+    );
+
+    const [code] = await Promise.race([
+      once(server, "exit"),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("the server never exited")), 15_000),
+      ),
+    ]);
+    assert.equal(code, 0);
+  } finally {
+    server.kill();
+  }
+});
+
+function languageServer(project) {
+  return `
+    const { ESLint } = require(${JSON.stringify(require.resolve("eslint"))});
+    const diskChanges = require(${JSON.stringify(require.resolve("./disk-changes"))});
+    const project = ${JSON.stringify(project)};
+    new ESLint({
+      cwd: project,
+      overrideConfigFile: true,
+      overrideConfig: [{
+        files: ["**/*.ts"],
+        languageOptions: {
+          parser: diskChanges.typescriptParser,
+          parserOptions: { projectService: true, tsconfigRootDir: project },
+        },
+      }],
+    })
+      .lintFiles([${JSON.stringify(path.join(project, "a.ts"))}])
+      .then(() => process.stdout.write("ready"));
+    setInterval(() => {}, 1000);
+  `;
+}
 
 function makeProject(overrides) {
   const project = fs.realpathSync(
