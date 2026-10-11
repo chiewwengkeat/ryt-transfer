@@ -10,7 +10,7 @@ All handled transfer scenarios are detailed in the [scenario matrix](src/screens
 ## Install direct from APK
 
 1. Download [ryt-transfer-demo.apk](https://github.com/chiewwengkeat/ryt-transfer/releases/latest) and install on your Android phone
-2. Full-featured: all are BE API calls simulated with an API layer
+2. Full-featured: BE API calls are simulated with an API layer
 3. See `Demo` button on top right of screen, to simulate many scenarios. [See demo video below](#demo-video)
 
 ## Demo video
@@ -37,7 +37,7 @@ Then:
 
 ```sh
 pnpm install
-pnpm android   # or: pnpm ios. Keep this terminal open while you use the app.
+pnpm android:demo   # or: pnpm ios:demo
 ```
 
 ## Assumptions
