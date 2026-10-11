@@ -83,18 +83,6 @@
     "typeOrder": "auto",
     "unicodeCollation": "ordinal"
   },
-  "typescript.preferences.organizeImports": {
-    "caseSensitivity": "auto",
-    "typeOrder": "auto",
-    "unicodeCollation": "ordinal"
-  },
-  "javascript.preferences.organizeImports": {
-    "caseSensitivity": "auto",
-    "typeOrder": "auto",
-    "unicodeCollation": "ordinal"
-  },
   "js/ts.tsdk.path": "node_modules/typescript/lib",
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true
 }
