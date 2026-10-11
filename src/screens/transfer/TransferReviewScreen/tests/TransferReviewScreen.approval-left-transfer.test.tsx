@@ -82,6 +82,31 @@ it("lets an approval's answer change nothing once the person has left it and sta
   expect(relaunched.getPathname()).toBe(`/transfer/result/${firstTransferId}`);
 });
 
+it("sends no approval for a transfer left while its PIN sheet waited, and opens the next review with no sheet, ready to send anew", async () => {
+  await pairPhoneAsTheDemoLaunchDoes();
+  await renderRoute("/transfer");
+  await walkToTransferReviewUntilTransferShows();
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Use PIN instead" }),
+  );
+  await screen.findByText("Enter your bank PIN to approve this transfer.");
+
+  // Review offers no way back while approving, so this stands in for any route that still could.
+  await act(() => {
+    router.back();
+  });
+  await fireEvent.press(await screen.findByRole("button", { name: "Review" }));
+  await screen.findByRole("button", { name: "Transfer" });
+
+  expect(
+    screen.queryByText("Enter your bank PIN to approve this transfer."),
+  ).toBeNull();
+  expect(approveRequests()).toHaveLength(0);
+  await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+  expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  expect(approveRequests()).toHaveLength(1);
+});
+
 it.each([
   ["signs", () => undefined],
   ["is cancelled", cancelNextBiometricPrompt],

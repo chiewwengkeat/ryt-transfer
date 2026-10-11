@@ -1,5 +1,10 @@
 import { ApprovalDemoPinContext } from "@/domains/approval/lib/approval-demo-pin/approval-demo-pin";
+import {
+  ApprovalPinSheetStep,
+  approvalPinSheetStore,
+} from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import { useIsOffline } from "@/shared/http/offline/offline";
+import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import { enableObscuredTouchGuard } from "@/shared/platform/obscured-touch-guard/obscured-touch-guard";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
@@ -7,71 +12,92 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import { use, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useStore } from "zustand";
 import KeypadPin from "./components/KeypadPin/KeypadPin";
 
-interface Props {
-  message: string;
-  detail?: string;
-  refusal?: string;
-  pinLocked: boolean;
-  sending: boolean;
-  onSubmitPin: (pin: string) => void;
-  onClose: () => void;
-}
-export default function BottomSheetPin({
-  message,
-  detail,
-  refusal,
-  pinLocked,
-  sending,
-  onSubmitPin,
-  onClose,
-}: Props) {
+export default function BottomSheetPin() {
   const { t } = useTranslation("transfer");
   const [pin, setPin] = useState("");
-  const [touchDropped, setTouchDropped] = useState(false);
-  const offline = useIsOffline();
-  const demoPin = use(ApprovalDemoPinContext);
-  useEffect(
-    () =>
-      enableObscuredTouchGuard(() => {
-        setTouchDropped(true);
-      }),
-    [],
-  );
+  const [isTouchDropped, setIsTouchDropped] = useState(false);
 
-  const approveDisabledReason = sending
-    ? undefined
-    : offline
-      ? t("common.offline.notice")
-      : pin.length < APPROVAL_PIN_LENGTH
-        ? t("bottom_sheet_pin.enter_every_digit", {
-            length: APPROVAL_PIN_LENGTH,
-          })
-        : undefined;
+  const sheet = useStore(approvalPinSheetStore);
+  const isOffline = useIsOffline();
+  const demoPin = use(ApprovalDemoPinContext);
+
+  const isPinSheetShown = sheet.step !== ApprovalPinSheetStep.Closed;
+  const isPinLocked = sheet.step === ApprovalPinSheetStep.PinLocked;
+  const isSending = sheet.step === ApprovalPinSheetStep.Sending;
+  const reasonApproveDisabled = (() => {
+    if (isSending) return undefined;
+    if (isOffline) return t("common.offline.notice");
+    if (pin.length < APPROVAL_PIN_LENGTH)
+      return t("bottom_sheet_pin.enter_every_digit", {
+        length: APPROVAL_PIN_LENGTH,
+      });
+    return undefined;
+  })();
+
+  // Only review going away answers as the person closing the sheet would: an ended session closes it too, but has a report of its own.
+  useEffect(() => {
+    const answerShownSheetAsClosed = (closedAnswer: null | undefined) => {
+      const shown = approvalPinSheetStore.getState();
+      if (shown.step !== ApprovalPinSheetStep.Closed)
+        shown.answer(closedAnswer);
+    };
+    const removeUnauthorizedListener = addUnauthorizedListener(() => {
+      answerShownSheetAsClosed(undefined);
+    });
+    return () => {
+      removeUnauthorizedListener();
+      answerShownSheetAsClosed(null);
+      // A sending sheet ignores the answer, and review opened afresh must not find it still open.
+      approvalPinSheetStore.setState(
+        approvalPinSheetStore.getInitialState(),
+        true,
+      );
+    };
+  }, []);
+  // Mounted between showings, so the digits and a dropped touch end with each one.
+  useEffect(() => {
+    if (!isPinSheetShown) return;
+    const disableObscuredTouchGuard = enableObscuredTouchGuard(() => {
+      setIsTouchDropped(true);
+    });
+    return () => {
+      disableObscuredTouchGuard();
+      setIsTouchDropped(false);
+      setPin("");
+    };
+  }, [isPinSheetShown]);
+
+  if (!isPinSheetShown) return null;
 
   return (
     <BottomSheetFrame
       title={t(
-        pinLocked ? "bottom_sheet_pin.title_locked" : "bottom_sheet_pin.title",
+        isPinLocked
+          ? "bottom_sheet_pin.title_locked"
+          : "bottom_sheet_pin.title",
       )}
       closeLabel={t("bottom_sheet_pin.close")}
-      dismissable={!sending}
-      onClose={onClose}
+      dismissable={!isSending}
+      onClose={() => {
+        sheet.answer(null);
+      }}
     >
-      {pinLocked ? (
-        <BannerNotice tone="negative" message={message} />
+      {isPinLocked ? (
+        <BannerNotice tone="negative" message={sheet.message} />
       ) : (
-        <TextBody>{message}</TextBody>
+        <TextBody>{sheet.message}</TextBody>
       )}
-      {detail !== undefined && <TextBody>{detail}</TextBody>}
-      {refusal !== undefined && (
-        <BannerNotice tone="negative" message={refusal} />
+      {sheet.detail !== undefined && <TextBody>{sheet.detail}</TextBody>}
+      {sheet.refusal !== undefined && (
+        <BannerNotice tone="negative" message={sheet.refusal} />
       )}
-      {touchDropped && (
+      {isTouchDropped && (
         <BannerNotice message={t("bottom_sheet_pin.touch_dropped")} />
       )}
-      {!pinLocked && (
+      {!isPinLocked && (
         <>
           {demoPin !== undefined && (
             <TextBody tone="secondary">
@@ -81,22 +107,22 @@ export default function BottomSheetPin({
           <KeypadPin
             pinLength={APPROVAL_PIN_LENGTH}
             digitsEntered={pin.length}
-            disabled={sending}
+            disabled={isSending}
             onPressDigit={(digit) => {
-              setTouchDropped(false);
+              setIsTouchDropped(false);
               setPin((typed) => (typed + digit).slice(0, APPROVAL_PIN_LENGTH));
             }}
             onPressDelete={() => {
-              setTouchDropped(false);
+              setIsTouchDropped(false);
               setPin((typed) => typed.slice(0, -1));
             }}
           />
           <ButtonPrimary
             label={t("bottom_sheet_pin.approve")}
-            loading={sending}
-            disabledReason={approveDisabledReason}
+            loading={isSending}
+            disabledReason={reasonApproveDisabled}
             onPress={() => {
-              onSubmitPin(pin);
+              sheet.answer(pin);
               setPin("");
             }}
           />

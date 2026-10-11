@@ -1,5 +1,9 @@
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
-import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
+import { rememberApprovalPinLocked } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
+import {
+  biometricPromptsShown,
+  changeEnrolledBiometrics,
+} from "@/test/doubles/biometrics-double";
 import {
   isObscuredTouchGuardOn,
   setPhoneNetwork,
@@ -8,9 +12,14 @@ import {
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { pressHardwareBack, scenarioTest } from "@/test/render/drive-app";
+import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
 import { renderRoute } from "@/test/render/render-route";
 import { act, fireEvent, screen } from "@testing-library/react-native";
-import { http } from "msw";
+import { http, HttpResponse } from "msw";
+import {
+  holdTheNextPost,
+  walkToTransferReviewUntilTransferShows,
+} from "./TransferReviewScreen.helper";
 
 it(
   "asks for the PIN, saying why face or fingerprint approval isn't available, with no prompt",
@@ -73,6 +82,134 @@ it("drops touches while another app draws over the PIN pad, says why, and stops 
       "Another app is drawing over the screen. Close it to enter your PIN.",
     ),
   ).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+  expect(isObscuredTouchGuardOn()).toBe(false);
+});
+
+it("stops guarding when the session's end closes the sheet mid-entry, and opens the next approval's sheet with no digits and no dropped-touch notice", async () => {
+  await openPinSheetWithBiometricsOff();
+  await typeDigits("246");
+  await act(() => {
+    touchThroughOverlay();
+  });
+  expect(
+    screen.getByText(
+      "Another app is drawing over the screen. Close it to enter your PIN.",
+    ),
+  ).toBeOnTheScreen();
+
+  const signInButton = await endTheSessionThroughAnotherRead();
+  expect(isObscuredTouchGuardOn()).toBe(false);
+  await fireEvent.press(signInButton);
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Transfer" }),
+  );
+  await screen.findByText("Approve with your PIN");
+
+  expect(isObscuredTouchGuardOn()).toBe(true);
+  expect(screen.getByLabelText("PIN, 0 of 6 digits entered")).toBeOnTheScreen();
+  expect(
+    screen.queryByText(
+      "Another app is drawing over the screen. Close it to enter your PIN.",
+    ),
+  ).toBeNull();
+});
+
+it.each([
+  [
+    "it was locked before Transfer was pressed",
+    async () => {
+      await pairPhoneAsTheDemoLaunchDoes();
+      approvalSettingsStore.setState({ biometricApprovalOn: false });
+      await renderRoute("/transfer");
+      await walkToTransferReviewUntilTransferShows();
+      await act(rememberApprovalPinLocked);
+      await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    },
+  ],
+  [
+    "the face or fingerprints changed while it was locked",
+    async () => {
+      await pairPhoneAsTheDemoLaunchDoes();
+      await renderRoute("/transfer");
+      await walkToTransferReviewUntilTransferShows();
+      await act(rememberApprovalPinLocked);
+      changeEnrolledBiometrics();
+      await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+    },
+  ],
+])(
+  "drops touches on a sheet that opens on a locked PIN when %s, says why, and stops guarding once closed",
+  async (_, openSheetOnLockedPin) => {
+    await openSheetOnLockedPin();
+    await screen.findByRole("header", { name: "PIN locked" });
+    expect(isObscuredTouchGuardOn()).toBe(true);
+
+    await act(() => {
+      touchThroughOverlay();
+    });
+
+    expect(
+      screen.getByText(
+        "Another app is drawing over the screen. Close it to enter your PIN.",
+      ),
+    ).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+    expect(isObscuredTouchGuardOn()).toBe(false);
+  },
+);
+
+it("keeps the sheet, its guard and a touch dropped while sending through a wrong PIN, which clears the digits, and through the lock that replaces it", async () => {
+  await openPinSheetWithBiometricsOff();
+  const wrongPinApproval = holdTheNextPost("*/transfers/:transferId/approve");
+  await typeDigits("111111");
+  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
+  await wrongPinApproval.waitUntilSent();
+  await act(() => {
+    touchThroughOverlay();
+  });
+  wrongPinApproval.release();
+
+  expect(
+    await screen.findByText("That PIN is incorrect. You have 2 tries left."),
+  ).toBeOnTheScreen();
+  expect(screen.getByLabelText("PIN, 0 of 6 digits entered")).toBeOnTheScreen();
+  expect(
+    screen.getByText(
+      "Another app is drawing over the screen. Close it to enter your PIN.",
+    ),
+  ).toBeOnTheScreen();
+  expect(isObscuredTouchGuardOn()).toBe(true);
+
+  mswServer.use(
+    http.post(
+      "*/transfers/:transferId/approve",
+      () =>
+        HttpResponse.json(
+          { error: { code: "PIN_LOCKED", message: "Test." } },
+          { status: 423 },
+        ),
+      { once: true },
+    ),
+  );
+  const lockingApproval = holdTheNextPost("*/transfers/:transferId/approve");
+  await typeDigits("111111");
+  await fireEvent.press(screen.getByRole("button", { name: "Approve" }));
+  await lockingApproval.waitUntilSent();
+  await act(() => {
+    touchThroughOverlay();
+  });
+  lockingApproval.release();
+
+  expect(
+    await screen.findByRole("header", { name: "PIN locked" }),
+  ).toBeOnTheScreen();
+  expect(
+    screen.getByText(
+      "Another app is drawing over the screen. Close it to enter your PIN.",
+    ),
+  ).toBeOnTheScreen();
+  expect(isObscuredTouchGuardOn()).toBe(true);
   await fireEvent.press(screen.getByRole("button", { name: "Close" }));
   expect(isObscuredTouchGuardOn()).toBe(false);
 });
