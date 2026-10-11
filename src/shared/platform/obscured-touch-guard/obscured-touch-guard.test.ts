@@ -2,7 +2,6 @@ import {
   isObscuredTouchGuardOn,
   touchThroughOverlay,
 } from "@/test/doubles/native-doubles";
-
 import { enableObscuredTouchGuard } from "./obscured-touch-guard";
 
 it("keeps the guard on from the first hold until the last release", () => {

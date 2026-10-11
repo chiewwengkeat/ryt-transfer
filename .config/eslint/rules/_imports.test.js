@@ -5,7 +5,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { parser } = require("typescript-eslint");
-
 const {
   fetchHookCall,
   importedBindings,

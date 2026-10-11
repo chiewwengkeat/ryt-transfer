@@ -1,6 +1,3 @@
-import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
   colors,
@@ -9,6 +6,8 @@ import {
   spacing,
   typography,
 } from "@/shared/theme/theme";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface Props {
   idType: RecipientIdType;

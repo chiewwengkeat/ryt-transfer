@@ -1,9 +1,8 @@
-import { StyleSheet, View } from "react-native";
-import Animated, { Keyframe, ReduceMotion } from "react-native-reanimated";
-
 import { standardEasing } from "@/shared/lib/motion/motion";
 import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion/reduce-motion";
 import { colors } from "@/shared/theme/theme";
+import { StyleSheet, View } from "react-native";
+import Animated, { Keyframe, ReduceMotion } from "react-native-reanimated";
 
 export default function IconTransferCompleted() {
   const phoneReducesMotion = usePhoneReducesMotion();

@@ -1,12 +1,11 @@
-import { focusManager } from "@tanstack/react-query";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import * as Haptics from "expo-haptics";
-import { delay, http, HttpResponse } from "msw";
-
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { scenarioTest, walkToTransferReview } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
+import { focusManager } from "@tanstack/react-query";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import * as Haptics from "expo-haptics";
+import { delay, http, HttpResponse } from "msw";
 
 beforeEach(() => {
   notificationHaptics.mockClear();

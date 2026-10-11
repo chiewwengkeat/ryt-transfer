@@ -4,7 +4,6 @@ import {
   getPermissionsAsync,
   requestPermissionsAsync,
 } from "expo-contacts";
-
 import {
   resetContactsNativeDouble,
   setContactsPermission,

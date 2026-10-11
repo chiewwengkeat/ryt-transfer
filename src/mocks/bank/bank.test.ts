@@ -1,11 +1,9 @@
-import type * as Msw from "msw";
-import type { RequestHandler } from "msw";
-
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
   TransferStatus,
   type GetTransferResponse,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import type * as SwitcherStore from "@/mocks/switcher/switcher-store/switcher-store";
 import {
   BANK_ORIGIN,
   pairTestPhone,
@@ -14,8 +12,8 @@ import {
   startTestTransfer,
   type BankErrorBody,
 } from "@/test/mock-bank/mock-bank";
-
-import type * as SwitcherStore from "@/mocks/switcher/switcher-store/switcher-store";
+import type * as Msw from "msw";
+import type { RequestHandler } from "msw";
 import type * as DemoBank from "./bank";
 import { pickTransferScenario } from "./bank";
 import type * as BankPorts from "./ports/ports";

@@ -1,3 +1,11 @@
+import {
+  colors,
+  minTouchTarget,
+  radii,
+  spacing,
+  typography,
+} from "@/shared/theme/theme";
+import TextBody from "@/shared/ui/TextBody/TextBody";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -7,15 +15,6 @@ import {
   Text,
   View,
 } from "react-native";
-
-import {
-  colors,
-  minTouchTarget,
-  radii,
-  spacing,
-  typography,
-} from "@/shared/theme/theme";
-import TextBody from "@/shared/ui/TextBody/TextBody";
 
 interface Props {
   label: string;

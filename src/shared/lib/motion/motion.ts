@@ -1,6 +1,5 @@
-import { Easing } from "react-native-reanimated";
-
 import { phoneReducesMotionNow } from "@/shared/platform/reduce-motion/reduce-motion";
+import { Easing } from "react-native-reanimated";
 
 // Material Design 3's standard easing.
 export const standardEasing = Easing.bezier(0.2, 0, 0, 1);

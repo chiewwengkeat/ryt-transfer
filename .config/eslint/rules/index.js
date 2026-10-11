@@ -12,5 +12,6 @@ module.exports = {
     "no-cross-component-internals": require("./no-cross-component-internals"),
     "component-folder-identity": require("./component-folder-identity"),
     "file-layout": require("./file-layout"),
+    "no-blank-line-between-imports": require("./no-blank-line-between-imports"),
   },
 };

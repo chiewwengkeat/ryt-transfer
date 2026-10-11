@@ -1,6 +1,3 @@
-import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-
 import {
   colors,
   minTouchTarget,
@@ -8,6 +5,8 @@ import {
   spacing,
   typography,
 } from "@/shared/theme/theme";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface Props {
   pinLength: number;

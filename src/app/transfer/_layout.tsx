@@ -1,6 +1,3 @@
-import { Stack } from "expo-router";
-import { useEffect } from "react";
-
 import { flowStackScreenOptions } from "@/root/app-launch/app-launch";
 import {
   dispatchTransferFlow,
@@ -9,6 +6,8 @@ import {
   TransferFlowStep,
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
+import { Stack } from "expo-router";
+import { useEffect } from "react";
 
 export default function TransferLayout() {
   // Open through Done: the result page replaces this stack a commit later, and closing first shows the recipient step.

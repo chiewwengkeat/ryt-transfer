@@ -2,7 +2,6 @@ const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-
 const { isTestCode } = require("../.config/test-files");
 const { readImportGraph } = require("./import-graph");
 const { findEntriesOutsideTheSliceFolders } = require("./slice-layout");

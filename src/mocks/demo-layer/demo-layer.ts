@@ -1,7 +1,3 @@
-import { randomUUID } from "expo-crypto";
-import { delay, getResponse, HttpResponse, type RequestHandler } from "msw";
-import type { ComponentType, ReactNode } from "react";
-
 import { registerApprovalKeys } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
 import {
   createApprovalKeys,
@@ -16,6 +12,9 @@ import type { PhoneSideScenarioId } from "@/mocks/scenarios/transfer-scenarios/t
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
 import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
 import type { Send } from "@/shared/http/transport/transport";
+import { randomUUID } from "expo-crypto";
+import { delay, getResponse, HttpResponse, type RequestHandler } from "msw";
+import type { ComponentType, ReactNode } from "react";
 
 export default {
   demoSend: createDemoSend(handlersForActiveScenario),

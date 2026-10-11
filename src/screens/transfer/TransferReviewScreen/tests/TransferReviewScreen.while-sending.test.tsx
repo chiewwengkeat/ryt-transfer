@@ -1,7 +1,4 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { http, HttpResponse } from "msw";
-
+import { TransferFlowStep } from "@/screens/transfer/flow-store/flow-store";
 import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
 import {
   observedRecords,
@@ -17,9 +14,9 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-
-import { TransferFlowStep } from "@/screens/transfer/flow-store/flow-store";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http, HttpResponse } from "msw";
 import {
   countSent,
   walkFromHomeToTransferReview,

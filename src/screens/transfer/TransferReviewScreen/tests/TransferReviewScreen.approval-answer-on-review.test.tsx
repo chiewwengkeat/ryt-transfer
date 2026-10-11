@@ -1,7 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { getFixedT } from "i18next";
-import { http, HttpResponse } from "msw";
-
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import {
   type GetTransferResponse,
@@ -24,7 +20,9 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { getFixedT } from "i18next";
+import { http, HttpResponse } from "msw";
 import {
   countSent,
   walkToTransferReviewAndPressTransfer,

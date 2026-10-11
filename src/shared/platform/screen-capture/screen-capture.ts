@@ -1,11 +1,10 @@
+import { reportError } from "@/shared/observability/observability/observability";
 import {
   allowScreenCaptureAsync,
   preventScreenCaptureAsync,
 } from "expo-screen-capture";
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
-
-import { reportError } from "@/shared/observability/observability/observability";
 
 export function markScreenErrorShowing() {
   screenErrorStore.setState(({ screenErrorsShowing }) => ({

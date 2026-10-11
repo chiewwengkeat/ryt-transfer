@@ -1,3 +1,11 @@
+import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
+import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
+import BannerAction from "@/shared/ui/BannerAction/BannerAction";
+import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
+import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import {
   Contact,
   getPermissionsAsync,
@@ -11,16 +19,6 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { AppState, Linking } from "react-native";
-
-import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
-import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
-import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import BannerAction from "@/shared/ui/BannerAction/BannerAction";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
-
-import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
 import BottomSheetContactMobiles from "./components/BottomSheetContactMobiles/BottomSheetContactMobiles";
 
 interface Props {

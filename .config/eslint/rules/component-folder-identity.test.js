@@ -4,7 +4,6 @@ const { test } = require("node:test");
 const { RuleTester } = require("eslint");
 const { mkdtempSync, mkdirSync, writeFileSync } = require("fs");
 const { tmpdir } = require("os");
-
 const rule = require("./component-folder-identity");
 
 // node:test owns reporting and failure now. RuleTester's own describe/it shims

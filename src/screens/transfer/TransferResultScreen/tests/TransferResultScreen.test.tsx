@@ -1,10 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { getFixedT } from "i18next";
-import { http, HttpResponse } from "msw";
-import { AccessibilityInfo } from "react-native";
-import { ReduceMotion } from "react-native-reanimated";
-
 import {
   type GetTransferResponse,
   TransferDirection,
@@ -33,7 +26,12 @@ import {
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { getFixedT } from "i18next";
+import { http, HttpResponse } from "msw";
+import { AccessibilityInfo } from "react-native";
+import { ReduceMotion } from "react-native-reanimated";
 import {
   buttonsOnTheResultPage,
   sendRm100FromHome,

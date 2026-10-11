@@ -4,7 +4,6 @@ import {
   type RegisterApprovalKeysRequest,
   type RegisterApprovalKeysResponse,
 } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
-
 import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
 import { randomHex } from "@/mocks/bank/ports/ports";
 import { DEMO_PIN, DEMO_PIN_ATTEMPTS } from "@/mocks/bank/seed/seed";

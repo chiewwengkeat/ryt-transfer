@@ -4,7 +4,6 @@ const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const { Linter, RuleTester } = require("eslint");
 const { parser } = require("typescript-eslint");
-
 const layout = require("./file-layout");
 
 // RuleTester's own describe/it would catch a failed case and leave the node:test case green.

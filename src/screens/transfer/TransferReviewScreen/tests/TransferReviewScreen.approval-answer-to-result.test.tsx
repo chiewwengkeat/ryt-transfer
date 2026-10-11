@@ -1,7 +1,3 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { http, HttpResponse } from "msw";
-
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   ApprovalPinSheetStep,
@@ -25,7 +21,9 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
-
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http, HttpResponse } from "msw";
 import {
   countSent,
   walkToTransferReviewAndPressTransfer,

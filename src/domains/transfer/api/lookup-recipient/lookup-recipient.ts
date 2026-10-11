@@ -1,8 +1,6 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
-
-import { requestJson } from "@/shared/http/transport/transport";
-
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
+import { requestJson } from "@/shared/http/transport/transport";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import {
   type LookupRecipientInput,
   type LookupRecipientRequest,

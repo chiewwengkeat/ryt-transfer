@@ -1,9 +1,3 @@
-import { focusManager } from "@tanstack/react-query";
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { http, HttpResponse } from "msw";
-import { AccessibilityInfo } from "react-native";
-
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
@@ -14,7 +8,11 @@ import {
 } from "@/test/mock-bank/mock-bank";
 import { scenarioTest } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
-
+import { focusManager } from "@tanstack/react-query";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http, HttpResponse } from "msw";
+import { AccessibilityInfo } from "react-native";
 import {
   buttonsOnTheResultPage,
   sendRm100FromHome,

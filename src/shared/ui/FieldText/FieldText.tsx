@@ -1,3 +1,11 @@
+import {
+  colors,
+  minTouchTarget,
+  radii,
+  spacing,
+  typography,
+} from "@/shared/theme/theme";
+import TextBody from "@/shared/ui/TextBody/TextBody";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -7,15 +15,6 @@ import {
   View,
   type TextInputProps,
 } from "react-native";
-
-import {
-  colors,
-  minTouchTarget,
-  radii,
-  spacing,
-  typography,
-} from "@/shared/theme/theme";
-import TextBody from "@/shared/ui/TextBody/TextBody";
 
 interface Props extends Omit<
   TextInputProps,

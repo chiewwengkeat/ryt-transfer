@@ -1,9 +1,8 @@
-import type { RequestHandler } from "msw";
-import { getResponse, http, HttpResponse } from "msw";
-
 import { bankError, httpResponseFrom } from "@/mocks/bank/answers/answers";
 import { toMalaysiaIso } from "@/mocks/bank/malaysia-time/malaysia-time";
 import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
+import type { RequestHandler } from "msw";
+import { getResponse, http, HttpResponse } from "msw";
 
 export const lostAnswer = () => HttpResponse.error();
 export const unknownCodeAnswer = () =>

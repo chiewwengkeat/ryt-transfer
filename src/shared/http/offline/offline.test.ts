@@ -1,11 +1,9 @@
-import { act, renderHook } from "@testing-library/react-native";
-
 import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import {
   observedRecords,
   setPhoneNetwork,
 } from "@/test/doubles/native-doubles";
-
+import { act, renderHook } from "@testing-library/react-native";
 import {
   addServerReachedAgainListener,
   reportRequestOutcome,

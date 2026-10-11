@@ -1,7 +1,5 @@
-import { http, HttpResponse } from "msw";
-
 import { clearTransferScenario, pickTransferScenario } from "@/mocks/bank/bank";
-
+import { http, HttpResponse } from "msw";
 import {
   BANK_ORIGIN,
   mswServer,

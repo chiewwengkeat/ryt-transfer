@@ -1,13 +1,11 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-import { useState } from "react";
-import { Pressable, Text } from "react-native";
-
 import { accountKeys } from "@/domains/account/api/account.keys";
 import { requestJson } from "@/shared/http/transport/transport";
 import { isScreenCaptureBlocked } from "@/test/doubles/native-doubles";
 import { mswServer } from "@/test/mock-bank/mock-bank";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
+import { useState } from "react";
+import { Pressable, Text } from "react-native";
 import { waitPastReceiptSettle } from "./drive-app";
 import { askOpenAppToReadAgain, renderRoute } from "./render-route";
 

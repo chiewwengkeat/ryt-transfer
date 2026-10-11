@@ -1,18 +1,4 @@
 import {
-  hashKey,
-  type QueryClient,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-
-import {
-  isSessionEndFailure,
-  TransportError,
-  TransportErrorKind,
-} from "@/shared/http/transport-error/transport-error";
-import { reportError } from "@/shared/observability/observability/observability";
-
-import {
   getTransferOptions,
   isSettledTransferOutcome,
   outcomeOfTransfer,
@@ -25,6 +11,18 @@ import {
   PendingTransferStage,
   updatePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
+import {
+  isSessionEndFailure,
+  TransportError,
+  TransportErrorKind,
+} from "@/shared/http/transport-error/transport-error";
+import { reportError } from "@/shared/observability/observability/observability";
+import {
+  hashKey,
+  type QueryClient,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 export const UNSETTLED_TRANSFER_READ_INTERVAL_MS = 15_000;
 

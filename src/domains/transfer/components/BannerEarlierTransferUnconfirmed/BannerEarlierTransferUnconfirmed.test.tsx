@@ -1,7 +1,3 @@
-import { focusManager } from "@tanstack/react-query";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { delay, http, HttpResponse } from "msw";
-
 import {
   type Transfer,
   TransferFunds,
@@ -23,6 +19,9 @@ import {
 } from "@/test/mock-bank/mock-bank";
 import { scenarioTest } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
+import { focusManager } from "@tanstack/react-query";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { delay, http, HttpResponse } from "msw";
 
 it(
   "warns on review that the last transfer is still being checked, and still lets them send this one",

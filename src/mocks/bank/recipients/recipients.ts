@@ -12,7 +12,6 @@ import {
   type LookupRecipientRequest,
   type LookupRecipientResponse,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-
 import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
 import {
   directoryEntryFor,

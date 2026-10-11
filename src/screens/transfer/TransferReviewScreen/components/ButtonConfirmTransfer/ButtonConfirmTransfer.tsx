@@ -1,7 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { randomUUID } from "expo-crypto";
-import { useTranslation } from "react-i18next";
-
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   BiometricSignOutcome,
@@ -26,7 +22,9 @@ import {
 import type { TransferDraft } from "@/screens/transfer/flow-store/flow-store.type";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import TextBody from "@/shared/ui/TextBody/TextBody";
-
+import { useQueryClient } from "@tanstack/react-query";
+import { randomUUID } from "expo-crypto";
+import { useTranslation } from "react-i18next";
 import ButtonUsePinInstead from "./components/ButtonUsePinInstead/ButtonUsePinInstead";
 import { useApprovalPinLocked } from "./hooks/use-approval-pin-locked/use-approval-pin-locked";
 import { usePhoneCheckBeforeApproval } from "./hooks/use-phone-check-before-approval/use-phone-check-before-approval";

@@ -1,10 +1,9 @@
-import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, View } from "react-native";
-
 import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
 import { colors, spacing, typography } from "@/shared/theme/theme";
 import CardPressable from "@/shared/ui/CardPressable/CardPressable";
 import TextHeading from "@/shared/ui/TextHeading/TextHeading";
+import { useTranslation } from "react-i18next";
+import { StyleSheet, Text, View } from "react-native";
 
 interface Props {
   onRecentChosen: (recentId: string) => void;

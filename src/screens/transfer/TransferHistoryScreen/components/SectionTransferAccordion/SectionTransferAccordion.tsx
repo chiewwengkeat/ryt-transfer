@@ -1,8 +1,3 @@
-import { FlashList, type FlashListRef } from "@shopify/flash-list";
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
-import { AppState, StyleSheet } from "react-native";
-
 import {
   askForNextTransferHistoryPage,
   countLoadedTransfersOnDay,
@@ -11,7 +6,10 @@ import {
 } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
 import { spacing } from "@/shared/theme/theme";
-
+import { FlashList, type FlashListRef } from "@shopify/flash-list";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { AppState, StyleSheet } from "react-native";
 import HeaderTransferDay from "./components/HeaderTransferDay/HeaderTransferDay";
 import ItemTransfer from "./components/ItemTransfer/ItemTransfer";
 import ViewTransferHistoryFooter from "./components/ViewTransferHistoryFooter/ViewTransferHistoryFooter";

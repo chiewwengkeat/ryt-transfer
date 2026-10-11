@@ -1,8 +1,7 @@
-import { useEffect, useRef } from "react";
-
 import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import { trackEvent } from "@/shared/observability/observability/observability";
+import { useEffect, useRef } from "react";
 
 // For a scenario a screen shows by itself: the transfer store reports its own with the step it moves to.
 export function trackScenarioShown(scenario: TransferScenarioId) {

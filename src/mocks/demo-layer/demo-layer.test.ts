@@ -1,6 +1,3 @@
-import type { RequestHandler } from "msw";
-import { delay, http, HttpResponse } from "msw";
-
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { clearTransferScenario, pickTransferScenario } from "@/mocks/bank/bank";
 import type * as BankPorts from "@/mocks/bank/ports/ports";
@@ -12,7 +9,8 @@ import {
   requestJson,
 } from "@/shared/http/transport/transport";
 import { mswServer } from "@/test/mock-bank/mock-bank";
-
+import type { RequestHandler } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import type * as DemoLayerModule from "./demo-layer";
 import demoLayer, { createDemoSend } from "./demo-layer";
 

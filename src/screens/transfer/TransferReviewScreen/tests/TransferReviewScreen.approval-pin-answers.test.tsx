@@ -1,7 +1,3 @@
-import type { QueryClient } from "@tanstack/react-query";
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
   approvalSettingsStore,
@@ -32,7 +28,9 @@ import {
 } from "@/test/mock-bank/mock-bank";
 import { enterPinAndApprove, scenarioTest } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
-
+import type { QueryClient } from "@tanstack/react-query";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
 import {
   approveRequests,
   walkToTransferReviewAndPressTransfer,

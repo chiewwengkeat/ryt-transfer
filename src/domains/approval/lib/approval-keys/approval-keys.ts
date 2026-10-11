@@ -1,3 +1,10 @@
+import { registerApprovalKeys } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
+import type { RegisterApprovalKeysResponse } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
+import { trackEvent } from "@/shared/observability/observability/observability";
+import {
+  readSecureRecord,
+  writeSecureRecord,
+} from "@/shared/platform/secure-storage/secure-storage";
 import {
   BiometricStrength,
   createKeysWithOptions,
@@ -9,15 +16,6 @@ import {
 } from "@sbaiahmed1/react-native-biometrics";
 import { randomUUID } from "expo-crypto";
 import { Platform } from "react-native";
-
-import type { RegisterApprovalKeysResponse } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
-import { trackEvent } from "@/shared/observability/observability/observability";
-import {
-  readSecureRecord,
-  writeSecureRecord,
-} from "@/shared/platform/secure-storage/secure-storage";
-
-import { registerApprovalKeys } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
 
 export enum BiometricSignOutcome {
   Signed = "signed",

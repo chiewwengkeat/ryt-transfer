@@ -1,7 +1,6 @@
+import { reportError } from "@/shared/observability/observability/observability";
 import { enableAppSwitcherProtectionAsync } from "expo-screen-capture";
 import { Platform } from "react-native";
-
-import { reportError } from "@/shared/observability/observability/observability";
 
 // iOS only: Android's module has no such cover, and there the capture block blanks the app-switcher preview.
 export async function enableAppSwitcherBlur() {

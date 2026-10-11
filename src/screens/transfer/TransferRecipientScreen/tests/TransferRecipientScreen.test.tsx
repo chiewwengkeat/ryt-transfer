@@ -1,14 +1,8 @@
-import {
-  act,
-  fireEvent,
-  screen,
-  userEvent,
-} from "@testing-library/react-native";
-import { getFixedT } from "i18next";
-import { http, HttpResponse } from "msw";
-import { AccessibilityInfo } from "react-native";
-
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import {
+  dispatchTransferFlow,
+  TransferFlowActionType,
+} from "@/screens/transfer/flow-store/flow-store";
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
 import { parseTypedAmount } from "@/shared/lib/money/money";
 import { setPickedContactPhones } from "@/test/doubles/contacts-native-double";
@@ -19,12 +13,15 @@ import {
   scenarioTest,
 } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-
 import {
-  dispatchTransferFlow,
-  TransferFlowActionType,
-} from "@/screens/transfer/flow-store/flow-store";
-
+  act,
+  fireEvent,
+  screen,
+  userEvent,
+} from "@testing-library/react-native";
+import { getFixedT } from "i18next";
+import { http, HttpResponse } from "msw";
+import { AccessibilityInfo } from "react-native";
 import { UNKNOWN_BANK_CODE } from "./TransferRecipientScreen.helper";
 
 it.each(["012-345 6789", "60123456789", "+60 12 345 6789"])(

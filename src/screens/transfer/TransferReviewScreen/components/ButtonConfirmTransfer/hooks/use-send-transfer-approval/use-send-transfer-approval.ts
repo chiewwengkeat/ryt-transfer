@@ -1,8 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { randomUUID } from "expo-crypto";
-import { useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
-
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
@@ -28,14 +23,17 @@ import {
   transferFlowStore,
 } from "@/screens/transfer/flow-store/flow-store";
 import type { TransferFlowNotice } from "@/screens/transfer/flow-store/flow-store.type";
-import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
-import { formatMoney } from "@/shared/lib/money/money";
-import { reportError } from "@/shared/observability/observability/observability";
-
 import { useRegisterApprovalKeysAgain } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/hooks/use-register-approval-keys-again/use-register-approval-keys-again";
 import { approveWithBiometricKey } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-biometric-key/approve-with-biometric-key";
 import { approveWithPin } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-pin/approve-with-pin";
 import { settleApprovalAnswer } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/settle-approval-answer/settle-approval-answer";
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
+import { formatMoney } from "@/shared/lib/money/money";
+import { reportError } from "@/shared/observability/observability/observability";
+import { useQueryClient } from "@tanstack/react-query";
+import { randomUUID } from "expo-crypto";
+import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 export function useSendTransferApproval() {
   const { t } = useTranslation("transfer");

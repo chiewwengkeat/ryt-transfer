@@ -1,9 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { http, HttpResponse } from "msw";
-import { AccessibilityInfo, AppState, Pressable, Text } from "react-native";
-
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
   type GetTransferResponse,
@@ -28,6 +22,11 @@ import {
 import { pressHardwareBack, scenarioTest } from "@/test/render/drive-app";
 import { endSessionWithAnyRequest } from "@/test/render/interrupt-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
+import { useQuery } from "@tanstack/react-query";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http, HttpResponse } from "msw";
+import { AccessibilityInfo, AppState, Pressable, Text } from "react-native";
 
 it(
   "covers the app with its own screen, offering only to sign in again, when the bank says the session has ended",

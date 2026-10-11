@@ -1,7 +1,6 @@
+import { spacing, typography } from "@/shared/theme/theme";
 import type { ReactElement, ReactNode } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-
-import { spacing, typography } from "@/shared/theme/theme";
 
 interface Props {
   children: ReactNode;

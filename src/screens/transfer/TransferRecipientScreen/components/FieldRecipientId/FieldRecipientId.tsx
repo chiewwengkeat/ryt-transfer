@@ -1,13 +1,12 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import type { TextInputProps } from "react-native";
-
 import {
   RECIPIENT_ID_FORMATS,
   RecipientIdCharacters,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import type { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import FieldText from "@/shared/ui/FieldText/FieldText";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TextInputProps } from "react-native";
 
 interface Props {
   idType: RecipientIdType;

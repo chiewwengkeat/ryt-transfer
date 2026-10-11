@@ -1,8 +1,5 @@
 import "@/test/setup/demo-build";
 
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-
 import { accountKeys } from "@/domains/account/api/account.keys";
 import {
   biometricPromptsShown,
@@ -22,7 +19,8 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
 import { holdTheNextPost } from "./TransferReviewScreen.helper";
 
 it("opens no result page for a transfer Reset demo ended while its answer was being kept", async () => {

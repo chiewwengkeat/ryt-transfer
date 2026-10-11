@@ -1,8 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { http, HttpResponse } from "msw";
-import { AccessibilityInfo } from "react-native";
-
 import type { ListRecentRecipientsResponse } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients.type";
 import type { LookupRecipientResponse } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { requestJson } from "@/shared/http/transport/transport";
@@ -17,7 +12,10 @@ import {
   scenarioTest,
 } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http, HttpResponse } from "msw";
+import { AccessibilityInfo } from "react-native";
 import { UNKNOWN_BANK_CODE } from "./TransferRecipientScreen.helper";
 
 it(

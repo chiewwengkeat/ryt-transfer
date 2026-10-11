@@ -1,14 +1,3 @@
-import { QueryClientProvider, type InfiniteData } from "@tanstack/react-query";
-import { act, renderHook, waitFor } from "@testing-library/react-native";
-import type { ReactNode } from "react";
-
-import {
-  buildHistoryTransfer,
-  serveTransferHistoryPages,
-} from "@/test/fixtures/transfer-responses";
-import { sentRequests } from "@/test/mock-bank/mock-bank";
-import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
-
 import {
   TransferDirection,
   TransferFunds,
@@ -17,6 +6,15 @@ import {
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { transferKeys } from "@/domains/transfer/api/transfer.keys";
+import {
+  buildHistoryTransfer,
+  serveTransferHistoryPages,
+} from "@/test/fixtures/transfer-responses";
+import { sentRequests } from "@/test/mock-bank/mock-bank";
+import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
+import { QueryClientProvider, type InfiniteData } from "@tanstack/react-query";
+import { act, renderHook, waitFor } from "@testing-library/react-native";
+import type { ReactNode } from "react";
 import {
   askForNextTransferHistoryPage,
   countLoadedTransfersOnDay,

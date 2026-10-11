@@ -1,3 +1,6 @@
+import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
+import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
+import { pressHardwareBack } from "@/test/render/drive-app";
 import {
   act,
   fireEvent,
@@ -14,11 +17,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-
-import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
-import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
-import { pressHardwareBack } from "@/test/render/drive-app";
-
 import BottomSheetFrame from "./BottomSheetFrame";
 
 afterEach(() => {

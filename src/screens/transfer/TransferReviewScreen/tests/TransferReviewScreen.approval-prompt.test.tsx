@@ -1,7 +1,3 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { http } from "msw";
-import { Platform } from "react-native";
-
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   biometricPromptsShown,
@@ -24,7 +20,9 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { http } from "msw";
+import { Platform } from "react-native";
 import {
   approveRequests,
   RECIPIENT_MOBILE,

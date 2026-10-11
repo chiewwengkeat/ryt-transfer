@@ -4,7 +4,6 @@
 
 const { test } = require("node:test");
 const { RuleTester } = require("eslint");
-
 const singularRoleSuffix = require("./singular-role-suffix");
 
 // node:test owns reporting and failure now. RuleTester's own describe/it shims

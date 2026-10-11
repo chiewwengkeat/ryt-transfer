@@ -2,7 +2,6 @@ import {
   setPhoneNetwork,
   setPhoneNetworkWithoutAnEvent,
 } from "@/test/doubles/native-doubles";
-
 import { subscribeToPhoneConnection } from "./network";
 
 afterEach(() => {

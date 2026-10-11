@@ -1,7 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { http } from "msw";
-
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { rememberApprovalPinLocked } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
 import {
@@ -18,6 +14,9 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http } from "msw";
 
 it("creates and approves nothing when review is left while Transfer reads the sensor under the bank's PIN lock, and approves from review opened again", async () => {
   await pairPhoneAsTheDemoLaunchDoes();

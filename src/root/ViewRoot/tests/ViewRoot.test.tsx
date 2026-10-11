@@ -1,7 +1,3 @@
-import { act, waitFor } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-import { Text } from "react-native";
-
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
   PendingTransferStage,
@@ -13,6 +9,9 @@ import {
   startTestTransfer,
 } from "@/test/mock-bank/mock-bank";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
+import { act, waitFor } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
+import { Text } from "react-native";
 
 it("discards another customer's pending transfers at launch, and keeps the signed-in customer's", async () => {
   const { body: signedInAccount } = await sendToBank<GetPrimaryAccountResponse>(

@@ -1,7 +1,7 @@
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useTranslation } from "react-i18next";
-
 import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
+import SectionTransferDetails from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
+import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
 import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
 import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
 import {
@@ -12,10 +12,8 @@ import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
-
-import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
-import SectionTransferDetails from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
-import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { useGetTransferWithHistoryPlaceholder } from "./hooks/use-get-transfer-with-history-placeholder/use-get-transfer-with-history-placeholder";
 
 export default function TransferDetailsScreen() {

@@ -3,7 +3,6 @@ import {
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-
 import { toMalaysiaIso } from "@/mocks/bank/malaysia-time/malaysia-time";
 import {
   bankState,

@@ -1,7 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { http, HttpResponse } from "msw";
-
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   mswServer,
@@ -11,7 +7,9 @@ import {
 } from "@/test/mock-bank/mock-bank";
 import { scenarioTest, walkToTransferReview } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http, HttpResponse } from "msw";
 import {
   askOpenReviewsNameCheckAgain,
   countSent,

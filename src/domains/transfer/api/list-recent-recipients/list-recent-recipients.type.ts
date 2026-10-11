@@ -1,6 +1,5 @@
-import type { WireMoney } from "@/shared/lib/money/money";
-
 import type { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
+import type { WireMoney } from "@/shared/lib/money/money";
 
 export interface ListRecentRecipientsResponse {
   items: {

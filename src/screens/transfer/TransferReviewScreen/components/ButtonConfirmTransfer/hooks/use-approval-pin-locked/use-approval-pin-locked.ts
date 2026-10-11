@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from "react";
-
 import {
   isApprovalPinLocked,
   subscribeToApprovalPinLock,
 } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
+import { useEffect, useRef, useState } from "react";
 
 export function useApprovalPinLocked() {
   // Unknown, not unlocked, until the first read answers: a guess could create a transfer only a PIN could approve.

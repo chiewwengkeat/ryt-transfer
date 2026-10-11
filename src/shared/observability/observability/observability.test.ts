@@ -3,7 +3,6 @@ import {
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
 import { observedRecords } from "@/test/doubles/native-doubles";
-
 import { reportError, setObservabilitySink, trackEvent } from "./observability";
 
 afterEach(() => {

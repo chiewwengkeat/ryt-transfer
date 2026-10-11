@@ -1,7 +1,3 @@
-import { QueryObserver } from "@tanstack/react-query";
-import { router } from "expo-router";
-import { useEffect } from "react";
-
 import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { refreshPendingTransferNotices } from "@/domains/transfer/lib/pending-transfer-notices/pending-transfer-notices";
 import {
@@ -14,6 +10,9 @@ import { checkPendingTransferOnce } from "@/domains/transfer/lib/transfer-status
 import { queryClient } from "@/root/query-client/query-client";
 import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import { reportError } from "@/shared/observability/observability/observability";
+import { QueryObserver } from "@tanstack/react-query";
+import { router } from "expo-router";
+import { useEffect } from "react";
 
 export function usePendingTransfersAtLaunch() {
   useEffect(() => {

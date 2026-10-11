@@ -1,3 +1,7 @@
+import type { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
+import { standardEasing } from "@/shared/lib/motion/motion";
+import { phoneReducesMotionNow } from "@/shared/platform/reduce-motion/reduce-motion";
+import { spacing } from "@/shared/theme/theme";
 import { type ReactNode, useEffect } from "react";
 import { StyleSheet } from "react-native";
 import Animated, {
@@ -6,11 +10,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-
-import type { TransferOutcomeScenario } from "@/domains/transfer/api/get-transfer/get-transfer";
-import { standardEasing } from "@/shared/lib/motion/motion";
-import { phoneReducesMotionNow } from "@/shared/platform/reduce-motion/reduce-motion";
-import { spacing } from "@/shared/theme/theme";
 
 interface Props {
   outcome: TransferOutcomeScenario;

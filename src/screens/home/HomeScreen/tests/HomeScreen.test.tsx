@@ -1,7 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-import { AccessibilityInfo, BackHandler, ToastAndroid } from "react-native";
-
 import {
   observedRecords,
   reportedScenarios,
@@ -20,7 +16,9 @@ import {
   scenarioTest,
 } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
+import { AccessibilityInfo, BackHandler, ToastAndroid } from "react-native";
 import { pressEveryRecentRecipientExpectingItDisabled } from "./HomeScreen.helper";
 
 it(

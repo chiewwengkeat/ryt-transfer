@@ -1,8 +1,3 @@
-import { Fragment, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useStore } from "zustand";
-
 import { notifyApprovalPinReset } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
@@ -28,6 +23,10 @@ import {
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import TextBody from "@/shared/ui/TextBody/TextBody";
+import { Fragment, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useStore } from "zustand";
 
 interface Props {
   onResetDemo: () => Promise<void>;

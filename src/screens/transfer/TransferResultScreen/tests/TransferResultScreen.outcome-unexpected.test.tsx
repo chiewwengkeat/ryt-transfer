@@ -1,6 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
   type GetTransferResponse,
@@ -29,7 +26,8 @@ import {
   scenarioTest,
 } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
 import {
   buttonsOnTheResultPage,
   sendRm100FromHome,

@@ -1,9 +1,8 @@
-import { collectManifestSchemes } from "expo-linking";
-
 import {
   isTransferDraftOpen,
   transferFlowStore,
 } from "@/screens/transfer/flow-store/flow-store";
+import { collectManifestSchemes } from "expo-linking";
 
 export function redirectSystemPath({
   path,

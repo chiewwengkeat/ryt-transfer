@@ -1,7 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { http } from "msw";
-
 import {
   buildHistoryTransfer,
   failTransferHistoryPages,
@@ -10,6 +6,9 @@ import {
 } from "@/test/fixtures/transfer-responses";
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http } from "msw";
 
 it("keeps Home's Transfer busy, with no reason line to vanish, while the balance first loads, and ignores a press", async () => {
   const loadingReason =

@@ -1,8 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { http, HttpResponse } from "msw";
-import { AccessibilityInfo } from "react-native";
-
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import {
   PendingTransferStage,
@@ -29,7 +24,10 @@ import {
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http, HttpResponse } from "msw";
+import { AccessibilityInfo } from "react-native";
 import {
   buttonsOnTheResultPage,
   sendRm100FromHome,

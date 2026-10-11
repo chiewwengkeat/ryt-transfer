@@ -5,7 +5,6 @@ import {
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-
 import {
   directoryEntryFor,
   DUITNOW_BANKS,

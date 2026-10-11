@@ -1,6 +1,5 @@
-import { fireEvent, screen } from "@testing-library/react-native";
-
 import { renderRoute } from "@/test/render/render-route";
+import { fireEvent, screen } from "@testing-library/react-native";
 
 it("says a page that does not exist is not found, and goes Home from there", async () => {
   // Mounted past the link guard, which sends an unknown path Home: only the app's own navigation can reach this.

@@ -1,6 +1,5 @@
-import type { WireMoney } from "@/shared/lib/money/money";
-
 import type { Transfer } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import type { WireMoney } from "@/shared/lib/money/money";
 
 export interface CreateTransferRequest {
   recipientRef: string;

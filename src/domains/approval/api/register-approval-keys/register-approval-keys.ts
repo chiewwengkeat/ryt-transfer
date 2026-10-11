@@ -3,7 +3,6 @@ import {
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
 import { requestJson } from "@/shared/http/transport/transport";
-
 import type {
   RegisterApprovalKeysErrorResponse,
   RegisterApprovalKeysRequest,

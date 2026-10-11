@@ -1,25 +1,23 @@
-import { focusManager, useQueryClient } from "@tanstack/react-query";
-import { use, useEffect, useEffectEvent, useRef } from "react";
-import { useTranslation } from "react-i18next";
-
-import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import {
-  ScreensCoveredContext,
-  useIsScreenOnTop,
-} from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
-import { reportError } from "@/shared/observability/observability/observability";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-
 import { isSettledTransferOutcome } from "@/domains/transfer/api/get-transfer/get-transfer";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import {
   refreshPendingTransferNotices,
   usePendingTransferNotices,
 } from "@/domains/transfer/lib/pending-transfer-notices/pending-transfer-notices";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   checkPendingTransferOnce,
   UNSETTLED_TRANSFER_READ_INTERVAL_MS,
 } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
+import {
+  ScreensCoveredContext,
+  useIsScreenOnTop,
+} from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
+import { reportError } from "@/shared/observability/observability/observability";
+import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
+import { focusManager, useQueryClient } from "@tanstack/react-query";
+import { use, useEffect, useEffectEvent, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   onEarlierTransferSettled: () => void;

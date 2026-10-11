@@ -1,14 +1,12 @@
-import { useTranslation } from "react-i18next";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
+import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
 import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 import { colors, spacing } from "@/shared/theme/theme";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import TextBody from "@/shared/ui/TextBody/TextBody";
-
-import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
+import { useTranslation } from "react-i18next";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
   hasNextPage: boolean;

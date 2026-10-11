@@ -3,7 +3,6 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { after, before, test } = require("node:test");
-
 const { ESLint } = require("eslint");
 
 // eslint-disable-next-line fe/file-layout -- read at load by the before hook, which node:test runs as it registers

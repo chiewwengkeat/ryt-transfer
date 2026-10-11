@@ -1,6 +1,5 @@
-import { createStore } from "zustand/vanilla";
-
 import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { createStore } from "zustand/vanilla";
 
 export const NO_SCENARIO_PICK = { scenarioId: null, activatedAtMs: 0 };
 

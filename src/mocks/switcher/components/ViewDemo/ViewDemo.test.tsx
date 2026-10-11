@@ -1,11 +1,3 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
-import { changeLanguage } from "i18next";
-import { Text } from "react-native";
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
-
 import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   TRANSFER_SCENARIOS,
@@ -20,7 +12,13 @@ import {
   signTestApproval,
   startTestTransfer,
 } from "@/test/mock-bank/mock-bank";
-
+import { fireEvent, render, screen } from "@testing-library/react-native";
+import { changeLanguage } from "i18next";
+import { Text } from "react-native";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import ViewDemo from "./ViewDemo";
 
 it("offers no scenario, the phone-side picks, then what the bank or the connection decides by step, all in matrix order", async () => {

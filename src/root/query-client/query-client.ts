@@ -1,11 +1,3 @@
-import {
-  focusManager,
-  onlineManager,
-  type Query,
-  QueryClient,
-} from "@tanstack/react-query";
-import { AppState, type AppStateStatus } from "react-native";
-
 import { addServerReachedAgainListener } from "@/shared/http/offline/offline";
 import {
   isUnansweredReadFailure,
@@ -13,6 +5,13 @@ import {
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
 import { subscribeToPhoneConnection } from "@/shared/platform/network/network";
+import {
+  focusManager,
+  onlineManager,
+  type Query,
+  QueryClient,
+} from "@tanstack/react-query";
+import { AppState, type AppStateStatus } from "react-native";
 
 onlineManager.setEventListener(subscribeToPhoneConnection);
 focusManager.setEventListener((setFocused) => {

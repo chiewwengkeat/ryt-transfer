@@ -1,4 +1,5 @@
 // ⛔ Type imports only from the doubled packages: a value import re-enters the mock factory building them.
+import type { ObservedRecord } from "@/shared/observability/observability/observability";
 import type { NetworkState } from "expo-network";
 import {
   type ComponentProps,
@@ -7,8 +8,6 @@ import {
   useLayoutEffect,
 } from "react";
 import type * as ReactNativeScreens from "react-native-screens";
-
-import type { ObservedRecord } from "@/shared/observability/observability/observability";
 
 export const kvStoreDouble = {
   getItemSync: (key: string) => kvEntries.get(key) ?? null,

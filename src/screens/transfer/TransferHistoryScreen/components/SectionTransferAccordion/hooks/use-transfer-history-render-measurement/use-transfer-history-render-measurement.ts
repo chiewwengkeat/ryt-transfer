@@ -1,7 +1,3 @@
-import type { FlashListRef } from "@shopify/flash-list";
-import { useQueryClient } from "@tanstack/react-query";
-import type { RefObject } from "react";
-
 import { TransferStatus } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import {
   findTransferInHistory,
@@ -11,6 +7,9 @@ import {
   type useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { useRenderMeasurement } from "@/shared/observability/render-trace/render-trace";
+import type { FlashListRef } from "@shopify/flash-list";
+import { useQueryClient } from "@tanstack/react-query";
+import type { RefObject } from "react";
 
 // ⛔ Keep the literal comparison, never a shared constant or config: Metro folds only this form, which removes the operations below from demo and production builds.
 export const useTransferHistoryRenderMeasurement =

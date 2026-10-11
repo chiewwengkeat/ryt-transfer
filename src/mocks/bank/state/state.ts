@@ -4,15 +4,6 @@ import type {
   LookupRecipientResponse,
   RecipientIdType,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
-import {
-  TRANSFER_SCENARIOS,
-  type TransferScenario,
-} from "@/mocks/scenarios/transfer-scenarios/transfer-scenarios";
-import {
-  NO_SCENARIO_PICK,
-  switcherStore,
-} from "@/mocks/switcher/switcher-store/switcher-store";
-
 import type { BankAnswer } from "@/mocks/bank/answers/answers";
 import { toMalaysiaIso } from "@/mocks/bank/malaysia-time/malaysia-time";
 import { bankPorts } from "@/mocks/bank/ports/ports";
@@ -22,6 +13,14 @@ import {
   seedTransferHistory,
 } from "@/mocks/bank/seed/seed";
 import type { PendingTransferChange } from "@/mocks/bank/settlement/settlement";
+import {
+  TRANSFER_SCENARIOS,
+  type TransferScenario,
+} from "@/mocks/scenarios/transfer-scenarios/transfer-scenarios";
+import {
+  NO_SCENARIO_PICK,
+  switcherStore,
+} from "@/mocks/switcher/switcher-store/switcher-store";
 
 export function bankState() {
   if (loadedState) return loadedState;

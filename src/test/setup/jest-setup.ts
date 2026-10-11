@@ -6,14 +6,6 @@ jest.mock("react-native-worklets", () =>
 // Its mocks run at require time, so they must load before any test module imports expo-router.
 import "expo-router/testing-library";
 
-import {
-  focusManager,
-  onlineManager,
-  type QueryClient,
-} from "@tanstack/react-query";
-import type * as ContextStubs from "expo-router/build/testing-library/context-stubs";
-import i18next, { changeLanguage } from "i18next";
-
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import type * as RootQueryClient from "@/root/query-client/query-client";
@@ -21,7 +13,6 @@ import "@/root/translations/translations";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
 import { forgetRequestOutcomes } from "@/shared/http/offline/offline";
 import { setObservabilitySink } from "@/shared/observability/observability/observability";
-
 import type * as BiometricsDouble from "@/test/doubles/biometrics-double";
 import { resetBiometricsDouble } from "@/test/doubles/biometrics-double";
 import {
@@ -44,6 +35,13 @@ import {
   sentRequests,
   unhandledRequests,
 } from "@/test/mock-bank/mock-bank";
+import {
+  focusManager,
+  onlineManager,
+  type QueryClient,
+} from "@tanstack/react-query";
+import type * as ContextStubs from "expo-router/build/testing-library/context-stubs";
+import i18next, { changeLanguage } from "i18next";
 
 // expo-contacts binds its native module as it loads, so no import above may load it before this line runs.
 globalThis.expo.modules.ExpoContactsNext = contactsNativeDouble;

@@ -1,10 +1,8 @@
+import { renderRoute } from "@/test/render/render-route";
 import { act } from "@testing-library/react-native";
 import { router, Stack } from "expo-router";
 import { AccessibilityInfo } from "react-native";
 import { create } from "zustand";
-
-import { renderRoute } from "@/test/render/render-route";
-
 import BannerNotice from "./BannerNotice";
 
 beforeEach(() => {

@@ -1,3 +1,5 @@
+import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
+import { colors, typography } from "@/shared/theme/theme";
 import { use, useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -7,9 +9,6 @@ import {
   Text,
   TextStyle,
 } from "react-native";
-
-import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
-import { colors, typography } from "@/shared/theme/theme";
 
 interface Props {
   children: ReactNode;

@@ -1,12 +1,4 @@
 import {
-  fireEvent,
-  screen,
-  waitForElementToBeRemoved,
-} from "@testing-library/react-native";
-import { PermissionStatus } from "expo";
-import { Linking } from "react-native";
-
-import {
   setContactsPermission,
   setContactsPickerFailingOnce,
   setPickedContactPhones,
@@ -15,6 +7,13 @@ import {
 import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { moveAppTo, scenarioTest } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
+import {
+  fireEvent,
+  screen,
+  waitForElementToBeRemoved,
+} from "@testing-library/react-native";
+import { PermissionStatus } from "expo";
+import { Linking } from "react-native";
 
 afterEach(() => {
   jest.restoreAllMocks();

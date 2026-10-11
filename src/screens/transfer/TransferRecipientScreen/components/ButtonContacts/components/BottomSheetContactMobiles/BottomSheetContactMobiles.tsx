@@ -1,8 +1,7 @@
-import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text } from "react-native";
-
 import { colors, minTouchTarget, typography } from "@/shared/theme/theme";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text } from "react-native";
 
 interface Props {
   contactMobiles: {

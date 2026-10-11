@@ -1,10 +1,8 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
-
+import { accountKeys } from "@/domains/account/api/account.keys";
 import { requestJson } from "@/shared/http/transport/transport";
 import { parseWireAmount } from "@/shared/lib/money/money";
 import { trackEvent } from "@/shared/observability/observability/observability";
-
-import { accountKeys } from "@/domains/account/api/account.keys";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { GetPrimaryAccountResponse } from "./get-primary-account.type";
 
 export const getPrimaryAccountOptions = () =>

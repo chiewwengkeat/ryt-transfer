@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { AppState } from "react-native";
-import { useStore } from "zustand";
-
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   BiometricSignOutcome,
   readBiometricSensorRefusal,
 } from "@/domains/approval/lib/approval-keys/approval-keys";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { AppState } from "react-native";
+import { useStore } from "zustand";
 
 interface Props {
   pinTryAvailable: boolean;

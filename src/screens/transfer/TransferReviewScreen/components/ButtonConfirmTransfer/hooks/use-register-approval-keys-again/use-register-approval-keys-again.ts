@@ -1,5 +1,3 @@
-import { useTranslation } from "react-i18next";
-
 import { readRegisterApprovalKeysRefusal } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
 import { RegisterApprovalKeysErrorCode } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
 import { registerNewApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
@@ -10,6 +8,7 @@ import {
 import { askForApprovalPin } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { reportError } from "@/shared/observability/observability/observability";
+import { useTranslation } from "react-i18next";
 
 export function useRegisterApprovalKeysAgain() {
   const { t } = useTranslation("transfer");

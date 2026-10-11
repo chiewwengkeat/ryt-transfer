@@ -1,6 +1,5 @@
-import i18next from "i18next";
-
 import { AppLanguage, pickAppLanguage } from "@/shared/i18n/i18n";
+import i18next from "i18next";
 
 // ⛔ Keep these two in this order: the second sees what the first leaves behind.
 it("lets a test switch the app to Malay", () => {

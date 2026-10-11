@@ -1,9 +1,3 @@
-import { hashKey, useQueryClient } from "@tanstack/react-query";
-import { Stack } from "expo-router";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { StyleSheet, View } from "react-native";
-
 import {
   getListTransfersOptions,
   isTransferHistoryCached,
@@ -12,6 +6,8 @@ import {
   useListTransfers,
   wasNewestTransferHistoryPageReadWithin,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
+import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
+import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
 import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
 import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
@@ -21,9 +17,11 @@ import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
-
-import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
-import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
+import { hashKey, useQueryClient } from "@tanstack/react-query";
+import { Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { StyleSheet, View } from "react-native";
 import SectionTransferAccordion from "./components/SectionTransferAccordion/SectionTransferAccordion";
 
 export default function TransferHistoryScreen() {

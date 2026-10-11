@@ -1,8 +1,3 @@
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
-import { useEffect, useState } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
-
 import { ApprovalDemoPinContext } from "@/domains/approval/lib/approval-demo-pin/approval-demo-pin";
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
@@ -25,13 +20,16 @@ import {
 import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
-import { forgetSignedInCustomer } from "./lib/forget-signed-in-customer/forget-signed-in-customer";
-// At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
-import "@/root/translations/translations";
-
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import { StatusBar, StyleSheet, View } from "react-native";
 import ViewSessionEnded from "./components/ViewSessionEnded/ViewSessionEnded";
 import { usePendingTransfersAtLaunch } from "./hooks/use-pending-transfers-at-launch/use-pending-transfers-at-launch";
 import { useScreenCaptureBlock } from "./hooks/use-screen-capture-block/use-screen-capture-block";
+import { forgetSignedInCustomer } from "./lib/forget-signed-in-customer/forget-signed-in-customer";
+// At module scope, not in a provider: the root boundary renders in this component's place and needs the strings.
+import "@/root/translations/translations";
 
 export default function ViewRoot() {
   usePendingTransfersAtLaunch();

@@ -1,6 +1,3 @@
-import { MutationObserver, QueryObserver } from "@tanstack/react-query";
-import { AppState } from "react-native";
-
 import { reportRequestOutcome } from "@/shared/http/offline/offline";
 import {
   TransportError,
@@ -8,7 +5,8 @@ import {
 } from "@/shared/http/transport-error/transport-error";
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import { moveAppTo } from "@/test/render/drive-app";
-
+import { MutationObserver, QueryObserver } from "@tanstack/react-query";
+import { AppState } from "react-native";
 import { createQueryClient } from "./query-client";
 
 // ⛔ gcTime 0 on every query and mutation here: a cached entry's 5-minute timer keeps a single-file run alive.

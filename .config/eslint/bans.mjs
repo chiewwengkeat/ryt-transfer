@@ -1,7 +1,6 @@
 /* eslint-disable fe/file-layout -- a config file built at load */
 import { readFileSync } from "node:fs";
 import path from "node:path";
-
 import { CHECK_TEST_FILES } from "../test-files.js";
 import { SOURCE_FILES } from "./boundaries.mjs";
 

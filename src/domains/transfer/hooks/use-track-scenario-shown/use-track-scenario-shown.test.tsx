@@ -1,14 +1,12 @@
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { reportedScenarios } from "@/test/doubles/native-doubles";
+import { pressHardwareBack } from "@/test/render/drive-app";
+import { renderRoute } from "@/test/render/render-route";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { Pressable, Text } from "react-native";
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
-
-import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { reportedScenarios } from "@/test/doubles/native-doubles";
-import { pressHardwareBack } from "@/test/render/drive-app";
-import { renderRoute } from "@/test/render/render-route";
-
 import { useTrackScenarioShown } from "./use-track-scenario-shown";
 
 it("reports what a covered screen came to show once it is back on top, and not again on later returns", async () => {

@@ -1,12 +1,5 @@
-import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet } from "react-native";
-import Animated, {
-  ReduceMotion,
-  useAnimatedStyle,
-  withTiming,
-} from "react-native-reanimated";
-
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
+import ViewAmountWrap from "@/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/components/ViewAmountWrap/ViewAmountWrap";
 import { formatMalaysianDayHeader } from "@/shared/lib/dates/dates";
 import { formatMoney, parseWireAmount } from "@/shared/lib/money/money";
 import { standardEasing } from "@/shared/lib/motion/motion";
@@ -17,8 +10,13 @@ import {
 import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion/reduce-motion";
 import { colors, minTouchTarget, spacing } from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
-
-import ViewAmountWrap from "@/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/components/ViewAmountWrap/ViewAmountWrap";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet } from "react-native";
+import Animated, {
+  ReduceMotion,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
 
 interface Props {
   summary: ListTransfersResponse["days"][number];

@@ -1,3 +1,4 @@
+import { kvStorage } from "@/shared/platform/kv-storage/kv-storage";
 import { getLocales } from "expo-localization";
 import {
   use as addI18nextPlugin,
@@ -7,8 +8,6 @@ import {
   type ResourceLanguage,
 } from "i18next";
 import { initReactI18next } from "react-i18next";
-
-import { kvStorage } from "@/shared/platform/kv-storage/kv-storage";
 
 export enum AppLanguage {
   English = "en-MY",

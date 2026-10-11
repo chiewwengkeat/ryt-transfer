@@ -2,7 +2,6 @@ import {
   failDeviceIntegrityChecks,
   reportDeviceIntegrity,
 } from "@/test/doubles/biometrics-double";
-
 import { checkDeviceIntegrity, DeviceIntegrity } from "./device-integrity";
 
 it.each([

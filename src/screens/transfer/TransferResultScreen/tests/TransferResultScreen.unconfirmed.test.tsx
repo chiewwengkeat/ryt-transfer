@@ -1,8 +1,3 @@
-import { focusManager } from "@tanstack/react-query";
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { delay, http } from "msw";
-import { AccessibilityInfo } from "react-native";
-
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   clearTransferScenario,
@@ -15,7 +10,10 @@ import {
   relaunchAppAndWaitForItsLaunchChecks,
   renderRoute,
 } from "@/test/render/render-route";
-
+import { focusManager } from "@tanstack/react-query";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { delay, http } from "msw";
+import { AccessibilityInfo } from "react-native";
 import {
   buttonsOnTheResultPage,
   sendRm100FromHome,

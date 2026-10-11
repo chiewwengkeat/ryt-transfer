@@ -1,12 +1,3 @@
-import {
-  act,
-  fireEvent,
-  screen,
-  userEvent,
-} from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-import { AccessibilityInfo } from "react-native";
-
 import { accountKeys } from "@/domains/account/api/account.keys";
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
@@ -26,6 +17,14 @@ import {
   scenarioTest,
 } from "@/test/render/drive-app";
 import { askOpenAppToReadAgain, renderRoute } from "@/test/render/render-route";
+import {
+  act,
+  fireEvent,
+  screen,
+  userEvent,
+} from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
+import { AccessibilityInfo } from "react-native";
 
 it(
   "shows the balance and today's remaining limit again on the amount step",

@@ -1,11 +1,10 @@
-import { createStore } from "zustand/vanilla";
-
 import { isProductionBuild } from "@/shared/config/config";
 import { trackEvent } from "@/shared/observability/observability/observability";
 import {
   checkDeviceIntegrity,
   DeviceIntegrity,
 } from "@/shared/platform/device-integrity/device-integrity";
+import { createStore } from "zustand/vanilla";
 
 export const rootedPhoneDemoPickStore = createStore(() => ({
   rootedPhonePicked: false,

@@ -1,6 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   biometricPromptsShown,
@@ -22,7 +19,8 @@ import {
 } from "@/test/render/drive-app";
 import { endTheSessionThroughAnotherRead } from "@/test/render/interrupt-app";
 import { renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
 import {
   holdTheNextPost,
   walkToTransferReviewUntilTransferShows,

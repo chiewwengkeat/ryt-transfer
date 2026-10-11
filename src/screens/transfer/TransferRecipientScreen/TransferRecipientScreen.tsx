@@ -1,7 +1,3 @@
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-
 import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
 import { parseRecipientId } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
@@ -9,17 +5,19 @@ import SectionRecentRecipients from "@/domains/transfer/components/SectionRecent
 import { useOfflineNotice } from "@/domains/transfer/hooks/use-offline-notice/use-offline-notice";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
-import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
-import Loader from "@/shared/ui/Loader/Loader";
-import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
-
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
   TransferFlowStep,
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
+import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
+import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
+import Loader from "@/shared/ui/Loader/Loader";
+import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import BannerRecipientUnexpected from "./components/BannerRecipientUnexpected/BannerRecipientUnexpected";
 import ButtonContacts from "./components/ButtonContacts/ButtonContacts";
 import CardRecentRecipientChosen from "./components/CardRecentRecipientChosen/CardRecentRecipientChosen";

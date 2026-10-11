@@ -1,11 +1,5 @@
 import "@/test/setup/demo-build";
 
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { http, HttpResponse } from "msw";
-import { useState } from "react";
-import { Pressable, Text } from "react-native";
-
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { hasApprovalKeysOnFile } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { TransferStatus } from "@/domains/transfer/api/get-transfer/get-transfer.type";
@@ -33,6 +27,11 @@ import {
 } from "@/test/render/drive-app";
 import { crashTheScreenOfASettledReceipt } from "@/test/render/interrupt-app";
 import { renderRoute } from "@/test/render/render-route";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http, HttpResponse } from "msw";
+import { useState } from "react";
+import { Pressable, Text } from "react-native";
 
 it("shows a scenario picked from the Demo menu in a banner, whose ✕ returns to normal", async () => {
   await renderDemoRoot();

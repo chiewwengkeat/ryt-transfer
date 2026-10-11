@@ -1,7 +1,3 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
-
 import {
   colors,
   minTouchTarget,
@@ -9,6 +5,9 @@ import {
   spacing,
   typography,
 } from "@/shared/theme/theme";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
 
 interface Props {
   label: string;

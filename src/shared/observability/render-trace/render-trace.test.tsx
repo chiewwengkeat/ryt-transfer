@@ -3,7 +3,6 @@ import * as React from "react";
 import { useState } from "react";
 import * as ReactNative from "react-native";
 import { Linking, Text } from "react-native";
-
 import type * as RenderTrace from "./render-trace";
 
 beforeEach(() => {

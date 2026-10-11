@@ -1,22 +1,4 @@
 import {
-  act,
-  fireEvent,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react-native";
-import { router } from "expo-router";
-import { getFixedT } from "i18next";
-import {
-  AccessibilityInfo,
-  Dimensions,
-  StyleSheet,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native";
-import { ReduceMotion } from "react-native-reanimated";
-
-import {
   TransferDirection,
   TransferFunds,
   TransferStatus,
@@ -35,6 +17,23 @@ import {
   watchReduceMotionOfAnimations,
 } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react-native";
+import { router } from "expo-router";
+import { getFixedT } from "i18next";
+import {
+  AccessibilityInfo,
+  Dimensions,
+  StyleSheet,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
+import { ReduceMotion } from "react-native-reanimated";
 
 afterEach(() => {
   Dimensions.set({ window: WINDOW_AT_LAUNCH, screen: SCREEN_AT_LAUNCH });

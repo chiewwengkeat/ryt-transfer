@@ -1,6 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-
 import { accountKeys } from "@/domains/account/api/account.keys";
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { getListRecentRecipientsOptions } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
@@ -14,6 +11,8 @@ import { clearPendingTransfer } from "@/domains/transfer/lib/pending-transfers/p
 import { formatMoney } from "@/shared/lib/money/money";
 import { reportError } from "@/shared/observability/observability/observability";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
+import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 export default function SectionTransferNotices() {
   const { t } = useTranslation("home");

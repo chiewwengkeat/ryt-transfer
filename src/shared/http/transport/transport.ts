@@ -1,11 +1,10 @@
 import { API_BASE_URL } from "@/shared/config/config";
-import { reportError } from "@/shared/observability/observability/observability";
-
 import { reportRequestOutcome } from "@/shared/http/offline/offline";
 import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
+import { reportError } from "@/shared/observability/observability/observability";
 
 export type Send = (request: Request) => Promise<Response>;
 

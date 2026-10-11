@@ -1,7 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { AccessibilityInfo } from "react-native";
-
 import {
   buildHistoryTransfer,
   failTransferHistoryPages,
@@ -10,7 +6,9 @@ import {
 } from "@/test/fixtures/transfer-responses";
 import { sentRequests } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { AccessibilityInfo } from "react-native";
 import { OUT_OF_DATE } from "./TransferHistoryScreen.helper";
 
 it("offers Retry when the next page fails, asks no more by itself, and shows the page once a retry lands", async () => {

@@ -1,5 +1,8 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
+import { getTransferOptions } from "@/domains/transfer/api/get-transfer/get-transfer";
+import {
+  PendingTransferStage,
+  writePendingTransfer,
+} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import {
   isUnansweredWriteFailure,
   TransportError,
@@ -7,12 +10,7 @@ import {
 } from "@/shared/http/transport-error/transport-error";
 import { requestJson } from "@/shared/http/transport/transport";
 import type { WireMoney } from "@/shared/lib/money/money";
-
-import { getTransferOptions } from "@/domains/transfer/api/get-transfer/get-transfer";
-import {
-  PendingTransferStage,
-  writePendingTransfer,
-} from "@/domains/transfer/lib/pending-transfers/pending-transfers";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   ApproveTransferErrorResponse,
   ApproveTransferRequest,

@@ -1,5 +1,3 @@
-import { useTranslation } from "react-i18next";
-
 import type { useGetTransfer } from "@/domains/transfer/api/get-transfer/get-transfer";
 import {
   TransferDirection,
@@ -16,6 +14,7 @@ import {
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { formatMoney } from "@/shared/lib/money/money";
 import Card from "@/shared/ui/Card/Card";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   transfer: NonNullable<ReturnType<typeof useGetTransfer>["data"]>;

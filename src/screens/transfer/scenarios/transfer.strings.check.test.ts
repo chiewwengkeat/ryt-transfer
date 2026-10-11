@@ -4,7 +4,6 @@ import {
 } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { TRANSLATION_BUNDLES } from "@/root/translations/translations";
 import { AppLanguage } from "@/shared/i18n/i18n";
-
 import {
   MONEY_PHRASES,
   RESEND_BAN,

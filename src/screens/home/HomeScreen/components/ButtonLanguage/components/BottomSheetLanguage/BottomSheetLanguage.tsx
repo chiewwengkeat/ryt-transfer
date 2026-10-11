@@ -1,6 +1,3 @@
-import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text } from "react-native";
-
 import {
   APP_LANGUAGE_NAMES,
   AppLanguage,
@@ -15,6 +12,8 @@ import {
   typography,
 } from "@/shared/theme/theme";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text } from "react-native";
 
 interface Props {
   onClose: () => void;

@@ -1,7 +1,3 @@
-import { focusManager } from "@tanstack/react-query";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { delay, http, HttpResponse } from "msw";
-
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import {
@@ -27,6 +23,9 @@ import {
 } from "@/test/mock-bank/mock-bank";
 import { scenarioTest } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
+import { focusManager } from "@tanstack/react-query";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { delay, http, HttpResponse } from "msw";
 
 it.each([
   ["sent", { status: TransferStatus.Completed }, "was sent — money moved."],

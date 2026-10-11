@@ -1,6 +1,5 @@
-import { screen } from "@testing-library/react-native";
-
 import { renderRoute } from "@/test/render/render-route";
+import { screen } from "@testing-library/react-native";
 
 jest.mock("@/mocks/demo-layer/demo-layer", () => {
   throw new Error("The mock bank's loader was touched.");

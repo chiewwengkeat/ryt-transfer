@@ -1,10 +1,9 @@
-import { useTranslation } from "react-i18next";
-
 import {
   TransferDirection,
   TransferStatus,
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { useTranslation } from "react-i18next";
 
 export function useTransferStatusWord(
   transfer: Pick<Transfer, "status" | "underReview" | "direction">,

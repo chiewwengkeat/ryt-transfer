@@ -1,6 +1,3 @@
-import { router } from "expo-router";
-import { useTranslation } from "react-i18next";
-
 import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import {
   scenarioWordsKey,
@@ -13,6 +10,8 @@ import {
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
+import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   step: TransferFlowStep.Editing | TransferFlowStep.Reviewing;

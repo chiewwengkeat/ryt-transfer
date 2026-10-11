@@ -1,6 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-
 import { reportRequestOutcome } from "@/shared/http/offline/offline";
 import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import { requestJson } from "@/shared/http/transport/transport";
@@ -19,7 +16,8 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
 import { countSent, RECIPIENT_MOBILE } from "./TransferReviewScreen.helper";
 
 afterEach(() => {

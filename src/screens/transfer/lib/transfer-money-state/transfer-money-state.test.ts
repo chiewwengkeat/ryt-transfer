@@ -11,7 +11,6 @@ import {
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { scenarioSections } from "@/screens/transfer/scenarios/transfer.helper";
 import { buildHistoryTransfer } from "@/test/fixtures/transfer-responses";
-
 import {
   MONEY_STATE_BY_OUTCOME,
   MoneyState,

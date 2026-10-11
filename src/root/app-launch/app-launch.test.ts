@@ -1,9 +1,8 @@
-import { waitFor } from "@testing-library/react-native";
-
 import type * as ApprovalKeys from "@/domains/approval/lib/approval-keys/approval-keys";
 import type * as SecureStorage from "@/shared/platform/secure-storage/secure-storage";
 import { phoneKeyOptions } from "@/test/doubles/biometrics-double";
 import { kvStoreDouble } from "@/test/doubles/native-doubles";
+import { waitFor } from "@testing-library/react-native";
 
 // Built out here, so the isolated launch below shares these doubles instead of building its own.
 jest.requireMock("@sbaiahmed1/react-native-biometrics");

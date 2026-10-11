@@ -1,8 +1,7 @@
-import { useTranslation } from "react-i18next";
-import { StyleSheet, View } from "react-native";
-
 import { spacing } from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
+import { useTranslation } from "react-i18next";
+import { StyleSheet, View } from "react-native";
 
 interface Props {
   label: string;

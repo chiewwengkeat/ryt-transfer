@@ -1,6 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { AccessibilityInfo } from "react-native";
-
 import {
   TransferDirection,
   TransferFailureReason,
@@ -20,6 +17,8 @@ import {
 import { sentRequests } from "@/test/mock-bank/mock-bank";
 import { pressHardwareBack } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { AccessibilityInfo } from "react-native";
 
 // eslint-disable-next-line fe/file-layout -- read at load by an it.each table
 const SENT_AT = "5 Oct 2026, 3:42 pm";

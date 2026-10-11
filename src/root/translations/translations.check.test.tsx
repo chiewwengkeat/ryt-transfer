@@ -1,7 +1,3 @@
-import { render } from "@testing-library/react-native";
-import i18next, { type Resource } from "i18next";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-
 import {
   scenarioWordsKey,
   type TransferScenarioId,
@@ -9,7 +5,9 @@ import {
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
 import type { initTranslations } from "@/shared/i18n/i18n";
 import { AppLanguage } from "@/shared/i18n/i18n";
-
+import { render } from "@testing-library/react-native";
+import i18next, { type Resource } from "i18next";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TRANSLATION_BUNDLES } from "./translations";
 
 it("finds a top-level key that two bundles of one namespace both define", () => {

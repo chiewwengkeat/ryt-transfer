@@ -1,7 +1,6 @@
+import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
-
-import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 
 interface Props {
   disabledReason: string | undefined;

@@ -1,13 +1,4 @@
 import {
-  onlineManager,
-  type QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
-import { act, renderHook, waitFor } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-import type { ReactNode } from "react";
-
-import {
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
@@ -15,7 +6,14 @@ import { API_BASE_URL } from "@/shared/config/config";
 import { observedRecords } from "@/test/doubles/native-doubles";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { createQueryClientWithoutGcTimers } from "@/test/render/drive-app";
-
+import {
+  onlineManager,
+  type QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
+import { act, renderHook, waitFor } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
+import type { ReactNode } from "react";
 import {
   askForNextTransferHistoryPage,
   getListTransfersOptions,

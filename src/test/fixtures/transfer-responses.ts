@@ -1,5 +1,3 @@
-import { http, HttpResponse } from "msw";
-
 import {
   TransferDirection,
   TransferFunds,
@@ -12,6 +10,7 @@ import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfer
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
 import { mswServer } from "@/test/mock-bank/mock-bank";
+import { http, HttpResponse } from "msw";
 
 // One row unless a test serves others: a query by a row's text then matches that row alone.
 beforeEach(() => {

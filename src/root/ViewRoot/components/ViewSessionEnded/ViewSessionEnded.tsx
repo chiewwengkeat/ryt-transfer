@@ -1,8 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { BackHandler, StyleSheet, View } from "react-native";
-
 import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
   getTransferOptions,
@@ -16,6 +11,10 @@ import { reportError } from "@/shared/observability/observability/observability"
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { BackHandler, StyleSheet, View } from "react-native";
 
 interface Props {
   onSignIn: () => void;

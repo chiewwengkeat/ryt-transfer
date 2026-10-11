@@ -1,8 +1,6 @@
 import { TRANSFER_SCENARIOS } from "@/mocks/scenarios/transfer-scenarios/transfer-scenarios";
 import { AppLanguage } from "@/shared/i18n/i18n";
-
 import { findRouteTestedScenarioIds } from "@/test/scenarios/find-route-tested-scenario-ids";
-
 import {
   matrixHeader,
   MONEY_PHRASES,

@@ -11,7 +11,6 @@ import {
   type ListTransfersErrorResponse,
   type ListTransfersResponse,
 } from "@/domains/transfer/api/list-transfers/list-transfers.type";
-
 import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
 import { bankTransfersWithSeededHistory } from "@/mocks/bank/state/state";
 

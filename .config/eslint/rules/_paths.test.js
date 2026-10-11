@@ -4,7 +4,6 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { mkdtempSync, mkdirSync, writeFileSync } = require("fs");
 const { tmpdir } = require("os");
-
 const {
   camelCase,
   dirEntries,

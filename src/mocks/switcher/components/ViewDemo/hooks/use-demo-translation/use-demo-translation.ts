@@ -1,5 +1,3 @@
-import { useTranslation } from "react-i18next";
-
 import {
   scenarioWordsKey,
   type TransferScenarioId,
@@ -8,6 +6,7 @@ import demoEnMY from "@/mocks/switcher/i18n/en-MY.json";
 import demoMsMY from "@/mocks/switcher/i18n/ms-MY.json";
 import demoZhMY from "@/mocks/switcher/i18n/zh-MY.json";
 import { AppLanguage } from "@/shared/i18n/i18n";
+import { useTranslation } from "react-i18next";
 
 export function useDemoTranslation() {
   // Not one of the app's typed namespaces, so the cast below types its keys against the English bundle.

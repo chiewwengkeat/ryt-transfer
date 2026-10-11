@@ -1,6 +1,3 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-
 import {
   buildHistoryTransfer,
   failTransferDetails,
@@ -10,6 +7,8 @@ import {
 } from "@/test/fixtures/transfer-responses";
 import { mswServer, readsOfTheBalance } from "@/test/mock-bank/mock-bank";
 import { renderRoute } from "@/test/render/render-route";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
 
 it("keeps a pressed Try again busy and unpressable until its read answers, then shows what it brought", async () => {
   mswServer.use(http.get("*/accounts/primary", () => HttpResponse.error()));

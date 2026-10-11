@@ -1,6 +1,3 @@
-import type { QueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
-
 import { closeApprovalPinSheet } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import {
   ApproveRequestNotSentError,
@@ -27,6 +24,8 @@ import {
 import type { ApprovalAction } from "@/screens/transfer/flow-store/flow-store.type";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
 import { reportError } from "@/shared/observability/observability/observability";
+import type { QueryClient } from "@tanstack/react-query";
+import { router } from "expo-router";
 
 export async function settleApprovalAnswer({
   answer: { transfer, failure },

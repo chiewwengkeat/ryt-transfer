@@ -1,10 +1,8 @@
-import { useStore } from "zustand";
-import { createStore } from "zustand/vanilla";
-
 import { CoolingOffReason } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { trackEvent } from "@/shared/observability/observability/observability";
-
+import { useStore } from "zustand";
+import { createStore } from "zustand/vanilla";
 import {
   reduceAmountAndNoteAction,
   reduceApprovalAction,

@@ -1,3 +1,5 @@
+import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { pickTransferScenario } from "@/mocks/bank/bank";
 import { QueryClient } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import {
@@ -8,9 +10,6 @@ import {
   type NativeEventSubscription,
 } from "react-native";
 import * as Reanimated from "react-native-reanimated";
-
-import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { pickTransferScenario } from "@/mocks/bank/bank";
 
 // Callers pass the id as a literal: the matrix check finds each scenario's tests by reading it.
 export function scenarioTest(

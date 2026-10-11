@@ -1,7 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { ScrollView, Text, TextInput } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-
 import ViewScreenFrame from "./ViewScreenFrame";
 
 it("scrolls the field being typed in up only as far as keeps room below it for the next control", async () => {

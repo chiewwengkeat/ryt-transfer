@@ -1,21 +1,19 @@
-import { useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
-import { AccessibilityInfo, StyleSheet } from "react-native";
-
 import {
   type TransferOutcomeScenario,
   type useGetTransfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
 import { scenarioWordsKey } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
-import { formatMoney } from "@/shared/lib/money/money";
-import TextBody from "@/shared/ui/TextBody/TextBody";
-import TextHeading from "@/shared/ui/TextHeading/TextHeading";
-
 import {
   MONEY_STATE_BY_OUTCOME,
   MoneyState,
 } from "@/screens/transfer/lib/transfer-money-state/transfer-money-state";
+import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
+import { formatMoney } from "@/shared/lib/money/money";
+import TextBody from "@/shared/ui/TextBody/TextBody";
+import TextHeading from "@/shared/ui/TextHeading/TextHeading";
+import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { AccessibilityInfo, StyleSheet } from "react-native";
 
 interface Props {
   scenario: TransferOutcomeScenario;

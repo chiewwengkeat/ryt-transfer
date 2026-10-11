@@ -1,7 +1,5 @@
-import { p256 } from "@noble/curves/nist.js";
-
 import { base64Of, P256_SPKI_PREFIX } from "@/test/mock-bank/mock-bank";
-
+import { p256 } from "@noble/curves/nist.js";
 import { isP256PublicKey, verifyApprovalSignature } from "./verification";
 
 it("accepts a DER signature over the exact signed text", () => {

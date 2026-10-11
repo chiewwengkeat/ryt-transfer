@@ -1,3 +1,14 @@
+import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion/reduce-motion";
+import {
+  colors,
+  minTouchTarget,
+  radii,
+  spacing,
+  typography,
+} from "@/shared/theme/theme";
+import FieldText from "@/shared/ui/FieldText/FieldText";
+import TextHeading from "@/shared/ui/TextHeading/TextHeading";
+import { BottomSheetHostContext } from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 import {
   use,
   useEffect,
@@ -26,18 +37,6 @@ import Animated, {
   SlideInDown,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion/reduce-motion";
-import {
-  colors,
-  minTouchTarget,
-  radii,
-  spacing,
-  typography,
-} from "@/shared/theme/theme";
-import FieldText from "@/shared/ui/FieldText/FieldText";
-import TextHeading from "@/shared/ui/TextHeading/TextHeading";
-import { BottomSheetHostContext } from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
 
 interface Props {
   title: string;

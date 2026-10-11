@@ -1,10 +1,8 @@
+import { observedRecords } from "@/test/doubles/native-doubles";
+import { renderRoute } from "@/test/render/render-route";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { AccessibilityInfo, Pressable, Text } from "react-native";
-
-import { observedRecords } from "@/test/doubles/native-doubles";
-import { renderRoute } from "@/test/render/render-route";
-
 import ViewScreenError from "./ViewScreenError";
 
 beforeEach(() => {

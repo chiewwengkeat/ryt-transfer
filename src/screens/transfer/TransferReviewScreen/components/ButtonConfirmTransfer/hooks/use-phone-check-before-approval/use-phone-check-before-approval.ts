@@ -1,11 +1,10 @@
-import { useState } from "react";
-
 import { isApprovalRefusedOnThisPhone } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
 } from "@/screens/transfer/flow-store/flow-store";
+import { useState } from "react";
 
 export function usePhoneCheckBeforeApproval() {
   const [checkingPhone, setCheckingPhone] = useState(false);

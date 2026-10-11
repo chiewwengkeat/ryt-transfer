@@ -1,7 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { Platform } from "react-native";
-
 import {
   isScreenCaptureBlocked,
   screenCaptureNativeDouble,
@@ -18,6 +14,9 @@ import {
   crashTheScreenOfASettledReceipt,
 } from "@/test/render/interrupt-app";
 import { renderRoute } from "@/test/render/render-route";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { Platform } from "react-native";
 
 it("blocks capture on Home, lifts it on a receipt only once the screen before it has gone, and blocks it again on leaving", async () => {
   await renderRoute("/");

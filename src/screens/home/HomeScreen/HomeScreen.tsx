@@ -1,12 +1,10 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { Stack } from "expo-router";
-import { useTranslation } from "react-i18next";
-
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
 import { useBalanceScenarios } from "@/domains/transfer/hooks/use-balance-scenarios/use-balance-scenarios";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
-
+import { useQueryClient } from "@tanstack/react-query";
+import { Stack } from "expo-router";
+import { useTranslation } from "react-i18next";
 import ButtonLanguage from "./components/ButtonLanguage/ButtonLanguage";
 import ButtonStartTransfer from "./components/ButtonStartTransfer/ButtonStartTransfer";
 import ButtonTransferHistory from "./components/ButtonTransferHistory/ButtonTransferHistory";

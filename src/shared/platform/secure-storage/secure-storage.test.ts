@@ -1,10 +1,8 @@
-import * as SecureStore from "expo-secure-store";
-
 import {
   secureStoreEntries,
   secureStoreNativeDouble,
 } from "@/test/doubles/native-doubles";
-
+import * as SecureStore from "expo-secure-store";
 import {
   deleteAllSecureRecords,
   deleteSecureNamespace,

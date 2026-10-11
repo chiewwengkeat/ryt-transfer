@@ -1,6 +1,3 @@
-import type { RequestHandler } from "msw";
-import { http } from "msw";
-
 import { GetTransferLimitsErrorCode } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import {
   CoolingOffReason,
@@ -15,7 +12,6 @@ import {
 } from "@/mocks/bank/conditions/conditions";
 import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
 import { isAmountStepOpen } from "@/mocks/scenarios/amount-step-open/amount-step-open";
-
 import {
   commitThenAnswer,
   errorAnswer,
@@ -24,6 +20,8 @@ import {
   serverErrorAnswer,
   unknownCodeAnswer,
 } from "@/mocks/scenarios/overlay-answers/overlay-answers";
+import type { RequestHandler } from "msw";
+import { http } from "msw";
 
 export enum TransferStep {
   Start = "Start",

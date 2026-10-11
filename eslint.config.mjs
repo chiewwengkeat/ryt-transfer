@@ -1,6 +1,4 @@
 /* eslint-disable fe/file-layout -- a config file built at load */
-import path from "node:path";
-
 import eslintReact from "@eslint-react/eslint-plugin";
 import js from "@eslint/js";
 import pluginQuery from "@tanstack/eslint-plugin-query";
@@ -13,8 +11,8 @@ import reactHooks from "eslint-plugin-react-hooks";
 import testingLibrary from "eslint-plugin-testing-library";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
+import path from "node:path";
 import * as tseslint from "typescript-eslint";
-
 import appCodeBans from "./.config/eslint/bans.mjs";
 import sliceBoundaries, { SOURCE_FILES } from "./.config/eslint/boundaries.mjs";
 import fe from "./.config/eslint/rules/index.js";
@@ -185,6 +183,11 @@ export default defineConfig(
     ignores: ["src/app/**", "**/*.d.ts"],
     plugins: { fe },
     rules: { "fe/file-layout": "error" },
+  },
+  {
+    files: ["**/*.{js,mjs,cjs,ts,tsx}"],
+    plugins: { fe },
+    rules: { "fe/no-blank-line-between-imports": "error" },
   },
   {
     files: [...TEST_FILES, ".config/**/*.test.js", "scripts/*.test.js"],

@@ -1,10 +1,8 @@
-import { StyleSheet, View } from "react-native";
-
+import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
 import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
 import { spacing } from "@/shared/theme/theme";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
-
-import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
+import { StyleSheet, View } from "react-native";
 
 interface Props {
   message: string;

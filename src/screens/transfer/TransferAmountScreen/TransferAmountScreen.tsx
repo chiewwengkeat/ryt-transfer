@@ -1,7 +1,3 @@
-import { router, Stack, useFocusEffect } from "expo-router";
-import { useCallback, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
   getTransferLimitsMaintenance,
@@ -13,11 +9,6 @@ import { useBalanceScenarios } from "@/domains/transfer/hooks/use-balance-scenar
 import { useOfflineNotice } from "@/domains/transfer/hooks/use-offline-notice/use-offline-notice";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { formatMoney, parseTypedAmount } from "@/shared/lib/money/money";
-import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
-import FieldText from "@/shared/ui/FieldText/FieldText";
-import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
-
 import BannerFlowNotice from "@/screens/transfer/components/BannerFlowNotice/BannerFlowNotice";
 import {
   dispatchTransferFlow,
@@ -25,6 +16,13 @@ import {
   TransferFlowStep,
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
+import { formatMoney, parseTypedAmount } from "@/shared/lib/money/money";
+import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
+import FieldText from "@/shared/ui/FieldText/FieldText";
+import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
+import { router, Stack, useFocusEffect } from "expo-router";
+import { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function TransferAmountScreen() {
   const { t } = useTranslation("transfer");

@@ -1,5 +1,3 @@
-import { delay } from "msw";
-
 import {
   bankError,
   httpResponseFrom,
@@ -7,6 +5,7 @@ import {
 } from "@/mocks/bank/answers/answers";
 import { advanceBankTransfers } from "@/mocks/bank/settlement/settlement";
 import { bankState, persistBankState } from "@/mocks/bank/state/state";
+import { delay } from "msw";
 
 // No refusal here: not every read's contract has a code for a malformed body.
 export function answerBankRead(request: Request, operate: BankOperation) {

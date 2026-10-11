@@ -1,15 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { notificationAsync, NotificationFeedbackType } from "expo-haptics";
-import {
-  type NativeStackNavigationProp,
-  router,
-  Stack,
-  useLocalSearchParams,
-  useNavigation,
-} from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
   isSettledTransferOutcome,
@@ -21,7 +9,13 @@ import {
   TransferReadFailure,
   useTransferStatusCheck,
 } from "@/domains/transfer/lib/transfer-status-checks/transfer-status-checks";
+import SectionTransferDetails from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
+import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
+import {
+  MONEY_STATE_BY_OUTCOME,
+  MoneyState,
+} from "@/screens/transfer/lib/transfer-money-state/transfer-money-state";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
 import {
@@ -31,13 +25,17 @@ import {
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
-
-import SectionTransferDetails from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
-import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
+import { useQueryClient } from "@tanstack/react-query";
+import { notificationAsync, NotificationFeedbackType } from "expo-haptics";
 import {
-  MONEY_STATE_BY_OUTCOME,
-  MoneyState,
-} from "@/screens/transfer/lib/transfer-money-state/transfer-money-state";
+  type NativeStackNavigationProp,
+  router,
+  Stack,
+  useLocalSearchParams,
+  useNavigation,
+} from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import IconTransferCompleted from "./components/IconTransferCompleted/IconTransferCompleted";
 import TextOutcome from "./components/TextOutcome/TextOutcome";
 import ViewOutcomeEntrance from "./components/ViewOutcomeEntrance/ViewOutcomeEntrance";

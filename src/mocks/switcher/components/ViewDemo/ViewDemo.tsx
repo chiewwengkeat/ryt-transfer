@@ -1,12 +1,3 @@
-import { useState, type ComponentProps } from "react";
-import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import {
-  SafeAreaInsetsContext,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
-import { useStore } from "zustand";
-
 import { clearTransferScenario } from "@/mocks/bank/bank";
 import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
 import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
@@ -17,7 +8,14 @@ import {
   typography,
 } from "@/shared/theme/theme";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
-
+import { useState, type ComponentProps } from "react";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  SafeAreaInsetsContext,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { useStore } from "zustand";
 import BottomSheetDemo from "./components/BottomSheetDemo/BottomSheetDemo";
 import { useDemoTranslation } from "./hooks/use-demo-translation/use-demo-translation";
 

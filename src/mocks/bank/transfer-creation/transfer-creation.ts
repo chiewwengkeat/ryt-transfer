@@ -10,7 +10,6 @@ import {
   TransferStatus,
   type Transfer,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-
 import {
   lockOrCoolingOffRefusal,
   PER_TRANSFER_MAX_MINOR,

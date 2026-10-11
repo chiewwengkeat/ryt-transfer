@@ -1,6 +1,3 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { router } from "expo-router";
-
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import {
   buildHistoryTransfer,
@@ -10,6 +7,8 @@ import {
 } from "@/test/fixtures/transfer-responses";
 import { pressHardwareBack } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
 
 it("keeps a transfer from its History row under the notice when opened offline, saying so in Try again's place, and shows the bank's once back online", async () => {
   serveTransferDetails({ ...AISYAH, version: 2, note: "Lunch" });

@@ -1,3 +1,7 @@
+import { queryClient } from "@/root/query-client/query-client";
+import { TRANSLATION_BUNDLES } from "@/root/translations/translations";
+import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
+import { AppLanguage, initTranslations } from "@/shared/i18n/i18n";
 import type { QueryKey } from "@tanstack/react-query";
 import { act, render, screen } from "@testing-library/react-native";
 import { ExpoRoot, usePathname } from "expo-router";
@@ -7,11 +11,6 @@ import {
 } from "expo-router/testing-library";
 import { changeLanguage } from "i18next";
 import { useEffect, type ReactNode } from "react";
-
-import { queryClient } from "@/root/query-client/query-client";
-import { TRANSLATION_BUNDLES } from "@/root/translations/translations";
-import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
-import { AppLanguage, initTranslations } from "@/shared/i18n/i18n";
 
 // renderRoute's fake timers last one test: left on, they stall the next test's msw delay().
 afterEach(() => {

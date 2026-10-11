@@ -1,3 +1,9 @@
+import {
+  colors,
+  minTouchTarget,
+  spacing,
+  typography,
+} from "@/shared/theme/theme";
 import { useRef, useState, type ReactNode } from "react";
 import {
   KeyboardAvoidingView,
@@ -8,13 +14,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import {
-  colors,
-  minTouchTarget,
-  spacing,
-  typography,
-} from "@/shared/theme/theme";
 
 interface Props {
   children: ReactNode;

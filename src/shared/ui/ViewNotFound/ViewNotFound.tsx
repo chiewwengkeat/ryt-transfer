@@ -1,8 +1,7 @@
-import { router, Stack } from "expo-router";
-import { useTranslation } from "react-i18next";
-
 import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
+import { router, Stack } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export default function ViewNotFound() {
   const { t } = useTranslation(["shared"]);

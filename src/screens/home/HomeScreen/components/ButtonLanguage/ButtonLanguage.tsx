@@ -1,7 +1,3 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text } from "react-native";
-
 import { APP_LANGUAGE_NAMES, AppLanguage } from "@/shared/i18n/i18n";
 import {
   colors,
@@ -9,7 +5,9 @@ import {
   spacing,
   typography,
 } from "@/shared/theme/theme";
-
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text } from "react-native";
 import BottomSheetLanguage from "./components/BottomSheetLanguage/BottomSheetLanguage";
 
 export default function ButtonLanguage() {

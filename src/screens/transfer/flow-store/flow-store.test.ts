@@ -5,7 +5,6 @@ import {
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { asSen } from "@/shared/lib/money/money";
-
 import {
   ApprovalPath,
   dispatchTransferFlow,

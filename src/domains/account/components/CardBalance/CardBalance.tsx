@@ -1,7 +1,3 @@
-import { useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, View } from "react-native";
-
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
   useGetTransferLimits,
@@ -24,6 +20,9 @@ import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
 import TextBody from "@/shared/ui/TextBody/TextBody";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { StyleSheet, Text, View } from "react-native";
 
 interface Props {
   failureWords: Record<

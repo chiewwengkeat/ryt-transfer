@@ -1,8 +1,3 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { getFixedT } from "i18next";
-import { http, HttpResponse } from "msw";
-import { AccessibilityInfo } from "react-native";
-
 import { formatMalaysianDateTime } from "@/shared/lib/dates/dates";
 import { reportedScenarios } from "@/test/doubles/native-doubles";
 import { mswServer } from "@/test/mock-bank/mock-bank";
@@ -12,7 +7,10 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { getFixedT } from "i18next";
+import { http, HttpResponse } from "msw";
+import { AccessibilityInfo } from "react-native";
 import { askBankToCreateRm100, countSent } from "./TransferReviewScreen.helper";
 
 afterEach(() => {

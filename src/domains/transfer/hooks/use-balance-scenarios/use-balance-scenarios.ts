@@ -1,10 +1,9 @@
-import { useTranslation } from "react-i18next";
-
 import { trackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import {
   scenarioWordsKey,
   TransferScenarioId,
 } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { useTranslation } from "react-i18next";
 
 export function useBalanceScenarios(
   unexpectedScenarioId:

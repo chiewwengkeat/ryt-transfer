@@ -1,12 +1,10 @@
-import type * as ExpoLinking from "expo-linking";
-
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
   dispatchTransferFlow,
   TransferFlowActionType,
 } from "@/screens/transfer/flow-store/flow-store";
 import { asSen } from "@/shared/lib/money/money";
-
+import type * as ExpoLinking from "expo-linking";
 import { redirectSystemPath } from "./deep-links";
 
 // The demo build's scheme, which Jest has no app config to supply. Spied, not mocked: expo-router's test

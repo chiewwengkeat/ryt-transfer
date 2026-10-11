@@ -1,16 +1,14 @@
-import { act, renderHook } from "@testing-library/react-native";
-import { delay, http, HttpResponse } from "msw";
-
 import { API_BASE_URL } from "@/shared/config/config";
-import { setObservabilitySink } from "@/shared/observability/observability/observability";
-import { observedRecords } from "@/test/doubles/native-doubles";
-import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
-
 import { useIsOffline } from "@/shared/http/offline/offline";
 import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
+import { setObservabilitySink } from "@/shared/observability/observability/observability";
+import { observedRecords } from "@/test/doubles/native-doubles";
+import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
+import { act, renderHook } from "@testing-library/react-native";
+import { delay, http, HttpResponse } from "msw";
 import {
   addUnauthorizedListener,
   configureTransport,

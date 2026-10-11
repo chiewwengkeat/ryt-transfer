@@ -4,7 +4,6 @@ import {
   TransferDirection,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
-
 import { bankError, type BankAnswer } from "@/mocks/bank/answers/answers";
 import {
   malaysianIsoDate,

@@ -1,8 +1,7 @@
+import { colors, typography } from "@/shared/theme/theme";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, TextStyle } from "react-native";
-
-import { colors, typography } from "@/shared/theme/theme";
 
 interface Props {
   children: ReactNode;

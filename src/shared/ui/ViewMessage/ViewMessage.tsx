@@ -1,11 +1,10 @@
-import type { ReactNode } from "react";
-import { StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import { colors } from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import TextHeading from "@/shared/ui/TextHeading/TextHeading";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
+import type { ReactNode } from "react";
+import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
   title: string;

@@ -1,7 +1,3 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { http, HttpResponse } from "msw";
-import { AccessibilityInfo } from "react-native";
-
 import {
   reportedScenarios,
   setPhoneNetwork,
@@ -9,7 +5,9 @@ import {
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { moveAppTo, scenarioTest } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
+import { AccessibilityInfo } from "react-native";
 import { UNKNOWN_BANK_CODE } from "./TransferRecipientScreen.helper";
 
 it("says in the bank sheet that the banks wait for a connection, offering Try again, once the phone has none", async () => {

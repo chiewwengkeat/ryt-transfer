@@ -1,6 +1,5 @@
-import { fireEvent, screen } from "@testing-library/react-native";
-
 import { walkToTransferReview } from "@/test/render/drive-app";
+import { fireEvent, screen } from "@testing-library/react-native";
 
 export async function sendRm100FromHome() {
   await fireEvent.press(

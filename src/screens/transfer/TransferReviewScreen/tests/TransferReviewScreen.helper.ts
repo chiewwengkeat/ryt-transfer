@@ -1,6 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { http } from "msw";
-
 import { getLookupRecipientOptions } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import {
@@ -12,6 +9,8 @@ import {
 } from "@/test/mock-bank/mock-bank";
 import { walkToTransferReview } from "@/test/render/drive-app";
 import { askOpenAppToReadAgain } from "@/test/render/render-route";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { http } from "msw";
 
 export const RECIPIENT_MOBILE = "012-345 6789";
 

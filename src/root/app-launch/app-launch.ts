@@ -1,7 +1,4 @@
 /* eslint-disable fe/file-layout -- its launch steps run in order */
-import { createElement } from "react";
-import type { ColorValue } from "react-native";
-
 import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { warmUpDeviceIntegrityCheck } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import type { DemoLayer } from "@/mocks/demo-layer/demo-layer";
@@ -18,6 +15,8 @@ import { kvStorage } from "@/shared/platform/kv-storage/kv-storage";
 import { blockScreenCapture } from "@/shared/platform/screen-capture/screen-capture";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage/secure-storage";
 import ButtonHeaderBack from "@/shared/ui/ButtonHeaderBack/ButtonHeaderBack";
+import { createElement } from "react";
+import type { ColorValue } from "react-native";
 
 const INSTALL_MARKER_KEY = "install-marker";
 

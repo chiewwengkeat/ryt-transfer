@@ -1,12 +1,3 @@
-import {
-  type NativeStackNavigationProp,
-  router,
-  useNavigation,
-} from "expo-router";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Platform } from "react-native";
-
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import {
   LookupRecipientErrorCode,
@@ -35,6 +26,14 @@ import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
 import { READERS_OWN_FOCUS_WAIT_MS } from "@/shared/ui/TextHeading/TextHeading";
+import {
+  type NativeStackNavigationProp,
+  router,
+  useNavigation,
+} from "expo-router";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Platform } from "react-native";
 
 interface Props {
   draft: TransferDraft;

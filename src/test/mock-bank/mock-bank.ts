@@ -1,7 +1,3 @@
-import { p256 } from "@noble/curves/nist.js";
-import { getResponse, http } from "msw";
-import { setupServer } from "msw/node";
-
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import type { GetTransferLimitsResponse } from "@/domains/account/api/get-transfer-limits/get-transfer-limits.type";
 import type { RegisterApprovalKeysResponse } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
@@ -13,6 +9,9 @@ import {
   type LookupRecipientResponse,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { handlersForActiveScenario } from "@/mocks/bank/bank";
+import { p256 } from "@noble/curves/nist.js";
+import { getResponse, http } from "msw";
+import { setupServer } from "msw/node";
 
 export { clearTransferScenario, pickTransferScenario } from "@/mocks/bank/bank";
 

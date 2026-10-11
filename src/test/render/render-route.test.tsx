@@ -1,18 +1,16 @@
-import { useMutation } from "@tanstack/react-query";
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { router, Stack } from "expo-router";
-import { http, HttpResponse } from "msw";
-import { Pressable, Text } from "react-native";
-
 import { queryClient } from "@/root/query-client/query-client";
 import {
   TransportError,
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
 import { requestJson } from "@/shared/http/transport/transport";
-
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
+import { useMutation } from "@tanstack/react-query";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { router, Stack } from "expo-router";
+import { http, HttpResponse } from "msw";
+import { Pressable, Text } from "react-native";
 import { renderRoute } from "./render-route";
 
 it("reports the pathname the user navigated to", async () => {

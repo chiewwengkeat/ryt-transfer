@@ -1,5 +1,3 @@
-import { Platform } from "react-native";
-
 import {
   BiometricSignOutcome,
   replaceBiometricApprovalKey,
@@ -8,9 +6,9 @@ import {
 import { readApproveTransferRefusal } from "@/domains/transfer/api/approve-transfer/approve-transfer";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-import { reportError } from "@/shared/observability/observability/observability";
-
 import { approveWithPin } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-pin/approve-with-pin";
+import { reportError } from "@/shared/observability/observability/observability";
+import { Platform } from "react-native";
 
 export async function approveWithBiometricKey(
   approval: Parameters<typeof approveWithPin>[0],

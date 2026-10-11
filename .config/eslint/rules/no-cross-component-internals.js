@@ -1,5 +1,4 @@
 const path = require("path");
-
 const {
   MODULE_EXTS,
   dirEntries,

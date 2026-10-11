@@ -1,6 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-
 import { setPhoneNetwork } from "@/test/doubles/native-doubles";
 import {
   buildHistoryTransfer,
@@ -10,7 +7,8 @@ import {
 import { sentRequests } from "@/test/mock-bank/mock-bank";
 import { moveAppTo } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { OUT_OF_DATE } from "./TransferHistoryScreen.helper";
 
 it("asks for the newest page once back online when History opened offline, and shows it", async () => {

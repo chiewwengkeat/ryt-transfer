@@ -5,7 +5,6 @@
 const { test } = require("node:test");
 const { RuleTester } = require("eslint");
 const { parser } = require("typescript-eslint");
-
 const hookFilename = require("./hook-filename-matches-export");
 // `useContentHeight.tsx` breaks hook-file-kebab-case too; the last case asserts the
 // two rules suggest the same rename rather than pulling in opposite directions.

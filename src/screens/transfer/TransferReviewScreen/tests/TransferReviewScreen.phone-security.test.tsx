@@ -1,7 +1,3 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { router } from "expo-router";
-import { http, HttpResponse } from "msw";
-
 import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
 import {
   TransferFunds,
@@ -34,6 +30,9 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
+import { http, HttpResponse } from "msw";
 
 it("refuses approval in place of the prompt on a phone that reports root, leaving no way to approve and sending nothing, then approves from review opened again once the phone reports clean", async () => {
   await pairPhoneAsTheDemoLaunchDoes();

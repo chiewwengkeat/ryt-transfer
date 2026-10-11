@@ -1,6 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { router } from "expo-router";
-
 import {
   buildHistoryTransfer,
   holdTransferHistoryPages,
@@ -14,6 +11,8 @@ import {
 } from "@/test/mock-bank/mock-bank";
 import { scenarioTest } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
 
 it("lists the first page's transfers under their day, asking the bank once", async () => {
   await renderRoute("/transfer-history");

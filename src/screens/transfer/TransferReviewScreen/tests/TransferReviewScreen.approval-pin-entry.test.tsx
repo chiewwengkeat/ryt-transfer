@@ -1,6 +1,3 @@
-import { act, fireEvent, screen } from "@testing-library/react-native";
-import { http } from "msw";
-
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { biometricPromptsShown } from "@/test/doubles/biometrics-double";
 import {
@@ -12,6 +9,8 @@ import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { mswServer, sentRequests } from "@/test/mock-bank/mock-bank";
 import { pressHardwareBack, scenarioTest } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { http } from "msw";
 
 it(
   "asks for the PIN, saying why face or fingerprint approval isn't available, with no prompt",

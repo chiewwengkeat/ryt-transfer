@@ -4,7 +4,6 @@ const { test } = require("node:test");
 const { RuleTester } = require("eslint");
 const { mkdtempSync, mkdirSync, writeFileSync } = require("fs");
 const { tmpdir } = require("os");
-
 const sibling = require("./sibling-basename-tracks-folder");
 
 // node:test owns reporting and failure now. RuleTester's own describe/it shims

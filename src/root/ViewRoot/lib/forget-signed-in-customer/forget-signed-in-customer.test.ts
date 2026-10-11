@@ -1,5 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
@@ -11,7 +9,7 @@ import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import { sendToBank, startTestTransfer } from "@/test/mock-bank/mock-bank";
 import { pressHardwareBack } from "@/test/render/drive-app";
 import { relaunchApp, renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { forgetSignedInCustomer } from "./forget-signed-in-customer";
 
 it("reopens none of their transfers at the next launch, though one still awaits approval", async () => {

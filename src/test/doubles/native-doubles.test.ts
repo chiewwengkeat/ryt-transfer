@@ -4,7 +4,6 @@ import {
   getNetworkStateAsync,
   NetworkStateType,
 } from "expo-network";
-
 import {
   kvStoreDouble,
   secureStoreNativeDouble,

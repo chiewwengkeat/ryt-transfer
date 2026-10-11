@@ -1,5 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-
 import { rememberApprovalPinLocked } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
 import {
   biometricPromptsShown,
@@ -21,7 +19,7 @@ import {
   walkToTransferReview,
 } from "@/test/render/drive-app";
 import { renderRoute } from "@/test/render/render-route";
-
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import {
   countSent,
   walkToTransferReviewAndPressTransfer,

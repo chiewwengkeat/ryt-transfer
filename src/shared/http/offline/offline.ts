@@ -1,9 +1,7 @@
-import { useSyncExternalStore } from "react";
-
+import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
 import { reportError } from "@/shared/observability/observability/observability";
 import { subscribeToPhoneConnection } from "@/shared/platform/network/network";
-
-import { TransportErrorKind } from "@/shared/http/transport-error/transport-error";
+import { useSyncExternalStore } from "react";
 
 export function useIsOffline() {
   return useSyncExternalStore(

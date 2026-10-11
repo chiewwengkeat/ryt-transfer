@@ -1,6 +1,3 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { delay, http, HttpResponse } from "msw";
-
 import { pairPhoneAsTheDemoLaunchDoes } from "@/test/mock-bank/demo-pairing";
 import {
   lookUpTestRecipient,
@@ -11,6 +8,8 @@ import {
 import { walkToTransferReview } from "@/test/render/drive-app";
 import { endSessionWithAnyRequest } from "@/test/render/interrupt-app";
 import { renderRoute } from "@/test/render/render-route";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { delay, http, HttpResponse } from "msw";
 
 it("asks a name check the ended session interrupted again by itself once they sign back in", async () => {
   const { recipient } = await lookUpTestRecipient("012-345 6789");

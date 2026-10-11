@@ -1,10 +1,9 @@
+import { colors, minTouchTarget } from "@/shared/theme/theme";
+import Card from "@/shared/ui/Card/Card";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { StyleProp, ViewStyle } from "react-native";
 import { Pressable, StyleSheet } from "react-native";
-
-import { colors, minTouchTarget } from "@/shared/theme/theme";
-import Card from "@/shared/ui/Card/Card";
 
 interface Props {
   children: ReactNode;

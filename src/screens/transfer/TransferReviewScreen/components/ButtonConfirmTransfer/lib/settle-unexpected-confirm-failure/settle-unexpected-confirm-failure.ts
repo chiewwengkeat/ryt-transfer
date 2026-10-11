@@ -1,5 +1,3 @@
-import type { QueryClient } from "@tanstack/react-query";
-
 import { getPrimaryAccountOptions } from "@/domains/account/api/get-primary-account/get-primary-account";
 import { closeApprovalPinSheet } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
@@ -9,11 +7,11 @@ import {
   TransferFlowStep,
   transferFlowStore,
 } from "@/screens/transfer/flow-store/flow-store";
-
 import {
   openResultPageOfSentApproval,
   settleApprovalAnswer,
 } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/settle-approval-answer/settle-approval-answer";
+import type { QueryClient } from "@tanstack/react-query";
 
 export async function settleUnexpectedConfirmFailure(queryClient: QueryClient) {
   // A sheet left sending cannot be closed by the person, and nothing else will close it.

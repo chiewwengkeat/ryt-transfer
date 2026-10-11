@@ -1,5 +1,3 @@
-import type { TFunction } from "i18next";
-
 import { signWithPossessionKey } from "@/domains/approval/lib/approval-keys/approval-keys";
 import {
   isApprovalPinLocked,
@@ -18,9 +16,9 @@ import {
   TransferFlowActionType,
 } from "@/screens/transfer/flow-store/flow-store";
 import type { TransferFlowNotice } from "@/screens/transfer/flow-store/flow-store.type";
-
 import type { useRegisterApprovalKeysAgain } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/hooks/use-register-approval-keys-again/use-register-approval-keys-again";
 import type { settleApprovalAnswer } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/settle-approval-answer/settle-approval-answer";
+import type { TFunction } from "i18next";
 
 // Resolves with the PIN only once the bank has accepted it, so nothing reuses a PIN that may be wrong.
 export async function approveWithPin(

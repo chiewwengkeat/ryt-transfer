@@ -1,3 +1,4 @@
+import { base64Of, P256_SPKI_PREFIX } from "@/test/mock-bank/mock-bank";
 import { p256 } from "@noble/curves/nist.js";
 import type {
   CreateKeysOptions,
@@ -5,8 +6,6 @@ import type {
   SignatureOptions,
   SignOptions,
 } from "@sbaiahmed1/react-native-biometrics";
-
-import { base64Of, P256_SPKI_PREFIX } from "@/test/mock-bank/mock-bank";
 
 // Signs for real with a test key, so the bank's own verification runs against the app's signed text.
 export const biometricsLibraryDouble = {

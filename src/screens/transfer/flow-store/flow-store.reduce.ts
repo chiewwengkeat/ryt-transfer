@@ -1,5 +1,4 @@
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
-
 import {
   type AmountAndNoteAction,
   type ApprovalAction,

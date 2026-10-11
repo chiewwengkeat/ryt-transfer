@@ -1,9 +1,14 @@
-import { http, type RequestHandler } from "msw";
-
 import { RegisterApprovalKeysErrorCode } from "@/domains/approval/api/register-approval-keys/register-approval-keys.type";
 import { ApproveTransferErrorCode } from "@/domains/transfer/api/approve-transfer/approve-transfer.type";
 import { CreateTransferErrorCode } from "@/domains/transfer/api/create-transfer/create-transfer.type";
 import type { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import {
+  answerBankRead,
+  answerBankWrite,
+} from "@/mocks/handlers/answer-from-bank/answer-from-bank";
+import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
+import { NO_SCENARIO_PICK } from "@/mocks/switcher/switcher-store/switcher-store";
+import { http, type RequestHandler } from "msw";
 import {
   getBankPrimaryAccount,
   getBankTransferLimits,
@@ -15,15 +20,6 @@ import {
   listDuitNowBanks,
   lookupBankRecipient,
 } from "./recipients/recipients";
-import { approveBankTransfer } from "./transfer-approval/transfer-approval";
-import { createBankTransfer } from "./transfer-creation/transfer-creation";
-
-import {
-  answerBankRead,
-  answerBankWrite,
-} from "@/mocks/handlers/answer-from-bank/answer-from-bank";
-import { BANK_PATHS } from "@/mocks/handlers/bank-paths/bank-paths";
-import { NO_SCENARIO_PICK } from "@/mocks/switcher/switcher-store/switcher-store";
 import { DEMO_PIN_ATTEMPTS } from "./seed/seed";
 import {
   activeTransferScenario,
@@ -32,6 +28,8 @@ import {
   resetBankState,
   saveScenarioPick,
 } from "./state/state";
+import { approveBankTransfer } from "./transfer-approval/transfer-approval";
+import { createBankTransfer } from "./transfer-creation/transfer-creation";
 
 // Stays exported: the bundle check finds this name in demo builds, and minify keeps only an export's.
 export const transferHandlers = [

@@ -1,7 +1,6 @@
+import { renderRoute } from "@/test/render/render-route";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
-
-import { renderRoute } from "@/test/render/render-route";
 
 afterEach(() => {
   jest.restoreAllMocks();

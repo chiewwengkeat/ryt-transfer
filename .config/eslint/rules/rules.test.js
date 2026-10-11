@@ -4,7 +4,6 @@
 
 const { test } = require("node:test");
 const { RuleTester } = require("eslint");
-
 const ownFolder = require("./component-own-folder");
 const kebabCase = require("./hook-file-kebab-case");
 const typePrefix = require("./component-type-prefix");

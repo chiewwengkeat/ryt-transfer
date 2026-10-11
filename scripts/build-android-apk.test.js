@@ -3,7 +3,6 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
-
 const { buildAndroidReleaseApk } = require("./build-android-apk");
 
 for (const variant of [undefined, "development", "constructor", "__proto__"]) {

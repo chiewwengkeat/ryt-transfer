@@ -1,11 +1,10 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-
 import {
   getTransferOptions,
   selectTransferWithOutcome,
 } from "@/domains/transfer/api/get-transfer/get-transfer";
 import { findTransferInHistory } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { parseWireAmount } from "@/shared/lib/money/money";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function useGetTransferWithHistoryPlaceholder(transferId: string) {
   const queryClient = useQueryClient();
