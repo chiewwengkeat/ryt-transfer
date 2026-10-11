@@ -8,7 +8,7 @@ import {
 } from "@/domains/transfer/api/list-transfers/list-transfers";
 import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
 import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
-import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
+import { useQueryError } from "@/shared/hooks/use-query-error/use-query-error";
 import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 import { colors, spacing } from "@/shared/theme/theme";
@@ -29,10 +29,10 @@ export default function TransferHistoryScreen() {
   const queryClient = useQueryClient();
   const transferHistory = useListTransfers();
   const phoneReportsConnection = usePhoneReportsConnection();
-  const { failure: historyFailure, retry: readFirstPageAgain } =
-    useRetryKeepingFailure(transferHistory.error, () =>
-      resetTransferHistory(queryClient),
-    );
+  const historyFailure = useQueryError(
+    transferHistory.error,
+    transferHistory.fetchStatus !== "idle",
+  );
   const failureIsSessionEnd = isSessionEndFailure(historyFailure);
   // Clear on each open: a failure left from an earlier visit would be announced as this one's.
   const [refreshFailed, setRefreshFailed] = useState(false);
@@ -79,7 +79,7 @@ export default function TransferHistoryScreen() {
             phoneReportsConnection ? (
               <ButtonPrimary
                 label={t("history.retry")}
-                onPress={readFirstPageAgain}
+                onPress={() => resetTransferHistory(queryClient)}
               />
             ) : (
               <TextOffline />

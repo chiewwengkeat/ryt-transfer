@@ -1,9 +1,10 @@
 import { useGetPrimaryAccount } from "@/domains/account/api/get-primary-account/get-primary-account";
 import {
+  getTransferLimitsMaintenance,
   useGetTransferLimits,
-  useTransferLimitsMaintenance,
 } from "@/domains/account/api/get-transfer-limits/get-transfer-limits";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
+import { useQueryError } from "@/shared/hooks/use-query-error/use-query-error";
 import { useIsOffline } from "@/shared/http/offline/offline";
 import {
   isSessionEndFailure,
@@ -46,18 +47,16 @@ export default function CardBalance({
   const limits = useGetTransferLimits({ refetchInterval });
   // Maintenance pauses transfers, not the balance: the balance still shows, and Transfer says why it waits.
   const limitsPausedForMaintenance =
-    useTransferLimitsMaintenance(limits) !== undefined;
-  const [failureBeforeReRead, setFailureBeforeReRead] = useState<Error | null>(
-    null,
+    getTransferLimitsMaintenance(
+      useQueryError(
+        limits.error,
+        limits.isPending && limits.fetchStatus !== "idle",
+      ),
+    ) !== undefined;
+  const failure = useQueryError(
+    account.error ?? (limitsPausedForMaintenance ? null : limits.error),
+    account.fetchStatus !== "idle" || limits.fetchStatus !== "idle",
   );
-  // A re-read of a read that never answered clears its error until it lands: kept, the failure stays one showing.
-  const failure =
-    account.error ??
-    (limitsPausedForMaintenance ? null : limits.error) ??
-    (account.fetchStatus !== "idle" || limits.fetchStatus !== "idle"
-      ? failureBeforeReRead
-      : null);
-  if (failure !== failureBeforeReRead) setFailureBeforeReRead(failure);
   const shownFailure =
     failure === null
       ? undefined

@@ -64,7 +64,7 @@ it("checks the name again by itself once a request reaches the bank, after revie
   expect(screen.getByRole("button", { name: "Transfer" })).toBeEnabled();
 });
 
-it("goes back to its loader while it checks the name again, until that answer lands", async () => {
+it("keeps the failure while it checks the name again, and a Try again pressed meanwhile sends no second check", async () => {
   const { recipient } = await lookUpTestRecipient(RECIPIENT_MOBILE);
   await openReviewWhileNoRequestReachesTheBank();
   mswServer.resetHandlers();
@@ -81,13 +81,34 @@ it("goes back to its loader while it checks the name again, until that answer la
       { once: true },
     ),
   );
+  const nameChecksBeforeTheBankAnswered = countSent(
+    "POST",
+    "/recipients/lookup",
+  );
 
   await act(() => jest.advanceTimersByTimeAsync(10_000));
+  const nameChecksOnceItAskedAgain = countSent("POST", "/recipients/lookup");
+  await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+  await act(() => jest.advanceTimersByTimeAsync(1_000));
 
-  expect(screen.getByLabelText("Loading")).toBeOnTheScreen();
-  expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+  expect(nameChecksOnceItAskedAgain).toBeGreaterThan(
+    nameChecksBeforeTheBankAnswered,
+  );
+  expect(countSent("POST", "/recipients/lookup")).toBe(
+    nameChecksOnceItAskedAgain,
+  );
+  expect(
+    screen.getByText(
+      "Something unexpected stopped the transfer — no money moved.",
+    ),
+  ).toBeOnTheScreen();
+  expect(screen.getByRole("button", { name: "Try again" })).toBeDisabled();
+  expect(screen.queryByLabelText("Loading")).toBeNull();
   answerTheNameCheck();
   expect(await screen.findByText(recipient.registeredName)).toBeOnTheScreen();
+  expect(countSent("POST", "/recipients/lookup")).toBe(
+    nameChecksOnceItAskedAgain,
+  );
 });
 
 it("never checks an answered name again once a request reaches the bank after one found none, so its reference stays", async () => {

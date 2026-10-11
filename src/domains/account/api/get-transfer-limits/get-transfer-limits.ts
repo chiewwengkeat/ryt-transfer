@@ -4,7 +4,6 @@ import { requestJson } from "@/shared/http/transport/transport";
 import { parseWireAmount } from "@/shared/lib/money/money";
 import { trackEvent } from "@/shared/observability/observability/observability";
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import {
   GetTransferLimitsErrorCode,
   type GetTransferLimitsErrorResponse,
@@ -54,21 +53,4 @@ export function getTransferLimitsMaintenance(error: unknown) {
   const { until } = (error.body as GetTransferLimitsErrorResponse).error;
   // An unreadable time is dropped: formatting it throws, and the words without a time still serve.
   return { until: Number.isNaN(Date.parse(until ?? "")) ? undefined : until };
-}
-
-export function useTransferLimitsMaintenance(
-  limits: ReturnType<typeof useGetTransferLimits>,
-) {
-  const [maintenanceErrorBeforeReRead, setMaintenanceErrorBeforeReRead] =
-    useState<Error | null>(null);
-  // A re-read of limits that never loaded clears their maintenance answer until it lands: kept, the pause stays.
-  const maintenanceError =
-    getTransferLimitsMaintenance(limits.error) !== undefined
-      ? limits.error
-      : limits.isPending && limits.fetchStatus !== "idle"
-        ? maintenanceErrorBeforeReRead
-        : null;
-  if (maintenanceError !== maintenanceErrorBeforeReRead)
-    setMaintenanceErrorBeforeReRead(maintenanceError);
-  return getTransferLimitsMaintenance(maintenanceError);
 }

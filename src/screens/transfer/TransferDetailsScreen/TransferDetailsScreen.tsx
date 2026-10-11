@@ -2,7 +2,7 @@ import { GetTransferErrorCode } from "@/domains/transfer/api/get-transfer/get-tr
 import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
 import SectionTransferDetails from "@/screens/transfer/components/SectionTransferDetails/SectionTransferDetails";
 import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
-import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
+import { useQueryError } from "@/shared/hooks/use-query-error/use-query-error";
 import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
 import {
   isSessionEndFailure,
@@ -22,17 +22,18 @@ export default function TransferDetailsScreen() {
   const { transferQuery, transfer } =
     useGetTransferWithHistoryPlaceholder(transferId);
   const phoneReportsConnection = usePhoneReportsConnection();
-  const { failure: readFailure, retry: readAgain } = useRetryKeepingFailure(
+  const readFailure = useQueryError(
     transferQuery.error,
-    () => transferQuery.refetch(),
+    transferQuery.fetchStatus !== "idle",
   );
+  const readAgain = () => transferQuery.refetch({ cancelRefetch: false });
   const failureIsSessionEnd = isSessionEndFailure(readFailure);
 
   return (
     <>
       <Stack.Screen options={{ title: t("details.title") }} />
-      {transferQuery.error instanceof TransportError &&
-      transferQuery.error.code === GetTransferErrorCode.TransferNotFound ? (
+      {readFailure instanceof TransportError &&
+      readFailure.code === GetTransferErrorCode.TransferNotFound ? (
         <ViewScreenFrame
           footer={
             <ButtonPrimary

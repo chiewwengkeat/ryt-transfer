@@ -1,6 +1,6 @@
 import { useListBanks } from "@/domains/transfer/api/list-banks/list-banks";
 import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
-import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
+import { useQueryError } from "@/shared/hooks/use-query-error/use-query-error";
 import { useIsOffline } from "@/shared/http/offline/offline";
 import {
   colors,
@@ -107,8 +107,8 @@ interface BottomSheetBankProps {
 function BottomSheetBank({ onBankChosen, onClose }: BottomSheetBankProps) {
   const { t, i18n } = useTranslation("transfer");
   const banks = useListBanks();
-  const { failure: banksFailure, retry: readBanksAgain } =
-    useRetryKeepingFailure(banks.error, () => banks.refetch());
+  const banksFailure = useQueryError(banks.error, banks.fetchStatus !== "idle");
+  const readBanksAgain = () => banks.refetch({ cancelRefetch: false });
   // Continue's offline line sits under the sheet, so the sheet says why its list waits.
   const offline = useIsOffline();
   const [bankSearch, setBankSearch] = useState("");

@@ -15,7 +15,7 @@ import {
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
 import type { TransferDraft } from "@/screens/transfer/flow-store/flow-store.type";
-import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
+import { useQueryError } from "@/shared/hooks/use-query-error/use-query-error";
 import {
   isSessionEndFailure,
   TransportError,
@@ -42,8 +42,10 @@ export default function SectionReviewDetails({ draft }: Props) {
   const { t } = useTranslation("transfer");
   const lookup = useLookupRecipient(draft.recipient);
   const sending = useTransferFlow(isTransferSentOrBeingSent);
-  const { failure: lookupFailure, retry: checkNameAgain } =
-    useRetryKeepingFailure(lookup.error, () => lookup.refetch());
+  const lookupFailure = useQueryError(
+    lookup.error,
+    lookup.fetchStatus !== "idle",
+  );
   const code =
     lookupFailure instanceof TransportError ? lookupFailure.code : undefined;
   // Never while sending: "no money moved" can be false by then, and a retry mints a new recipient reference.
@@ -134,7 +136,7 @@ export default function SectionReviewDetails({ draft }: Props) {
           waitedOutRefusalAt === refusedAt
             ? {
                 label: t(`common.${scenarioWordsKey(nameCheckFailure)}.retry`),
-                onPress: checkNameAgain,
+                onPress: () => lookup.refetch({ cancelRefetch: false }),
               }
             : undefined
         }

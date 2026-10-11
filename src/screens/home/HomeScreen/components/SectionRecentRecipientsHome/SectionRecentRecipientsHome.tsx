@@ -1,6 +1,6 @@
 import { useListRecentRecipients } from "@/domains/transfer/api/list-recent-recipients/list-recent-recipients";
 import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
-import { useRetryKeepingFailure } from "@/shared/hooks/use-retry-keeping-failure/use-retry-keeping-failure";
+import { useQueryError } from "@/shared/hooks/use-query-error/use-query-error";
 import { useIsOffline } from "@/shared/http/offline/offline";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
 import BannerAction from "@/shared/ui/BannerAction/BannerAction";
@@ -15,8 +15,10 @@ export default function SectionRecentRecipientsHome({
 }: Props) {
   const { t } = useTranslation("transfer");
   const recents = useListRecentRecipients();
-  const { failure: recentsFailure, retry: readRecentsAgain } =
-    useRetryKeepingFailure(recents.error, () => recents.refetch());
+  const recentsFailure = useQueryError(
+    recents.error,
+    recents.fetchStatus !== "idle",
+  );
   // Transfer's offline line already explains a list that cannot load.
   const offline = useIsOffline();
 
@@ -30,7 +32,7 @@ export default function SectionRecentRecipientsHome({
           message={t("common.start_unexpected.body")}
           action={{
             label: t("common.start_unexpected.retry"),
-            onPress: readRecentsAgain,
+            onPress: () => recents.refetch({ cancelRefetch: false }),
           }}
         />
       )}
