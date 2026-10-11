@@ -11,6 +11,7 @@ import {
   PendingTransferStage,
   updatePendingTransfer,
 } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
+import { useInitialValue } from "@/shared/hooks/use-initial-value/use-initial-value";
 import {
   isSessionEndFailure,
   TransportError,
@@ -38,7 +39,7 @@ export function useTransferStatusCheck(
   outcomeShown: boolean,
 ) {
   const queryClient = useQueryClient();
-  const [openedAtMs] = useState(Date.now);
+  const openedAtMs = useInitialValue(Date.now);
   const transfer = useGetTransfer(transferId, {
     retry: 0,
     refetchInterval: ({ state }) => {

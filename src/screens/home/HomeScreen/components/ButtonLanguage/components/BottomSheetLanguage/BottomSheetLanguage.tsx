@@ -1,3 +1,4 @@
+import { useInitialValue } from "@/shared/hooks/use-initial-value/use-initial-value";
 import {
   APP_LANGUAGE_NAMES,
   AppLanguage,
@@ -20,8 +21,7 @@ interface Props {
 }
 export default function BottomSheetLanguage({ onClose }: Props) {
   const { t, i18n } = useTranslation("home");
-  // The React Compiler keeps this for as long as the sheet stays open, so every pick closes it.
-  const pickedLanguage = readPickedAppLanguage();
+  const pickedLanguage = useInitialValue(readPickedAppLanguage);
   return (
     <BottomSheetFrame
       title={t("bottom_sheet_language.title")}

@@ -12,13 +12,14 @@ import {
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
+import { useInitialValue } from "@/shared/hooks/use-initial-value/use-initial-value";
 import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import ButtonHeaderBack from "@/shared/ui/ButtonHeaderBack/ButtonHeaderBack";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 import { useQueryClient } from "@tanstack/react-query";
 import { Stack, useNavigation } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { BackHandler } from "react-native";
 import { useStore } from "zustand";
@@ -29,7 +30,7 @@ import SectionReviewDetails from "./components/SectionReviewDetails/SectionRevie
 export default function TransferReviewScreen() {
   const queryClient = useQueryClient();
   // Review shows, and the phone signs, the draft it opened with; the steps behind it cannot change it meanwhile.
-  const [draft] = useState(() => {
+  const draft = useInitialValue(() => {
     const flow = transferFlowStore.getState();
     if (flow.step !== TransferFlowStep.Reviewing)
       throw new Error(`Review opened while the transfer was ${flow.step}.`);

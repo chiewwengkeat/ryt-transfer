@@ -14,6 +14,7 @@ import {
 } from "@/mocks/scenarios/transfer-scenarios/transfer-scenarios";
 import { useDemoTranslation } from "@/mocks/switcher/components/ViewDemo/hooks/use-demo-translation/use-demo-translation";
 import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
+import { useInitialValue } from "@/shared/hooks/use-initial-value/use-initial-value";
 import {
   colors,
   minTouchTarget,
@@ -23,7 +24,7 @@ import {
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import TextBody from "@/shared/ui/TextBody/TextBody";
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useStore } from "zustand";
@@ -35,7 +36,7 @@ interface Props {
 export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
   const { t, scenarioTitle } = useDemoTranslation();
   const activeScenarioId = useStore(switcherStore, (pick) => pick.scenarioId);
-  const [demoPinLocked] = useState(isDemoPinLocked);
+  const demoPinLocked = useInitialValue(isDemoPinLocked);
 
   return (
     <BottomSheetFrame
