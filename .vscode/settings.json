@@ -1,0 +1,100 @@
+{
+  // Pinned per language, defaults included, and code actions as an empty list: VS Code merges these
+  // with each person's own settings, so a missing key or an object would let theirs run on save too.
+  "[typescript]": {
+    "editor.codeActionsOnSave": [],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "files.trimTrailingWhitespace": false,
+    "files.insertFinalNewline": false,
+    "files.trimFinalNewlines": false
+  },
+  "[typescriptreact]": {
+    "editor.codeActionsOnSave": [],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "files.trimTrailingWhitespace": false,
+    "files.insertFinalNewline": false,
+    "files.trimFinalNewlines": false
+  },
+  "[javascript]": {
+    "editor.codeActionsOnSave": [],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "files.trimTrailingWhitespace": false,
+    "files.insertFinalNewline": false,
+    "files.trimFinalNewlines": false
+  },
+  "[javascriptreact]": {
+    "editor.codeActionsOnSave": [],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "files.trimTrailingWhitespace": false,
+    "files.insertFinalNewline": false,
+    "files.trimFinalNewlines": false
+  },
+  "[json]": {
+    "editor.codeActionsOnSave": [],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "files.trimTrailingWhitespace": false,
+    "files.insertFinalNewline": false,
+    "files.trimFinalNewlines": false
+  },
+  "[jsonc]": {
+    "editor.codeActionsOnSave": [],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "files.trimTrailingWhitespace": false,
+    "files.insertFinalNewline": false,
+    "files.trimFinalNewlines": false
+  },
+  "[markdown]": {
+    "editor.codeActionsOnSave": [],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "files.trimTrailingWhitespace": false,
+    "files.insertFinalNewline": false,
+    "files.trimFinalNewlines": false
+  },
+  "[yaml]": {
+    "editor.codeActionsOnSave": [],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "files.trimTrailingWhitespace": false,
+    "files.insertFinalNewline": false,
+    "files.trimFinalNewlines": false
+  },
+  "prettier.enable": true,
+  "prettier.configPath": "",
+  "prettier.ignorePath": ".prettierignore",
+  "prettier.prettierPath": "./node_modules/prettier",
+  "prettier.useEditorConfig": true,
+  "js/ts.preferences.organizeImports": {
+    "caseSensitivity": "auto",
+    "typeOrder": "auto",
+    "unicodeCollation": "ordinal"
+  },
+  "typescript.preferences.organizeImports": {
+    "caseSensitivity": "auto",
+    "typeOrder": "auto",
+    "unicodeCollation": "ordinal"
+  },
+  "javascript.preferences.organizeImports": {
+    "caseSensitivity": "auto",
+    "typeOrder": "auto",
+    "unicodeCollation": "ordinal"
+  },
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}

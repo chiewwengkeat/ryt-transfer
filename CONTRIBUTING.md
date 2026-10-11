@@ -14,6 +14,8 @@ pnpm test    # Jest, then the tests of the repo's own scripts and lint rules
 
 The pre-commit hook lints, formats and secret-scans the staged files, then runs the placement check over the commit's own tree. The `commit-msg` hook lints the message, and CI lints every pushed message again.
 
+Open the repo in VS Code or Cursor, trust the folder, install the Prettier extension it recommends, and accept the editor's offer to use the workspace's TypeScript version. A save then runs Format Document once and nothing else, whatever your own settings say.
+
 CI also runs `production-bundle`, a job of its own that exports the app in each variant, and with none set (`scripts/check-production-bundle.js`). It fails when a production or unset export carries code from `src/mocks/` or msw, or when a demo or production export carries the development-only re-render counter. It also fails when an export does not finish or writes no bundle, when no source map lists `src/app/`, or when a build that should carry that code lacks it, since then a clean export proves nothing.
 
 ## Layout
