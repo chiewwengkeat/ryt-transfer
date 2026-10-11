@@ -16,7 +16,7 @@ import {
   TransferFlowActionType,
 } from "@/screens/transfer/flow-store/flow-store";
 import type { TransferFlowNotice } from "@/screens/transfer/flow-store/flow-store.type";
-import type { useRegisterApprovalKeysAgain } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/hooks/use-register-approval-keys-again/use-register-approval-keys-again";
+import type { registerApprovalKeysAgain } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/register-approval-keys-again/register-approval-keys-again";
 import type { settleApprovalAnswer } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/settle-approval-answer/settle-approval-answer";
 import type { TFunction } from "i18next";
 
@@ -40,7 +40,7 @@ export async function approveWithPin(
     ) => Promise<void>;
     setUpApprovalAgain: (
       pinInHand?: string,
-    ) => ReturnType<ReturnType<typeof useRegisterApprovalKeysAgain>>;
+    ) => ReturnType<typeof registerApprovalKeysAgain>;
   },
   scenario: TransferScenarioId,
   words: { message: string; detail?: string },

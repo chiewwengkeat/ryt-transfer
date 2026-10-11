@@ -18,18 +18,20 @@ export default function ButtonUsePinInstead({
   onPress,
 }: Props) {
   const { t } = useTranslation("transfer");
-  const biometricApprovalOn = useStore(
+  const [isBiometricSensorUnavailable, setIsBiometricSensorUnavailable] =
+    useState(false);
+
+  const isBiometricApprovalOn = useStore(
     approvalSettingsStore,
     (settings) => settings.biometricApprovalOn,
   );
-  const [biometricSensorUnavailable, setBiometricSensorUnavailable] =
-    useState(false);
+
   useEffect(() => {
-    let mounted = true;
+    let isMounted = true;
     const checkBiometricSensor = () => {
       void readBiometricSensorRefusal().then((refusal) => {
-        if (mounted)
-          setBiometricSensorUnavailable(
+        if (isMounted)
+          setIsBiometricSensorUnavailable(
             refusal?.outcome === BiometricSignOutcome.NotSetUp ||
               refusal?.outcome === BiometricSignOutcome.NoSensor,
           );
@@ -41,14 +43,19 @@ export default function ButtonUsePinInstead({
       if (state === "active") checkBiometricSensor();
     });
     return () => {
-      mounted = false;
+      isMounted = false;
       subscription.remove();
     };
   }, []);
 
   // Transfer asks for the PIN itself while face or fingerprint approval is off or unavailable.
-  if (!pinTryAvailable || !biometricApprovalOn || biometricSensorUnavailable)
+  if (
+    !pinTryAvailable ||
+    !isBiometricApprovalOn ||
+    isBiometricSensorUnavailable
+  )
     return null;
+
   return (
     <ButtonSecondary label={t("common.pin_chosen.choose")} onPress={onPress} />
   );

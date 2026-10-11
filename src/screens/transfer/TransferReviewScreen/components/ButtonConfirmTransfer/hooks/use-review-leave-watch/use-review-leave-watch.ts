@@ -21,9 +21,5 @@ export function useReviewLeaveWatch() {
       countLeave();
     };
   }, [navigation]);
-
-  return () => {
-    const leaveCountAtStart = reviewLeaveCountRef.current;
-    return () => reviewLeaveCountRef.current !== leaveCountAtStart;
-  };
+  return () => reviewLeaveCountRef.current;
 }

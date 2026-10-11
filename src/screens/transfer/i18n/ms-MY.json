@@ -59,7 +59,7 @@
   "section_review_details": {
     "recipient_name": "Kepada"
   },
-  "button_confirm_transfer": {
+  "section_transfer_buttons": {
     "label": "Pindahkan"
   },
   "approve_with_biometric_key": {

@@ -23,9 +23,9 @@ import {
   transferFlowStore,
 } from "@/screens/transfer/flow-store/flow-store";
 import type { TransferFlowNotice } from "@/screens/transfer/flow-store/flow-store.type";
-import { useRegisterApprovalKeysAgain } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/hooks/use-register-approval-keys-again/use-register-approval-keys-again";
 import { approveWithBiometricKey } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-biometric-key/approve-with-biometric-key";
 import { approveWithPin } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/approve-with-pin/approve-with-pin";
+import { registerApprovalKeysAgain } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/register-approval-keys-again/register-approval-keys-again";
 import { settleApprovalAnswer } from "@/screens/transfer/TransferReviewScreen/components/ButtonConfirmTransfer/lib/settle-approval-answer/settle-approval-answer";
 import { useIsScreenOnTop } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
 import { formatMoney } from "@/shared/lib/money/money";
@@ -38,25 +38,23 @@ import { useTranslation } from "react-i18next";
 export function useSendTransferApproval() {
   const { t } = useTranslation("transfer");
   const queryClient = useQueryClient();
+  const scenarioReachedUnderAViewRef = useRef<TransferScenarioId>(undefined);
   const customerId = useGetPrimaryAccount().data?.customerId;
   const approveTransfer = useApproveTransfer();
-  const registerApprovalKeysAgain = useRegisterApprovalKeysAgain();
-  const screenOnTop = useIsScreenOnTop();
+  const isScreenOnTop = useIsScreenOnTop();
   // A ref, not the render's value: the approval reaches each scenario long after the press, maybe under another view.
-  const screenOnTopRef = useRef(screenOnTop);
-  const scenarioReachedUnderAViewRef = useRef<TransferScenarioId>(undefined);
+  const screenOnTopRef = useRef(isScreenOnTop);
   useEffect(() => {
-    screenOnTopRef.current = screenOnTop;
+    screenOnTopRef.current = isScreenOnTop;
     const scenarioReached = scenarioReachedUnderAViewRef.current;
-    if (!screenOnTop || scenarioReached === undefined) return;
+    if (!isScreenOnTop || scenarioReached === undefined) return;
     scenarioReachedUnderAViewRef.current = undefined;
     // Only while its sheet still asks for the PIN: once the sheet has closed, Result or review shows what came after.
     if (
       approvalPinSheetStore.getState().step === ApprovalPinSheetStep.AwaitingPin
     )
       trackScenarioShown(scenarioReached);
-  }, [screenOnTop]);
-
+  }, [isScreenOnTop]);
   return async (path = ApprovalPath.Biometric) => {
     const approving = transferFlowStore.getState();
     if (approving.step !== TransferFlowStep.Approving) return;
@@ -155,13 +153,13 @@ export function useSendTransferApproval() {
           });
         await forgetPendingTransfer();
         return registerApprovalKeysAgain(
+          t,
           noLongerOnThisTransfer,
           trackScenarioShownWhileOnTop,
           pinInHand,
         );
       },
     };
-
     if (path === ApprovalPath.Pin) {
       await approveWithPin(approval, TransferScenarioId.PinChosen, {
         message: t("common.pin_chosen.body"),

@@ -59,7 +59,7 @@
   "section_review_details": {
     "recipient_name": "收款人"
   },
-  "button_confirm_transfer": {
+  "section_transfer_buttons": {
     "label": "转账"
   },
   "approve_with_biometric_key": {
