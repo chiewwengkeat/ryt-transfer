@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 export default function ButtonTransferHistory() {
   const { t } = useTranslation("home");
+
   return (
     <ButtonSecondary
       label={t("button_transfer_history.label")}

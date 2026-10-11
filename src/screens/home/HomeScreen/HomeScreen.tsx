@@ -1,27 +1,31 @@
 import CardBalance from "@/domains/account/components/CardBalance/CardBalance";
+import SectionRecentRecipients from "@/domains/transfer/components/SectionRecentRecipients/SectionRecentRecipients";
 import { useBalanceScenarios } from "@/domains/transfer/hooks/use-balance-scenarios/use-balance-scenarios";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 import { useQueryClient } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
+import BannerRecentRecipientsFailed from "./components/BannerRecentRecipientsFailed/BannerRecentRecipientsFailed";
 import ButtonLanguage from "./components/ButtonLanguage/ButtonLanguage";
 import ButtonStartTransfer from "./components/ButtonStartTransfer/ButtonStartTransfer";
 import ButtonTransferHistory from "./components/ButtonTransferHistory/ButtonTransferHistory";
-import SectionRecentRecipientsHome from "./components/SectionRecentRecipientsHome/SectionRecentRecipientsHome";
 import SectionTransferNotices from "./components/SectionTransferNotices/SectionTransferNotices";
 import { useBackTwiceToCloseApp } from "./hooks/use-back-twice-to-close-app/use-back-twice-to-close-app";
 import { useStartTransferAvailability } from "./hooks/use-start-transfer-availability/use-start-transfer-availability";
 
 export default function HomeScreen() {
   const { t } = useTranslation("home");
-  useBackTwiceToCloseApp();
+  const queryClient = useQueryClient();
+
   const balanceScenarios = useBalanceScenarios(
     TransferScenarioId.StartUnexpected,
   );
-  const { startTransferDisabledReason, firstReadRunning } =
+  const { reasonStartTransferDisabled, isFirstReadRunning } =
     useStartTransferAvailability();
-  const queryClient = useQueryClient();
+
+  useBackTwiceToCloseApp();
+
   return (
     <>
       <Stack.Screen
@@ -33,8 +37,8 @@ export default function HomeScreen() {
       <ViewScreenFrame
         footer={
           <ButtonStartTransfer
-            disabledReason={startTransferDisabledReason}
-            firstReadRunning={firstReadRunning}
+            disabledReason={reasonStartTransferDisabled}
+            firstReadRunning={isFirstReadRunning}
           />
         }
         // Home is the stack's root, so every read still active is one of its own.
@@ -43,8 +47,12 @@ export default function HomeScreen() {
         <SectionTransferNotices />
         <CardBalance {...balanceScenarios} />
         <ButtonTransferHistory />
-        <SectionRecentRecipientsHome
-          startTransferDisabledReason={startTransferDisabledReason}
+        <BannerRecentRecipientsFailed />
+        <SectionRecentRecipients
+          disabledReason={reasonStartTransferDisabled}
+          onRecentChosen={(recentId) => {
+            router.push({ pathname: "/transfer", params: { recentId } });
+          }}
         />
       </ViewScreenFrame>
     </>

@@ -22,6 +22,7 @@ interface Props {
 export default function BottomSheetLanguage({ onClose }: Props) {
   const { t, i18n } = useTranslation("home");
   const pickedLanguage = useInitialValue(readPickedAppLanguage);
+
   return (
     <BottomSheetFrame
       title={t("bottom_sheet_language.title")}

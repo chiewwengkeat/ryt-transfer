@@ -12,12 +12,14 @@ import BottomSheetLanguage from "./components/BottomSheetLanguage/BottomSheetLan
 
 export default function ButtonLanguage() {
   const { t, i18n } = useTranslation("home");
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
   const shortName = (
     Object.entries(APP_LANGUAGE_NAMES).find(
       ([language]) => language === i18n.language,
     )?.[1] ?? APP_LANGUAGE_NAMES[AppLanguage.English]
   ).short;
+
   return (
     <>
       <Pressable
@@ -26,7 +28,7 @@ export default function ButtonLanguage() {
         accessibilityLabel={`${shortName}, ${t("button_language.label")}`}
         accessibilityLanguage={i18n.language}
         onPress={() => {
-          setSheetOpen(true);
+          setIsSheetOpen(true);
         }}
         style={({ pressed }) => [styles.main, pressed && styles.pressed]}
       >
@@ -35,10 +37,10 @@ export default function ButtonLanguage() {
           {shortName}
         </Text>
       </Pressable>
-      {sheetOpen && (
+      {isSheetOpen && (
         <BottomSheetLanguage
           onClose={() => {
-            setSheetOpen(false);
+            setIsSheetOpen(false);
           }}
         />
       )}

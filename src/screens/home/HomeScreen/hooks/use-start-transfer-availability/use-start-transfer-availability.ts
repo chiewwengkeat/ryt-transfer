@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 
 export function useStartTransferAvailability() {
   const { t } = useTranslation(["transfer", "shared"]);
-  const offlineNotice = useOfflineNotice();
+  const noticeOffline = useOfflineNotice();
   const account = useGetPrimaryAccount();
   const limits = useGetTransferLimits();
   const maintenance = getTransferLimitsMaintenance(
@@ -19,28 +19,24 @@ export function useStartTransferAvailability() {
       limits.isPending && limits.fetchStatus !== "idle",
     ),
   );
-
-  return {
-    startTransferDisabledReason:
-      offlineNotice !== undefined
-        ? offlineNotice
-        : maintenance?.until !== undefined
-          ? t("common.under_maintenance.until", {
-              time: formatMalaysianDateTime(maintenance.until, t),
-            })
-          : maintenance !== undefined
-            ? t("common.under_maintenance.body")
-            : account.isSuccess && limits.isSuccess
-              ? undefined
-              : t("common.balance_unavailable.disabled_reason"),
-    firstReadRunning:
-      offlineNotice === undefined &&
-      [account, limits].some(
-        // Not isPending: a read with no data goes back to pending each time it is asked again.
-        (read) =>
-          read.fetchStatus === "fetching" &&
-          read.dataUpdatedAt === 0 &&
-          read.errorUpdatedAt === 0,
-      ),
-  };
+  const reasonStartTransferDisabled = (() => {
+    if (noticeOffline !== undefined) return noticeOffline;
+    if (maintenance?.until !== undefined)
+      return t("common.under_maintenance.until", {
+        time: formatMalaysianDateTime(maintenance.until, t),
+      });
+    if (maintenance !== undefined) return t("common.under_maintenance.body");
+    if (account.isSuccess && limits.isSuccess) return undefined;
+    return t("common.balance_unavailable.disabled_reason");
+  })();
+  const isFirstReadRunning =
+    noticeOffline === undefined &&
+    [account, limits].some(
+      // Not isPending: a read with no data goes back to pending each time it is asked again.
+      (read) =>
+        read.fetchStatus === "fetching" &&
+        read.dataUpdatedAt === 0 &&
+        read.errorUpdatedAt === 0,
+    );
+  return { reasonStartTransferDisabled, isFirstReadRunning };
 }

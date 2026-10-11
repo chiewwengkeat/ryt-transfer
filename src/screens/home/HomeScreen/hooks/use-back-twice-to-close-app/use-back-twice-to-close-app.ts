@@ -5,13 +5,13 @@ import { BackHandler, ToastAndroid } from "react-native";
 
 export function useBackTwiceToCloseApp() {
   const { t } = useTranslation("home");
-  const homeFocused = useIsFocused();
   const navigation = useNavigation();
+  const isHomeFocused = useIsFocused();
   const showPressBackAgainToast = useEffectEvent(() => {
     ToastAndroid.show(t("home.close_toast"), ToastAndroid.SHORT);
   });
   useEffect(() => {
-    if (!homeFocused) return;
+    if (!isHomeFocused) return;
     let toastShownAt = Number.NEGATIVE_INFINITY;
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -28,5 +28,5 @@ export function useBackTwiceToCloseApp() {
     return () => {
       subscription.remove();
     };
-  }, [homeFocused, navigation]);
+  }, [isHomeFocused, navigation]);
 }

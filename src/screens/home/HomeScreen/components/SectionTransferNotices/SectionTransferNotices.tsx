@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 export default function SectionTransferNotices() {
   const { t } = useTranslation("home");
   const queryClient = useQueryClient();
+
   const customerId = useGetPrimaryAccount().data?.customerId;
   const { settled } = usePendingTransferNotices();
 

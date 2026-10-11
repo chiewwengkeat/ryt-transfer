@@ -11,6 +11,7 @@ export default function ButtonStartTransfer({
   firstReadRunning,
 }: Props) {
   const { t } = useTranslation("home");
+
   return (
     <ButtonPrimary
       label={t("button_start_transfer.label")}
