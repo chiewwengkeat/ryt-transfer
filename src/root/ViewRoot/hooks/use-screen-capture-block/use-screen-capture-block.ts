@@ -6,7 +6,7 @@ import {
   useScreenErrorShowing,
 } from "@/shared/platform/screen-capture/screen-capture";
 import { usePathname, useSegments } from "expo-router";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useLayoutEffect, useState } from "react";
 import { AppState, Platform } from "react-native";
 
 export function useScreenCaptureBlock(
@@ -16,53 +16,54 @@ export function useScreenCaptureBlock(
 ) {
   const routePattern = `/${useSegments().join("/")}`;
   const pathname = usePathname();
-  const onReceiptRoute = RECEIPT_ROUTES.has(routePattern);
   const [settledReceiptPathname, setSettledReceiptPathname] = useState<
     string | null
   >(null);
+  const [isCaptureBlockPicked, setIsCaptureBlockPicked] = useState(false);
+  // A route's own error view keeps its route mounted, so it would otherwise pass for the receipt it replaced.
+  const isScreenErrorShowing = useScreenErrorShowing();
+  const isOnReceiptRoute = RECEIPT_ROUTES.has(routePattern);
+  const isReceiptOnScreen =
+    isOnReceiptRoute &&
+    settledReceiptPathname === pathname &&
+    !isScreenErrorShowing;
+  const isBlocked =
+    (isProductionBuild || isCaptureBlockPicked) && !isReceiptOnScreen;
   useEffect(() => {
-    if (!onReceiptRoute) return;
-    const settleTimer = setTimeout(() => {
+    if (!isOnReceiptRoute) return;
+    const timer = setTimeout(() => {
       setSettledReceiptPathname(pathname);
     }, RECEIPT_SETTLE_MS);
     return () => {
-      clearTimeout(settleTimer);
+      clearTimeout(timer);
       setSettledReceiptPathname(null);
     };
-  }, [onReceiptRoute, pathname]);
-  const [captureBlockPicked, setCaptureBlockPicked] = useState(false);
-  const captureBlockPickedRef = useRef(false);
+  }, [isOnReceiptRoute, pathname]);
   // Before paint, so a pick saved before a restart blocks the first frame.
   useLayoutEffect(
     () =>
-      demoLayer?.subscribeToPhoneSidePick(captureBlockScenarioId, (picked) => {
-        captureBlockPickedRef.current = picked;
-        setCaptureBlockPicked(picked);
-      }),
+      demoLayer?.subscribeToPhoneSidePick(
+        captureBlockScenarioId,
+        setIsCaptureBlockPicked,
+      ),
     [captureBlockScenarioId],
   );
-
   // The crash screen that replaces this root is no receipt, so it is blocked wherever other screens are, even when a
-  // receipt crashed. The pick is read through a ref: as a dependency, unpicking it on a receipt would block the receipt.
+  // receipt crashed. The pick is read through an effect event: as a dependency, unpicking it on a receipt would block
+  // the receipt.
+  const blockCaptureForCrashScreen = useEffectEvent(() => {
+    if (isProductionBuild || isCaptureBlockPicked) void blockScreenCapture();
+  });
   useLayoutEffect(
     () => () => {
-      if (isProductionBuild || captureBlockPickedRef.current)
-        void blockScreenCapture();
+      blockCaptureForCrashScreen();
     },
     [],
   );
-
-  // A route's own error view keeps its route mounted, so it would otherwise pass for the receipt it replaced.
-  const screenErrorShowing = useScreenErrorShowing();
-  const receiptOnScreen =
-    onReceiptRoute &&
-    settledReceiptPathname === pathname &&
-    !screenErrorShowing;
-  const blocked = (isProductionBuild || captureBlockPicked) && !receiptOnScreen;
   // Before paint, so a receipt being left hands over to a screen that is drawn blocked.
   useLayoutEffect(() => {
-    void (blocked ? blockScreenCapture() : allowScreenCapture());
-    if (!blocked || Platform.OS !== "android") return;
+    void (isBlocked ? blockScreenCapture() : allowScreenCapture());
+    if (!isBlocked || Platform.OS !== "android") return;
     // A font-size change or reopen from Back recreates Android's activity on an unblocked window; blocked stays put,
     // so block again on active. Not iOS: it keeps its window, and each block adds a recording observer until allowed.
     const subscription = AppState.addEventListener("change", (state) => {
@@ -71,7 +72,7 @@ export function useScreenCaptureBlock(
     return () => {
       subscription.remove();
     };
-  }, [blocked]);
+  }, [isBlocked]);
 }
 
 const RECEIPT_ROUTES = new Set([

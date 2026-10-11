@@ -5,6 +5,6 @@ import { createContext, use } from "react";
 export const ScreensCoveredContext = createContext(false);
 
 export function useIsScreenOnTop() {
-  const screenFocused = useIsFocused();
-  return screenFocused && !use(ScreensCoveredContext);
+  const isScreenFocused = useIsFocused();
+  return isScreenFocused && !use(ScreensCoveredContext);
 }

@@ -17,10 +17,10 @@ export function enableObscuredTouchGuard(onTouchDropped: () => void) {
   guardHoldCount += 1;
   if (guardHoldCount === 1) guardModule.enable();
 
-  let holdReleased = false;
+  let isHoldReleased = false;
   return () => {
-    if (holdReleased) return;
-    holdReleased = true;
+    if (isHoldReleased) return;
+    isHoldReleased = true;
     dropListener.remove();
     guardHoldCount -= 1;
     if (guardHoldCount === 0) guardModule.disable();

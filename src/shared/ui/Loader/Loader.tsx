@@ -4,6 +4,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 export default function Loader() {
   const { t, i18n } = useTranslation(["shared"]);
+
   return (
     <View style={styles.main}>
       <ActivityIndicator

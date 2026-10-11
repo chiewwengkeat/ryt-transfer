@@ -63,7 +63,7 @@ if (demoLayer !== null) {
 }
 
 // One back button for every screen: the platform's own sits elsewhere, and a flow's first screen has none.
-function buildStackScreenOptions(firstScreenOpensHome: boolean) {
+function buildStackScreenOptions(doesFirstScreenOpenHome: boolean) {
   return ({
     route,
     navigation,
@@ -71,12 +71,12 @@ function buildStackScreenOptions(firstScreenOpensHome: boolean) {
     route: { key: string };
     navigation: { getState: () => { routes: readonly { key: string }[] } };
   }) => {
-    const firstInStack = navigation.getState().routes[0]?.key === route.key;
-    const opensHome = firstScreenOpensHome && firstInStack;
+    const isFirstInStack = navigation.getState().routes[0]?.key === route.key;
+    const doesOpenHome = doesFirstScreenOpenHome && isFirstInStack;
     return {
       ...screenTransitionOptions(),
       // None at all where there is no way back: iOS draws an empty button round a header-left that renders nothing.
-      ...((opensHome || !firstInStack) && {
+      ...((doesOpenHome || !isFirstInStack) && {
         headerLeft: ({
           tintColor,
           canGoBack,
@@ -84,7 +84,11 @@ function buildStackScreenOptions(firstScreenOpensHome: boolean) {
           tintColor?: ColorValue;
           canGoBack?: boolean;
         }) =>
-          createElement(ButtonHeaderBack, { tintColor, canGoBack, opensHome }),
+          createElement(ButtonHeaderBack, {
+            tintColor,
+            canGoBack,
+            opensHome: doesOpenHome,
+          }),
       }),
       // Android's header pads for the status bar itself, a place the Demo header has already taken.
       ...(demoLayer !== null && {

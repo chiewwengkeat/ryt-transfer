@@ -27,16 +27,61 @@ import { forgetSignedInCustomer } from "./lib/forget-signed-in-customer/forget-s
 import "@/root/translations/translations";
 
 export default function ViewRoot() {
+  const [hasSessionEnded, setHasSessionEnded] = useState(false);
+  const [isAppSheetOpen, setIsAppSheetOpen] = useState(false);
+  const [navigatorMounts, setNavigatorMounts] = useState(0);
+
+  const appWithSessionEndedView = (
+    <>
+      <View
+        aria-hidden={hasSessionEnded}
+        // Never flattened: aria-hidden alone would add and remove this view as a session ends and begins, re-parenting the screens beneath.
+        collapsable={false}
+        style={styles.app}
+      >
+        <ScreensCoveredContext value={hasSessionEnded}>
+          <ApprovalDemoPinContext value={demoLayer?.demoPin}>
+            <ViewBottomSheetHost
+              // Production has no Demo header to hide, so its root need not re-render as sheets open.
+              onSheetOpenChange={
+                demoLayer === null ? undefined : setIsAppSheetOpen
+              }
+            >
+              <Stack key={navigatorMounts} screenOptions={stackScreenOptions}>
+                <Stack.Screen
+                  name="transfer"
+                  options={{ headerShown: false, headerLeft: () => null }}
+                />
+              </Stack>
+            </ViewBottomSheetHost>
+          </ApprovalDemoPinContext>
+        </ScreensCoveredContext>
+      </View>
+      {hasSessionEnded && (
+        <View style={styles.layer}>
+          <ViewSessionEnded
+            // Stands in for the host app's sign-in: the session is the host's, so a standalone build only resumes.
+            onSignIn={() => {
+              setHasSessionEnded(false);
+              releaseTransferScenarioReports(transferFlowStore.getState());
+              readAgainEveryReadButAnsweredNameChecks(queryClient, {
+                refusalsAreAnswers: true,
+              });
+            }}
+          />
+        </View>
+      )}
+    </>
+  );
+
   usePendingTransfersAtLaunch();
   useScreenCaptureBlock(TransferScenarioId.ScreenCaptureBlocked);
   useEffect(
     () =>
       demoLayer?.subscribeToPhoneSidePick(
         TransferScenarioId.BiometricsUnavailable,
-        (biometricsOff) => {
-          approvalSettingsStore.setState({
-            biometricApprovalOn: !biometricsOff,
-          });
+        (isPicked) => {
+          approvalSettingsStore.setState({ biometricApprovalOn: !isPicked });
         },
       ),
     [],
@@ -45,15 +90,12 @@ export default function ViewRoot() {
     () =>
       demoLayer?.subscribeToPhoneSidePick(
         TransferScenarioId.RootedPhone,
-        (rootedPhonePicked) => {
-          rootedPhoneDemoPickStore.setState({ rootedPhonePicked });
+        (isPicked) => {
+          rootedPhoneDemoPickStore.setState({ rootedPhonePicked: isPicked });
         },
       ),
     [],
   );
-  const [sessionEnded, setSessionEnded] = useState(false);
-  const [appSheetOpen, setAppSheetOpen] = useState(false);
-  const [navigatorMounts, setNavigatorMounts] = useState(0);
   useEffect(() => {
     // Android otherwise keeps the status bar's icons white, unseen on the app's white headers. Called,
     // not rendered: a <StatusBar> here stalled route tests under renderRoute's fake timers.
@@ -61,7 +103,7 @@ export default function ViewRoot() {
   }, []);
   useEffect(() => {
     const removeUnauthorizedListener = addUnauthorizedListener(() => {
-      setSessionEnded(true);
+      setHasSessionEnded(true);
       // Here, not on the render: an answer settled in this same moment would report beneath the view.
       holdTransferScenarioReports();
     });
@@ -80,49 +122,6 @@ export default function ViewRoot() {
     [],
   );
 
-  const appWithSessionEndedView = (
-    <>
-      <View
-        aria-hidden={sessionEnded}
-        // Never flattened: aria-hidden alone would add and remove this view as a session ends and begins, re-parenting the screens beneath.
-        collapsable={false}
-        style={styles.app}
-      >
-        <ScreensCoveredContext value={sessionEnded}>
-          <ApprovalDemoPinContext value={demoLayer?.demoPin}>
-            <ViewBottomSheetHost
-              // Production has no Demo header to hide, so its root need not re-render as sheets open.
-              onSheetOpenChange={
-                demoLayer === null ? undefined : setAppSheetOpen
-              }
-            >
-              <Stack key={navigatorMounts} screenOptions={stackScreenOptions}>
-                <Stack.Screen
-                  name="transfer"
-                  options={{ headerShown: false, headerLeft: () => null }}
-                />
-              </Stack>
-            </ViewBottomSheetHost>
-          </ApprovalDemoPinContext>
-        </ScreensCoveredContext>
-      </View>
-      {sessionEnded && (
-        <View style={styles.layer}>
-          <ViewSessionEnded
-            // Stands in for the host app's sign-in: the session is the host's, so a standalone build only resumes.
-            onSignIn={() => {
-              setSessionEnded(false);
-              releaseTransferScenarioReports(transferFlowStore.getState());
-              readAgainEveryReadButAnsweredNameChecks(queryClient, {
-                refusalsAreAnswers: true,
-              });
-            }}
-          />
-        </View>
-      )}
-    </>
-  );
-
   return (
     <QueryClientProvider client={queryClient}>
       {demoLayer === null ? (
@@ -130,7 +129,7 @@ export default function ViewRoot() {
       ) : (
         // Outside the session-ended view, so a reviewer who picked an ended session can still return to normal.
         <demoLayer.ViewDemo
-          appSheetOpen={appSheetOpen && !sessionEnded}
+          appSheetOpen={isAppSheetOpen && !hasSessionEnded}
           onResetDemo={async () => {
             // First: forgetSignedInCustomer's clear() leaves a mounted screen showing its last read, so it reads the reset bank now.
             await queryClient.resetQueries();

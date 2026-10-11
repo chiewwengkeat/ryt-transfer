@@ -60,6 +60,14 @@ export default function BottomSheetFrame({
   children,
   footer,
 }: Props) {
+  const { i18n } = useTranslation();
+  const [sheetLayerTopInWindow, setSheetLayerTopInWindow] = useState(0);
+  const [bodyHeight, setBodyHeight] = useState(0);
+  const [bodyContentHeight, setBodyContentHeight] = useState(0);
+  const [hasSheetOpened, setHasSheetOpened] = useState(false);
+
+  const searchFieldFocusedRef = useRef(false);
+  const sheetLayerRef = useRef<View>(null);
   const sheetHost = use(BottomSheetHostContext);
   if (sheetHost === null)
     throw new Error(
@@ -67,26 +75,19 @@ export default function BottomSheetFrame({
     );
   const sheetId = useId();
   const { top, bottom } = useSafeAreaInsets();
-  const searchFieldFocusedRef = useRef(false);
-  const sheetLayerRef = useRef<View>(null);
-  const [sheetLayerTopInWindow, setSheetLayerTopInWindow] = useState(0);
-  const [bodyHeight, setBodyHeight] = useState(0);
-  const [bodyContentHeight, setBodyContentHeight] = useState(0);
-  const { i18n } = useTranslation();
   const sheetReduceMotion = usePhoneReducesMotion()
     ? ReduceMotion.Always
     : ReduceMotion.Never;
-  const [sheetOpened, setSheetOpened] = useState(false);
+
   // Asked at mount, the title's focus is lost under the fading sheet: VoiceOver took Close, TalkBack often nothing.
   useEffect(() => {
-    const titleFocusTimer = setTimeout(() => {
-      setSheetOpened(true);
+    const timer = setTimeout(() => {
+      setHasSheetOpened(true);
     }, SHEET_OPENING_MS);
     return () => {
-      clearTimeout(titleFocusTimer);
+      clearTimeout(timer);
     };
   }, []);
-
   const closeOnBack = useEffectEvent(() => {
     if (dismissable) onClose();
   });
@@ -103,7 +104,6 @@ export default function BottomSheetFrame({
       subscription.remove();
     };
   }, []);
-
   // Every render, before paint: a controlled field drawn in the host must never lag its value.
   useLayoutEffect(() => {
     sheetHost.showSheet(
@@ -147,7 +147,7 @@ export default function BottomSheetFrame({
           >
             <View style={styles.header}>
               <View style={styles.title}>
-                <TextHeading autoFocus={sheetOpened}>{title}</TextHeading>
+                <TextHeading autoFocus={hasSheetOpened}>{title}</TextHeading>
               </View>
               {dismissable && (
                 <Pressable

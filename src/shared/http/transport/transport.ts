@@ -52,9 +52,9 @@ export async function requestJson<Data>(
     body: body === undefined ? undefined : JSON.stringify(body),
     signal: controller.signal,
   });
-  let timedOut = false;
+  let didTimeOut = false;
   const timer = setTimeout(() => {
-    timedOut = true;
+    didTimeOut = true;
     controller.abort();
   }, options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
   const abortForCaller = () => {
@@ -76,11 +76,11 @@ export async function requestJson<Data>(
     });
     text = await response.text();
   } catch {
-    const failure = !controller.signal.aborted
-      ? TransportErrorKind.Network
-      : timedOut
-        ? TransportErrorKind.Timeout
-        : TransportErrorKind.Aborted;
+    const failure = (() => {
+      if (!controller.signal.aborted) return TransportErrorKind.Network;
+      if (didTimeOut) return TransportErrorKind.Timeout;
+      return TransportErrorKind.Aborted;
+    })();
     reportRequestOutcome(`${method} ${path}`, failure);
     throw new TransportError(failure);
   } finally {

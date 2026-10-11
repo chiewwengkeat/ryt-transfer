@@ -27,6 +27,7 @@ interface Props extends Omit<
 }
 export default function FieldText({ label, error, ...inputProps }: Props) {
   const { i18n } = useTranslation();
+
   // A screen reader stays on the input, so an error that appears below it would go unheard.
   useEffect(() => {
     if (error !== undefined) AccessibilityInfo.announceForAccessibility(error);

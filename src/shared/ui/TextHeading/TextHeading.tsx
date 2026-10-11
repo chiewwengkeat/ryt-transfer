@@ -21,32 +21,32 @@ export default function TextHeading({
   style: propStyle,
 }: Props) {
   const { i18n } = useTranslation();
+
   const headingRef = useRef<Text>(null);
-  // The covered signal alone, not the screen's focus: a sheet or a view the root lays over the app draws this outside any screen.
-  const screensCovered = use(ScreensCoveredContext);
   const screensCoveredBeforeRef = useRef<boolean>(undefined);
+  // The covered signal alone, not the screen's focus: a sheet or a view the root lays over the app draws this outside any screen.
+  const isCovered = use(ScreensCoveredContext);
+
   useEffect(() => {
-    const screensCoveredBefore = screensCoveredBeforeRef.current;
-    screensCoveredBeforeRef.current = screensCovered;
+    const wasCovered = screensCoveredBeforeRef.current;
+    screensCoveredBeforeRef.current = isCovered;
     const heading = headingRef.current;
     // Asked beneath the session-ended view, the focus is lost, and nothing reads the heading after sign-in.
-    if (!autoFocus || screensCovered || heading === null) return;
-    if (screensCoveredBefore === undefined) {
+    if (!autoFocus || isCovered || heading === null) return;
+    if (wasCovered === undefined) {
       AccessibilityInfo.sendAccessibilityEvent(heading, "focus");
       return;
     }
-    const headingFocusTimer = setTimeout(
+    const timer = setTimeout(
       () => {
         AccessibilityInfo.sendAccessibilityEvent(heading, "focus");
       },
-      screensCoveredBefore || Platform.OS === "ios"
-        ? READERS_OWN_FOCUS_WAIT_MS
-        : 0,
+      wasCovered || Platform.OS === "ios" ? READERS_OWN_FOCUS_WAIT_MS : 0,
     );
     return () => {
-      clearTimeout(headingFocusTimer);
+      clearTimeout(timer);
     };
-  }, [autoFocus, screensCovered]);
+  }, [autoFocus, isCovered]);
 
   return (
     <Text

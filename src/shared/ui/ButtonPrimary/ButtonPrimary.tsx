@@ -31,11 +31,13 @@ export default function ButtonPrimary({
   notice,
 }: Props) {
   const { i18n } = useTranslation();
-  const [pressAnswerAwaited, setPressAnswerAwaited] = useState(false);
-  const busy = loading || pressAnswerAwaited;
+  const [isPressAnswerAwaited, setIsPressAnswerAwaited] = useState(false);
+
+  const isBusy = loading || isPressAnswerAwaited;
   const hasDisabledReason = disabledReason !== undefined;
-  const disabled = busy || hasDisabledReason;
-  const shownNotice = disabledReason ?? notice;
+  const isDisabled = isBusy || hasDisabledReason;
+  const noticeShown = disabledReason ?? notice;
+
   return (
     <View style={styles.main}>
       <Pressable
@@ -43,15 +45,15 @@ export default function ButtonPrimary({
         accessibilityLabel={label}
         // On the button, not its label: the screen reader reads the button as one element, in the button's language.
         accessibilityLanguage={i18n.language}
-        accessibilityHint={shownNotice}
-        accessibilityState={{ disabled, busy }}
-        disabled={disabled}
+        accessibilityHint={noticeShown}
+        accessibilityState={{ disabled: isDisabled, busy: isBusy }}
+        disabled={isDisabled}
         onPress={() => {
           const pressAnswer = onPress();
           if (!(pressAnswer instanceof Promise)) return;
-          setPressAnswerAwaited(true);
+          setIsPressAnswerAwaited(true);
           void pressAnswer.finally(() => {
-            setPressAnswerAwaited(false);
+            setIsPressAnswerAwaited(false);
           });
         }}
         style={({ pressed }) => [
@@ -64,22 +66,22 @@ export default function ButtonPrimary({
         <Text
           style={[
             styles.textLabel,
-            disabled && styles.textLabelDisabled,
-            busy && styles.textLabelHidden,
+            isDisabled && styles.textLabelDisabled,
+            isBusy && styles.textLabelHidden,
           ]}
         >
           {label}
         </Text>
-        {busy && (
+        {isBusy && (
           <ActivityIndicator
             color={hasDisabledReason ? colors.accent : colors.onAccent}
             style={styles.spinner}
           />
         )}
       </Pressable>
-      {shownNotice !== undefined && (
+      {noticeShown !== undefined && (
         <TextBody tone="warning" alignCenter>
-          {shownNotice}
+          {noticeShown}
         </TextBody>
       )}
     </View>

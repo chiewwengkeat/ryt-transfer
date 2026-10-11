@@ -20,6 +20,7 @@ export default function TextBody({
   style: propStyle,
 }: Props) {
   const { i18n } = useTranslation();
+
   return (
     <Text
       accessibilityLanguage={i18n.language}

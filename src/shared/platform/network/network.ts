@@ -7,24 +7,24 @@ import {
 export function subscribeToPhoneConnection(
   onChange: (connected: boolean) => void,
 ) {
-  let subscribed = true;
+  let isSubscribed = true;
   let changesHeard = 0;
   let nextReadTimer: ReturnType<typeof setTimeout> | undefined;
 
   function reportAndReadAgainIfDisconnected(state: NetworkState) {
     // Only a phone that says it has no connection is offline; no answer at all must not pause requests.
-    const connected = state.isConnected !== false;
+    const isConnected = state.isConnected !== false;
     clearTimeout(nextReadTimer);
     // A disconnection can end with no event to say so: read again until a reading says connected.
-    if (!connected) nextReadTimer = setTimeout(readAndReport, 2_000);
-    onChange(connected);
+    if (!isConnected) nextReadTimer = setTimeout(readAndReport, 2_000);
+    onChange(isConnected);
   }
 
   function readAndReport() {
     const changesHeardBeforeRead = changesHeard;
     // A read can land after a change event, and must not overwrite the newer state.
     void getNetworkStateAsync().then((state) => {
-      if (subscribed && changesHeard === changesHeardBeforeRead)
+      if (isSubscribed && changesHeard === changesHeardBeforeRead)
         reportAndReadAgainIfDisconnected(state);
     });
   }
@@ -35,7 +35,7 @@ export function subscribeToPhoneConnection(
   });
   readAndReport();
   return () => {
-    subscribed = false;
+    isSubscribed = false;
     clearTimeout(nextReadTimer);
     subscription.remove();
   };

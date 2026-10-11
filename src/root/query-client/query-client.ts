@@ -16,15 +16,15 @@ import { AppState, type AppStateStatus } from "react-native";
 onlineManager.setEventListener(subscribeToPhoneConnection);
 focusManager.setEventListener((setFocused) => {
   // Runs again on Android's reopen after Back: focus is still off from that background, and active may come first.
-  let backgroundSinceActive = !focusManager.isFocused();
+  let wasBackgroundSinceActive = !focusManager.isFocused();
   const followAppState = (state: AppStateStatus) => {
     if (state === "background") {
-      backgroundSinceActive = true;
+      wasBackgroundSinceActive = true;
       setFocused(false);
     }
     // Never on "inactive": a face or fingerprint prompt passes through it, and must refetch nothing.
-    if (state === "active" && backgroundSinceActive) {
-      backgroundSinceActive = false;
+    if (state === "active" && wasBackgroundSinceActive) {
+      wasBackgroundSinceActive = false;
       setFocused(true);
     }
   };

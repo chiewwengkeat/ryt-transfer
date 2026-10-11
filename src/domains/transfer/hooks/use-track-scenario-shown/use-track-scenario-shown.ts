@@ -11,14 +11,14 @@ export function trackScenarioShown(scenario: TransferScenarioId) {
 export function useTrackScenarioShown(
   scenario: TransferScenarioId | undefined,
 ) {
-  const screenOnTop = useIsScreenOnTop();
   const reportedScenarioRef = useRef<TransferScenarioId>(undefined);
+  const isScreenOnTop = useIsScreenOnTop();
   // Only on top: a covered screen stays mounted, and a 401 fails its reads too. Once per showing, so a return is not another.
   useEffect(() => {
     if (scenario === undefined) reportedScenarioRef.current = undefined;
-    else if (screenOnTop && reportedScenarioRef.current !== scenario) {
+    else if (isScreenOnTop && reportedScenarioRef.current !== scenario) {
       reportedScenarioRef.current = scenario;
       trackScenarioShown(scenario);
     }
-  }, [scenario, screenOnTop]);
+  }, [scenario, isScreenOnTop]);
 }

@@ -8,18 +8,18 @@ import { AccessibilityInfo } from "react-native";
 
 export function useOfflineNotice() {
   const { t } = useTranslation("transfer");
-  const offline = useIsOffline();
-  const notice = offline ? t("common.offline.notice") : undefined;
-  useTrackScenarioShown(offline ? TransferScenarioId.Offline : undefined);
-  const screenOnTop = useIsScreenOnTop();
   const announcedNoticeRef = useRef<string>(undefined);
+  const isOffline = useIsOffline();
+  const isScreenOnTop = useIsScreenOnTop();
+  const notice = isOffline ? t("common.offline.notice") : undefined;
+  useTrackScenarioShown(isOffline ? TransferScenarioId.Offline : undefined);
   // Said aloud as a notice is: a screen reader otherwise meets it only as the footer button's hint.
   useEffect(() => {
     if (notice === undefined) announcedNoticeRef.current = undefined;
-    else if (screenOnTop && announcedNoticeRef.current !== notice) {
+    else if (isScreenOnTop && announcedNoticeRef.current !== notice) {
       announcedNoticeRef.current = notice;
       AccessibilityInfo.announceForAccessibility(notice);
     }
-  }, [notice, screenOnTop]);
+  }, [notice, isScreenOnTop]);
   return notice;
 }

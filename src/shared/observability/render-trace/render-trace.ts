@@ -19,7 +19,7 @@ export const useRenderMeasurement =
 let cellCommitCount = 0;
 let formatCallCount = 0;
 // The launch link outlives every remount, which would otherwise measure again.
-let measuredThisLaunch = false;
+let hasMeasuredThisLaunch = false;
 const shownCells = new Map<object, { cellKind: string; cellKey: string }>();
 let measuredCommits:
   { cellKind: string; cellKey: string; rerender: boolean }[] | null = null;
@@ -63,17 +63,17 @@ function useRenderMeasurementFromLaunchLink(
     latestInputsRef.current = { operations, describeState };
   });
   useEffect(() => {
-    let unmounted = false;
+    let isUnmounted = false;
     void Linking.getInitialURL().then(async (launchURL) => {
       if (
-        measuredThisLaunch ||
+        hasMeasuredThisLaunch ||
         !/[?&]measure=renders(&|$)/.test(launchURL ?? "")
       )
         return;
-      measuredThisLaunch = true;
+      hasMeasuredThisLaunch = true;
       for (const operation of Object.keys(latestInputsRef.current.operations)) {
         await waitUntilCommitsSettle();
-        if (unmounted) return;
+        if (isUnmounted) return;
         const before = latestInputsRef.current.describeState();
         const countsByCellKind: Record<
           string,
@@ -102,7 +102,7 @@ function useRenderMeasurementFromLaunchLink(
         await waitUntilCommitsSettle();
         const commits = measuredCommits;
         measuredCommits = null;
-        if (unmounted) return;
+        if (isUnmounted) return;
 
         const rerenderedKindsAndKeys = new Set<string>();
         for (const { cellKind, cellKey, rerender } of commits) {
@@ -127,7 +127,7 @@ function useRenderMeasurementFromLaunchLink(
       }
     });
     return () => {
-      unmounted = true;
+      isUnmounted = true;
     };
   }, []);
 }

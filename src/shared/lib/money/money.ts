@@ -21,12 +21,11 @@ export function formatMoney(
 ) {
   const digits = String(Math.abs(money.minor)).padStart(3, "0");
   const ringgit = digits.slice(0, -2).replace(/\B(?=(\d{3})+$)/g, ",");
-  const sign =
-    money.minor < 0
-      ? "-"
-      : money.minor > 0 && signDisplay === "exceptZero"
-        ? "+"
-        : "";
+  const sign = (() => {
+    if (money.minor < 0) return "-";
+    if (money.minor > 0 && signDisplay === "exceptZero") return "+";
+    return "";
+  })();
   return `${sign}RM ${ringgit}.${digits.slice(-2)}`;
 }
 

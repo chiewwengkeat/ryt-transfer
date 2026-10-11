@@ -23,7 +23,7 @@ export function useDemoTranslation() {
   ) => string;
   return {
     t: translate,
-    scenarioTitle: (scenarioId: `${TransferScenarioId}`) =>
+    titleOfScenario: (scenarioId: `${TransferScenarioId}`) =>
       translate(`common.${scenarioWordsKey(scenarioId)}.title`),
   };
 }

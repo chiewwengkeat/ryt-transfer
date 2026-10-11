@@ -41,12 +41,16 @@ export default function CardBalance({
   onUnderMaintenance,
 }: Props) {
   const { t, i18n } = useTranslation("account");
+  const [pressedReReadsAnswered, setPressedReReadsAnswered] = useState(0);
+
+  const isScreenOnTop = useIsScreenOnTop();
   // Only a request that reaches the bank ends offline, so the card keeps asking while it lasts.
   const refetchInterval = useIsOffline() ? 10_000 : false;
   const account = useGetPrimaryAccount({ refetchInterval });
   const limits = useGetTransferLimits({ refetchInterval });
+
   // Maintenance pauses transfers, not the balance: the balance still shows, and Transfer says why it waits.
-  const limitsPausedForMaintenance =
+  const isUnderMaintenance =
     getTransferLimitsMaintenance(
       useQueryError(
         limits.error,
@@ -54,32 +58,29 @@ export default function CardBalance({
       ),
     ) !== undefined;
   const failure = useQueryError(
-    account.error ?? (limitsPausedForMaintenance ? null : limits.error),
+    account.error ?? (isUnderMaintenance ? null : limits.error),
     account.fetchStatus !== "idle" || limits.fetchStatus !== "idle",
   );
-  const shownFailure =
-    failure === null
-      ? undefined
-      : isUnansweredReadFailure(failure)
-        ? "unavailable"
-        : "unexpected";
+  const failureShown = (() => {
+    if (failure === null) return undefined;
+    if (isUnansweredReadFailure(failure)) return "unavailable";
+    return "unexpected";
+  })();
   // After sign-in this stays shown until the card's reads answer again.
-  const failureIsSessionEnd = isSessionEndFailure(failure);
-  const shown = failureIsSessionEnd
-    ? undefined
-    : (shownFailure ??
-      (limitsPausedForMaintenance
-        ? "under_maintenance"
-        : account.data !== undefined && limits.isSuccess
-          ? "loaded"
-          : undefined));
-  const screenOnTop = useIsScreenOnTop();
+  const isFailureSessionEnd = isSessionEndFailure(failure);
+  const shown = (() => {
+    if (isFailureSessionEnd) return undefined;
+    if (failureShown !== undefined) return failureShown;
+    if (isUnderMaintenance) return "under_maintenance";
+    if (account.data !== undefined && limits.isSuccess) return "loaded";
+    return undefined;
+  })();
   const reportedShownRef = useRef<typeof shown>(undefined);
-  const [pressedReReadsAnswered, setPressedReReadsAnswered] = useState(0);
+
   // useTrackScenarioShown's rule, which an account component may not import: only on top, once per showing.
   useEffect(() => {
     if (shown === undefined) reportedShownRef.current = undefined;
-    else if (screenOnTop && reportedShownRef.current !== shown) {
+    else if (isScreenOnTop && reportedShownRef.current !== shown) {
       reportedShownRef.current = shown;
       if (shown === "loaded") onLoaded();
       else if (shown === "under_maintenance") onUnderMaintenance();
@@ -87,23 +88,23 @@ export default function CardBalance({
     }
   }, [
     shown,
-    screenOnTop,
+    isScreenOnTop,
     onLoaded,
     onFailed,
     onUnderMaintenance,
     pressedReReadsAnswered,
   ]);
 
-  if (shownFailure !== undefined) {
+  if (failureShown !== undefined) {
     return (
       <Card styles={{ main: [styles.main, styles.floor] }}>
         <BannerAction
           key={pressedReReadsAnswered}
           tone="negative"
-          announce={!failureIsSessionEnd}
-          message={failureWords[shownFailure].body}
+          announce={!isFailureSessionEnd}
+          message={failureWords[failureShown].body}
           action={{
-            label: failureWords[shownFailure].retry,
+            label: failureWords[failureShown].retry,
             onPress: async () => {
               await Promise.all([account.refetch(), limits.refetch()]);
               // Pressed, the answer is a new showing: said and reported even when it fails the same way.
@@ -115,10 +116,7 @@ export default function CardBalance({
       </Card>
     );
   }
-  if (
-    account.data === undefined ||
-    (limits.isPending && !limitsPausedForMaintenance)
-  ) {
+  if (account.data === undefined || (limits.isPending && !isUnderMaintenance)) {
     return (
       <Card styles={{ main: [styles.main, styles.floor] }}>
         <Loader />

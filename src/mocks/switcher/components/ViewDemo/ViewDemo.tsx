@@ -15,25 +15,27 @@ export default function ViewDemo({
   children,
   onResetDemo,
 }: Props) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const insets = useSafeAreaInsets();
+
   return (
     <ViewBottomSheetHost>
       <HeaderDemo
         appSheetOpen={appSheetOpen}
         onOpenMenu={() => {
-          setMenuOpen(true);
+          setIsMenuOpen(true);
         }}
       />
       {/* The header has taken the status bar's place, so a screen's own header must not pad for it again. */}
       <SafeAreaInsetsContext value={{ ...insets, top: 0 }}>
         <View style={styles.app}>{children}</View>
       </SafeAreaInsetsContext>
-      {menuOpen && (
+      {isMenuOpen && (
         <BottomSheetDemo
           onResetDemo={onResetDemo}
           onClose={() => {
-            setMenuOpen(false);
+            setIsMenuOpen(false);
           }}
         />
       )}

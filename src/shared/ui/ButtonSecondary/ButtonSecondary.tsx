@@ -20,7 +20,8 @@ export default function ButtonSecondary({
   onPress,
 }: Props) {
   const { i18n } = useTranslation();
-  const [pressAnswerAwaited, setPressAnswerAwaited] = useState(false);
+  const [isPressAnswerAwaited, setIsPressAnswerAwaited] = useState(false);
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -28,27 +29,30 @@ export default function ButtonSecondary({
       // On the button, not its label: the screen reader reads the button as one element, in the button's language.
       accessibilityLanguage={i18n.language}
       accessibilityState={{
-        disabled: pressAnswerAwaited,
-        busy: pressAnswerAwaited,
+        disabled: isPressAnswerAwaited,
+        busy: isPressAnswerAwaited,
       }}
-      disabled={pressAnswerAwaited}
+      disabled={isPressAnswerAwaited}
       onPress={() => {
         const pressAnswer = onPress();
         if (!(pressAnswer instanceof Promise)) return;
-        setPressAnswerAwaited(true);
+        setIsPressAnswerAwaited(true);
         void pressAnswer.finally(() => {
-          setPressAnswerAwaited(false);
+          setIsPressAnswerAwaited(false);
         });
       }}
       style={({ pressed }) => [styles.main, pressed && styles.pressed]}
     >
       {/* Hidden, not removed: its lines keep the button's height while the spinner shows. */}
       <Text
-        style={[styles.textLabel, pressAnswerAwaited && styles.textLabelHidden]}
+        style={[
+          styles.textLabel,
+          isPressAnswerAwaited && styles.textLabelHidden,
+        ]}
       >
         {label}
       </Text>
-      {pressAnswerAwaited && (
+      {isPressAnswerAwaited && (
         <ActivityIndicator color={colors.accent} style={styles.spinner} />
       )}
     </Pressable>

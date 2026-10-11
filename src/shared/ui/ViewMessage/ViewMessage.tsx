@@ -19,6 +19,7 @@ export default function ViewMessage({
   fullScreen = false,
 }: Props) {
   const { top } = useSafeAreaInsets();
+
   return (
     <View style={[styles.main, fullScreen && { paddingTop: top }]}>
       <ViewScreenFrame footer={actions}>

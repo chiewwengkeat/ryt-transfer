@@ -25,13 +25,14 @@ export default function ViewScreenFrame({
   footer,
   onPullToRefresh,
 }: Props) {
-  const { bottom } = useSafeAreaInsets();
-  const frameRef = useRef<View>(null);
   const [frameTopInWindow, setFrameTopInWindow] = useState(0);
+  const [doesFooterDrawNothing, setDoesFooterDrawNothing] = useState(false);
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+
+  const frameRef = useRef<View>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollOffsetRef = useRef(0);
-  const [footerDrawsNothing, setFooterDrawsNothing] = useState(false);
-  const [pullRefreshing, setPullRefreshing] = useState(false);
+  const { bottom } = useSafeAreaInsets();
 
   return (
     <View
@@ -54,13 +55,13 @@ export default function ViewScreenFrame({
           refreshControl={
             onPullToRefresh && (
               <RefreshControl
-                refreshing={pullRefreshing}
+                refreshing={isPullRefreshing}
                 colors={[colors.accent]}
                 tintColor={colors.accent}
                 onRefresh={() => {
-                  setPullRefreshing(true);
+                  setIsPullRefreshing(true);
                   void onPullToRefresh().finally(() => {
-                    setPullRefreshing(false);
+                    setIsPullRefreshing(false);
                   });
                 }}
               />
@@ -111,7 +112,7 @@ export default function ViewScreenFrame({
             collapsable={false}
             style={[
               styles.footer,
-              footerDrawsNothing
+              doesFooterDrawNothing
                 ? { paddingBottom: bottom }
                 : [styles.footerBar, { paddingBottom: spacing.md + bottom }],
             ]}
@@ -119,7 +120,7 @@ export default function ViewScreenFrame({
             <View
               // A footer element can render nothing, as review's does while the name check runs: no empty bar then.
               onLayout={(event) => {
-                setFooterDrawsNothing(event.nativeEvent.layout.height === 0);
+                setDoesFooterDrawNothing(event.nativeEvent.layout.height === 0);
               }}
               style={styles.footerContent}
             >

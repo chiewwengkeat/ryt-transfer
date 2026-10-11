@@ -17,8 +17,9 @@ interface Props {
   onOpenMenu: () => void;
 }
 export default function HeaderDemo({ appSheetOpen, onOpenMenu }: Props) {
-  const { t, scenarioTitle } = useDemoTranslation();
+  const { t, titleOfScenario } = useDemoTranslation();
   const { i18n } = useTranslation();
+
   const scenarioId = useStore(switcherStore, (pick) => pick.scenarioId);
   const { top } = useSafeAreaInsets();
 
@@ -42,7 +43,7 @@ export default function HeaderDemo({ appSheetOpen, onOpenMenu }: Props) {
             style={styles.textScenarioMessage}
           >
             {t("header_demo.banner.message", {
-              title: scenarioTitle(scenarioId),
+              title: titleOfScenario(scenarioId),
             })}
           </Text>
           <Pressable

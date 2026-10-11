@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 export default function ViewAppError({ error, retry }: ErrorBoundaryProps) {
   const { t } = useTranslation(["shared"]);
+
   useEffect(() => {
     reportError(error, { boundary: "root" });
   }, [error]);

@@ -20,15 +20,17 @@ export default function CardPressable({
   styles: propStyles,
 }: Props) {
   const { i18n } = useTranslation();
-  const disabled = disabledReason !== undefined;
+
+  const isDisabled = disabledReason !== undefined;
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityHint={disabledReason}
       // On the card, not its texts: the screen reader reads the card as one element, in the card's language.
       accessibilityLanguage={i18n.language}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
+      accessibilityState={{ disabled: isDisabled }}
+      disabled={isDisabled}
       onPress={onPress}
       style={propStyles?.main}
     >

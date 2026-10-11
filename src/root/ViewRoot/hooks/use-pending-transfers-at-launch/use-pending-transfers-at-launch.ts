@@ -16,11 +16,11 @@ import { useEffect } from "react";
 
 export function usePendingTransfersAtLaunch() {
   useEffect(() => {
-    let launchRecoveryDone = false;
-    let recheckDue = true;
+    let isLaunchRecoveryDone = false;
+    let isRecheckDue = true;
     // Records outlive an ended session, so they are checked again once someone signs back in.
     const stopListeningForEndedSessions = addUnauthorizedListener(() => {
-      recheckDue = true;
+      isRecheckDue = true;
     });
     // Observed rather than read once: offline, or signed out, whose records these are waits for the account.
     const accountObserver = new QueryObserver(
@@ -34,15 +34,15 @@ export function usePendingTransfersAtLaunch() {
     }: ReturnType<typeof accountObserver.getCurrentResult>) => {
       // An answered read only: the 401's own result still carries the account read before it.
       if (
-        !recheckDue ||
+        !isRecheckDue ||
         data === undefined ||
         status !== "success" ||
         fetchStatus !== "idle"
       )
         return;
-      recheckDue = false;
-      const opensTheTransferLeftMidApproval = !launchRecoveryDone;
-      launchRecoveryDone = true;
+      isRecheckDue = false;
+      const shouldOpenTheTransferLeftMidApproval = !isLaunchRecoveryDone;
+      isLaunchRecoveryDone = true;
       void (async () => {
         await discardOtherCustomersPendingTransfers(data.customerId);
         await refreshPendingTransferNotices(queryClient, data.customerId);
@@ -50,7 +50,7 @@ export function usePendingTransfersAtLaunch() {
         const [newestApproving] = records
           .filter(({ stage }) => stage === PendingTransferStage.Approving)
           .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
-        const reopened = opensTheTransferLeftMidApproval
+        const reopened = shouldOpenTheTransferLeftMidApproval
           ? newestApproving
           : undefined;
         if (reopened !== undefined)

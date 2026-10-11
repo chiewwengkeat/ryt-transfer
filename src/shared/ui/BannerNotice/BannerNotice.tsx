@@ -14,16 +14,17 @@ export default function BannerNotice({
   tone = "warning",
   announce = true,
 }: Props) {
-  const screenOnTop = useIsScreenOnTop();
   const announcedMessageRef = useRef<string>(undefined);
+  const isScreenOnTop = useIsScreenOnTop();
+
   // Announced outright, which iOS needs; a live region as well could make TalkBack say it twice.
   // Once per message, and only on top: a covered screen stays mounted and would talk over the one above it.
   useEffect(() => {
-    if (!announce || !screenOnTop || announcedMessageRef.current === message)
+    if (!announce || !isScreenOnTop || announcedMessageRef.current === message)
       return;
     announcedMessageRef.current = message;
     AccessibilityInfo.announceForAccessibility(message);
-  }, [message, screenOnTop, announce]);
+  }, [message, isScreenOnTop, announce]);
 
   return (
     <View accessibilityRole="alert" style={[styles.main, styles[tone]]}>

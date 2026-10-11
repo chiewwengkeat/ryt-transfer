@@ -66,7 +66,7 @@ export const getTransferOptions = (transferId: string) =>
         { signal },
       );
       // Patching cancels history's own loads first, so only a copy there that this read outdates earns it.
-      const historyHoldsAnOlderCopy = client
+      const doesHistoryHoldAnOlderCopy = client
         .getQueriesData<InfiniteData<ListTransfersResponse>>({
           queryKey: transferKeys.historyAll,
         })
@@ -79,7 +79,7 @@ export const getTransferOptions = (transferId: string) =>
             ),
           ),
         );
-      if (historyHoldsAnOlderCopy)
+      if (doesHistoryHoldAnOlderCopy)
         await patchTransferInHistory(client, transfer);
       return transfer;
     },

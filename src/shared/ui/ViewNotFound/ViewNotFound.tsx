@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 export default function ViewNotFound() {
   const { t } = useTranslation(["shared"]);
+
   return (
     <>
       <Stack.Screen options={{ title: t("shared:view_not_found.title") }} />

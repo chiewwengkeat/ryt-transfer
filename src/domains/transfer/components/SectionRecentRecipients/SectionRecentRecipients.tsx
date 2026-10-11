@@ -14,10 +14,13 @@ export default function SectionRecentRecipients({
   disabledReason,
 }: Props) {
   const { t } = useTranslation("transfer");
+
   const recents = useListRecentRecipients();
+
+  const isDisabled = disabledReason !== undefined;
+
   // A shortcut only: while it loads or when it fails, the screen works without it.
   if (recents.data === undefined || recents.data.length === 0) return null;
-  const disabled = disabledReason !== undefined;
 
   return (
     <View style={styles.main}>
@@ -32,7 +35,7 @@ export default function SectionRecentRecipients({
             }}
           >
             <Text
-              style={[styles.textName, disabled && styles.textNameDisabled]}
+              style={[styles.textName, isDisabled && styles.textNameDisabled]}
             >
               {recent.registeredName}
             </Text>

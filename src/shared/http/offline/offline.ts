@@ -6,13 +6,16 @@ import { useSyncExternalStore } from "react";
 export function useIsOffline() {
   return useSyncExternalStore(
     subscribeToOfflineChanges,
-    () => !phoneConnected || lastRequestFoundNoNetwork,
+    () => !isPhoneConnected || didLastRequestFindNoNetwork,
   );
 }
 
 // Reads pause on the phone's own report alone, so this, not useIsOffline, says whether a retry can send.
 export function usePhoneReportsConnection() {
-  return useSyncExternalStore(subscribeToOfflineChanges, () => phoneConnected);
+  return useSyncExternalStore(
+    subscribeToOfflineChanges,
+    () => isPhoneConnected,
+  );
 }
 
 export function reportRequestOutcome(
@@ -25,8 +28,8 @@ export function reportRequestOutcome(
     failure === TransportErrorKind.Aborted
   )
     return;
-  const foundNoNetwork = failure === TransportErrorKind.Network;
-  if (foundNoNetwork) {
+  const didFindNoNetwork = failure === TransportErrorKind.Network;
+  if (didFindNoNetwork) {
     // Its answer is lost while others' arrive: the trouble is this request's, and counting it would flap offline.
     if (requestsLostWhileTheServerAnswersOthers.has(request)) return;
     requestsFindingNoNetworkSinceTheServerAnswered.add(request);
@@ -37,10 +40,10 @@ export function reportRequestOutcome(
       requestsLostWhileTheServerAnswersOthers.add(lostRequest);
     requestsFindingNoNetworkSinceTheServerAnswered.clear();
   }
-  if (foundNoNetwork === lastRequestFoundNoNetwork) return;
-  lastRequestFoundNoNetwork = foundNoNetwork;
+  if (didFindNoNetwork === didLastRequestFindNoNetwork) return;
+  didLastRequestFindNoNetwork = didFindNoNetwork;
   for (const listener of offlineListeners) listener();
-  if (foundNoNetwork) return;
+  if (didFindNoNetwork) return;
   for (const listener of serverReachedAgainListeners) {
     try {
       listener();
@@ -54,7 +57,7 @@ export function reportRequestOutcome(
 }
 
 export function forgetRequestOutcomes() {
-  lastRequestFoundNoNetwork = false;
+  didLastRequestFindNoNetwork = false;
   requestsFindingNoNetworkSinceTheServerAnswered.clear();
   requestsLostWhileTheServerAnswersOthers.clear();
 }
@@ -66,8 +69,8 @@ export function addServerReachedAgainListener(listener: () => void) {
   };
 }
 
-let phoneConnected = true;
-let lastRequestFoundNoNetwork = false;
+let isPhoneConnected = true;
+let didLastRequestFindNoNetwork = false;
 const requestsFindingNoNetworkSinceTheServerAnswered = new Set<string>();
 const requestsLostWhileTheServerAnswersOthers = new Set<string>();
 const offlineListeners = new Set<() => void>();
@@ -77,8 +80,8 @@ let stopReadingPhoneConnection = () => {};
 function subscribeToOfflineChanges(onChange: () => void) {
   offlineListeners.add(onChange);
   if (offlineListeners.size === 1)
-    stopReadingPhoneConnection = subscribeToPhoneConnection((connected) => {
-      phoneConnected = connected;
+    stopReadingPhoneConnection = subscribeToPhoneConnection((isConnected) => {
+      isPhoneConnected = isConnected;
       for (const listener of offlineListeners) listener();
     });
   return () => {
@@ -86,6 +89,6 @@ function subscribeToOfflineChanges(onChange: () => void) {
     if (offlineListeners.size > 0) return;
     stopReadingPhoneConnection();
     // Nobody keeps this reading fresh now: the next reader must not open on a stale "no connection".
-    phoneConnected = true;
+    isPhoneConnected = true;
   };
 }

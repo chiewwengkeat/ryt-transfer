@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 
 export default function ViewScreenError({ error, retry }: ErrorBoundaryProps) {
   const { t } = useTranslation(["shared"]);
+
   useEffect(() => {
     reportError(error, { boundary: "route" });
   }, [error]);

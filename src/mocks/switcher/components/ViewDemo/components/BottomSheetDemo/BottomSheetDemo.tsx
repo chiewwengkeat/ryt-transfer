@@ -27,9 +27,10 @@ interface Props {
   onClose: () => void;
 }
 export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
-  const { t, scenarioTitle } = useDemoTranslation();
+  const { t, titleOfScenario } = useDemoTranslation();
+  const isPinLocked = useInitialValue(isDemoPinLocked);
+
   const activeScenarioId = useStore(switcherStore, (pick) => pick.scenarioId);
-  const demoPinLocked = useInitialValue(isDemoPinLocked);
 
   return (
     <BottomSheetFrame
@@ -46,7 +47,7 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
         />
       }
     >
-      {demoPinLocked && (
+      {isPinLocked && (
         <>
           <TextBody strong>{t("bottom_sheet_demo.demo_only")}</TextBody>
           <TextBody tone="secondary">
@@ -73,7 +74,7 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
       {PHONE_SIDE_SCENARIO_IDS.map((scenarioId) => (
         <ItemScenarioDemo
           key={scenarioId}
-          label={scenarioTitle(scenarioId)}
+          label={titleOfScenario(scenarioId)}
           checked={activeScenarioId === scenarioId}
           onPress={() => {
             pickTransferScenario(scenarioId);
@@ -93,7 +94,7 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
           ).map((scenarioId) => (
             <ItemScenarioDemo
               key={scenarioId}
-              label={scenarioTitle(scenarioId)}
+              label={titleOfScenario(scenarioId)}
               checked={activeScenarioId === scenarioId}
               onPress={() => {
                 pickTransferScenario(scenarioId);

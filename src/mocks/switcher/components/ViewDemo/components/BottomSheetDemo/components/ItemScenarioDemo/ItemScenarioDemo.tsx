@@ -14,6 +14,7 @@ interface Props {
 }
 export default function ItemScenarioDemo({ label, checked, onPress }: Props) {
   const { i18n } = useTranslation();
+
   return (
     <Pressable
       accessibilityRole="radio"

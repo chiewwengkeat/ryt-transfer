@@ -20,6 +20,7 @@ export default function ViewBottomSheetHost({
   const [openSheets, setOpenSheets] = useState<
     { sheetId: string; sheet: ReactNode }[]
   >([]);
+
   // Updated in place, never re-appended: a re-render must not lift an older sheet over a newer one.
   const sheetHost = useMemo(
     () => ({
@@ -41,18 +42,19 @@ export default function ViewBottomSheetHost({
     [],
   );
 
-  const sheetOpen = openSheets.length > 0;
+  const isSheetOpen = openSheets.length > 0;
+
   const reportSheetOpen = useEffectEvent(() => {
-    onSheetOpenChange?.(sheetOpen);
+    onSheetOpenChange?.(isSheetOpen);
   });
   useEffect(() => {
     reportSheetOpen();
-  }, [sheetOpen]);
+  }, [isSheetOpen]);
 
   return (
     <BottomSheetHostContext value={sheetHost}>
       <View
-        aria-hidden={sheetOpen}
+        aria-hidden={isSheetOpen}
         // Never flattened: aria-hidden alone would add and remove this view with each sheet, re-parenting the screens beneath.
         collapsable={false}
         style={styles.main}
