@@ -174,8 +174,6 @@ function collectValueRefs(node, out) {
   }
 }
 
-// Only the component's own props type takes the slot above it; a DIFFERENT
-// `XxxProps` belongs to a sub-component and moves below styles with it.
 function isProps(stmt, compName) {
   const inner =
     stmt.type === "ExportNamedDeclaration" && stmt.declaration

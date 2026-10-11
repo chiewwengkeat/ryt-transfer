@@ -2,23 +2,19 @@ import BannerEarlierTransferUnconfirmed from "@/domains/transfer/components/Bann
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import BannerFlowNotice from "@/screens/transfer/components/BannerFlowNotice/BannerFlowNotice";
 import {
-  isTransferSentOrBeingSent,
   TransferFlowStep,
   transferFlowStore,
   useTransferFlow,
 } from "@/screens/transfer/flow-store/flow-store";
 import { refreshAccountHistoryAndRecentRecipientsAfterApproval } from "@/screens/transfer/lib/refresh-after-approval/refresh-after-approval";
 import { useInitialValue } from "@/shared/hooks/use-initial-value/use-initial-value";
-import ButtonHeaderBack from "@/shared/ui/ButtonHeaderBack/ButtonHeaderBack";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 import { useQueryClient } from "@tanstack/react-query";
-import { Stack, useNavigation } from "expo-router";
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { BackHandler } from "react-native";
 import BottomSheetPin from "./components/BottomSheetPin/BottomSheetPin";
 import ButtonConfirmTransfer from "./components/ButtonConfirmTransfer/ButtonConfirmTransfer";
+import HeaderReview from "./components/HeaderReview/HeaderReview";
 import SectionReviewDetails from "./components/SectionReviewDetails/SectionReviewDetails";
 
 export default function TransferReviewScreen() {
@@ -76,48 +72,5 @@ export default function TransferReviewScreen() {
       </ViewScreenFrame>
       <BottomSheetPin />
     </>
-  );
-}
-
-function HeaderReview() {
-  const { t } = useTranslation("transfer");
-  const navigation = useNavigation();
-
-  const isSending = useTransferFlow(isTransferSentOrBeingSent);
-
-  // Android's Back and the root stack's swipe too, which this stack's options never reach: leaving
-  // mid-send strands an approval no screen can answer.
-  useEffect(() => {
-    if (!isSending) return;
-    const flowScreen = navigation.getParent();
-    flowScreen?.setOptions({ gestureEnabled: false });
-    const backPress = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => true,
-    );
-    return () => {
-      backPress.remove();
-      flowScreen?.setOptions({ gestureEnabled: true });
-    };
-  }, [navigation, isSending]);
-
-  return (
-    <Stack.Screen
-      options={{
-        title: t("header_review.title"),
-        // Set on every render: options merge, so a key set only while sending would outlive the send.
-        headerLeft: isSending
-          ? () => null
-          : ({ tintColor, canGoBack }) => (
-              <ButtonHeaderBack
-                tintColor={tintColor}
-                canGoBack={canGoBack}
-                opensHome={false}
-              />
-            ),
-        headerBackVisible: false,
-        gestureEnabled: !isSending,
-      }}
-    />
   );
 }

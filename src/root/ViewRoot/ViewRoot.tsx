@@ -2,7 +2,7 @@ import { ApprovalDemoPinContext } from "@/domains/approval/lib/approval-demo-pin
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import { deleteApprovalKeys } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { rootedPhoneDemoPickStore } from "@/domains/approval/lib/device-integrity-verdict/device-integrity-verdict";
-import { transferKeys } from "@/domains/transfer/api/transfer.keys";
+import { readAgainEveryReadButAnsweredNameChecks } from "@/domains/transfer/lib/read-again-every-read-but-answered-name-checks/read-again-every-read-but-answered-name-checks";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import { demoLayer, stackScreenOptions } from "@/root/app-launch/app-launch";
 import { queryClient } from "@/root/query-client/query-client";
@@ -12,11 +12,6 @@ import {
   transferFlowStore,
 } from "@/screens/transfer/flow-store/flow-store";
 import { ScreensCoveredContext } from "@/shared/hooks/use-is-screen-on-top/use-is-screen-on-top";
-import {
-  isSessionEndFailure,
-  TransportError,
-  TransportErrorKind,
-} from "@/shared/http/transport-error/transport-error";
 import { addUnauthorizedListener } from "@/shared/http/transport/transport";
 import { deleteAllSecureRecords } from "@/shared/platform/secure-storage/secure-storage";
 import ViewBottomSheetHost from "@/shared/ui/ViewBottomSheetHost/ViewBottomSheetHost";
@@ -78,7 +73,9 @@ export default function ViewRoot() {
   useEffect(
     () =>
       demoLayer?.subscribeToScenarioChange(() => {
-        readAgainEveryReadButAnsweredNameChecks({ refusalsAreAnswers: false });
+        readAgainEveryReadButAnsweredNameChecks(queryClient, {
+          refusalsAreAnswers: false,
+        });
       }),
     [],
   );
@@ -116,7 +113,7 @@ export default function ViewRoot() {
             onSignIn={() => {
               setSessionEnded(false);
               releaseTransferScenarioReports(transferFlowStore.getState());
-              readAgainEveryReadButAnsweredNameChecks({
+              readAgainEveryReadButAnsweredNameChecks(queryClient, {
                 refusalsAreAnswers: true,
               });
             }}
@@ -157,30 +154,3 @@ const styles = StyleSheet.create({
   app: { flex: 1 },
   layer: { ...StyleSheet.absoluteFill, pointerEvents: "box-none" },
 });
-
-// A found recipient stays: asking again mints another reference. After sign-in a refusal stays too, as asking again meets
-// the check limit; a Demo pick asks it again, since the picked scenario may answer it otherwise.
-function readAgainEveryReadButAnsweredNameChecks({
-  refusalsAreAnswers,
-}: {
-  refusalsAreAnswers: boolean;
-}) {
-  void queryClient.invalidateQueries({
-    predicate: ({ queryKey, state: { status, error } }) =>
-      queryKey[0] !== transferKeys.lookupAll[0] ||
-      status === "pending" ||
-      (status === "error" &&
-        (!refusalsAreAnswers ||
-          isSessionEndFailure(error) ||
-          (error instanceof TransportError &&
-            ([
-              TransportErrorKind.Network,
-              TransportErrorKind.Timeout,
-              TransportErrorKind.Aborted,
-            ].includes(error.kind) ||
-              // A server error the bank put no code on is no answer from it.
-              (error.kind === TransportErrorKind.Http &&
-                (error.status ?? 0) >= 500 &&
-                error.code === undefined))))),
-  });
-}

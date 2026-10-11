@@ -1,7 +1,4 @@
-import {
-  type Transfer,
-  TransferDirection,
-} from "@/domains/transfer/api/get-transfer/get-transfer.type";
+import { type Transfer } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import { MONEY_MOVED_SIGN } from "@/domains/transfer/api/list-transfers/list-transfers";
 import { useTransferStatusWord } from "@/screens/transfer/hooks/use-transfer-status-word/use-transfer-status-word";
 import ViewAmountWrap from "@/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/components/ViewAmountWrap/ViewAmountWrap";
@@ -11,12 +8,13 @@ import {
   traceFormatCalls,
   useRenderTrace,
 } from "@/shared/observability/render-trace/render-trace";
-import { colors, spacing } from "@/shared/theme/theme";
+import { spacing } from "@/shared/theme/theme";
 import CardPressable from "@/shared/ui/CardPressable/CardPressable";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
+import IconTransferDirection from "./components/IconTransferDirection/IconTransferDirection";
 
 interface Props {
   transfer: Transfer;
@@ -83,57 +81,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-});
-
-interface IconTransferDirectionProps {
-  direction: TransferDirection;
-}
-function IconTransferDirection({ direction }: IconTransferDirectionProps) {
-  return (
-    <View aria-hidden style={iconTransferDirectionStyles.main}>
-      <View
-        style={[
-          iconTransferDirectionStyles.arrow,
-          direction === TransferDirection.In
-            ? iconTransferDirectionStyles.received
-            : iconTransferDirectionStyles.sent,
-        ]}
-      >
-        <View style={iconTransferDirectionStyles.shaft} />
-        <View style={iconTransferDirectionStyles.head} />
-      </View>
-    </View>
-  );
-}
-
-const iconTransferDirectionStyles = StyleSheet.create({
-  main: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
-  arrow: { width: 14, height: 14, alignItems: "center" },
-  sent: { transform: [{ rotate: "45deg" }] },
-  received: { transform: [{ rotate: "225deg" }] },
-  shaft: {
-    position: "absolute",
-    top: 1,
-    bottom: 0,
-    width: 2,
-    backgroundColor: colors.textPrimary,
-  },
-  head: {
-    position: "absolute",
-    top: 1,
-    width: 8,
-    height: 8,
-    borderTopWidth: 2,
-    borderLeftWidth: 2,
-    borderColor: colors.textPrimary,
-    transform: [{ rotate: "45deg" }],
   },
 });

@@ -4,15 +4,15 @@ import {
   resetTransferHistory,
   type useListTransfers,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
-import { toMalaysianDateKey } from "@/shared/lib/dates/dates";
 import { spacing } from "@/shared/theme/theme";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
-import { AppState, StyleSheet } from "react-native";
+import { useRef, useState } from "react";
+import { StyleSheet } from "react-native";
 import HeaderTransferDay from "./components/HeaderTransferDay/HeaderTransferDay";
 import ItemTransfer from "./components/ItemTransfer/ItemTransfer";
 import ViewTransferHistoryFooter from "./components/ViewTransferHistoryFooter/ViewTransferHistoryFooter";
+import { useMalaysianToday } from "./hooks/use-malaysian-today/use-malaysian-today";
 import { useTransferHistoryRenderMeasurement } from "./hooks/use-transfer-history-render-measurement/use-transfer-history-render-measurement";
 import { reuseTransferDayHeaderRow } from "./SectionTransferAccordion.helper";
 
@@ -129,41 +129,3 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.md,
   },
 });
-
-function useMalaysianToday() {
-  const [malaysianToday, setMalaysianToday] = useState(() => new Date());
-  useEffect(() => {
-    const showTodayIfTheDateMoved = () => {
-      const now = new Date();
-      setMalaysianToday((shown) =>
-        toMalaysianDateKey(shown.toISOString()) ===
-        toMalaysianDateKey(now.toISOString())
-          ? shown
-          : now,
-      );
-    };
-    let midnightTimer: ReturnType<typeof setTimeout> | undefined;
-    const waitForMalaysianMidnight = () => {
-      const tomorrow = toMalaysianDateKey(
-        new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      );
-      midnightTimer = setTimeout(
-        () => {
-          showTodayIfTheDateMoved();
-          waitForMalaysianMidnight();
-        },
-        Date.parse(`${tomorrow}T00:00:00+08:00`) - Date.now(),
-      );
-    };
-    waitForMalaysianMidnight();
-    // A suspended app's timers stop, so midnight can pass unseen until it comes back.
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") showTodayIfTheDateMoved();
-    });
-    return () => {
-      clearTimeout(midnightTimer);
-      subscription.remove();
-    };
-  }, []);
-  return malaysianToday;
-}

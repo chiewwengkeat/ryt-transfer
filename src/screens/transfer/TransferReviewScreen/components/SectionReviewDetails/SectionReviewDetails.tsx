@@ -1,7 +1,6 @@
 import { useLookupRecipient } from "@/domains/transfer/api/lookup-recipient/lookup-recipient";
 import {
   LookupRecipientErrorCode,
-  type LookupRecipientResponse,
   type RecipientIdType,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
@@ -154,19 +153,6 @@ export default function SectionReviewDetails({ draft }: Props) {
       {firstTransfer && (
         <BannerNotice message={t("common.first_transfer_to_recipient.body")} />
       )}
-      <SectionReviewRecipient recipient={recipient} />
-      <SectionReviewAmount draft={draft} />
-    </Card>
-  );
-}
-
-interface SectionReviewRecipientProps {
-  recipient: LookupRecipientResponse["recipient"];
-}
-function SectionReviewRecipient({ recipient }: SectionReviewRecipientProps) {
-  const { t } = useTranslation("transfer");
-  return (
-    <>
       <RowDetail
         label={t("common.detail_rows.bank")}
         value={recipient.bankName}
@@ -177,17 +163,6 @@ function SectionReviewRecipient({ recipient }: SectionReviewRecipientProps) {
         )}
         value={recipient.idValueMasked}
       />
-    </>
-  );
-}
-
-interface SectionReviewAmountProps {
-  draft: TransferDraft;
-}
-function SectionReviewAmount({ draft }: SectionReviewAmountProps) {
-  const { t } = useTranslation("transfer");
-  return (
-    <>
       <RowDetail
         label={t("common.detail_rows.amount")}
         value={formatMoney(draft.amount)}
@@ -195,6 +170,6 @@ function SectionReviewAmount({ draft }: SectionReviewAmountProps) {
       {draft.note !== undefined && (
         <RowDetail label={t("common.detail_rows.note")} value={draft.note} />
       )}
-    </>
+    </Card>
   );
 }

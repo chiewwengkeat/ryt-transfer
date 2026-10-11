@@ -3,22 +3,12 @@ import { RecipientIdType } from "@/domains/transfer/api/lookup-recipient/lookup-
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
 import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import BannerRecipientUnexpected from "@/screens/transfer/TransferRecipientScreen/components/BannerRecipientUnexpected/BannerRecipientUnexpected";
-import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
-import {
-  Contact,
-  getPermissionsAsync,
-  requestPermissionsAsync,
-} from "expo-contacts";
-import {
-  type ComponentProps,
-  useEffect,
-  useEffectEvent,
-  useState,
-} from "react";
+import { Contact, requestPermissionsAsync } from "expo-contacts";
+import { type ComponentProps, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AppState, Linking } from "react-native";
+import BannerContactsRefused from "./components/BannerContactsRefused/BannerContactsRefused";
 import BottomSheetContactMobiles from "./components/BottomSheetContactMobiles/BottomSheetContactMobiles";
 
 interface Props {
@@ -114,40 +104,6 @@ export default function ButtonContacts({ onMobilePicked }: Props) {
         />
       )}
     </>
-  );
-}
-
-interface BannerContactsRefusedProps {
-  onAccessGranted: () => void;
-}
-function BannerContactsRefused({
-  onAccessGranted,
-}: BannerContactsRefusedProps) {
-  const { t } = useTranslation("transfer");
-  useTrackScenarioShown(TransferScenarioId.ContactsAccessRefused);
-  const recheckContactsAccess = useEffectEvent(async () => {
-    if ((await getPermissionsAsync()).granted) onAccessGranted();
-  });
-  // Access is granted in the phone's Settings, outside the app, so the only sign of it is the app coming back.
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (appState) => {
-      if (appState === "active") void recheckContactsAccess();
-    });
-    return () => {
-      subscription.remove();
-    };
-  }, []);
-
-  return (
-    <BannerAction
-      message={t("common.contacts_access_refused.body")}
-      action={{
-        label: t("common.contacts_access_refused.open_settings"),
-        onPress: () => {
-          void Linking.openSettings();
-        },
-      }}
-    />
   );
 }
 

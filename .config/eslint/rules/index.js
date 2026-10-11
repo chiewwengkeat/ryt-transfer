@@ -9,6 +9,7 @@ module.exports = {
     "hook-filename-matches-export": require("./hook-filename-matches-export"),
     "singular-role-suffix": require("./singular-role-suffix"),
     "no-component-fetch-hooks": require("./no-component-fetch-hooks"),
+    "no-component-file-helpers": require("./no-component-file-helpers"),
     "no-cross-component-internals": require("./no-cross-component-internals"),
     "component-folder-identity": require("./component-folder-identity"),
     "file-layout": require("./file-layout"),

@@ -29,8 +29,6 @@ module.exports = {
         "`{{key}}` styles neither a text element nor a pressable, so it starts with neither `text` nor `btn`.",
       buttonWord:
         "`{{key}}` says button twice: the `btn` prefix replaces the word, as `{{suggestion}}`.",
-      sharedMain:
-        "This sheet's `main` already styles {{owner}}'s outermost element. Give {{component}} a sheet of its own, `{{suggestion}}`.",
     },
     schema: [],
   },
@@ -53,11 +51,10 @@ module.exports = {
           if (keys.length > 0) keysOf.set(element, keys);
         }
         const roots = rootElements(sourceCode, program, keysOf);
-        const mainOwners = new Map();
         for (const [element, keys] of keysOf) {
           const component = roots.get(element);
           if (component === undefined) reportBelowRoot(report, element, keys);
-          else reportRoot(report, component, keys, mainOwners);
+          else reportRoot(report, component, keys);
           for (const { node, key } of keys)
             if (BTN_KEY.test(key) && key.includes("Button"))
               report(node, "buttonWord", { key, suggestion: btnName(key) });
@@ -94,7 +91,7 @@ function sheetAccesses(sourceCode, program) {
           !access.computed &&
           access.property.type === "Identifier"
         )
-          accesses.set(access, { sheet, key: access.property.name });
+          accesses.set(access, { key: access.property.name });
       }
     }
   }
@@ -137,18 +134,9 @@ function rootElements(sourceCode, program, keysOf) {
   return roots;
 }
 
-function reportRoot(report, component, keys, mainOwners) {
-  const main = keys.filter(({ key }) => key === "main");
-  if (main.length === 0)
+function reportRoot(report, component, keys) {
+  if (!keys.some(({ key }) => key === "main"))
     report(keys[0].node, "rootNotMain", { component, key: keys[0].key });
-  for (const { node, sheet } of main) {
-    const owner = mainOwners.get(sheet) ?? component;
-    mainOwners.set(sheet, owner);
-    const suggestion =
-      component[0].toLowerCase() + component.slice(1) + "Styles";
-    if (owner !== component)
-      report(node, "sharedMain", { owner, component, suggestion });
-  }
 }
 
 function reportBelowRoot(report, element, keys) {

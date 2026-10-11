@@ -109,18 +109,6 @@ test("style-key-names: a component that renders nothing gives main to the JSX it
   `);
 });
 
-test("style-key-names: a folded component's own sheet takes its main", () => {
-  passes(`
-    export default function Header() {
-      return <View style={styles.main}><IconChevron /></View>;
-    }
-    function IconChevron() {
-      return <View style={iconChevronStyles.main} />;
-    }
-    const iconChevronStyles = StyleSheet.create({ main: {} });
-  `);
-});
-
 test("style-key-names: computed keys, optional chains and a parameter named styles", () => {
   passes(`
     export default function Banner({ tone }: Props) {
@@ -229,25 +217,6 @@ test("style-key-names: reports main below the outermost element", () => {
   reports(
     "export default function R() { return <List contentContainerStyle={styles.main} footer={<View style={styles.main} />} />; }",
     ["mainBelowRoot"],
-  );
-});
-
-test("style-key-names: reports two components' outermost elements sharing one sheet's main", () => {
-  reports(
-    [
-      "export default function Header() { return <View style={styles.main}><Chevron /></View>; }",
-      "function Chevron() { return <View style={styles.main} />; }",
-    ].join("\n"),
-    [
-      {
-        messageId: "sharedMain",
-        data: {
-          owner: "Header",
-          component: "Chevron",
-          suggestion: "chevronStyles",
-        },
-      },
-    ],
   );
 });
 

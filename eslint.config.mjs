@@ -182,6 +182,12 @@ export default defineConfig(
     },
   },
   {
+    files: SOURCE_FILES,
+    ignores: TEST_CODE_FILES,
+    plugins: { fe },
+    rules: { "fe/no-component-file-helpers": "error" },
+  },
+  {
     files: ["**/*.{js,mjs,cjs,ts,tsx}"],
     ignores: ["src/app/**", "**/*.d.ts"],
     plugins: { fe },

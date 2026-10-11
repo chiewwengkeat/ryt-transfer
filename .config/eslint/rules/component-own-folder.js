@@ -11,7 +11,7 @@ module.exports = {
     },
     messages: {
       ownFolder:
-        "Component '{{file}}' sits directly under {{dir}}/. Give it its own folder: {{dir}}/{{name}}/{{file}} — that folder is where any helper it already has colocates as a sibling (and a helper with its own helpers gets its own subfolder, recursively). ⛔ This says where a helper goes, never that one should exist: a single-use child earns its own file only where its name states its whole job, and is inlined otherwise.",
+        "Component '{{file}}' sits directly under {{dir}}/. Give it its own folder: {{dir}}/{{name}}/{{file}} — that folder is where any helper it already has colocates as a sibling (and a helper with its own helpers gets its own subfolder, recursively). ⛔ This says where a helper goes, never that one should exist: a child readers rarely need inlines into its user's body up to about 15 lines, one they usually need up to about 40 while the user stays within 200, and only a larger one, or one with state or effects that renders conditionally or in a list, takes a folder of its own.",
     },
     schema: [],
   },

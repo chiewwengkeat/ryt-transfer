@@ -53,7 +53,7 @@ The mock bank seeds 5,000 transfers. Pages of 30 come by cursor, and each day's 
 
 ## Every component and hook has one place
 
-The app is cut into vertical slices: a screens folder per flow, a domain per business area. A component, hook or module stays in the one screen using it until a second screen, then a second flow, needs it, and a small one with a single user folds into that user's file. Each layer imports only those below it: the placement check fails a piece placed higher than its users need, and the boundary lint an import running sideways or up ([001](deep-dives/design-decisions/001-vertical-slices.md), [011](deep-dives/design-decisions/011-low-mental-load.md)).
+The app is cut into vertical slices: a screens folder per flow, a domain per business area. A component, hook or module stays in the one screen using it until a second screen, then a second flow, needs it. A small module with a single module as its user folds into that user's file, but nothing folds into a component file: a piece one component uses inlines into its body or takes a folder of its own. Each layer imports only those below it: the placement check fails a piece placed higher than its users need, and the boundary lint an import running sideways or up ([001](deep-dives/design-decisions/001-vertical-slices.md), [011](deep-dives/design-decisions/011-low-mental-load.md), [012](deep-dives/design-decisions/012-inline-or-own-folder.md)).
 
 ```mermaid
 flowchart TD

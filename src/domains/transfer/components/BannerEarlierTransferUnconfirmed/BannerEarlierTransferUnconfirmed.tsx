@@ -36,39 +36,11 @@ export default function BannerEarlierTransferUnconfirmed({
       ? TransferScenarioId.EarlierTransferUnconfirmed
       : undefined,
   );
-  useRecheckEarlierTransferWhileOnTop({
-    customerId,
-    transferId: newestUnconfirmed?.transferId,
-    onSettled: onEarlierTransferSettled,
-  });
-  if (newestUnconfirmed === undefined) return null;
-
-  return (
-    <BannerNotice
-      message={t("common.earlier_transfer_unconfirmed.body", {
-        reference:
-          newestUnconfirmed.reference ??
-          newestUnconfirmed.transfer?.reference ??
-          newestUnconfirmed.transferId,
-      })}
-    />
-  );
-}
-
-// The bank can answer long after Result was left. Only on top: a Result over this counts each failed read it sees.
-function useRecheckEarlierTransferWhileOnTop({
-  customerId,
-  transferId,
-  onSettled,
-}: {
-  customerId: string | undefined;
-  transferId: string | undefined;
-  onSettled: () => void;
-}) {
   const queryClient = useQueryClient();
   const screenOnTop = useIsScreenOnTop();
   const screensCovered = use(ScreensCoveredContext);
   const transferIdsToldSettledRef = useRef(new Set<string>());
+  const transferId = newestUnconfirmed?.transferId;
   const tellEarlierTransferSettled = useEffectEvent(
     (settledTransferId: string) => {
       // Covered, not off top: under the session-ended view reads answer 401, but a check out as Home is left still owes it.
@@ -76,9 +48,10 @@ function useRecheckEarlierTransferWhileOnTop({
       // Once per transfer: a settled answer the cached notice cannot show, such as one no newer than the copy held, keeps it ticking.
       if (transferIdsToldSettledRef.current.has(settledTransferId)) return;
       transferIdsToldSettledRef.current.add(settledTransferId);
-      onSettled();
+      onEarlierTransferSettled();
     },
   );
+  // The bank can answer long after Result was left. Only on top: a Result over this counts each failed read it sees.
   useEffect(() => {
     if (!screenOnTop || customerId === undefined || transferId === undefined)
       return;
@@ -124,4 +97,16 @@ function useRecheckEarlierTransferWhileOnTop({
       clearInterval(timer);
     };
   }, [screenOnTop, customerId, transferId, queryClient]);
+  if (newestUnconfirmed === undefined) return null;
+
+  return (
+    <BannerNotice
+      message={t("common.earlier_transfer_unconfirmed.body", {
+        reference:
+          newestUnconfirmed.reference ??
+          newestUnconfirmed.transfer?.reference ??
+          newestUnconfirmed.transferId,
+      })}
+    />
+  );
 }

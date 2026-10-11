@@ -15,19 +15,12 @@ import {
 import { useDemoTranslation } from "@/mocks/switcher/components/ViewDemo/hooks/use-demo-translation/use-demo-translation";
 import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
 import { useInitialValue } from "@/shared/hooks/use-initial-value/use-initial-value";
-import {
-  colors,
-  minTouchTarget,
-  spacing,
-  typography,
-} from "@/shared/theme/theme";
 import BottomSheetFrame from "@/shared/ui/BottomSheetFrame/BottomSheetFrame";
 import ButtonSecondary from "@/shared/ui/ButtonSecondary/ButtonSecondary";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import { Fragment } from "react";
-import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useStore } from "zustand";
+import ItemScenarioDemo from "./components/ItemScenarioDemo/ItemScenarioDemo";
 
 interface Props {
   onResetDemo: () => Promise<void>;
@@ -113,51 +106,6 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
     </BottomSheetFrame>
   );
 }
-
-interface ItemScenarioDemoProps {
-  label: string;
-  checked: boolean;
-  onPress: () => void;
-}
-function ItemScenarioDemo({ label, checked, onPress }: ItemScenarioDemoProps) {
-  const { i18n } = useTranslation();
-  return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityLabel={label}
-      accessibilityLanguage={i18n.language}
-      accessibilityState={{ checked }}
-      onPress={onPress}
-      style={itemScenarioDemoStyles.main}
-    >
-      <View
-        style={[
-          itemScenarioDemoStyles.mark,
-          checked && itemScenarioDemoStyles.markChecked,
-        ]}
-      />
-      <Text style={itemScenarioDemoStyles.textLabel}>{label}</Text>
-    </Pressable>
-  );
-}
-
-const itemScenarioDemoStyles = StyleSheet.create({
-  main: {
-    minHeight: minTouchTarget,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  mark: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.border,
-  },
-  markChecked: { borderWidth: 6, borderColor: colors.accent },
-  textLabel: { ...typography.body, flex: 1, color: colors.textPrimary },
-});
 
 // Picking an unlisted scenario does nothing: those are the bank acting normally, or happen on the phone.
 const PICKABLE_SCENARIO_IDS = (

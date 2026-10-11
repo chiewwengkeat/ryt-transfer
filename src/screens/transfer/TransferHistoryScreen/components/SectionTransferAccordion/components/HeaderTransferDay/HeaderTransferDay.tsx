@@ -2,21 +2,15 @@ import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfer
 import ViewAmountWrap from "@/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/components/ViewAmountWrap/ViewAmountWrap";
 import { formatMalaysianDayHeader } from "@/shared/lib/dates/dates";
 import { formatMoney, parseWireAmount } from "@/shared/lib/money/money";
-import { standardEasing } from "@/shared/lib/motion/motion";
 import {
   traceFormatCalls,
   useRenderTrace,
 } from "@/shared/observability/render-trace/render-trace";
-import { usePhoneReducesMotion } from "@/shared/platform/reduce-motion/reduce-motion";
 import { colors, minTouchTarget, spacing } from "@/shared/theme/theme";
 import TextBody from "@/shared/ui/TextBody/TextBody";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet } from "react-native";
-import Animated, {
-  ReduceMotion,
-  useAnimatedStyle,
-  withTiming,
-} from "react-native-reanimated";
+import IconChevron from "./components/IconChevron/IconChevron";
 
 interface Props {
   summary: ListTransfersResponse["days"][number];
@@ -96,38 +90,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   pressed: { opacity: 0.8 },
-});
-
-interface IconChevronProps {
-  expanded: boolean;
-}
-function IconChevron({ expanded }: IconChevronProps) {
-  const phoneReducesMotion = usePhoneReducesMotion();
-  const turnStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        rotate: withTiming(expanded ? "45deg" : "-45deg", {
-          duration: 200,
-          easing: standardEasing,
-          reduceMotion: phoneReducesMotion
-            ? ReduceMotion.Always
-            : ReduceMotion.Never,
-        }),
-      },
-    ],
-  }));
-
-  return (
-    <Animated.View aria-hidden style={[iconChevronStyles.main, turnStyle]} />
-  );
-}
-
-const iconChevronStyles = StyleSheet.create({
-  main: {
-    width: 8,
-    height: 8,
-    borderRightWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: colors.textSecondary,
-  },
 });
