@@ -27,7 +27,6 @@ function useTransferHistoryRenderMeasurementInDevelopment(
 ) {
   const queryClient = useQueryClient();
   const transfers = transferHistory.data?.transfers ?? [];
-
   useRenderMeasurement(
     {
       pageAppend: () => transferHistory.fetchNextPage(),
