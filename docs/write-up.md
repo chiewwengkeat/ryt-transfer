@@ -36,7 +36,7 @@ sequenceDiagram
 Approval signs what review showed ([003](deep-dives/design-decisions/003-biometric-approval.md)):
 
 1. Face ID or a fingerprint unlocks a hardware-backed key on the phone
-2. The key signs the transfer details and BE's challenge
+2. The key signs the transfer details and BE's 60-second challenge
 3. BE verifies the signature
 
 **Characteristics**:
@@ -92,7 +92,7 @@ History stays fast over 5,000 transfers ([009](deep-dives/design-decisions/009-h
 
 1. Cursor pagination, with per-day totals from BE
 2. A virtualized list that recycles rows
-3. A short cache window before refetching
+3. A 30-second cache window before refetching
 4. Server state in TanStack Query ([010](deep-dives/design-decisions/010-query-cache-only.md)), flow state in zustand ([005](deep-dives/design-decisions/005-state.md))
 
 **Characteristics**:
