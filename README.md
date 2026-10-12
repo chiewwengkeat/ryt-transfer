@@ -42,9 +42,9 @@ pnpm android:demo   # or: pnpm ios:demo
 
 ## Assumptions
 
-- **A Malaysian bank's customer.** Ringgit only, held as whole sen, and times shown in Malaysia time.
-- **Transfers go over DuitNow**, to an ID or a bank account; the bank, never the app, looks up the registered name.
-- **The module runs inside the bank's own app**, which owns sign-in and the PIN and talks to it through [two seams](docs/deep-dives/features.md#for-the-host-app).
-- **The bank's API is designed here.** No backend exists, so each endpoint's types are a proposed contract.
-- **The bank creates a transfer before anyone approves it.** Creating checks the balance and limits; only the approval moves money.
-- **The bank's rules are the simulated bank's**: RM5,000 a day, RM50,000 a transfer, 60 seconds to approve, three PIN tries.
+1. **A Malaysian bank's customer**: ringgit only, amounts as integer sen, times in Malaysia time
+2. **Transfers go over DuitNow**, to an ID or a bank account; BE, never FE, looks up the registered name
+3. **The module runs inside the bank's own app** (the host app), which owns sign-in and the PIN, and passes the module [two inputs](docs/deep-dives/features.md#for-the-host-app): its biometrics setting and a completed PIN reset
+4. **The API is designed here**: no BE exists, so each endpoint's types are a proposed API contract
+5. **Create, then approve**: Create Transfer checks balance and limits; only Approve Transfer moves money
+6. **Limits are the mock BE's**: RM5,000 a day, RM50,000 per transfer, 60 seconds to approve, three PIN attempts
