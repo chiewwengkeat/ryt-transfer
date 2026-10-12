@@ -12,7 +12,7 @@ export function readAgainEveryReadButAnsweredNameChecks(
   queryClient: QueryClient,
   { isRefusalAnAnswer }: { isRefusalAnAnswer: boolean },
 ) {
-  void queryClient.invalidateQueries({
+  queryClient.invalidateQueries({
     predicate: ({ queryKey, state: { status, error } }) =>
       queryKey[0] !== transferKeys.lookupAll[0] ||
       status === "pending" ||

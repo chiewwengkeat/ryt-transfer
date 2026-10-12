@@ -10,8 +10,8 @@ import {
   type GetTransferLimitsResponse,
 } from "./get-transfer-limits.type";
 
-export const getTransferLimitsOptions = () =>
-  queryOptions({
+export function getTransferLimitsOptions() {
+  return queryOptions({
     queryKey: accountKeys.transferLimits,
     queryFn: async ({ signal }) => {
       const limits = await requestJson<GetTransferLimitsResponse>(
@@ -27,6 +27,7 @@ export const getTransferLimitsOptions = () =>
       return { remainingToday, perTransferMax };
     },
   });
+}
 
 export function useGetTransferLimits(
   options: { refetchInterval?: number | false } = {},

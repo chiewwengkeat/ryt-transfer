@@ -22,9 +22,7 @@ export function useBalanceScenarios(
         retry: t(`common.${unexpectedWordsKey}.retry`),
       },
     },
-    onLoaded: () => {
-      trackScenarioShown(TransferScenarioId.BalanceAndLimitShown);
-    },
+    onLoaded: () => trackScenarioShown(TransferScenarioId.BalanceAndLimitShown),
     onFailed: (failure: "unavailable" | "unexpected") => {
       trackScenarioShown(
         failure === "unavailable"

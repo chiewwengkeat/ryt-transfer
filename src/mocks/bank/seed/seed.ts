@@ -42,10 +42,12 @@ export function seedTransferHistory(
   spanDays: number,
 ): BankTransferRecord[] {
   const nextRandom = createSeededRandom(HISTORY_SEED);
-  const randomDigits = (length: number) =>
-    Array.from({ length }, () => Math.floor(nextRandom() * 10)).join("");
-  const pickRandom = <T>(list: readonly T[]) =>
-    list[Math.floor(nextRandom() * list.length)]!;
+  function randomDigits(length: number) {
+    return Array.from({ length }, () => Math.floor(nextRandom() * 10)).join("");
+  }
+  function pickRandom<T>(list: readonly T[]) {
+    return list[Math.floor(nextRandom() * list.length)]!;
+  }
 
   const regularCounterparties = Array.from({ length: 30 }, (_, index) => {
     const id = drawRegularCounterpartyId(index, pickRandom, randomDigits);

@@ -15,7 +15,7 @@ export function useApprovalPinLocked() {
       pinLockedNowRef.current = isLocked;
       setIsPinLocked(isLocked);
     });
-    void isApprovalPinLocked().then((isLockedAtMount) => {
+    isApprovalPinLocked().then((isLockedAtMount) => {
       if (isMountReadOutdated) return;
       pinLockedNowRef.current = isLockedAtMount;
       setIsPinLocked(isLockedAtMount);

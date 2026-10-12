@@ -52,7 +52,7 @@ export function useScreenCaptureBlock(
   // receipt crashed. The pick is read through an effect event: as a dependency, unpicking it on a receipt would block
   // the receipt.
   const blockCaptureForCrashScreen = useEffectEvent(() => {
-    if (isProductionBuild || isCaptureBlockPicked) void blockScreenCapture();
+    if (isProductionBuild || isCaptureBlockPicked) blockScreenCapture();
   });
   useLayoutEffect(
     () => () => {
@@ -62,12 +62,13 @@ export function useScreenCaptureBlock(
   );
   // Before paint, so a receipt being left hands over to a screen that is drawn blocked.
   useLayoutEffect(() => {
-    void (isBlocked ? blockScreenCapture() : allowScreenCapture());
+    if (isBlocked) blockScreenCapture();
+    else allowScreenCapture();
     if (!isBlocked || Platform.OS !== "android") return;
     // A font-size change or reopen from Back recreates Android's activity on an unblocked window; blocked stays put,
     // so block again on active. Not iOS: it keeps its window, and each block adds a recording observer until allowed.
     const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") void blockScreenCapture();
+      if (state === "active") blockScreenCapture();
     });
     return () => {
       subscription.remove();

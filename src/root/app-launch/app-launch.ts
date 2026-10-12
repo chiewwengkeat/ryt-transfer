@@ -32,8 +32,8 @@ const installChecked = (async () => {
 });
 
 // At load, ahead of the root view's guard, so the block is in place before anything renders.
-if (isProductionBuild) void blockScreenCapture();
-void enableAppSwitcherBlur();
+if (isProductionBuild) blockScreenCapture();
+enableAppSwitcherBlur();
 warmUpDeviceIntegrityCheck();
 
 // Compared literally, never through the config predicate: Metro strips the demo layer from production only for this form.
@@ -55,7 +55,7 @@ if (demoLayer !== null) {
     );
   });
   // After the install check, whose wipe would delete keys paired while it ran.
-  void installChecked
+  installChecked
     .then(demoLayer.pairPhoneAtFirstLaunch)
     .catch((error: unknown) => {
       reportError(error, { boundary: "demo_pairing" });

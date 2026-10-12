@@ -129,8 +129,9 @@ export function listDuitNowBanks(): BankAnswer<ListBanksResponse> {
 const RECIPIENT_REF_LIFETIME_SECONDS = 600;
 const RECENT_RECIPIENT_COUNT = 10;
 
-const counterpartyKey = (id: BankTransferRecord["counterpartyId"]) =>
-  `${id.idType}:${id.idValue}:${id.bankCode}`;
+function counterpartyKey(id: BankTransferRecord["counterpartyId"]) {
+  return `${id.idType}:${id.idValue}:${id.bankCode}`;
+}
 
 // Money moving or moved, so an attempt that failed never makes a recipient familiar.
 function sentTransfersNewestFirst() {

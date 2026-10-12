@@ -57,9 +57,9 @@ export async function requestJson<Data>(
     didTimeOut = true;
     controller.abort();
   }, options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
-  const abortForCaller = () => {
+  function abortForCaller() {
     controller.abort();
-  };
+  }
   signal?.addEventListener("abort", abortForCaller);
 
   let response: Response;
@@ -129,9 +129,13 @@ export async function requestJson<Data>(
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
-// An arrow, not fetch itself: called unbound fetch can throw, and msw swaps the global after load.
-const sendWithFetch: Send = (request) => fetch(request);
-const withoutAuthHeaders = () => ({});
+// A wrapper, not fetch itself: called unbound fetch can throw, and msw swaps the global after load.
+function sendWithFetch(request: Request) {
+  return fetch(request);
+}
+function withoutAuthHeaders() {
+  return {};
+}
 
 let configuredSend = sendWithFetch;
 let authHeaders: () => Record<string, string> = withoutAuthHeaders;

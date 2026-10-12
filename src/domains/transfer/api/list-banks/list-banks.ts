@@ -4,8 +4,8 @@ import { onlineManager, queryOptions, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import type { ListBanksResponse } from "./list-banks.type";
 
-export const getListBanksOptions = () =>
-  queryOptions({
+export function getListBanksOptions() {
+  return queryOptions({
     queryKey: transferKeys.banks,
     queryFn: ({ signal }) =>
       requestJson<ListBanksResponse>("/banks", { signal }),
@@ -19,6 +19,7 @@ export const getListBanksOptions = () =>
     // Under "always" a failed list is asked again at each return to the front, and an open sheet says it is offline again.
     refetchOnWindowFocus: () => onlineManager.isOnline(),
   });
+}
 
 export function useListBanks() {
   return useQuery({

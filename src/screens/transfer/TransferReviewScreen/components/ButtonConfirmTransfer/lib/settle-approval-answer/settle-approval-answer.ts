@@ -46,7 +46,7 @@ export async function settleApprovalAnswer({
     });
     return;
   }
-  const returnRefusedApprovalToReview = async (action: ApprovalAction) => {
+  async function returnRefusedApprovalToReview(action: ApprovalAction) {
     await clearPendingTransfer(customerId, transferId).catch(
       (error: unknown) => {
         reportError(error, { boundary: "pending_transfer_clear" });
@@ -54,7 +54,7 @@ export async function settleApprovalAnswer({
     );
     if (!isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId))
       dispatchTransferFlow(action);
-  };
+  }
 
   if (
     transfer?.status === TransferStatus.Unsuccessful &&
@@ -63,7 +63,7 @@ export async function settleApprovalAnswer({
       transfer.failureReason === TransferFailureReason.DailyLimitExceeded)
   ) {
     // The amount step they go back to checks against the figures that just fell short.
-    void refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
+    refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
     await returnRefusedApprovalToReview({
       type: TransferFlowActionType.ApprovalNotSent,
       notice: TransferScenarioId.BalanceOrLimitShortAtApproval,
@@ -161,7 +161,7 @@ export function openResultPageOfSentApproval({
   wasAnswered: boolean;
   isUnknownAnswer: boolean;
 }) {
-  void refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
+  refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
   // From Home, so Back from the result never reopens a transfer already sent.
   router.dismissTo("/");
   router.push({

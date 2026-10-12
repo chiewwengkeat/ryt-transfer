@@ -23,7 +23,7 @@ export function subscribeToPhoneConnection(
   function readAndReport() {
     const changesHeardBeforeRead = changesHeard;
     // A read can land after a change event, and must not overwrite the newer state.
-    void getNetworkStateAsync().then((state) => {
+    getNetworkStateAsync().then((state) => {
       if (isSubscribed && changesHeard === changesHeardBeforeRead)
         reportAndReadAgainIfDisconnected(state);
     });

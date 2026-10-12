@@ -17,7 +17,7 @@ onlineManager.setEventListener(subscribeToPhoneConnection);
 focusManager.setEventListener((setFocused) => {
   // Runs again on Android's reopen after Back: focus is still off from that background, and active may come first.
   let wasBackgroundSinceActive = !focusManager.isFocused();
-  const followAppState = (state: AppStateStatus) => {
+  function followAppState(state: AppStateStatus) {
     if (state === "background") {
       wasBackgroundSinceActive = true;
       setFocused(false);
@@ -27,7 +27,7 @@ focusManager.setEventListener((setFocused) => {
       wasBackgroundSinceActive = false;
       setFocused(true);
     }
-  };
+  }
   if (AppState.currentState === "active") followAppState("active");
   const subscription = AppState.addEventListener("change", followAppState);
   return () => {
@@ -61,7 +61,7 @@ export function createQueryClient() {
     for (const query of readsThatFoundNoNetwork) {
       answersWhenLastReadAgain.set(query, query.state.dataUpdateCount);
       // Through a reading observer: the query holds the options of whichever rendered last, a disabled one's retries too.
-      void query.observers
+      query.observers
         .find((observer) => observer.options.enabled !== false)
         // The read in flight may be the one that got through: let it land rather than send it again.
         ?.refetch({ cancelRefetch: false });

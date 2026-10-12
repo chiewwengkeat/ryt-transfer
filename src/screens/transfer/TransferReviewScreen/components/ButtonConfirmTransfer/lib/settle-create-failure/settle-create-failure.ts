@@ -58,7 +58,7 @@ export function settleCreateFailure({
     case CreateTransferErrorCode.DailyLimitExceeded:
     case CreateTransferErrorCode.AbovePerTransferMax:
       // The figures the amount step checked against are stale now, so it reads them again.
-      void queryClient.invalidateQueries({ queryKey: accountKeys.all });
+      queryClient.invalidateQueries({ queryKey: accountKeys.all });
       dispatchTransferFlow({
         type: TransferFlowActionType.CreateNotSent,
         notice: TransferScenarioId.BalanceOrLimitShortAtConfirmation,
@@ -85,7 +85,7 @@ export function settleCreateFailure({
       return;
     case CreateTransferErrorCode.ServiceUnavailable:
       // Home reads maintenance off the limits, so they are read again before the person returns there.
-      void queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: accountKeys.transferLimits,
       });
       dispatchTransferFlow({

@@ -82,11 +82,12 @@ const NEXT_LAUNCH_NOTICE_OF_OUTCOME: Record<
 };
 
 // No query function: whose records these are is known only to the code that changes them, so each refill says.
-const getPendingTransferNoticesOptions = () =>
-  queryOptions<{
+function getPendingTransferNoticesOptions() {
+  return queryOptions<{
     customerId: string;
     records: Awaited<ReturnType<typeof listPendingTransfers>>;
   }>({
     queryKey: transferKeys.pendingNotices,
     queryFn: skipToken,
   });
+}

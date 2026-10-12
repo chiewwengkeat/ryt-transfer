@@ -38,7 +38,7 @@ export function initTranslations(
   }
 
   addI18nextPlugin(initReactI18next);
-  void init({
+  init({
     resources,
     // Only a pick is stored: until there is one, every launch follows the phone's current language.
     lng: readPickedAppLanguage() ?? findAppLanguageForPhone(),
@@ -59,12 +59,12 @@ export function readPickedAppLanguage() {
 
 export function pickAppLanguage(language: AppLanguage) {
   kvStorage.setItemSync(PICKED_LANGUAGE_KEY, language);
-  void changeLanguage(language);
+  changeLanguage(language);
 }
 
 export function followPhoneLanguage() {
   kvStorage.removeItemSync(PICKED_LANGUAGE_KEY);
-  void changeLanguage(findAppLanguageForPhone());
+  changeLanguage(findAppLanguageForPhone());
 }
 
 const APP_LANGUAGE_BY_PHONE_LANGUAGE = new Map([

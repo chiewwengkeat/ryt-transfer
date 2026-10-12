@@ -63,8 +63,8 @@ export function parseRecipientId(idType: RecipientIdType, typedId: string) {
   return idType === RecipientIdType.Mobile ? `+60${match[1]}` : compactId;
 }
 
-export const getLookupRecipientOptions = (recipient: LookupRecipientInput) =>
-  queryOptions({
+export function getLookupRecipientOptions(recipient: LookupRecipientInput) {
+  return queryOptions({
     queryKey: transferKeys.lookup(recipient),
     queryFn: ({ signal }) =>
       requestJson<LookupRecipientResponse>("/recipients/lookup", {
@@ -83,6 +83,7 @@ export const getLookupRecipientOptions = (recipient: LookupRecipientInput) =>
     staleTime: Infinity,
     gcTime: 0,
   });
+}
 
 export function useLookupRecipient(recipient: LookupRecipientInput) {
   return useQuery(getLookupRecipientOptions(recipient));

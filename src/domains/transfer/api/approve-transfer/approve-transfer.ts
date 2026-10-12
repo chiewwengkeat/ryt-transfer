@@ -54,8 +54,8 @@ export function useApproveTransfer() {
           { cause },
         );
       });
-      const sendApproveRequest = () =>
-        requestJson<ApproveTransferResponse>(
+      function sendApproveRequest() {
+        return requestJson<ApproveTransferResponse>(
           `/transfers/${encodeURIComponent(transferId)}/approve`,
           {
             method: "POST",
@@ -64,6 +64,7 @@ export function useApproveTransfer() {
             timeoutMs: 30_000,
           },
         );
+      }
       // Asked again as the same signed bytes under the same key, which the bank acts on at most once.
       for (const resendDelayMs of [2_000, 4_000]) {
         try {

@@ -57,8 +57,8 @@ export function isSettledTransferOutcome(
   return SETTLED_TRANSFER_OUTCOMES.some((settled) => settled === outcome);
 }
 
-export const getTransferOptions = (transferId: string) =>
-  queryOptions({
+export function getTransferOptions(transferId: string) {
+  return queryOptions({
     queryKey: transferKeys.detail(transferId),
     queryFn: async ({ client, signal }) => {
       const { transfer } = await requestJson<GetTransferResponse>(
@@ -92,6 +92,7 @@ export const getTransferOptions = (transferId: string) =>
         ? held
         : received,
   });
+}
 
 export function useGetTransfer(
   transferId: string,
@@ -109,13 +110,13 @@ export function useGetTransfer(
 
 export function useGetTransferWithHistoryPlaceholder(transferId: string) {
   const queryClient = useQueryClient();
-  const findReadableHistoryRow = () => {
+  function findReadableHistoryRow() {
     const historyRow = findTransferInHistory(queryClient, transferId);
     // The select runs on a placeholder too, and its throw would show as a failure while the fetch is on its way.
     return historyRow && parseWireAmount(historyRow.amount)
       ? historyRow
       : undefined;
-  };
+  }
   const transferQuery = useQuery({
     ...getTransferOptions(transferId),
     placeholderData: findReadableHistoryRow,

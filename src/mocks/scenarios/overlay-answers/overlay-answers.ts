@@ -4,19 +4,22 @@ import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
 import type { RequestHandler } from "msw";
 import { getResponse, http, HttpResponse } from "msw";
 
-export const lostAnswer = () => HttpResponse.error();
-export const unknownCodeAnswer = () =>
-  httpResponseFrom(
+export function lostAnswer() {
+  return HttpResponse.error();
+}
+export function unknownCodeAnswer() {
+  return httpResponseFrom(
     bankError(400, "NEW_BANK_CODE", "A code added after this app was built."),
   );
-export const serverErrorAnswer = () =>
-  httpResponseFrom(
+}
+export function serverErrorAnswer() {
+  return httpResponseFrom(
     bankError(500, "INTERNAL_ERROR", "The bank could not answer."),
   );
-export const maintenanceAnswer =
-  (codes: { ServiceUnavailable: string }) =>
+}
+export function maintenanceAnswer(codes: { ServiceUnavailable: string }) {
   // Typed by hand: inferring it loops through the store's type back to the registry's ids.
-  (): Response =>
+  return (): Response =>
     httpResponseFrom({
       status: 503,
       body: {
@@ -29,9 +32,10 @@ export const maintenanceAnswer =
         },
       },
     });
-export const errorAnswer =
-  (status: number, code: string, message: string) => () =>
-    httpResponseFrom(bankError(status, code, message));
+}
+export function errorAnswer(status: number, code: string, message: string) {
+  return () => httpResponseFrom(bankError(status, code, message));
+}
 
 export function commitThenAnswer(
   path: string,

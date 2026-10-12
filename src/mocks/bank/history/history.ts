@@ -41,8 +41,9 @@ export function getBankTransfer(
 export function listBankTransfers(
   query: URLSearchParams,
 ): BankAnswer<ListTransfersResponse | ListTransfersErrorResponse> {
-  const refuseAsInvalid = (message: string) =>
-    bankError(400, ListTransfersErrorCode.InvalidRequest, message);
+  function refuseAsInvalid(message: string) {
+    return bankError(400, ListTransfersErrorCode.InvalidRequest, message);
+  }
   const limit = Number(query.get("limit") ?? PAGE_SIZE);
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_PAGE_SIZE) {
     return refuseAsInvalid(
@@ -82,7 +83,9 @@ export function listBankTransfers(
   const hasMore = start !== -1 && start + limit < listed.length;
 
   // createdAt carries +08:00, so its first ten characters are the Malaysian date.
-  const dayOf = (transfer: Transfer) => transfer.createdAt.slice(0, 10);
+  function dayOf(transfer: Transfer) {
+    return transfer.createdAt.slice(0, 10);
+  }
   const pageDays = new Set(page.map(({ transfer }) => dayOf(transfer)));
   const days = new Map<string, { count: number; netMinor: number }>();
   for (const { transfer } of listed) {

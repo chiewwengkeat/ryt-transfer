@@ -89,11 +89,9 @@ export async function approveWithBiometricKey(
         { message: t("common.biometrics_changed.body") },
       );
       if (acceptedPin !== null)
-        void replaceBiometricApprovalKey(acceptedPin).catch(
-          (error: unknown) => {
-            reportError(error, { boundary: "biometric_key_replacement" });
-          },
-        );
+        replaceBiometricApprovalKey(acceptedPin).catch((error: unknown) => {
+          reportError(error, { boundary: "biometric_key_replacement" });
+        });
       return;
     }
     case BiometricSignOutcome.Failed:

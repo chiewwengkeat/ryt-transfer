@@ -5,8 +5,8 @@ import { trackEvent } from "@/shared/observability/observability/observability";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { GetPrimaryAccountResponse } from "./get-primary-account.type";
 
-export const getPrimaryAccountOptions = () =>
-  queryOptions({
+export function getPrimaryAccountOptions() {
+  return queryOptions({
     queryKey: accountKeys.primaryAccount,
     queryFn: async ({ signal }) => {
       const account = await requestJson<GetPrimaryAccountResponse>(
@@ -21,6 +21,7 @@ export const getPrimaryAccountOptions = () =>
       return { ...account, balance };
     },
   });
+}
 
 export function useGetPrimaryAccount(
   options: { refetchInterval?: number | false } = {},

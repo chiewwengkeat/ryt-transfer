@@ -64,7 +64,7 @@ function useRenderMeasurementFromLaunchLink(
   });
   useEffect(() => {
     let isUnmounted = false;
-    void Linking.getInitialURL().then(async (launchURL) => {
+    Linking.getInitialURL().then(async (launchURL) => {
       if (
         hasMeasuredThisLaunch ||
         !/[?&]measure=renders(&|$)/.test(launchURL ?? "")
@@ -84,13 +84,14 @@ function useRenderMeasurementFromLaunchLink(
             firstRenders: number;
           }
         > = {};
-        const countsFor = (cellKind: string) =>
-          (countsByCellKind[cellKind] ??= {
+        function countsFor(cellKind: string) {
+          return (countsByCellKind[cellKind] ??= {
             mounted: 0,
             rerenderedCells: 0,
             rerenders: 0,
             firstRenders: 0,
           });
+        }
         const shownAtStart = new Set<string>();
         for (const { cellKind, cellKey } of shownCells.values()) {
           shownAtStart.add(`${cellKind}\n${cellKey}`);

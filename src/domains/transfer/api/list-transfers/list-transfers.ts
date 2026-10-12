@@ -24,8 +24,8 @@ export const MONEY_MOVED_SIGN = {
   [TransferFunds.Credited]: 1,
 } satisfies Record<TransferFunds, -1 | 0 | 1>;
 
-export const getListTransfersOptions = () =>
-  infiniteQueryOptions({
+export function getListTransfersOptions() {
+  return infiniteQueryOptions({
     queryKey: transferKeys.history(),
     queryFn: async ({ pageParam, signal, client }) => {
       const searchParams = new URLSearchParams({ limit: "30" });
@@ -63,6 +63,7 @@ export const getListTransfersOptions = () =>
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
+}
 
 export function useListTransfers() {
   return useInfiniteQuery({
@@ -79,18 +80,16 @@ export function askForNextTransferHistoryPage(
 ) {
   if (!transferHistory.hasNextPage || transferHistory.isFetchNextPageError)
     return;
-  void transferHistory
-    .fetchNextPage({ cancelRefetch: false })
-    .then((settled) => {
-      if (
-        settled.data === transferHistory.data &&
-        queryClient
-          .getQueryCache()
-          .find({ queryKey: getListTransfersOptions().queryKey })
-          ?.isActive()
-      )
-        askForNextTransferHistoryPage(queryClient, settled);
-    });
+  transferHistory.fetchNextPage({ cancelRefetch: false }).then((settled) => {
+    if (
+      settled.data === transferHistory.data &&
+      queryClient
+        .getQueryCache()
+        .find({ queryKey: getListTransfersOptions().queryKey })
+        ?.isActive()
+    )
+      askForNextTransferHistoryPage(queryClient, settled);
+  });
 }
 
 export function findTransferInHistory(

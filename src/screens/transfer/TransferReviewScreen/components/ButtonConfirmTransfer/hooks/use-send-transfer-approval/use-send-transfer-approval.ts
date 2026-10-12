@@ -60,18 +60,19 @@ export function useSendTransferApproval() {
     if (approving.step !== TransferFlowStep.Approving) return;
     const { transferId, lookup, draft } = approving;
     // ⛔ Any wait here can end with the flow off this transfer, and whatever it is on now this call leaves alone.
-    const noLongerOnThisTransfer = () =>
-      isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId);
-    const trackScenarioShownWhileOnTop = (scenario: TransferScenarioId) => {
+    function noLongerOnThisTransfer() {
+      return isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId);
+    }
+    function trackScenarioShownWhileOnTop(scenario: TransferScenarioId) {
       if (screenOnTopRef.current) trackScenarioShown(scenario);
       else scenarioReachedUnderAViewRef.current = scenario;
-    };
-    const leaveApprovalNotSent = async (
+    }
+    async function leaveApprovalNotSent(
       notice: TransferFlowNotice,
       {
         wasClosedBySessionEnd = false,
       }: { wasClosedBySessionEnd?: boolean } = {},
-    ) => {
+    ) {
       if (noLongerOnThisTransfer()) return;
       closeApprovalPinSheet();
       dispatchTransferFlow(
@@ -82,7 +83,7 @@ export function useSendTransferApproval() {
       // ⛔ Shown after the dispatch, which reports the scenario: a locked PIN is reported as its sheet opens.
       if (notice === TransferScenarioId.PinLocked)
         await showApprovalPinLocked(t("common.pin_locked.body"));
-    };
+    }
     if (customerId === undefined) {
       await leaveApprovalNotSent(TransferScenarioId.ApprovalUnexpected);
       return;

@@ -12,7 +12,7 @@ export const rootedPhoneDemoPickStore = createStore(() => ({
 
 // Once at launch, so the check an approval waits on is never the library's first.
 export function warmUpDeviceIntegrityCheck() {
-  if (isProductionBuild) void checkDeviceIntegrity();
+  if (isProductionBuild) checkDeviceIntegrity();
 }
 
 export async function isApprovalRefusedOnThisPhone() {

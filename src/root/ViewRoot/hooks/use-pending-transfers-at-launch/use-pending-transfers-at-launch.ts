@@ -27,11 +27,11 @@ export function usePendingTransfersAtLaunch() {
       queryClient,
       getPrimaryAccountOptions(),
     );
-    const onAccountRead = ({
+    function onAccountRead({
       data,
       status,
       fetchStatus,
-    }: ReturnType<typeof accountObserver.getCurrentResult>) => {
+    }: ReturnType<typeof accountObserver.getCurrentResult>) {
       // An answered read only: the 401's own result still carries the account read before it.
       if (
         !isRecheckDue ||
@@ -43,7 +43,7 @@ export function usePendingTransfersAtLaunch() {
       isRecheckDue = false;
       const shouldOpenTheTransferLeftMidApproval = !isLaunchRecoveryDone;
       isLaunchRecoveryDone = true;
-      void (async () => {
+      (async () => {
         await discardOtherCustomersPendingTransfers(data.customerId);
         await refreshPendingTransferNotices(queryClient, data.customerId);
         const records = await listPendingTransfers(data.customerId);
@@ -76,7 +76,7 @@ export function usePendingTransfersAtLaunch() {
       })().catch((error: unknown) => {
         reportError(error, { boundary: "pending_transfers_at_launch" });
       });
-    };
+    }
     const stopObservingAccount = accountObserver.subscribe(onAccountRead);
     // clear() removes the query this observer is on, and nothing but setOptions moves an observer onto the next one.
     const stopRebindingAfterClears = queryClient

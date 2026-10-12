@@ -7,7 +7,7 @@ import { createStore } from "zustand/vanilla";
 const reduceMotionStore = createStore(() => ({
   phoneReducesMotion: false,
 }));
-void AccessibilityInfo.isReduceMotionEnabled().then((doesPhoneReduceMotion) => {
+AccessibilityInfo.isReduceMotionEnabled().then((doesPhoneReduceMotion) => {
   reduceMotionStore.setState({ phoneReducesMotion: doesPhoneReduceMotion });
 });
 AccessibilityInfo.addEventListener(
