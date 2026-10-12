@@ -17,14 +17,13 @@ import { useStartTransferAvailability } from "./hooks/use-start-transfer-availab
 export default function HomeScreen() {
   const { t } = useTranslation("home");
   const queryClient = useQueryClient();
+  useBackTwiceToCloseApp();
 
   const balanceScenarios = useBalanceScenarios(
     TransferScenarioId.StartUnexpected,
   );
   const { reasonStartTransferDisabled, isFirstReadRunning } =
     useStartTransferAvailability();
-
-  useBackTwiceToCloseApp();
 
   return (
     <>

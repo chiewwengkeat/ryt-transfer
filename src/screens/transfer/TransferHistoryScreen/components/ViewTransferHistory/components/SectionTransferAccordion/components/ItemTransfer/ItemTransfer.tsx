@@ -21,6 +21,7 @@ interface Props {
 }
 export default function ItemTransfer({ transfer }: Props) {
   const { t } = useTranslation(["transfer", "shared"]);
+  useRenderTrace("row", transfer.transferId);
 
   const statusWord = useTransferStatusWord(transfer);
 
@@ -30,8 +31,6 @@ export default function ItemTransfer({ transfer }: Props) {
     transfer.createdAt,
     t,
   );
-
-  useRenderTrace("row", transfer.transferId);
 
   return (
     <CardPressable

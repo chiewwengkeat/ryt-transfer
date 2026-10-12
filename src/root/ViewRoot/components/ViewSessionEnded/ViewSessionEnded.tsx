@@ -12,8 +12,8 @@ interface Props {
 }
 export default function ViewSessionEnded({ onSignIn }: Props) {
   const { t } = useTranslation(["shared"]);
-
   useTrackScenarioShown(TransferScenarioId.SessionEnded);
+
   // The app behind is hidden, so Back would move it where nobody can see.
   useEffect(() => {
     const subscription = BackHandler.addEventListener(

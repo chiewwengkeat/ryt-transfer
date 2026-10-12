@@ -25,6 +25,7 @@ export default function HeaderTransferDay({
   onToggle,
 }: Props) {
   const { t, i18n } = useTranslation(["transfer", "shared"]);
+  useRenderTrace("header", summary.date);
 
   const labelDay = traceFormatCalls(formatMalaysianDayHeader)(
     summary.date,
@@ -35,8 +36,6 @@ export default function HeaderTransferDay({
   const textNet =
     parsedNet &&
     traceFormatCalls(formatMoney)(parsedNet, { signDisplay: "exceptZero" });
-
-  useRenderTrace("header", summary.date);
 
   return (
     <Pressable

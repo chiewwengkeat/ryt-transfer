@@ -27,6 +27,8 @@ import { forgetSignedInCustomer } from "./lib/forget-signed-in-customer/forget-s
 import "@/root/translations/translations";
 
 export default function ViewRoot() {
+  usePendingTransfersAtLaunch();
+  useScreenCaptureBlock(TransferScenarioId.ScreenCaptureBlocked);
   const [hasSessionEnded, setHasSessionEnded] = useState(false);
   const [isAppSheetOpen, setIsAppSheetOpen] = useState(false);
   const [navigatorMounts, setNavigatorMounts] = useState(0);
@@ -74,8 +76,6 @@ export default function ViewRoot() {
     </>
   );
 
-  usePendingTransfersAtLaunch();
-  useScreenCaptureBlock(TransferScenarioId.ScreenCaptureBlocked);
   useEffect(
     () =>
       demoLayer?.subscribeToPhoneSidePick(
