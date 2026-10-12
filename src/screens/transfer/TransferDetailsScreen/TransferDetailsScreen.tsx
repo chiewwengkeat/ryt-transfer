@@ -30,7 +30,9 @@ export default function TransferDetailsScreen() {
 
   const isFailureSessionEnd = isSessionEndFailure(failure);
 
-  const readAgain = () => transferQuery.refetch({ cancelRefetch: false });
+  function readAgain() {
+    return transferQuery.refetch({ cancelRefetch: false });
+  }
 
   const content = (() => {
     if (
@@ -40,12 +42,7 @@ export default function TransferDetailsScreen() {
       return (
         <ViewScreenFrame
           footer={
-            <ButtonPrimary
-              label={t("details.back")}
-              onPress={() => {
-                router.back();
-              }}
-            />
+            <ButtonPrimary label={t("details.back")} onPress={router.back} />
           }
         >
           <BannerNotice tone="negative" message={t("details.not_found")} />

@@ -62,7 +62,7 @@ export default function TransferHistoryScreen() {
       isTransferHistoryCached(queryClient) &&
       !wasNewestTransferHistoryPageReadWithin(queryClient, 30_000)
     )
-      void resetTransferHistory(queryClient);
+      resetTransferHistory(queryClient);
     // An open draws every cached page at once, so 200 transfers bound it.
     return () => {
       trimTransferHistory(queryClient, 200);

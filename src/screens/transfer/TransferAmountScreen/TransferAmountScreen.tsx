@@ -123,6 +123,29 @@ export default function TransferAmountScreen() {
     })(),
   );
 
+  function handleReview() {
+    if (reviewPushedSinceFocusRef.current) return;
+    setWasReviewPressed(true);
+    if (
+      parsedAmount === null ||
+      parsedAmount.minor === 0 ||
+      errorAmount ||
+      errorNote
+    )
+      return;
+    const note = typedNote.trim();
+    if (
+      dispatchTransferFlow({
+        type: TransferFlowActionType.AmountEntered,
+        amount: parsedAmount,
+        ...(note !== "" && { note }),
+      })
+    ) {
+      reviewPushedSinceFocusRef.current = true;
+      router.push("/transfer/review");
+    }
+  }
+
   return (
     <>
       <Stack.Screen options={{ title: t("amount.title") }} />
@@ -141,28 +164,7 @@ export default function TransferAmountScreen() {
                   t("common.balance_unavailable.disabled_reason"))
             }
             notice={noticeOffline}
-            onPress={() => {
-              if (reviewPushedSinceFocusRef.current) return;
-              setWasReviewPressed(true);
-              if (
-                parsedAmount === null ||
-                parsedAmount.minor === 0 ||
-                errorAmount ||
-                errorNote
-              )
-                return;
-              const note = typedNote.trim();
-              if (
-                dispatchTransferFlow({
-                  type: TransferFlowActionType.AmountEntered,
-                  amount: parsedAmount,
-                  ...(note !== "" && { note }),
-                })
-              ) {
-                reviewPushedSinceFocusRef.current = true;
-                router.push("/transfer/review");
-              }
-            }}
+            onPress={handleReview}
           />
         }
       >

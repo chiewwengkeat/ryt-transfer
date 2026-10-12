@@ -55,11 +55,9 @@ export default function TransferReviewScreen() {
       >
         {!isPhoneRefused && (
           <BannerEarlierTransferUnconfirmed
-            onEarlierTransferSettled={() => {
-              void refreshAccountHistoryAndRecentRecipientsAfterApproval(
-                queryClient,
-              );
-            }}
+            onEarlierTransferSettled={() =>
+              refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient)
+            }
           />
         )}
         <SectionReviewDetails draft={draft} />

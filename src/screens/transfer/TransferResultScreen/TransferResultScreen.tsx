@@ -77,7 +77,7 @@ export default function TransferResultScreen() {
   );
   useEffect(() => {
     if (customerId === undefined) return;
-    void (async () => {
+    (async () => {
       if (failureLatestRead === TransferReadFailure.NotFound) {
         await clearPendingTransfer(customerId, transferId);
         await refreshPendingTransferNotices(queryClient, customerId);
@@ -112,51 +112,42 @@ export default function TransferResultScreen() {
   useEffect(() => {
     // Settled after opening: any refresh the approve call made predates it, and it may have moved money.
     if (isOutcomeSettled && !wasSettledRef.current)
-      void refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
+      refreshAccountHistoryAndRecentRecipientsAfterApproval(queryClient);
   }, [isOutcomeSettled, queryClient]);
   useEffect(() => {
     switch (displayedMoneyState) {
       case MoneyState.MoneyMoved:
-        void notificationAsync(NotificationFeedbackType.Success);
+        notificationAsync(NotificationFeedbackType.Success);
         break;
       case MoneyState.NotConfirmedYet:
       case MoneyState.MoneyReturned:
-        void notificationAsync(NotificationFeedbackType.Warning);
+        notificationAsync(NotificationFeedbackType.Warning);
         break;
       case MoneyState.NoMoneyMoved:
-        void notificationAsync(NotificationFeedbackType.Error);
+        notificationAsync(NotificationFeedbackType.Error);
         break;
     }
   }, [displayedMoneyState]);
+
+  async function handleDone() {
+    // Cleared before Home shows, or Home announces the outcome again.
+    if (isOutcomeSettled && !isOutcomeShown && customerId !== undefined)
+      await settlePendingTransfer({
+        queryClient,
+        customerId,
+        transferId,
+        outcome,
+      }).catch((error: unknown) => {
+        reportError(error, { boundary: "pending_transfer" });
+      });
+    router.dismissTo("/");
+  }
 
   return (
     <>
       <Stack.Screen options={{ title: t("result.title") }} />
       <ViewScreenFrame
-        footer={
-          <ButtonPrimary
-            label={t("result.done")}
-            onPress={() => {
-              void (async () => {
-                // Cleared before Home shows, or Home announces the outcome again.
-                if (
-                  isOutcomeSettled &&
-                  !isOutcomeShown &&
-                  customerId !== undefined
-                )
-                  await settlePendingTransfer({
-                    queryClient,
-                    customerId,
-                    transferId,
-                    outcome,
-                  }).catch((error: unknown) => {
-                    reportError(error, { boundary: "pending_transfer" });
-                  });
-                router.dismissTo("/");
-              })();
-            }}
-          />
-        }
+        footer={<ButtonPrimary label={t("result.done")} onPress={handleDone} />}
       >
         <ViewOutcomeEntrance outcome={scenario}>
           {scenario === TransferScenarioId.Completed && (
@@ -178,16 +169,14 @@ export default function TransferResultScreen() {
           ].includes(scenario) && (
             <ButtonSecondary
               label={t("result.transfer_history")}
-              onPress={() => {
-                router.replace("/transfer-history");
-              }}
+              onPress={() => router.replace("/transfer-history")}
             />
           )}
           {scenario === TransferScenarioId.OutcomeUnexpected &&
             (doesPhoneReportConnection ? (
               <ButtonSecondary
                 label={t("common.outcome_unexpected.load_again")}
-                onPress={() => transfer.refetch()}
+                onPress={transfer.refetch}
               />
             ) : (
               <TextOffline />

@@ -85,9 +85,7 @@ export default function TransferRecipientScreen() {
       return (
         <CardRecentRecipientChosen
           recent={chosenRecent}
-          onChange={() => {
-            setChosenRecentId(undefined);
-          }}
+          onChange={() => setChosenRecentId(undefined)}
         />
       );
     if (isChosenRecentAwaited) return <Loader />;
@@ -127,6 +125,49 @@ export default function TransferRecipientScreen() {
       </>
     );
   })();
+
+  function handleContinue() {
+    if (chosenRecent !== undefined) {
+      if (
+        dispatchTransferFlow({
+          type: TransferFlowActionType.RecipientChosen,
+          recipient: {
+            idType: chosenRecent.idType,
+            idValue: chosenRecent.idValueMasked,
+            recentId: chosenRecent.recentId,
+          },
+        })
+      )
+        router.push("/transfer/amount");
+      return;
+    }
+    const idValue = parseRecipientId(idType, typedId);
+    const isBankMissing =
+      idType === RecipientIdType.AccountNumber && bankCode === undefined;
+    setErrorRecipientId(
+      idValue === null
+        ? t(
+            `common.badly_formed_input.${idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+          )
+        : undefined,
+    );
+    setErrorBank(isBankMissing ? t("recipient.bank_missing") : undefined);
+    if (idValue === null || isBankMissing) return;
+    if (
+      dispatchTransferFlow({
+        type: TransferFlowActionType.RecipientChosen,
+        recipient: {
+          idType,
+          idValue,
+          ...(idType === RecipientIdType.AccountNumber && {
+            bankCode,
+          }),
+        },
+      })
+    )
+      router.push("/transfer/amount");
+  }
+
   return (
     <>
       <Stack.Screen options={{ title: t("recipient.title") }} />
@@ -136,50 +177,7 @@ export default function TransferRecipientScreen() {
             label={t("recipient.continue")}
             loading={isChosenRecentAwaited}
             notice={noticeOffline}
-            onPress={() => {
-              if (chosenRecent !== undefined) {
-                if (
-                  dispatchTransferFlow({
-                    type: TransferFlowActionType.RecipientChosen,
-                    recipient: {
-                      idType: chosenRecent.idType,
-                      idValue: chosenRecent.idValueMasked,
-                      recentId: chosenRecent.recentId,
-                    },
-                  })
-                )
-                  router.push("/transfer/amount");
-                return;
-              }
-              const idValue = parseRecipientId(idType, typedId);
-              const isBankMissing =
-                idType === RecipientIdType.AccountNumber &&
-                bankCode === undefined;
-              setErrorRecipientId(
-                idValue === null
-                  ? t(
-                      `common.badly_formed_input.${idType.toLowerCase() as Lowercase<RecipientIdType>}`,
-                    )
-                  : undefined,
-              );
-              setErrorBank(
-                isBankMissing ? t("recipient.bank_missing") : undefined,
-              );
-              if (idValue === null || isBankMissing) return;
-              if (
-                dispatchTransferFlow({
-                  type: TransferFlowActionType.RecipientChosen,
-                  recipient: {
-                    idType,
-                    idValue,
-                    ...(idType === RecipientIdType.AccountNumber && {
-                      bankCode,
-                    }),
-                  },
-                })
-              )
-                router.push("/transfer/amount");
-            }}
+            onPress={handleContinue}
           />
         }
       >
