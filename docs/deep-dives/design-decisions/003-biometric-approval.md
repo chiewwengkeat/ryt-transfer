@@ -24,6 +24,7 @@ Each transfer is approved by a signature BE verifies, never by a pass/fail promp
    1. Fallback: the app's own six-digit PIN pad; BE verifies the PIN and allows three attempts
    2. A second hardware key, which needs no prompt, signs the same details
    3. BE tells the two paths apart by the signing key, and rejects a second-key signature sent without the right PIN
+   4. A device the OS won't give a biometric key, because no strong biometric is enrolled, pairs with the second key alone and approves through the PIN path; a face or fingerprint enrolled later is set up as changed biometrics are, below
 3. **Changed biometrics end the biometric key**
    1. FE detects the signing failure, explains, takes the PIN once, approves the current transfer through the PIN path, and registers a new biometric key with the same PIN
    2. BE records the change and notifies the customer

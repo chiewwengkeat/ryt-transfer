@@ -12,6 +12,12 @@ export const biometricsLibraryDouble = {
   BiometricStrength: { Strong: "strong", Weak: "weak" },
   InputEncoding: { UTF8: "utf8", Base64: "base64" },
   createKeysWithOptions: (options: CreateKeysOptions = {}) => {
+    if (doesPhoneRefuseBiometricKeys && options.requireAuthentication !== false)
+      return Promise.reject(
+        Object.assign(new Error("At least one biometric must be enrolled"), {
+          code: "CREATE_KEYS_ERROR",
+        }),
+      );
     const keyAlias = options.keyAlias ?? "default";
     const secretKey = p256.utils.randomSecretKey();
     phoneKeys.set(keyAlias, { secretKey, options });
@@ -23,17 +29,25 @@ export const biometricsLibraryDouble = {
       ]),
     });
   },
-  isSensorAvailable: () =>
-    Promise.resolve(
-      sensorUnavailableCode === null
-        ? { available: true, biometryType: "FaceID", isDeviceSecure: true }
-        : {
-            available: false,
-            biometryType: "None",
-            errorCode: sensorUnavailableCode,
+  isSensorAvailable: () => {
+    if (sensorUnavailableCode !== null)
+      return Promise.resolve({
+        available: false,
+        biometryType: "None",
+        errorCode: sensorUnavailableCode,
+        isDeviceSecure: true,
+      });
+    return Promise.resolve(
+      hasOnlyWeakBiometrics
+        ? {
+            available: true,
+            biometryType: "Biometrics",
+            biometricStrength: "weak",
             isDeviceSecure: true,
-          },
-    ),
+          }
+        : { available: true, biometryType: "FaceID", isDeviceSecure: true },
+    );
+  },
   signWithOptions: async (options: SignatureOptions) => {
     const keyAlias = options.keyAlias ?? "default";
     if (keysKilledByEnrolmentChange.has(keyAlias))
@@ -98,6 +112,21 @@ export function reportBiometricSensorUnavailable(errorCode: string) {
   sensorUnavailableCode = errorCode;
 }
 
+// As Android refuses a key needing a strong biometric for every use while none is enrolled.
+export function refuseBiometricKeys() {
+  doesPhoneRefuseBiometricKeys = true;
+}
+
+export function reportOnlyWeakBiometrics() {
+  hasOnlyWeakBiometrics = true;
+}
+
+export function enrolFirstBiometric() {
+  sensorUnavailableCode = null;
+  hasOnlyWeakBiometrics = false;
+  doesPhoneRefuseBiometricKeys = false;
+}
+
 // As iOS reports a key bound to the enrolled set once a face or finger is added: refused before any prompt.
 export function changeEnrolledBiometrics() {
   for (const [keyAlias, { options }] of phoneKeys)
@@ -147,6 +176,8 @@ export function resetBiometricsDouble() {
   nextPromptFailure = null;
   nextPromptHeldUntil = null;
   sensorUnavailableCode = null;
+  hasOnlyWeakBiometrics = false;
+  doesPhoneRefuseBiometricKeys = false;
   answerIntegrityCheck = () => Promise.resolve(UNTAMPERED_PHONE);
   integrityChecksAsked = 0;
 }
@@ -161,6 +192,8 @@ let nextPromptRecognised = true;
 let nextPromptFailure: string | null = null;
 let nextPromptHeldUntil: Promise<void> | null = null;
 let sensorUnavailableCode: string | null = null;
+let hasOnlyWeakBiometrics = false;
+let doesPhoneRefuseBiometricKeys = false;
 const UNTAMPERED_PHONE: DeviceIntegrityResult = {
   hasRuntimeHooks: false,
   isCompromised: false,

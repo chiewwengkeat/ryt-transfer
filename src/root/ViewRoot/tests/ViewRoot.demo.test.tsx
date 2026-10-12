@@ -1,7 +1,7 @@
 import "@/test/setup/demo-build";
 
 import type { GetPrimaryAccountResponse } from "@/domains/account/api/get-primary-account/get-primary-account.type";
-import { hasApprovalKeysOnFile } from "@/domains/approval/lib/approval-keys/approval-keys";
+import { isPhonePaired } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { TransferStatus } from "@/domains/transfer/api/get-transfer/get-transfer.type";
 import {
   PendingTransferStage,
@@ -285,7 +285,7 @@ it("checks an earlier transfer again once they sign back in after the reset, and
   await fireEvent.press(screen.getByRole("button", { name: "Reset demo" }));
   // ⛔ Wait the reset out first: a record written while it runs is wiped by the reset itself, which also hides this notice.
   await act(() => jest.advanceTimersByTimeAsync(5_000));
-  expect(await hasApprovalKeysOnFile()).toBe(true);
+  expect(await isPhonePaired()).toBe(true);
   await writePendingTransfer(customerId, {
     transferId: created.transfer.transferId,
     idempotencyKey: "approval-key",

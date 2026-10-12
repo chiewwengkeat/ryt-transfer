@@ -3,7 +3,9 @@ import {
   biometricPromptsShown,
   changeEnrolledBiometrics,
   failNextBiometricPrompt,
+  refuseBiometricKeys,
   reportBiometricSensorUnavailable,
+  reportOnlyWeakBiometrics,
 } from "@/test/doubles/biometrics-double";
 import {
   reportedScenarios,
@@ -170,6 +172,54 @@ it.each([
     ).toBeOnTheScreen();
     expect(biometricPromptsShown()).toEqual([]);
   },
+);
+
+it(
+  "approves with the PIN on an Android phone with nothing enrolled, which pairs with its PIN key alone",
+  scenarioTest("transfer.biometrics_unavailable", async () => {
+    reportBiometricSensorUnavailable("BiometricErrorNoneEnrolled");
+    refuseBiometricKeys();
+    await pairPhoneAsTheDemoLaunchDoes();
+    // A second launch must leave the pairing alone.
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
+
+    expect(
+      await screen.findByText(
+        "No face or fingerprint is set up on this phone.",
+      ),
+    ).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.biometrics_unavailable");
+    await enterPinAndApprove(DEMO_PIN);
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  }),
+);
+
+it(
+  "approves with the PIN, offering no PIN instead, on an Android phone whose face unlock is too weak to protect a key",
+  scenarioTest("transfer.biometrics_unavailable", async () => {
+    reportOnlyWeakBiometrics();
+    refuseBiometricKeys();
+    await pairPhoneAsTheDemoLaunchDoes();
+    await renderRoute("/transfer");
+    await walkToTransferReviewUntilTransferShows();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: "Use PIN instead" }),
+      ).toBeNull();
+    });
+    await fireEvent.press(screen.getByRole("button", { name: "Transfer" }));
+
+    expect(
+      await screen.findByText(
+        "This phone has no face or fingerprint sensor the app can use.",
+      ),
+    ).toBeOnTheScreen();
+    await enterPinAndApprove(DEMO_PIN);
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+  }),
 );
 
 it(

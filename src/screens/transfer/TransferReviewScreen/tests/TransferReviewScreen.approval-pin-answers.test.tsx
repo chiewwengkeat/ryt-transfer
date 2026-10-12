@@ -7,6 +7,7 @@ import { rememberApprovalPinLocked } from "@/domains/approval/lib/approval-pin-l
 import { approvalPinSheetStore } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
 import { listPendingTransfers } from "@/domains/transfer/lib/pending-transfers/pending-transfers";
 import { transferFlowStore } from "@/screens/transfer/flow-store/flow-store";
+import { deleteSecureRecord } from "@/shared/platform/secure-storage/secure-storage";
 import {
   biometricPromptsShown,
   changeEnrolledBiometrics,
@@ -156,6 +157,11 @@ it.each([
     () => {
       reportBiometricSensorUnavailable("BIOMETRY_LOCKOUT");
     },
+  ],
+  [
+    "the phone holds no face or fingerprint key, as one paired while none was enrolled does",
+    () =>
+      deleteSecureRecord({ namespace: "approval", name: "biometric-key-id" }),
   ],
 ])(
   "creates no transfer that only the PIN could approve once the bank has locked the PIN, when %s",

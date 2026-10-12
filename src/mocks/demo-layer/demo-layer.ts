@@ -1,7 +1,6 @@
-import { registerApprovalKeys } from "@/domains/approval/api/register-approval-keys/register-approval-keys";
 import {
-  createApprovalKeys,
-  hasApprovalKeysOnFile,
+  createAndRegisterApprovalKeys,
+  isPhonePaired,
   saveApprovalKeyIds,
 } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { handlersForActiveScenario } from "@/mocks/bank/bank";
@@ -12,7 +11,6 @@ import type { PhoneSideScenarioId } from "@/mocks/scenarios/transfer-scenarios/t
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
 import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
 import type { Send } from "@/shared/http/transport/transport";
-import { randomUUID } from "expo-crypto";
 import { delay, getResponse, HttpResponse, type RequestHandler } from "msw";
 import type { ComponentType, ReactNode } from "react";
 
@@ -25,14 +23,8 @@ export default {
   watchAmountStepOpen,
   // Stands in for the pairing a host app made long ago, so the bank holds no cooling-off against it.
   async pairPhoneAtFirstLaunch() {
-    if (await hasApprovalKeysOnFile()) return;
-    const { possessionKeyId, biometricKeyId } = await registerApprovalKeys(
-      await createApprovalKeys(),
-      randomUUID(),
-    );
-    if (possessionKeyId === undefined || biometricKeyId === undefined)
-      throw new Error("The bank registered only some of the approval keys.");
-    await saveApprovalKeyIds({ possessionKeyId, biometricKeyId });
+    if (await isPhonePaired()) return;
+    await saveApprovalKeyIds(await createAndRegisterApprovalKeys());
   },
 } satisfies DemoLayer;
 

@@ -28,12 +28,9 @@ export enum BiometricSignOutcome {
   Failed = "failed",
 }
 
-export async function hasApprovalKeysOnFile() {
-  const keyIds = await Promise.all([
-    readSecureRecord(POSSESSION_KEY_ID_RECORD),
-    readSecureRecord(BIOMETRIC_KEY_ID_RECORD),
-  ]);
-  return keyIds.every((keyId) => keyId !== null);
+// Not both keys: a phone with nothing enrolled pairs without a biometric one, and pairing again remakes a key the bank holds.
+export async function isPhonePaired() {
+  return (await readSecureRecord(POSSESSION_KEY_ID_RECORD)) !== null;
 }
 
 export async function createApprovalKeys(keySets?: {
@@ -48,24 +45,43 @@ export async function createApprovalKeys(keySets?: {
     keyType: "ec256",
     requireAuthentication: false,
   });
+  // Android refuses this key while no strong biometric is enrolled, and the phone then pairs for the PIN alone.
   const biometricKey = await createKeysWithOptions({
     ...BIOMETRIC_KEY_OPTIONS,
     keyAlias:
       APPROVAL_KEY_SETS[
         keySets?.biometric ?? (await readApprovalKeySetInUse("biometric"))
       ].biometric,
-  });
+  }).catch(() => undefined);
   return {
     possessionPublicKey: possessionKey.publicKey,
-    biometricPublicKey: biometricKey.publicKey,
+    biometricPublicKey: biometricKey?.publicKey,
   };
 }
 
+export async function createAndRegisterApprovalKeys(
+  keySets?: Parameters<typeof createApprovalKeys>[0],
+  pin?: string,
+) {
+  const keys = await createApprovalKeys(keySets);
+  const { possessionKeyId, biometricKeyId } = await registerApprovalKeys(
+    { ...keys, pin },
+    randomUUID(),
+  );
+  if (
+    possessionKeyId === undefined ||
+    (keys.biometricPublicKey !== undefined && biometricKeyId === undefined)
+  )
+    throw new Error("The bank registered only some of the approval keys.");
+  return { possessionKeyId, biometricKeyId };
+}
+
 export async function saveApprovalKeyIds(
-  keyIds: Required<RegisterApprovalKeysResponse>,
+  keyIds: RegisterApprovalKeysResponse & { possessionKeyId: string },
 ) {
   await writeSecureRecord(POSSESSION_KEY_ID_RECORD, keyIds.possessionKeyId);
-  await writeSecureRecord(BIOMETRIC_KEY_ID_RECORD, keyIds.biometricKeyId);
+  if (keyIds.biometricKeyId !== undefined)
+    await writeSecureRecord(BIOMETRIC_KEY_ID_RECORD, keyIds.biometricKeyId);
 }
 
 export async function registerNewApprovalKeys(pin?: string) {
@@ -73,22 +89,18 @@ export async function registerNewApprovalKeys(pin?: string) {
     possession: await readApprovalKeySetNotInUse("possession"),
     biometric: await readApprovalKeySetNotInUse("biometric"),
   } as const;
-  const { possessionKeyId, biometricKeyId } = await registerApprovalKeys(
-    { ...(await createApprovalKeys(newKeySets)), pin },
-    randomUUID(),
-  );
-  if (possessionKeyId === undefined || biometricKeyId === undefined)
-    throw new Error("The bank registered only some of the approval keys.");
+  const keyIds = await createAndRegisterApprovalKeys(newKeySets, pin);
   // Before the ids: stopped between the two, the phone sends ids the bank has dropped, which sets keys up again.
   await writeSecureRecord(
     APPROVAL_KEY_SET_RECORDS.possession,
     newKeySets.possession,
   );
-  await writeSecureRecord(
-    APPROVAL_KEY_SET_RECORDS.biometric,
-    newKeySets.biometric,
-  );
-  await saveApprovalKeyIds({ possessionKeyId, biometricKeyId });
+  if (keyIds.biometricKeyId !== undefined)
+    await writeSecureRecord(
+      APPROVAL_KEY_SET_RECORDS.biometric,
+      newKeySets.biometric,
+    );
+  await saveApprovalKeyIds(keyIds);
 }
 
 export async function replaceBiometricApprovalKey(pin: string) {
@@ -112,6 +124,12 @@ export async function readBiometricSensorRefusal() {
   const sensor = await isSensorAvailable({
     biometricStrength: BiometricStrength.Strong,
   }).catch(() => undefined);
+  // The library falls back to a weak face, which no biometric key accepts.
+  if (sensor?.available && sensor.biometricStrength === BiometricStrength.Weak)
+    return {
+      outcome: BiometricSignOutcome.NoSensor,
+      errorCode: "WEAK_BIOMETRICS_ONLY",
+    } as const;
   const outcome =
     sensor?.available === false
       ? SIGN_OUTCOME_BY_LIBRARY_CODE.get(sensor.errorCode ?? "")
@@ -121,18 +139,32 @@ export async function readBiometricSensorRefusal() {
     : { outcome, errorCode: sensor?.errorCode };
 }
 
+export async function readBiometricRefusal() {
+  const sensorRefusal = await readBiometricSensorRefusal();
+  if (sensorRefusal !== null) return sensorRefusal;
+  // A face or fingerprint enrolled after a pairing without one gets its key with the PIN, as a changed one does.
+  return (await readSecureRecord(BIOMETRIC_KEY_ID_RECORD)) === null
+    ? ({
+        outcome: BiometricSignOutcome.KeyChanged,
+        errorCode: "NO_BIOMETRIC_KEY",
+      } as const)
+    : null;
+}
+
 export async function signWithBiometricKey(
   signedText: string,
   prompt: { title: string; subtitle: string; cancel: string },
 ) {
+  if (!(await isPhonePaired()))
+    return { outcome: BiometricSignOutcome.Failed } as const;
+  // Asked first: on a phone, iOS signing reports neither a lockout nor an empty enrolment.
+  const refusal = await readBiometricRefusal();
+  if (refusal !== null) {
+    trackEvent("biometric_signing", refusal);
+    return { outcome: refusal.outcome };
+  }
   const keyId = await readSecureRecord(BIOMETRIC_KEY_ID_RECORD);
   if (keyId === null) return { outcome: BiometricSignOutcome.Failed } as const;
-  // Asked first: on a phone, iOS signing reports neither a lockout nor an empty enrolment.
-  const sensorRefusal = await readBiometricSensorRefusal();
-  if (sensorRefusal !== null) {
-    trackEvent("biometric_signing", sensorRefusal);
-    return { outcome: sensorRefusal.outcome };
-  }
 
   const result = await signWithOptions({
     keyAlias:

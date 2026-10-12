@@ -376,7 +376,7 @@ Every scenario a user can hit while sending money, from opening a transfer to it
 
 ### Face or fingerprint unavailable
 `transfer.biometrics_unavailable`
-- **When:** biometric approval is off in the host app's settings, nothing is enrolled on the device, or the device has no usable sensor
+- **When:** biometric approval is off in the host app's settings, nothing is enrolled on the device, or the device has no usable sensor, a face unlock the OS rates too weak to protect a key counting as none
 - **Money:** no money moved
 - **Shown as:** the PIN sheet, over the review step, saying why
 - **Tell them:** why face or fingerprint approval isn't available, and that they approve with their PIN
@@ -386,7 +386,7 @@ Every scenario a user can hit while sending money, from opening a transfer to it
 
 ### Fingerprints or face changed
 `transfer.biometrics_changed`
-- **When:** a fingerprint or face was added or removed on the device since approval was set up, which invalidates the biometric key
+- **When:** a fingerprint or face was added or removed on the device since approval was set up, which invalidates the biometric key, or was added to a device set up while none was enrolled, which had no biometric key
 - **Money:** no money moved
 - **Shown as:** the PIN sheet, over the review step
 - **Tell them:** their fingerprints or face changed; their PIN approves this transfer and turns face or fingerprint approval back on

@@ -2,6 +2,9 @@ import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inpu
 import {
   biometricPromptsShown,
   changeEnrolledBiometrics,
+  enrolFirstBiometric,
+  refuseBiometricKeys,
+  reportBiometricSensorUnavailable,
 } from "@/test/doubles/biometrics-double";
 import { reportedScenarios } from "@/test/doubles/native-doubles";
 import {
@@ -45,6 +48,31 @@ it(
     expect(keyRegistrationBody).toHaveProperty("pin", DEMO_PIN);
     expect(keyRegistrationBody).toHaveProperty("biometricPublicKey");
     expect(keyRegistrationBody).not.toHaveProperty("possessionPublicKey");
+  }),
+);
+
+it(
+  "sets face or fingerprint approval up with the PIN once one is enrolled on a phone paired without it",
+  scenarioTest("transfer.biometrics_changed", async () => {
+    reportBiometricSensorUnavailable("BiometricErrorNoneEnrolled");
+    refuseBiometricKeys();
+    await pairPhoneAsTheDemoLaunchDoes();
+    enrolFirstBiometric();
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
+
+    expect(
+      await screen.findByText(
+        "Your fingerprints or face changed. Your PIN approves this transfer and turns face or fingerprint approval back on.",
+      ),
+    ).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.biometrics_changed");
+    await enterPinAndApprove(DEMO_PIN);
+    await screen.findByText("Transfer sent");
+    await sendAnotherRm100TransferFromResult();
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    expect(biometricPromptsShown()).toHaveLength(1);
   }),
 );
 
@@ -163,6 +191,33 @@ it("sets approval up again with the PIN when the bank no longer knows the phone'
     expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
     jest.useRealTimers();
     expect(await readBankBalanceMinor()).toBe(balanceBeforeMinor - 10_000);
+  })();
+});
+
+it("sets approval up again with the PIN key alone when the bank no longer knows the key of a phone paired with nothing enrolled, then approves", async () => {
+  reportBiometricSensorUnavailable("BiometricErrorNoneEnrolled");
+  refuseBiometricKeys();
+  await pairPhoneBeforeTheBankForgetsItsKeys();
+  await scenarioTest("transfer.approval_key_unknown", async () => {
+    await renderRoute("/transfer");
+    await walkToTransferReviewAndPressTransfer();
+
+    expect(
+      await screen.findByText(
+        "No face or fingerprint is set up on this phone.",
+      ),
+    ).toBeOnTheScreen();
+    await enterPinAndApprove(DEMO_PIN);
+
+    expect(await screen.findByText("Transfer sent")).toBeOnTheScreen();
+    expect(reportedScenarios()).toContain("transfer.approval_key_unknown");
+    const keyRegistration = sentRequests
+      .filter((request) => new URL(request.url).pathname === "/approval-keys")
+      .at(-1);
+    const keyRegistrationBody = (await keyRegistration?.json()) as unknown;
+    expect(keyRegistrationBody).toHaveProperty("pin", DEMO_PIN);
+    expect(keyRegistrationBody).toHaveProperty("possessionPublicKey");
+    expect(keyRegistrationBody).not.toHaveProperty("biometricPublicKey");
   })();
 });
 

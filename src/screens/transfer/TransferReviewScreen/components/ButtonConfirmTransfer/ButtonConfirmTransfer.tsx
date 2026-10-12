@@ -1,7 +1,7 @@
 import { approvalSettingsStore } from "@/domains/approval/lib/approval-host-inputs/approval-host-inputs";
 import {
   BiometricSignOutcome,
-  readBiometricSensorRefusal,
+  readBiometricRefusal,
 } from "@/domains/approval/lib/approval-keys/approval-keys";
 import { isApprovalPinLocked } from "@/domains/approval/lib/approval-pin-lock/approval-pin-lock";
 import { showApprovalPinLocked } from "@/domains/approval/lib/approval-pin-sheet/approval-pin-sheet";
@@ -69,8 +69,8 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     // Read now, not from the render pressed in: the lock can land while the check runs.
     const isPinLockedAfterCheck =
       isPinLockedNow() ?? (await isApprovalPinLocked());
-    const sensorRefusalOutcome = isPinLockedAfterCheck
-      ? (await readBiometricSensorRefusal())?.outcome
+    const refusalOutcome = isPinLockedAfterCheck
+      ? (await readBiometricRefusal())?.outcome
       : undefined;
     // ⛔ Read after every wait: once review is left the press is void, so nothing is created or prompted behind them.
     if (readLeaveCount() !== leaveCountAtPress) return;
@@ -79,9 +79,10 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       isPinLockedAfterCheck &&
       (path === ApprovalPath.Pin ||
         !approvalSettingsStore.getState().biometricApprovalOn ||
-        sensorRefusalOutcome === BiometricSignOutcome.NotSetUp ||
-        sensorRefusalOutcome === BiometricSignOutcome.NoSensor ||
-        sensorRefusalOutcome === BiometricSignOutcome.LockedOut)
+        refusalOutcome === BiometricSignOutcome.NotSetUp ||
+        refusalOutcome === BiometricSignOutcome.NoSensor ||
+        refusalOutcome === BiometricSignOutcome.LockedOut ||
+        refusalOutcome === BiometricSignOutcome.KeyChanged)
     ) {
       // ⛔ Dispatched first, since it reports the scenario: a locked PIN is reported as its sheet opens.
       dispatchTransferFlow({
