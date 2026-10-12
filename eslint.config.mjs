@@ -93,7 +93,10 @@ export default defineConfig(
     files: SOURCE_FILES,
     ignores: TEST_CODE_FILES,
     // App code calls a promise un-awaited with no `void`; tests keep it to catch an un-awaited press.
-    rules: { "@typescript-eslint/no-floating-promises": "off" },
+    rules: {
+      "@typescript-eslint/no-floating-promises": "off",
+      "no-void": "error",
+    },
   },
   {
     files: ["**/*.{js,mjs,ts,tsx}"],
