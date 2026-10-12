@@ -11,7 +11,7 @@ sequenceDiagram
     participant Bank
     App->>Bank: [Create Transfer], Idempotency-Key k1
     Note right of Bank: checks balance, limits,<br/>cooling-off and account lock
-    Bank-->>App: transfer + 60-second challenge
+    Bank-->>App: transfer object + 60-second challenge
     Note left of App: behind Face ID, a fingerprint or the PIN,<br/>a phone key signs review and challenge
     App->>Bank: [Approve Transfer], Idempotency-Key k2, signature
     Bank--xApp: response lost
