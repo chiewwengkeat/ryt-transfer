@@ -1,28 +1,44 @@
-# 004. Mock backend
+# 004. Mock BE
 
 ## Context
 
-No bank backend exists for this module. A reviewer still has to see every scenario on a phone they install, from not enough balance to the service down, a lost answer or an app killed mid-approval, and the tests have to exercise the same behaviour. With one fake for the demo and another for the tests, every change to the bank's contract would need two edits that drift apart. Whatever carries the mock should also last: no deprecated or unsupported package.
+1. No BE exists for this module
+2. A reviewer still has to see every scenario on a device they install the app on: insufficient balance, service down, a lost response, an app killed mid-approval
+3. The tests have to exercise the same behaviour
+4. With one mock for the demo and another for the tests, every API contract change would need two edits that drift apart
+5. The mock has to last: no deprecated or unsupported package
 
 ## Decision
 
-The app carries its own mock bank, and one set of [msw](https://mswjs.io) handlers answers for it wherever the app runs:
+The app ships its own mock BE, and one set of [MSW](https://mswjs.io) handlers serves it wherever the app runs:
 
-- **One set of handlers, two hosts.** In Jest, msw's Node server serves them (`src/test/mock-bank/mock-bank.ts`). On a phone, in development and demo builds, the app's own fetch transport (`src/shared/http/transport/transport.ts`) hands each request to msw's `getResponse` (`createDemoSend` in `src/mocks/demo-layer/demo-layer.ts`), through a small Metro alias that exposes only msw's request-handling core (`.config/metro.js`, `.config/metro.msw-entry.mjs`). A change to an endpoint's contract edits its `.type.ts`, the endpoint module that sends the request and reads the answer, the mock bank's code that builds that answer behind the handler, and any scenario that lays an answer over it, once for tests and phones alike. A new or moved path also edits the mock's own list of paths (`src/mocks/handlers/bank-paths/bank-paths.ts`), which the type checker does not tie to the client's. msw stays on its 2.x line; the alias reaches into msw's internal file layout, so any msw upgrade re-checks it.
-- **A bank with state.** Behind the handlers is one bank, `src/mocks/bank/`, that every endpoint reads and writes: a transfer moves the balance and uses the day's limit, a repeated idempotency key gets its first answer back, and signatures are verified for real. Development and demo builds save it across restarts, because the scenarios about a killed app need the bank to outlive the app; the Demo menu resets it.
-- **Scenarios on top.** Each matrix id has an entry in `src/mocks/scenarios/transfer-scenarios/transfer-scenarios.ts`: conditions that change the bank's state, or answers laid over the bank's own. A visible Demo menu picks one in development and demo builds, so a reviewer can see the bank's and the connection's errors without touching code. Production carries neither the bank nor the menu ([007](007-production-guard.md)).
-- **Nothing passes through.** No handler forwards a request to the network: a request nothing answers is an error, in tests and on a phone alike.
+1. **One set of handlers, two hosts**
+   1. Jest: MSW's Node server (`src/test/mock-bank/mock-bank.ts`)
+   2. Device, in development and demo builds: the app's own fetch transport (`src/shared/http/transport/transport.ts`) passes each request to MSW's `getResponse` (`createDemoSend` in `src/mocks/demo-layer/demo-layer.ts`), through a small Metro alias that exposes only MSW's request-handling core (`.config/metro.js`, `.config/metro.msw-entry.mjs`)
+   3. An API contract change edits, once for tests and devices alike: the endpoint's `.type.ts`; the endpoint module that sends the request and parses the response; the mock BE code behind the handler that builds the response; and any scenario that overrides it
+   4. A new or moved path also edits the mock BE's own path list (`src/mocks/handlers/bank-paths/bank-paths.ts`), which the type checker doesn't tie to FE's
+   5. MSW stays on 2.x; the alias reaches into MSW's internal file layout, so every MSW upgrade re-checks it
+2. **A stateful mock BE**: one store, `src/mocks/bank/`, behind every endpoint's handler
+   1. A transfer debits the balance and uses the day's limit
+   2. A repeated `Idempotency-Key` gets BE's first response back
+   3. Signatures are verified for real
+   4. Development and demo builds persist it across app restarts, since the killed-app scenarios need the mock BE to outlive the app; the Demo menu resets it
+3. **Scenarios on top**
+   1. Each matrix id has an entry in `src/mocks/scenarios/transfer-scenarios/transfer-scenarios.ts`: conditions that change the mock BE's state, or handlers that override its responses
+   2. A visible Demo menu picks one in development and demo builds, so a reviewer sees BE and network errors without touching code
+   3. Production ships neither the mock BE nor the menu ([007](007-production-guard.md))
+4. **No passthrough**: no handler forwards a request to the network; an unhandled request is an error, in tests and on a device alike
 
 ## Rejected
 
-- **msw's own routes into React Native.** On Hermes, msw 2's React Native entry returned empty response bodies; the newer `@msw/react-native` was an unreleased experiment that worked only after a manual build, bundler aliases and two hand-written shims; msw 3 has no React Native entry at all.
-- **Taking a supported package to mean the path its maintainers declare, or a stable 1.0 release.** The first would have meant `@msw/react-native`, the experiment above; the second would have ruled out the only maintained biometric-signing library, leaving a yes-or-no biometric check. Chosen instead: msw stays on its 2.x line, and the signing library ([003](003-biometric-approval.md)) may stay before 1.0.
-- **msw 2's main entry, with two hand-written shims.** The app would import msw's public entry, not its internal files, with stand-ins for the two browser APIs React Native lacks, without which that entry crashes the app at startup. It would have meant hand-written shims of web APIs, on a path not yet tested when it was weighed. Chosen instead: the alias, which needs no stand-ins, at the cost of re-checking it on any msw upgrade.
-- **msw in tests only, with plain handlers in the app.** The app would call plain request-to-response handlers directly, with no msw import at all, but the handlers would stop being msw's own.
-- **A local mock server.** The most production-like, but an installed APK has no server to reach.
-- **A bank that forgets on restart.** Killing the app kills the mock, so the scenarios about a killed app could be shown only in tests.
-- **Fixed answers per scenario.** No balance change after a transfer, no limit used, no repeat recognised.
-- **A mock bank that trusts any signature.** A demo would pass what the real bank refuses ([003](003-biometric-approval.md)).
-- **axios or ky over the transport.** The transport is needed anyway, to reach the mock bank. axios could reach the mock only through its fetch adapter, wrapped around that transport, since its default XHR never received a mocked body when it was tried; ky retries GET requests twice by default, retries that would have to be switched off under the query library's.
-- **No way to pick a scenario.** A reviewer would see only the happy path.
-- **A hidden gesture, or a launch argument, to pick a scenario.** A reviewer may never find the gesture, and an installed APK cannot easily take a launch argument.
+1. **MSW's own React Native integration**. Reason: on Hermes, MSW 2's React Native entry returned empty response bodies; the newer `@msw/react-native` was an unreleased experiment that worked only after a manual build, Metro aliases and two hand-written shims; MSW 3 has no React Native entry at all
+2. **"Supported" read as the integration its maintainers declare, or a stable 1.0 release**. Reason: the first would have meant `@msw/react-native`, the experiment above; the second would have ruled out the only maintained biometric-signing library, leaving a pass/fail biometric prompt. Chosen instead: MSW stays on 2.x, and the signing library ([003](003-biometric-approval.md)) may stay before 1.0
+3. **MSW 2's main entry, with two hand-written shims**. Reason: the app would import MSW's public entry, not its internal files, but would need stand-ins for the two browser APIs React Native lacks, without which that entry crashes the app at startup: hand-written shims of web APIs, on a path untested when it was weighed. Chosen instead: the alias, which needs no shims, at the cost of re-checking it on every MSW upgrade
+4. **MSW in tests only, with plain handlers in the app**. Reason: the app would call plain request-to-response handlers directly, with no MSW import, but the handlers would stop being MSW's own
+5. **A local mock server**. Reason: the most production-like, but an installed APK has no server to reach
+6. **A mock BE that resets on app restart**. Reason: killing the app kills the mock, so the killed-app scenarios could be shown only in tests
+7. **Fixed responses per scenario**. Reason: no balance change after a transfer, no limit used, no retry recognised
+8. **A mock BE that accepts any signature**. Reason: a demo would pass what the real BE rejects ([003](003-biometric-approval.md))
+9. **axios or ky over the transport**. Reason: the transport is needed anyway, to reach the mock BE. axios could reach it only through its fetch adapter, wrapped around that transport, since its default XHR adapter never received a mocked body when tried; ky retries GET requests twice by default, retries that would have to be turned off under TanStack Query's own
+10. **No way to pick a scenario**. Reason: a reviewer would see only the happy path
+11. **A hidden gesture, or a launch argument, to pick a scenario**. Reason: a reviewer may never find the gesture, and an installed APK can't easily take a launch argument
