@@ -63,16 +63,12 @@ export default function TransferRecipientScreen() {
     (recent) => recent.recentId === chosenRecentId,
   );
   // Never the form in a chosen recent's place unannounced: a list that has yet to answer, or failed
-  // offline where Continue's offline line says why, is waited for; else the catch-all stands until they type.
+  // offline where Continue's offline line says why, is waited for.
   // Not `isPending`: the form's own list refetches a failed list on mount, which would flip it back.
   const isChosenRecentAwaited =
     chosenRecentId !== undefined &&
     recents.data === undefined &&
     (!recents.isFetched || isOffline);
-  const isChosenRecentMissing =
-    chosenRecentId !== undefined &&
-    chosenRecent === undefined &&
-    !isChosenRecentAwaited;
 
   useTrackScenarioShown(
     errorRecipientId === undefined
@@ -167,8 +163,9 @@ export default function TransferRecipientScreen() {
                 setErrorBank(undefined);
               }}
             />
+            {/* A recent still chosen here is one the list lacks: the catch-all stands until they type. */}
             {((failureRecents !== null && !isOffline) ||
-              isChosenRecentMissing) && (
+              chosenRecentId !== undefined) && (
               <BannerRecipientUnexpected
                 key={recents.errorUpdatedAt}
                 failure={failureRecents}

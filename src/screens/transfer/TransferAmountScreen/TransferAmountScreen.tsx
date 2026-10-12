@@ -53,31 +53,32 @@ export default function TransferAmountScreen() {
   );
 
   const parsedAmount = parseTypedAmount(typedAmount);
-  const ceilings = account.data &&
-    limits.data && [
-      {
-        limit: account.data.balance,
-        message: t("common.amount_too_high.over_balance", {
-          amount: formatMoney(account.data.balance),
-        }),
-      },
-      {
-        limit: limits.data.remainingToday,
-        message: t("common.amount_too_high.over_remaining_today", {
-          amount: formatMoney(limits.data.remainingToday),
-        }),
-      },
-      {
-        limit: limits.data.perTransferMax,
-        message: t("common.amount_too_high.over_per_transfer_max", {
-          amount: formatMoney(limits.data.perTransferMax),
-        }),
-      },
-    ];
   // The lowest is the one to name: lowering the amount under a higher one would leave it still too high.
-  const lowestCeiling = ceilings?.reduce((lowest, ceiling) =>
-    ceiling.limit.minor < lowest.limit.minor ? ceiling : lowest,
-  );
+  const lowestCeiling =
+    account.data && limits.data
+      ? [
+          {
+            limit: account.data.balance,
+            message: t("common.amount_too_high.over_balance", {
+              amount: formatMoney(account.data.balance),
+            }),
+          },
+          {
+            limit: limits.data.remainingToday,
+            message: t("common.amount_too_high.over_remaining_today", {
+              amount: formatMoney(limits.data.remainingToday),
+            }),
+          },
+          {
+            limit: limits.data.perTransferMax,
+            message: t("common.amount_too_high.over_per_transfer_max", {
+              amount: formatMoney(limits.data.perTransferMax),
+            }),
+          },
+        ].reduce((lowest, ceiling) =>
+          ceiling.limit.minor < lowest.limit.minor ? ceiling : lowest,
+        )
+      : undefined;
   const isAmountBadlyFormed = typedAmount !== "" && parsedAmount === null;
   const isAmountRefusedByBank =
     bankRefusal === CreateTransferErrorCode.AmountInvalid &&
