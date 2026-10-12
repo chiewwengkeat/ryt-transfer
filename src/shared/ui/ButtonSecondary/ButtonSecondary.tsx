@@ -37,7 +37,7 @@ export default function ButtonSecondary({
         const pressAnswer = onPress();
         if (!(pressAnswer instanceof Promise)) return;
         setIsPressAnswerAwaited(true);
-        void pressAnswer.finally(() => {
+        pressAnswer.finally(() => {
           setIsPressAnswerAwaited(false);
         });
       }}

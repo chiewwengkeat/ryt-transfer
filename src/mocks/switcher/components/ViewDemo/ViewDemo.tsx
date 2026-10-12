@@ -23,9 +23,7 @@ export default function ViewDemo({
     <ViewBottomSheetHost>
       <HeaderDemo
         appSheetOpen={appSheetOpen}
-        onOpenMenu={() => {
-          setIsMenuOpen(true);
-        }}
+        onOpenMenu={() => setIsMenuOpen(true)}
       />
       {/* The header has taken the status bar's place, so a screen's own header must not pad for it again. */}
       <SafeAreaInsetsContext value={{ ...insets, top: 0 }}>
@@ -34,9 +32,7 @@ export default function ViewDemo({
       {isMenuOpen && (
         <BottomSheetDemo
           onResetDemo={onResetDemo}
-          onClose={() => {
-            setIsMenuOpen(false);
-          }}
+          onClose={() => setIsMenuOpen(false)}
         />
       )}
     </ViewBottomSheetHost>

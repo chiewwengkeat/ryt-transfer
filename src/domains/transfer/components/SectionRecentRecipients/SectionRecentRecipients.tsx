@@ -17,11 +17,8 @@ export default function SectionRecentRecipients({
 
   const recents = useListRecentRecipients();
 
-  const isDisabled = disabledReason !== undefined;
-
   // A shortcut only: while it loads or when it fails, the screen works without it.
   if (recents.data === undefined || recents.data.length === 0) return null;
-
   return (
     <View style={styles.main}>
       <TextHeading>{t("section_recent_recipients.title")}</TextHeading>
@@ -30,12 +27,13 @@ export default function SectionRecentRecipients({
           <CardPressable
             key={recent.recentId}
             disabledReason={disabledReason}
-            onPress={() => {
-              onRecentChosen(recent.recentId);
-            }}
+            onPress={() => onRecentChosen(recent.recentId)}
           >
             <Text
-              style={[styles.textName, isDisabled && styles.textNameDisabled]}
+              style={[
+                styles.textName,
+                disabledReason !== undefined && styles.textNameDisabled,
+              ]}
             >
               {recent.registeredName}
             </Text>

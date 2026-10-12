@@ -15,8 +15,12 @@ export default function ButtonHeaderBack({
 }: Props) {
   const { t } = useTranslation(["shared"]);
 
-  if (!opensHome && !canGoBack) return null;
+  function handleBack() {
+    if (opensHome) router.dismissTo("/");
+    else router.back();
+  }
 
+  if (!opensHome && !canGoBack) return null;
   return (
     <HeaderBackButton
       tintColor={tintColor}
@@ -26,10 +30,7 @@ export default function ButtonHeaderBack({
           ? t("shared:button_header_back.home")
           : t("shared:button_header_back.back")
       }
-      onPress={() => {
-        if (opensHome) router.dismissTo("/");
-        else router.back();
-      }}
+      onPress={handleBack}
     />
   );
 }

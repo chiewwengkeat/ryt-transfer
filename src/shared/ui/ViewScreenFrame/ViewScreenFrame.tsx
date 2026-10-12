@@ -12,6 +12,7 @@ import {
   StyleSheet,
   TextInput,
   View,
+  type LayoutChangeEvent,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -33,6 +34,31 @@ export default function ViewScreenFrame({
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollOffsetRef = useRef(0);
   const { bottom } = useSafeAreaInsets();
+
+  function handleScrollViewLayout(event: LayoutChangeEvent) {
+    const shownHeight = event.nativeEvent.layout.height;
+    if (frameRef.current === null) return;
+    // As the keyboard shrinks this, the field being typed in keeps room below it for one labelled control, the
+    // next one, short of scrolling its own top out of sight.
+    TextInput.State.currentlyFocusedInput()?.measureLayout(
+      frameRef.current,
+      // React Native leaves the scroll offset out of this y: it is the field's place in the content, which starts at the frame's top.
+      (_x, fieldTopInContent, _width, fieldHeight) => {
+        const scrollOffsetNeeded = Math.min(
+          fieldTopInContent,
+          fieldTopInContent +
+            fieldHeight +
+            spacing.md +
+            typography.label.lineHeight +
+            spacing.xs +
+            minTouchTarget -
+            shownHeight,
+        );
+        if (scrollOffsetNeeded > scrollOffsetRef.current)
+          scrollViewRef.current?.scrollTo({ y: scrollOffsetNeeded });
+      },
+    );
+  }
 
   return (
     <View
@@ -60,7 +86,7 @@ export default function ViewScreenFrame({
                 tintColor={colors.accent}
                 onRefresh={() => {
                   setIsPullRefreshing(true);
-                  void onPullToRefresh().finally(() => {
+                  onPullToRefresh().finally(() => {
                     setIsPullRefreshing(false);
                   });
                 }}
@@ -71,30 +97,7 @@ export default function ViewScreenFrame({
           onScroll={(event) => {
             scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
           }}
-          onLayout={(event) => {
-            const shownHeight = event.nativeEvent.layout.height;
-            if (frameRef.current === null) return;
-            // As the keyboard shrinks this, the field being typed in keeps room below it for one labelled control, the
-            // next one, short of scrolling its own top out of sight.
-            TextInput.State.currentlyFocusedInput()?.measureLayout(
-              frameRef.current,
-              // React Native leaves the scroll offset out of this y: it is the field's place in the content, which starts at the frame's top.
-              (_x, fieldTopInContent, _width, fieldHeight) => {
-                const scrollOffsetNeeded = Math.min(
-                  fieldTopInContent,
-                  fieldTopInContent +
-                    fieldHeight +
-                    spacing.md +
-                    typography.label.lineHeight +
-                    spacing.xs +
-                    minTouchTarget -
-                    shownHeight,
-                );
-                if (scrollOffsetNeeded > scrollOffsetRef.current)
-                  scrollViewRef.current?.scrollTo({ y: scrollOffsetNeeded });
-              },
-            );
-          }}
+          onLayout={handleScrollViewLayout}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={[
             styles.content,

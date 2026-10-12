@@ -15,9 +15,7 @@ export default function ViewNotFound() {
         actions={
           <ButtonPrimary
             label={t("shared:view_not_found.home")}
-            onPress={() => {
-              router.replace("/");
-            }}
+            onPress={() => router.replace("/")}
           />
         }
       />

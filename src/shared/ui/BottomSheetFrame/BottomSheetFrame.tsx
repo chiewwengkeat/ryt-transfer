@@ -79,6 +79,11 @@ export default function BottomSheetFrame({
     ? ReduceMotion.Always
     : ReduceMotion.Never;
 
+  // Handled even when it cannot close, as Back is: iOS hands an unhandled escape on up to what holds the sheet.
+  function handleAccessibilityEscape() {
+    if (dismissable) onClose();
+  }
+
   // Asked at mount, the title's focus is lost under the fading sheet: VoiceOver took Close, TalkBack often nothing.
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -119,10 +124,7 @@ export default function BottomSheetFrame({
           sheetReduceMotion,
         )}
         exiting={FadeOut.reduceMotion(sheetReduceMotion)}
-        // Handled even when it cannot close, as Back is: iOS hands an unhandled escape on up to what holds the sheet.
-        onAccessibilityEscape={() => {
-          if (dismissable) onClose();
-        }}
+        onAccessibilityEscape={handleAccessibilityEscape}
         style={styles.main}
       >
         {/* Hidden too: TalkBack stops on any pressable view whatever `accessible` says. ✕ and Back still close. */}
@@ -168,12 +170,8 @@ export default function BottomSheetFrame({
               <FieldText
                 {...searchField}
                 autoCorrect={false}
-                onFocus={() => {
-                  searchFieldFocusedRef.current = true;
-                }}
-                onBlur={() => {
-                  searchFieldFocusedRef.current = false;
-                }}
+                onFocus={() => (searchFieldFocusedRef.current = true)}
+                onBlur={() => (searchFieldFocusedRef.current = false)}
               />
             )}
             <ScrollView

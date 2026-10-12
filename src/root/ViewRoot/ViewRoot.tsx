@@ -122,6 +122,18 @@ export default function ViewRoot() {
     [],
   );
 
+  async function handleResetDemo() {
+    // First: forgetSignedInCustomer's clear() leaves a mounted screen showing its last read, so it reads the reset bank now.
+    await queryClient.resetQueries();
+    await forgetSignedInCustomer();
+    // The reset bank knows none of this phone's keys, and pairing skips a phone whose key ids are on file.
+    await deleteAllSecureRecords();
+    await deleteApprovalKeys();
+    await demoLayer?.pairPhoneAtFirstLaunch();
+    // Remounts every screen: forgetSignedInCustomer's clear() leaves their reads on removed queries, which no later answer reaches.
+    setNavigatorMounts((mounts) => mounts + 1);
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       {demoLayer === null ? (
@@ -130,17 +142,7 @@ export default function ViewRoot() {
         // Outside the session-ended view, so a reviewer who picked an ended session can still return to normal.
         <demoLayer.ViewDemo
           appSheetOpen={isAppSheetOpen && !hasSessionEnded}
-          onResetDemo={async () => {
-            // First: forgetSignedInCustomer's clear() leaves a mounted screen showing its last read, so it reads the reset bank now.
-            await queryClient.resetQueries();
-            await forgetSignedInCustomer();
-            // The reset bank knows none of this phone's keys, and pairing skips a phone whose key ids are on file.
-            await deleteAllSecureRecords();
-            await deleteApprovalKeys();
-            await demoLayer?.pairPhoneAtFirstLaunch();
-            // Remounts every screen: forgetSignedInCustomer's clear() leaves their reads on removed queries, which no later answer reaches.
-            setNavigatorMounts((mounts) => mounts + 1);
-          }}
+          onResetDemo={handleResetDemo}
         >
           {appWithSessionEndedView}
         </demoLayer.ViewDemo>

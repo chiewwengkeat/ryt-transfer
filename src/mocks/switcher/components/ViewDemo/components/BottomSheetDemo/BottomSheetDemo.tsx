@@ -42,7 +42,7 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
           label={t("bottom_sheet_demo.reset")}
           onPress={() => {
             onClose();
-            void resetDemoBank().then(notifyApprovalPinReset).then(onResetDemo);
+            resetDemoBank().then(notifyApprovalPinReset).then(onResetDemo);
           }}
         />
       }
@@ -57,7 +57,7 @@ export default function BottomSheetDemo({ onResetDemo, onClose }: Props) {
             label={t("bottom_sheet_demo.unlock_pin")}
             onPress={() => {
               unlockDemoPin();
-              void notifyApprovalPinReset();
+              notifyApprovalPinReset();
               onClose();
             }}
           />

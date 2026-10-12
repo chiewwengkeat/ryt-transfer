@@ -24,16 +24,12 @@ export default function ViewScreenError({ error, retry }: ErrorBoundaryProps) {
         <>
           <ButtonPrimary
             label={t("shared:view_screen_error.retry")}
-            onPress={() => {
-              void retry();
-            }}
+            onPress={retry}
           />
           {router.canGoBack() && (
             <ButtonSecondary
               label={t("shared:view_screen_error.back")}
-              onPress={() => {
-                router.back();
-              }}
+              onPress={router.back}
             />
           )}
         </>

@@ -74,7 +74,7 @@ export default function BannerEarlierTransferUnconfirmed({
         .subscribe(({ type }) => {
           isOvertaken ||= type === "removed";
         });
-      void (async () => {
+      (async () => {
         if (
           isSettledTransferOutcome(
             await checkPendingTransferOnce(queryClient, customerId, transferId),
@@ -102,7 +102,6 @@ export default function BannerEarlierTransferUnconfirmed({
   }, [isScreenOnTop, customerId, transferId, queryClient]);
 
   if (newestUnconfirmed === undefined) return null;
-
   return (
     <BannerNotice
       message={t("common.earlier_transfer_unconfirmed.body", {

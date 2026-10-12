@@ -20,9 +20,7 @@ export default function ViewAppError({ error, retry }: ErrorBoundaryProps) {
       actions={
         <ButtonPrimary
           label={t("shared:view_app_error.retry")}
-          onPress={() => {
-            void retry();
-          }}
+          onPress={retry}
         />
       }
     />

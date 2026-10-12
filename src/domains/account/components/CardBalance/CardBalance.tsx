@@ -68,6 +68,7 @@ export default function CardBalance({
   })();
   // After sign-in this stays shown until the card's reads answer again.
   const isFailureSessionEnd = isSessionEndFailure(failure);
+  const balance = account.data?.balance;
   const shown = (() => {
     if (isFailureSessionEnd) return undefined;
     if (failureShown !== undefined) return failureShown;
@@ -95,9 +96,28 @@ export default function CardBalance({
     pressedReReadsAnswered,
   ]);
 
-  if (failureShown !== undefined) {
-    return (
-      <Card styles={{ main: [styles.main, styles.floor] }}>
+  async function handleRetry() {
+    await Promise.all([account.refetch(), limits.refetch()]);
+    // Pressed, the answer is a new showing: said and reported even when it fails the same way.
+    reportedShownRef.current = undefined;
+    setPressedReReadsAnswered((answered) => answered + 1);
+  }
+
+  const isBalanceShown =
+    failureShown === undefined &&
+    balance !== undefined &&
+    (!limits.isPending || isUnderMaintenance);
+  return (
+    <Card
+      // Below a balance shown alone, during maintenance, the floor is a blank band.
+      styles={{
+        main: [
+          styles.main,
+          (!isBalanceShown || limits.isSuccess) && styles.floor,
+        ],
+      }}
+    >
+      {failureShown !== undefined && (
         <BannerAction
           key={pressedReReadsAnswered}
           tone="negative"
@@ -105,50 +125,35 @@ export default function CardBalance({
           message={failureWords[failureShown].body}
           action={{
             label: failureWords[failureShown].retry,
-            onPress: async () => {
-              await Promise.all([account.refetch(), limits.refetch()]);
-              // Pressed, the answer is a new showing: said and reported even when it fails the same way.
-              reportedShownRef.current = undefined;
-              setPressedReReadsAnswered((answered) => answered + 1);
-            },
+            onPress: handleRetry,
           }}
         />
-      </Card>
-    );
-  }
-  if (account.data === undefined || (limits.isPending && !isUnderMaintenance)) {
-    return (
-      <Card styles={{ main: [styles.main, styles.floor] }}>
-        <Loader />
-      </Card>
-    );
-  }
-
-  return (
-    <Card
-      // Below a balance shown alone, during maintenance, the floor is a blank band.
-      styles={{ main: [styles.main, limits.isSuccess && styles.floor] }}
-    >
-      <View
-        accessible
-        // The group, not its texts: a screen reader reads the group as one element, in the group's language.
-        accessibilityLanguage={i18n.language}
-      >
-        <TextBody tone="secondary">{t("card_balance.label")}</TextBody>
-        <Text
-          // Grown further, the balance outgrows a small phone's line and breaks inside the number.
-          maxFontSizeMultiplier={2}
-          style={styles.textBalance}
-        >
-          {formatMoney(account.data.balance)}
-        </Text>
-      </View>
-      {limits.isSuccess && (
-        <TextBody>
-          {t("card_balance.remaining_today", {
-            amount: formatMoney(limits.data.remainingToday),
-          })}
-        </TextBody>
+      )}
+      {failureShown === undefined && !isBalanceShown && <Loader />}
+      {isBalanceShown && (
+        <>
+          <View
+            accessible
+            // The group, not its texts: a screen reader reads the group as one element, in the group's language.
+            accessibilityLanguage={i18n.language}
+          >
+            <TextBody tone="secondary">{t("card_balance.label")}</TextBody>
+            <Text
+              // Grown further, the balance outgrows a small phone's line and breaks inside the number.
+              maxFontSizeMultiplier={2}
+              style={styles.textBalance}
+            >
+              {formatMoney(balance)}
+            </Text>
+          </View>
+          {limits.isSuccess && (
+            <TextBody>
+              {t("card_balance.remaining_today", {
+                amount: formatMoney(limits.data.remainingToday),
+              })}
+            </TextBody>
+          )}
+        </>
       )}
     </Card>
   );
