@@ -16,7 +16,7 @@ sequenceDiagram
     App->>Bank: [Approve Transfer], Idempotency-Key k2, signature
     Bank--xApp: response lost
     App->>Bank: [Approve Transfer] resent after 2 s, then 4 s
-    Bank-->>App: its first response again, never a second run
+    Bank-->>App: its first response again, without approving the transfer twice
     Note over App,Bank: if no response arrives at all
     App->>Bank: query transfer status at 2, 4, 8, 16 s, then every 15 s
     Bank-->>App: transfer status
@@ -26,7 +26,7 @@ sequenceDiagram
 
 1. Both API calls carry an `Idempotency-Key`:
    1. A transfer is never created or approved twice
-   2. With no response (e.g. network loss), FE resends with the same key; BE returns its first response instead of running it again
+   2. With no response (e.g. network loss), FE resends with the same key; BE returns its first response instead of creating or approving the transfer again
 2. Approve Transfer API call carries a signature ([details](#approval-signs-exactly-what-you-saw)):
    1. BE verifies it covers exactly what review showed, so nothing is swapped in between
    2. Signed by a hardware-backed key, unlocked by Face ID or a fingerprint; without biometrics, a PIN BE checks
