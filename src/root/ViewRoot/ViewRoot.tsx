@@ -19,6 +19,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { StatusBar, StyleSheet, View } from "react-native";
+import ViewDemoFrame from "./components/ViewDemoFrame/ViewDemoFrame";
 import ViewSessionEnded from "./components/ViewSessionEnded/ViewSessionEnded";
 import { usePendingTransfersAtLaunch } from "./hooks/use-pending-transfers-at-launch/use-pending-transfers-at-launch";
 import { useScreenCaptureBlock } from "./hooks/use-screen-capture-block/use-screen-capture-block";
@@ -32,49 +33,6 @@ export default function ViewRoot() {
   const [hasSessionEnded, setHasSessionEnded] = useState(false);
   const [isAppSheetOpen, setIsAppSheetOpen] = useState(false);
   const [navigatorMounts, setNavigatorMounts] = useState(0);
-
-  const appWithSessionEndedView = (
-    <>
-      <View
-        aria-hidden={hasSessionEnded}
-        // Never flattened: aria-hidden alone would add and remove this view as a session ends and begins, re-parenting the screens beneath.
-        collapsable={false}
-        style={styles.app}
-      >
-        <ScreensCoveredContext value={hasSessionEnded}>
-          <ApprovalDemoPinContext value={demoLayer?.demoPin}>
-            <ViewBottomSheetHost
-              // Production has no Demo header to hide, so its root need not re-render as sheets open.
-              onSheetOpenChange={
-                demoLayer === null ? undefined : setIsAppSheetOpen
-              }
-            >
-              <Stack key={navigatorMounts} screenOptions={stackScreenOptions}>
-                <Stack.Screen
-                  name="transfer"
-                  options={{ headerShown: false, headerLeft: () => null }}
-                />
-              </Stack>
-            </ViewBottomSheetHost>
-          </ApprovalDemoPinContext>
-        </ScreensCoveredContext>
-      </View>
-      {hasSessionEnded && (
-        <View style={styles.layer}>
-          <ViewSessionEnded
-            // Stands in for the host app's sign-in: the session is the host's, so a standalone build only resumes.
-            onSignIn={() => {
-              setHasSessionEnded(false);
-              releaseTransferScenarioReports(transferFlowStore.getState());
-              readAgainEveryReadButAnsweredNameChecks(queryClient, {
-                isRefusalAnAnswer: true,
-              });
-            }}
-          />
-        </View>
-      )}
-    </>
-  );
 
   useEffect(
     () =>
@@ -136,17 +94,50 @@ export default function ViewRoot() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {demoLayer === null ? (
-        appWithSessionEndedView
-      ) : (
-        // Outside the session-ended view, so a reviewer who picked an ended session can still return to normal.
-        <demoLayer.ViewDemo
-          appSheetOpen={isAppSheetOpen && !hasSessionEnded}
-          onResetDemo={handleResetDemo}
+      {/* Outside the session-ended view, so a reviewer who picked an ended session can still return to normal. */}
+      <ViewDemoFrame
+        appSheetOpen={isAppSheetOpen && !hasSessionEnded}
+        onResetDemo={handleResetDemo}
+      >
+        <View
+          aria-hidden={hasSessionEnded}
+          // Never flattened: aria-hidden alone would add and remove this view as a session ends and begins, re-parenting the screens beneath.
+          collapsable={false}
+          style={styles.app}
         >
-          {appWithSessionEndedView}
-        </demoLayer.ViewDemo>
-      )}
+          <ScreensCoveredContext value={hasSessionEnded}>
+            <ApprovalDemoPinContext value={demoLayer?.demoPin}>
+              <ViewBottomSheetHost
+                // Production has no Demo header to hide, so its root need not re-render as sheets open.
+                onSheetOpenChange={
+                  demoLayer === null ? undefined : setIsAppSheetOpen
+                }
+              >
+                <Stack key={navigatorMounts} screenOptions={stackScreenOptions}>
+                  <Stack.Screen
+                    name="transfer"
+                    options={{ headerShown: false, headerLeft: () => null }}
+                  />
+                </Stack>
+              </ViewBottomSheetHost>
+            </ApprovalDemoPinContext>
+          </ScreensCoveredContext>
+        </View>
+        {hasSessionEnded && (
+          <View style={styles.layer}>
+            <ViewSessionEnded
+              // Stands in for the host app's sign-in: the session is the host's, so a standalone build only resumes.
+              onSignIn={() => {
+                setHasSessionEnded(false);
+                releaseTransferScenarioReports(transferFlowStore.getState());
+                readAgainEveryReadButAnsweredNameChecks(queryClient, {
+                  isRefusalAnAnswer: true,
+                });
+              }}
+            />
+          </View>
+        )}
+      </ViewDemoFrame>
     </QueryClientProvider>
   );
 }
