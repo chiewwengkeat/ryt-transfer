@@ -96,7 +96,7 @@ flowchart TD
     root --> screens["src/screens: one folder per flow"]
     screens --> domains["src/domains: one folder per business area"]
     domains --> shared["src/shared: knows nothing about banking"]
-    root -.->|one gated require| mocks["src/mocks: the mock bank"]
+    root -.->|one gated require| mocks["src/mocks: the mock BE"]
 ```
 
 **Characteristics**:
