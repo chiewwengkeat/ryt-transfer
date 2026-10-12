@@ -49,7 +49,7 @@ const BUNDLE_MARKERS = [
   },
   {
     source:
-      "src/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/hooks/use-transfer-history-render-measurement/use-transfer-history-render-measurement.ts",
+      "src/screens/transfer/TransferHistoryScreen/components/ViewTransferHistory/components/SectionTransferAccordion/hooks/use-transfer-history-render-measurement/use-transfer-history-render-measurement.ts",
     text: "pullToRefreshWithNothingNew",
     carriedBy: ["development"],
   },

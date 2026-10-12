@@ -80,52 +80,6 @@ export default function TransferRecipientScreen() {
       : TransferScenarioId.BadlyFormedInput,
   );
 
-  const recipientInput = (() => {
-    if (chosenRecent !== undefined)
-      return (
-        <CardRecentRecipientChosen
-          recent={chosenRecent}
-          onChange={() => setChosenRecentId(undefined)}
-        />
-      );
-    if (isChosenRecentAwaited) return <Loader />;
-    return (
-      <>
-        <SectionRecipientFields
-          idType={idType}
-          typedId={typedId}
-          idError={errorRecipientId}
-          bankCode={bankCode}
-          bankError={errorBank}
-          onIdTypeChange={(chosenIdType) => {
-            setIdType(chosenIdType);
-            setTypedId("");
-            setErrorRecipientId(undefined);
-            setErrorBank(undefined);
-            setChosenRecentId(undefined);
-          }}
-          onTypedIdChange={(recipientId) => {
-            setTypedId(recipientId);
-            setErrorRecipientId(undefined);
-            setChosenRecentId(undefined);
-          }}
-          onBankChosen={(chosenBankCode) => {
-            setBankCode(chosenBankCode);
-            setErrorBank(undefined);
-          }}
-        />
-        {((failureRecents !== null && !isOffline) || isChosenRecentMissing) && (
-          <BannerRecipientUnexpected
-            key={recents.errorUpdatedAt}
-            failure={failureRecents}
-            onRetry={() => recents.refetch({ cancelRefetch: false })}
-          />
-        )}
-        <SectionRecentRecipients onRecentChosen={setChosenRecentId} />
-      </>
-    );
-  })();
-
   function handleContinue() {
     if (chosenRecent !== undefined) {
       if (
@@ -181,7 +135,49 @@ export default function TransferRecipientScreen() {
           />
         }
       >
-        {recipientInput}
+        {chosenRecent !== undefined && (
+          <CardRecentRecipientChosen
+            recent={chosenRecent}
+            onChange={() => setChosenRecentId(undefined)}
+          />
+        )}
+        {isChosenRecentAwaited && <Loader />}
+        {chosenRecent === undefined && !isChosenRecentAwaited && (
+          <>
+            <SectionRecipientFields
+              idType={idType}
+              typedId={typedId}
+              idError={errorRecipientId}
+              bankCode={bankCode}
+              bankError={errorBank}
+              onIdTypeChange={(chosenIdType) => {
+                setIdType(chosenIdType);
+                setTypedId("");
+                setErrorRecipientId(undefined);
+                setErrorBank(undefined);
+                setChosenRecentId(undefined);
+              }}
+              onTypedIdChange={(recipientId) => {
+                setTypedId(recipientId);
+                setErrorRecipientId(undefined);
+                setChosenRecentId(undefined);
+              }}
+              onBankChosen={(chosenBankCode) => {
+                setBankCode(chosenBankCode);
+                setErrorBank(undefined);
+              }}
+            />
+            {((failureRecents !== null && !isOffline) ||
+              isChosenRecentMissing) && (
+              <BannerRecipientUnexpected
+                key={recents.errorUpdatedAt}
+                failure={failureRecents}
+                onRetry={() => recents.refetch({ cancelRefetch: false })}
+              />
+            )}
+            <SectionRecentRecipients onRecentChosen={setChosenRecentId} />
+          </>
+        )}
       </ViewScreenFrame>
     </>
   );

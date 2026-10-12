@@ -108,13 +108,18 @@
     "announcement": "{{heading}}. {{body}}"
   },
   "history": {
-    "title": "Sejarah pindahan",
+    "title": "Sejarah pindahan"
+  },
+  "view_transfer_history": {
     "empty": {
       "title": "Belum ada pindahan",
       "body": "Pindahan yang anda hantar atau terima akan dipaparkan di sini."
     },
-    "first_page_failed": "Pindahan anda tidak dapat dimuatkan.",
     "out_of_date": "Tidak dapat dimuat semula — senarai ini mungkin sudah lapuk",
+    "retry": "Cuba lagi"
+  },
+  "view_transfer_history_failed": {
+    "message": "Pindahan anda tidak dapat dimuatkan.",
     "retry": "Cuba lagi"
   },
   "header_transfer_day": {

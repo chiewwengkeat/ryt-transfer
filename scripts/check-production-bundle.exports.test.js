@@ -69,7 +69,7 @@ test("ships markers with text for the mock bank, the demo layer, the scenarios, 
       "src/mocks/demo-layer/demo-layer.ts: demo and development",
       "src/mocks/scenarios: demo and development",
       "src/mocks/switcher: demo and development",
-      "src/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/hooks/use-transfer-history-render-measurement/use-transfer-history-render-measurement.ts: development",
+      "src/screens/transfer/TransferHistoryScreen/components/ViewTransferHistory/components/SectionTransferAccordion/hooks/use-transfer-history-render-measurement/use-transfer-history-render-measurement.ts: development",
       "src/shared/observability/render-trace/render-trace.ts: development",
     ],
   );

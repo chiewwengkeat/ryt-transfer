@@ -1,5 +1,5 @@
 import type { ListTransfersResponse } from "@/domains/transfer/api/list-transfers/list-transfers.type";
-import ViewAmountWrap from "@/screens/transfer/TransferHistoryScreen/components/SectionTransferAccordion/components/ViewAmountWrap/ViewAmountWrap";
+import ViewAmountWrap from "@/screens/transfer/TransferHistoryScreen/components/ViewTransferHistory/components/SectionTransferAccordion/components/ViewAmountWrap/ViewAmountWrap";
 import { formatMalaysianDayHeader } from "@/shared/lib/dates/dates";
 import { formatMoney, parseWireAmount } from "@/shared/lib/money/money";
 import {

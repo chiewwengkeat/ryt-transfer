@@ -6,23 +6,15 @@ import {
   useListTransfers,
   wasNewestTransferHistoryPageReadWithin,
 } from "@/domains/transfer/api/list-transfers/list-transfers";
-import BannerOutOfDate from "@/screens/transfer/components/BannerOutOfDate/BannerOutOfDate";
-import TextOffline from "@/screens/transfer/components/TextOffline/TextOffline";
 import { useQueryError } from "@/shared/hooks/use-query-error/use-query-error";
-import { usePhoneReportsConnection } from "@/shared/http/offline/offline";
 import { isSessionEndFailure } from "@/shared/http/transport-error/transport-error";
-import { colors, spacing } from "@/shared/theme/theme";
-import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
-import ButtonPrimary from "@/shared/ui/ButtonPrimary/ButtonPrimary";
 import Loader from "@/shared/ui/Loader/Loader";
-import ViewMessage from "@/shared/ui/ViewMessage/ViewMessage";
-import ViewScreenFrame from "@/shared/ui/ViewScreenFrame/ViewScreenFrame";
 import { hashKey, useQueryClient } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, View } from "react-native";
-import SectionTransferAccordion from "./components/SectionTransferAccordion/SectionTransferAccordion";
+import ViewTransferHistory from "./components/ViewTransferHistory/ViewTransferHistory";
+import ViewTransferHistoryFailed from "./components/ViewTransferHistoryFailed/ViewTransferHistoryFailed";
 
 export default function TransferHistoryScreen() {
   const { t } = useTranslation("transfer");
@@ -31,13 +23,14 @@ export default function TransferHistoryScreen() {
   const [didRefreshFail, setDidRefreshFail] = useState(false);
 
   const transferHistory = useListTransfers();
-  const doesPhoneReportConnection = usePhoneReportsConnection();
   const failure = useQueryError(
     transferHistory.error,
     transferHistory.fetchStatus !== "idle",
   );
 
   const isFailureSessionEnd = isSessionEndFailure(failure);
+  const isFirstPageLoading =
+    transferHistory.isPending && !transferHistory.isPaused && failure === null;
 
   // The query keeps one status, which a page fetch after a failed refresh overwrites: only a refresh's outcome counts.
   useEffect(() => {
@@ -69,68 +62,23 @@ export default function TransferHistoryScreen() {
     };
   }, [queryClient]);
 
-  const content = (() => {
-    if (
-      transferHistory.isPending &&
-      !transferHistory.isPaused &&
-      failure === null
-    )
-      return <Loader />;
-    if (transferHistory.data === undefined)
-      return (
-        <ViewScreenFrame
-          footer={
-            doesPhoneReportConnection ? (
-              <ButtonPrimary
-                label={t("history.retry")}
-                onPress={() => resetTransferHistory(queryClient)}
-              />
-            ) : (
-              <TextOffline />
-            )
-          }
-        >
-          <BannerNotice
-            key={transferHistory.errorUpdatedAt}
-            tone="negative"
-            announce={!isFailureSessionEnd}
-            message={t("history.first_page_failed")}
-          />
-        </ViewScreenFrame>
-      );
-    return (
-      <View style={styles.history}>
-        {(didRefreshFail || transferHistory.isPaused) && (
-          <View style={styles.outOfDate}>
-            <BannerOutOfDate
-              announce={!isFailureSessionEnd}
-              message={t("history.out_of_date")}
-              tryAgainLabel={t("history.retry")}
-              onTryAgain={() => resetTransferHistory(queryClient)}
-            />
-          </View>
-        )}
-        {transferHistory.data.transfers.length === 0 ? (
-          <ViewMessage
-            title={t("history.empty.title")}
-            message={t("history.empty.body")}
-            actions={undefined}
-          />
-        ) : (
-          <SectionTransferAccordion transferHistory={transferHistory} />
-        )}
-      </View>
-    );
-  })();
   return (
     <>
       <Stack.Screen options={{ title: t("history.title") }} />
-      {content}
+      {isFirstPageLoading && <Loader />}
+      {!isFirstPageLoading && transferHistory.data === undefined && (
+        <ViewTransferHistoryFailed
+          errorUpdatedAt={transferHistory.errorUpdatedAt}
+          announce={!isFailureSessionEnd}
+        />
+      )}
+      {transferHistory.data !== undefined && (
+        <ViewTransferHistory
+          transferHistory={transferHistory}
+          didRefreshFail={didRefreshFail}
+          announce={!isFailureSessionEnd}
+        />
+      )}
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  history: { flex: 1 },
-  outOfDate: { padding: spacing.md, backgroundColor: colors.background },
-});

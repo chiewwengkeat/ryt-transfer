@@ -108,13 +108,18 @@
     "announcement": "{{heading}}。{{body}}"
   },
   "history": {
-    "title": "转账记录",
+    "title": "转账记录"
+  },
+  "view_transfer_history": {
     "empty": {
       "title": "暂无转账",
       "body": "您发送或收到的转账将显示在此处。"
     },
-    "first_page_failed": "无法加载您的转账。",
     "out_of_date": "无法刷新——此列表可能不是最新的",
+    "retry": "重试"
+  },
+  "view_transfer_history_failed": {
+    "message": "无法加载您的转账。",
     "retry": "重试"
   },
   "header_transfer_day": {

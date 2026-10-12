@@ -29,17 +29,18 @@ export default function TransferDetailsScreen() {
   );
 
   const isFailureSessionEnd = isSessionEndFailure(failure);
+  const isNotFound =
+    failure instanceof TransportError &&
+    failure.code === GetTransferErrorCode.TransferNotFound;
 
   function readAgain() {
     return transferQuery.refetch({ cancelRefetch: false });
   }
 
-  const content = (() => {
-    if (
-      failure instanceof TransportError &&
-      failure.code === GetTransferErrorCode.TransferNotFound
-    )
-      return (
+  return (
+    <>
+      <Stack.Screen options={{ title: t("details.title") }} />
+      {isNotFound && (
         <ViewScreenFrame
           footer={
             <ButtonPrimary label={t("details.back")} onPress={router.back} />
@@ -47,9 +48,8 @@ export default function TransferDetailsScreen() {
         >
           <BannerNotice tone="negative" message={t("details.not_found")} />
         </ViewScreenFrame>
-      );
-    if (transfer)
-      return (
+      )}
+      {!isNotFound && transfer !== undefined && (
         <ViewScreenFrame>
           {/* A failure from an earlier visit is not this one's: shown on reopening, it would be announced as current. */}
           {((failure !== null && transferQuery.isFetchedAfterMount) ||
@@ -65,32 +65,30 @@ export default function TransferDetailsScreen() {
           )}
           <SectionTransferDetails transfer={transfer} />
         </ViewScreenFrame>
-      );
-    if (failure !== null || transferQuery.isPaused)
-      return (
-        <ViewScreenFrame
-          footer={
-            doesPhoneReportConnection ? (
-              <ButtonPrimary label={t("details.retry")} onPress={readAgain} />
-            ) : (
-              <TextOffline />
-            )
-          }
-        >
-          <BannerNotice
-            key={transferQuery.errorUpdatedAt}
-            tone="negative"
-            announce={!isFailureSessionEnd}
-            message={t("details.failed")}
-          />
-        </ViewScreenFrame>
-      );
-    return <Loader />;
-  })();
-  return (
-    <>
-      <Stack.Screen options={{ title: t("details.title") }} />
-      {content}
+      )}
+      {!isNotFound &&
+        transfer === undefined &&
+        (failure !== null || transferQuery.isPaused) && (
+          <ViewScreenFrame
+            footer={
+              doesPhoneReportConnection ? (
+                <ButtonPrimary label={t("details.retry")} onPress={readAgain} />
+              ) : (
+                <TextOffline />
+              )
+            }
+          >
+            <BannerNotice
+              key={transferQuery.errorUpdatedAt}
+              tone="negative"
+              announce={!isFailureSessionEnd}
+              message={t("details.failed")}
+            />
+          </ViewScreenFrame>
+        )}
+      {transfer === undefined &&
+        failure === null &&
+        !transferQuery.isPaused && <Loader />}
     </>
   );
 }

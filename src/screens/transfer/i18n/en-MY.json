@@ -108,13 +108,18 @@
     "announcement": "{{heading}}. {{body}}"
   },
   "history": {
-    "title": "Transfer history",
+    "title": "Transfer history"
+  },
+  "view_transfer_history": {
     "empty": {
       "title": "No transfers yet",
       "body": "Transfers you send or receive will show here."
     },
-    "first_page_failed": "Couldn't load your transfers.",
     "out_of_date": "Couldn't refresh — this list may be out of date",
+    "retry": "Try again"
+  },
+  "view_transfer_history_failed": {
+    "message": "Couldn't load your transfers.",
     "retry": "Try again"
   },
   "header_transfer_day": {
