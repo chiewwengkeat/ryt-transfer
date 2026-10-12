@@ -160,7 +160,6 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       shouldShowButtons={lookup.isSuccess && !isAmountRefusedAsShort}
       isBusy={lookup.isFetching || isCheckingPhone}
       isPinLocked={isPinLocked}
-      // Braced: returning the approval would keep Transfer busy through the whole PIN sheet.
       onPress={(path) => {
         createAndApproveTransfer(path).catch(() =>
           settleUnexpectedConfirmFailure(queryClient),
