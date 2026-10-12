@@ -18,7 +18,7 @@ sequenceDiagram
     App->>Bank: [Approve Transfer] resent after 2 s, then 4 s
     Bank-->>App: its first response again, never a second run
     Note over App,Bank: if no response arrives at all
-    App->>Bank: read transfer status at 2, 4, 8, 16 s, then every 15 s
+    App->>Bank: query transfer status at 2, 4, 8, 16 s, then every 15 s
     Bank-->>App: transfer status
 ```
 
