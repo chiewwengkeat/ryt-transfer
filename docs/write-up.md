@@ -38,8 +38,8 @@ A hardware-backed key signs what review showed, and BE verifies it ([003](deep-d
 **Characteristics**:
 
 1. Tamper-proof, and proves who approved what, which a pass/fail biometric prompt can't
-2. Works without biometrics: a PIN BE verifies, never the device passcode
-3. One trust boundary at BE, so every client follows the same rule
+2. Works without biometrics: a PIN BE verifies
+3. BE checks every signature itself, so every client is held to the same rule
 
 **Rejected designs**:
 
