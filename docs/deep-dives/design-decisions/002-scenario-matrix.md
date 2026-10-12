@@ -2,7 +2,7 @@
 
 ## Context
 
-1. A bank's transfers go through more than one FE consumer: this app, a website, maybe a lite app or a rebuild
+1. A bank's transfers go through more than one FE consumer: sister FE repos (this app, a website, a lite app, a later rebuild) each implement the same transfer flow
 2. Each must tell the user the same thing about their money in the same scenario; one FE consumer's "failed" beside another's "pending" leads a user to pay twice
 3. Product owners and designers need to read and change that behaviour themselves, with no second copy kept for them in a ticket
 4. The scenario list is long from the start, and keeps growing

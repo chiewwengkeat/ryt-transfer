@@ -2,7 +2,7 @@
 
 ## Context
 
-1. Built as a bank's production code, which a growing team of engineers extends as features multiply
+1. Built as a bank's production code: many more features will follow, added by FE engineers new to the codebase, with no context of the whole system or its patterns
 2. The folder layout decides how fast an engineer finds the code they need, and how often two engineers' changes collide
 3. So the layout must:
    1. Make it obvious at first glance where new code goes, so every engineer puts the same component in the same folder
