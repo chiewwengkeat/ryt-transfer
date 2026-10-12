@@ -21,13 +21,23 @@ export default function SectionTransferNotices() {
   const customerId = useGetPrimaryAccount().data?.customerId;
   const { settled } = usePendingTransferNotices();
 
+  async function handleDismiss(transferId: string) {
+    if (customerId === undefined) return;
+    try {
+      await clearPendingTransfer(customerId, transferId);
+      await refreshPendingTransferNotices(queryClient, customerId);
+    } catch (error: unknown) {
+      reportError(error, { boundary: "pending_transfer" });
+    }
+  }
+
   return (
     <>
       <BannerEarlierTransferUnconfirmed
         onEarlierTransferSettled={() => {
-          void queryClient.invalidateQueries({ queryKey: accountKeys.all });
-          void resetTransferHistory(queryClient);
-          void queryClient.invalidateQueries({
+          queryClient.invalidateQueries({ queryKey: accountKeys.all });
+          resetTransferHistory(queryClient);
+          queryClient.invalidateQueries({
             queryKey: getListRecentRecipientsOptions().queryKey,
           });
         }}
@@ -47,15 +57,7 @@ export default function SectionTransferNotices() {
                 "section_transfer_notices.dismiss_notice_about",
                 amountAndName,
               ),
-              onPress: () => {
-                if (customerId === undefined) return;
-                void (async () => {
-                  await clearPendingTransfer(customerId, transferId);
-                  await refreshPendingTransferNotices(queryClient, customerId);
-                })().catch((error: unknown) => {
-                  reportError(error, { boundary: "pending_transfer" });
-                });
-              },
+              onPress: () => handleDismiss(transferId),
             }}
           />
         );

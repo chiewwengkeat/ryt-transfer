@@ -30,47 +30,18 @@ export default function BottomSheetBank({ onBankChosen, onClose }: Props) {
       bank.name.toLowerCase().includes(bankSearch.trim().toLowerCase()),
     );
 
-  const readBanksAgain = () => banks.refetch({ cancelRefetch: false });
+  function readBanksAgain() {
+    return banks.refetch({ cancelRefetch: false });
+  }
 
-  const bankList = (() => {
-    if (matchingBanks?.length === 0)
-      return <BannerNotice message={t("bottom_sheet_bank.no_match")} />;
-    if (matchingBanks !== undefined)
-      return matchingBanks.map((bank) => (
-        <Pressable
-          key={bank.bankCode}
-          accessibilityRole="button"
-          accessibilityLanguage={i18n.language}
-          onPress={() => {
-            onBankChosen(bank.bankCode);
-          }}
-          style={styles.btnBank}
-        >
-          <Text style={styles.textBankName}>{bank.name}</Text>
-        </Pressable>
-      ));
-    if (isOffline && (!banks.isFetching || failureBanks !== null))
-      return (
-        <BannerAction
-          // Remounted per failure, so a press that finds no network again says so again.
-          key={banks.errorUpdatedAt}
-          message={t("common.offline.notice")}
-          action={{
-            label: t("bottom_sheet_bank.retry"),
-            onPress: readBanksAgain,
-          }}
-        />
-      );
-    if (failureBanks !== null)
-      return (
-        <BannerRecipientUnexpected
-          key={banks.errorUpdatedAt}
-          failure={failureBanks}
-          onRetry={readBanksAgain}
-        />
-      );
-    return <Loader />;
-  })();
+  const isOfflineShown =
+    matchingBanks === undefined &&
+    isOffline &&
+    (!banks.isFetching || failureBanks !== null);
+  const isLoaderShown =
+    matchingBanks === undefined &&
+    failureBanks === null &&
+    (!isOffline || banks.isFetching);
   return (
     <BottomSheetFrame
       title={t("bottom_sheet_bank.title")}
@@ -82,7 +53,39 @@ export default function BottomSheetBank({ onBankChosen, onClose }: Props) {
         onChangeText: setBankSearch,
       }}
     >
-      {bankList}
+      {matchingBanks?.length === 0 && (
+        <BannerNotice message={t("bottom_sheet_bank.no_match")} />
+      )}
+      {matchingBanks?.map((bank) => (
+        <Pressable
+          key={bank.bankCode}
+          accessibilityRole="button"
+          accessibilityLanguage={i18n.language}
+          onPress={() => onBankChosen(bank.bankCode)}
+          style={styles.btnBank}
+        >
+          <Text style={styles.textBankName}>{bank.name}</Text>
+        </Pressable>
+      ))}
+      {isOfflineShown && (
+        <BannerAction
+          // Remounted per failure, so a press that finds no network again says so again.
+          key={banks.errorUpdatedAt}
+          message={t("common.offline.notice")}
+          action={{
+            label: t("bottom_sheet_bank.retry"),
+            onPress: readBanksAgain,
+          }}
+        />
+      )}
+      {matchingBanks === undefined && !isOffline && failureBanks !== null && (
+        <BannerRecipientUnexpected
+          key={banks.errorUpdatedAt}
+          failure={failureBanks}
+          onRetry={readBanksAgain}
+        />
+      )}
+      {isLoaderShown && <Loader />}
     </BottomSheetFrame>
   );
 }

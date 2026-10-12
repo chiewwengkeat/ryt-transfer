@@ -23,22 +23,26 @@ export default function KeypadPin({
   onPressDelete,
 }: Props) {
   const { t, i18n } = useTranslation("transfer");
-  const digitKey = (digit: string) => (
-    <Pressable
-      key={digit}
-      accessibilityRole="button"
-      accessibilityLabel={digit}
-      accessibilityLanguage={i18n.language}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={() => {
-        onPressDigit(digit);
-      }}
-      style={({ pressed }) => [styles.btnKey, pressed && styles.btnKeyPressed]}
-    >
-      <Text style={styles.textKeyLabel}>{digit}</Text>
-    </Pressable>
-  );
+
+  function digitKey(digit: string) {
+    return (
+      <Pressable
+        key={digit}
+        accessibilityRole="button"
+        accessibilityLabel={digit}
+        accessibilityLanguage={i18n.language}
+        accessibilityState={{ disabled }}
+        disabled={disabled}
+        onPress={() => onPressDigit(digit)}
+        style={({ pressed }) => [
+          styles.btnKey,
+          pressed && styles.btnKeyPressed,
+        ]}
+      >
+        <Text style={styles.textKeyLabel}>{digit}</Text>
+      </Pressable>
+    );
+  }
 
   return (
     <View style={styles.main}>

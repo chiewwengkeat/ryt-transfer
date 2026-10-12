@@ -14,7 +14,6 @@ export default function BannerRecentRecipientsFailed() {
   const isOffline = useIsOffline();
 
   if (failure === null || isOffline) return null;
-
   return (
     <BannerAction
       key={recents.errorUpdatedAt}

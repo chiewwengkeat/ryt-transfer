@@ -4,10 +4,7 @@ import {
   type RecipientIdType,
 } from "@/domains/transfer/api/lookup-recipient/lookup-recipient.type";
 import { useTrackScenarioShown } from "@/domains/transfer/hooks/use-track-scenario-shown/use-track-scenario-shown";
-import {
-  scenarioWordsKey,
-  TransferScenarioId,
-} from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
+import { TransferScenarioId } from "@/domains/transfer/lib/transfer-scenario-id/transfer-scenario-id";
 import RowDetail from "@/screens/transfer/components/RowDetail/RowDetail";
 import {
   isTransferSentOrBeingSent,
@@ -20,19 +17,16 @@ import {
   TransportError,
 } from "@/shared/http/transport-error/transport-error";
 import { formatMoney } from "@/shared/lib/money/money";
-import BannerAction from "@/shared/ui/BannerAction/BannerAction";
 import BannerNotice from "@/shared/ui/BannerNotice/BannerNotice";
 import Card from "@/shared/ui/Card/Card";
 import Loader from "@/shared/ui/Loader/Loader";
 import { READERS_OWN_FOCUS_WAIT_MS } from "@/shared/ui/TextHeading/TextHeading";
-import {
-  type NativeStackNavigationProp,
-  router,
-  useNavigation,
-} from "expo-router";
+import { type NativeStackNavigationProp, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
+import BannerNameCheckFailed from "./components/BannerNameCheckFailed/BannerNameCheckFailed";
+import BannerRecipientNotFound from "./components/BannerRecipientNotFound/BannerRecipientNotFound";
 
 interface Props {
   draft: TransferDraft;
@@ -121,69 +115,61 @@ export default function SectionReviewDetails({ draft }: Props) {
     };
   }, [failureNameCheck, refusedAt]);
 
+  const isNameCheckFailedShown =
+    failureNameCheck !== undefined &&
+    failureNameCheck !== TransferScenarioId.RecipientNotFound;
   if (lookup.isPending && failureLookup === null) return <Loader />;
-  if (failureNameCheck === TransferScenarioId.RecipientNotFound)
-    return (
-      <BannerAction
-        tone="negative"
-        announce={isFailureAnnouncementDue}
-        message={t("common.recipient_not_found.body")}
-        action={{
-          label: t("common.recipient_not_found.change_recipient"),
-          onPress: () => {
-            router.dismissTo("/transfer");
-          },
-        }}
-      />
-    );
-  // One banner per refusal, whether or not Try again shows: a remounted one announces its words again.
-  if (failureNameCheck !== undefined)
-    return (
-      <BannerAction
-        key={refusedAt}
-        tone="negative"
-        announce={isFailureAnnouncementDue}
-        message={t(`common.${scenarioWordsKey(failureNameCheck)}.body`)}
-        action={
-          failureNameCheck !== TransferScenarioId.TooManyNameChecks ||
-          waitedOutRefusalAt === refusedAt
-            ? {
-                label: t(`common.${scenarioWordsKey(failureNameCheck)}.retry`),
-                onPress: () => lookup.refetch({ cancelRefetch: false }),
-              }
-            : undefined
-        }
-      />
-    );
-  if (!lookup.data) return null;
-
-  const { recipient } = lookup.data;
   return (
-    <Card>
-      <RowDetail
-        label={t("section_review_details.recipient_name")}
-        value={recipient.registeredName}
-      />
-      {lookup.data.firstTransfer && (
-        <BannerNotice message={t("common.first_transfer_to_recipient.body")} />
+    <>
+      {failureNameCheck === TransferScenarioId.RecipientNotFound && (
+        <BannerRecipientNotFound announce={isFailureAnnouncementDue} />
       )}
-      <RowDetail
-        label={t("common.detail_rows.bank")}
-        value={recipient.bankName}
-      />
-      <RowDetail
-        label={t(
-          `common.detail_rows.${recipient.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
-        )}
-        value={recipient.idValueMasked}
-      />
-      <RowDetail
-        label={t("common.detail_rows.amount")}
-        value={formatMoney(draft.amount)}
-      />
-      {draft.note !== undefined && (
-        <RowDetail label={t("common.detail_rows.note")} value={draft.note} />
+      {isNameCheckFailedShown && (
+        <BannerNameCheckFailed
+          // One banner per refusal, whether or not Try again shows: a remounted one announces its words again.
+          key={refusedAt}
+          scenario={failureNameCheck}
+          announce={isFailureAnnouncementDue}
+          canRetry={
+            failureNameCheck !== TransferScenarioId.TooManyNameChecks ||
+            waitedOutRefusalAt === refusedAt
+          }
+          onRetry={() => lookup.refetch({ cancelRefetch: false })}
+        />
       )}
-    </Card>
+      {failureNameCheck === undefined && lookup.data && (
+        <Card>
+          <RowDetail
+            label={t("section_review_details.recipient_name")}
+            value={lookup.data.recipient.registeredName}
+          />
+          {lookup.data.firstTransfer && (
+            <BannerNotice
+              message={t("common.first_transfer_to_recipient.body")}
+            />
+          )}
+          <RowDetail
+            label={t("common.detail_rows.bank")}
+            value={lookup.data.recipient.bankName}
+          />
+          <RowDetail
+            label={t(
+              `common.detail_rows.${lookup.data.recipient.idType.toLowerCase() as Lowercase<RecipientIdType>}`,
+            )}
+            value={lookup.data.recipient.idValueMasked}
+          />
+          <RowDetail
+            label={t("common.detail_rows.amount")}
+            value={formatMoney(draft.amount)}
+          />
+          {draft.note !== undefined && (
+            <RowDetail
+              label={t("common.detail_rows.note")}
+              value={draft.note}
+            />
+          )}
+        </Card>
+      )}
+    </>
   );
 }

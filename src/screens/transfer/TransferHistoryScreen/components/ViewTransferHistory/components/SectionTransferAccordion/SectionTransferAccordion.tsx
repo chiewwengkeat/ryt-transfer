@@ -47,14 +47,14 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
   });
   const listRef = useRef<FlashListRef<(typeof dataItems)[number]>>(null);
   // Counted from the cache, not this render's rows: closing over those would redraw every row on each page.
-  const toggleTransferDay = (date: string, wasExpanded: boolean) => {
+  function toggleTransferDay(date: string, wasExpanded: boolean) {
     setCountsAtCollapse((counts) => ({
       ...counts,
       [date]: wasExpanded
         ? countLoadedTransfersOnDay(queryClient, date)
         : undefined,
     }));
-  };
+  }
 
   useTransferHistoryRenderMeasurement(
     transferHistory,
@@ -79,9 +79,7 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
             summary={item.summary}
             expanded={item.expanded}
             today={extraData as Date}
-            onToggle={() => {
-              toggleTransferDay(item.summary.date, item.expanded);
-            }}
+            onToggle={() => toggleTransferDay(item.summary.date, item.expanded)}
           />
         )
       }
@@ -96,9 +94,7 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
           fetchNextPageFailure={
             transferHistory.isFetchNextPageError ? transferHistory.error : null
           }
-          onRetry={() => {
-            void transferHistory.fetchNextPage();
-          }}
+          onRetry={transferHistory.fetchNextPage}
         />
       }
       refreshing={transferHistory.isRefetching}
@@ -113,7 +109,7 @@ export default function SectionTransferAccordion({ transferHistory }: Props) {
             ),
           ),
         );
-        void resetTransferHistory(queryClient).then(() => {
+        resetTransferHistory(queryClient).then(() => {
           listRef.current?.scrollToTop();
         });
       }}

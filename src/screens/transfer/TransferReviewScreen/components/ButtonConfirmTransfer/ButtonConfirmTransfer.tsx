@@ -49,7 +49,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
   const { pinLocked: isPinLocked, isPinLockedNow } = useApprovalPinLocked();
   const readLeaveCount = useReviewLeaveWatch();
 
-  const createAndApproveTransfer = async (path: ApprovalPath) => {
+  async function createAndApproveTransfer(path: ApprovalPath) {
     if (!lookup.isSuccess) return;
     const leaveCountAtPress = readLeaveCount();
     setIsCheckingPhone(true);
@@ -107,13 +107,13 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
     )
       return;
     // The reducer matches the step, not the attempt: a late answer to an abandoned create would move the next one.
-    const isThisCreateStillAwaited = () => {
+    function isThisCreateStillAwaited() {
       const flow = transferFlowStore.getState();
       return (
         flow.step === TransferFlowStep.Creating &&
         flow.idempotencyKey === idempotencyKey
       );
-    };
+    }
     let created: CreateTransferResponse;
     try {
       created = await createTransfer.mutateAsync({
@@ -129,7 +129,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
         settleCreateFailure({
           failure,
           queryClient,
-          checkTheNameAgain: () => void lookup.refetch(),
+          checkTheNameAgain: lookup.refetch,
         });
       return;
     }
@@ -151,7 +151,7 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       return;
     }
     await sendTransferApproval(path);
-  };
+  }
 
   return (
     <SectionTransferButtons
@@ -160,8 +160,9 @@ export default function ButtonConfirmTransfer({ draft }: Props) {
       shouldShowButtons={lookup.isSuccess && !isAmountRefusedAsShort}
       isBusy={lookup.isFetching || isCheckingPhone}
       isPinLocked={isPinLocked}
+      // Braced: returning the approval would keep Transfer busy through the whole PIN sheet.
       onPress={(path) => {
-        void createAndApproveTransfer(path).catch(() =>
+        createAndApproveTransfer(path).catch(() =>
           settleUnexpectedConfirmFailure(queryClient),
         );
       }}

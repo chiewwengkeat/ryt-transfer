@@ -28,15 +28,15 @@ export default function ButtonUsePinInstead({
 
   useEffect(() => {
     let isMounted = true;
-    const checkBiometricSensor = () => {
-      void readBiometricSensorRefusal().then((refusal) => {
+    function checkBiometricSensor() {
+      readBiometricSensorRefusal().then((refusal) => {
         if (isMounted)
           setIsBiometricSensorUnavailable(
             refusal?.outcome === BiometricSignOutcome.NotSetUp ||
               refusal?.outcome === BiometricSignOutcome.NoSensor,
           );
       });
-    };
+    }
     checkBiometricSensor();
     // Enrolment changes in the phone's own settings, so it is asked again whenever the app comes back.
     const subscription = AppState.addEventListener("change", (state) => {
@@ -55,7 +55,6 @@ export default function ButtonUsePinInstead({
     isBiometricSensorUnavailable
   )
     return null;
-
   return (
     <ButtonSecondary label={t("common.pin_chosen.choose")} onPress={onPress} />
   );

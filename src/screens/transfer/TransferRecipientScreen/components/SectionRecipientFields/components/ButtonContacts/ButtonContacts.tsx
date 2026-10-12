@@ -71,26 +71,18 @@ export default function ButtonContacts({ onMobilePicked }: Props) {
     <>
       <ButtonSecondary
         label={t("button_contacts.label")}
-        onPress={() => {
-          void pickMobileFromContacts();
-        }}
+        onPress={pickMobileFromContacts}
       />
       {contactsOutcome === ContactsOutcome.AccessRefused && (
         <BannerContactsRefused
-          onAccessGranted={() => {
-            setContactsOutcome(undefined);
-          }}
+          onAccessGranted={() => setContactsOutcome(undefined)}
         />
       )}
       {contactsOutcome === ContactsOutcome.WithoutMobile && (
         <BannerNotice message={t("common.contact_without_mobile.body")} />
       )}
       {contactsOutcome === ContactsOutcome.Unexpected && (
-        <BannerRecipientUnexpected
-          onRetry={() => {
-            void pickMobileFromContacts();
-          }}
-        />
+        <BannerRecipientUnexpected onRetry={pickMobileFromContacts} />
       )}
       {contactMobiles !== undefined && (
         <BottomSheetContactMobiles
@@ -99,9 +91,7 @@ export default function ButtonContacts({ onMobilePicked }: Props) {
             setContactMobiles(undefined);
             onMobilePicked(mobileId);
           }}
-          onClose={() => {
-            setContactMobiles(undefined);
-          }}
+          onClose={() => setContactMobiles(undefined)}
         />
       )}
     </>

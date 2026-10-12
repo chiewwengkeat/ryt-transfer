@@ -18,9 +18,7 @@ export default function ButtonStartTransfer({
       // A spinner, not the reason: a line that vanishes once the first read lands moves the button.
       loading={firstReadRunning}
       disabledReason={firstReadRunning ? undefined : disabledReason}
-      onPress={() => {
-        router.push("/transfer");
-      }}
+      onPress={() => router.push("/transfer")}
     />
   );
 }

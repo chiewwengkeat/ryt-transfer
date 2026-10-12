@@ -19,6 +19,7 @@ export default function FieldRecipientId({ idType, ...fieldProps }: Props) {
   const [isFieldFocused, setIsFieldFocused] = useState(false);
 
   const { characters, longestIdLength } = RECIPIENT_ID_FORMATS[idType];
+
   const keyboardProps = (
     {
       [RecipientIdCharacters.PlusAndDigits]: {
@@ -33,18 +34,13 @@ export default function FieldRecipientId({ idType, ...fieldProps }: Props) {
       },
     } satisfies Record<RecipientIdCharacters, TextInputProps>
   )[characters];
-
   return (
     <FieldText
       // A new field per keyboard, taking the old one's focus: iOS keeps a focused field's keys, and Android its case.
       key={characters}
       autoFocus={isFieldFocused}
-      onFocus={() => {
-        setIsFieldFocused(true);
-      }}
-      onBlur={() => {
-        setIsFieldFocused(false);
-      }}
+      onFocus={() => setIsFieldFocused(true)}
+      onBlur={() => setIsFieldFocused(false)}
       {...fieldProps}
       {...keyboardProps}
       // A separator may sit between any two characters, so no typed ID the bank's rule takes is cut.

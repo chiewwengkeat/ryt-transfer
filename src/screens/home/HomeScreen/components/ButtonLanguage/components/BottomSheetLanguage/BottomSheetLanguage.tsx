@@ -40,9 +40,7 @@ export default function BottomSheetLanguage({ onClose }: Props) {
           label: APP_LANGUAGE_NAMES[language].full,
           language,
           isChecked: pickedLanguage === language,
-          pick: () => {
-            pickAppLanguage(language);
-          },
+          pick: () => pickAppLanguage(language),
         })),
       ].map(({ label, language, isChecked, pick }) => (
         <Pressable

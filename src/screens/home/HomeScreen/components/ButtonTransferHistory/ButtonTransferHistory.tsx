@@ -8,9 +8,7 @@ export default function ButtonTransferHistory() {
   return (
     <ButtonSecondary
       label={t("button_transfer_history.label")}
-      onPress={() => {
-        router.push("/transfer-history");
-      }}
+      onPress={() => router.push("/transfer-history")}
     />
   );
 }

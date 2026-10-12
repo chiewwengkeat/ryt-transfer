@@ -33,9 +33,6 @@ export default function TextOutcome({
   const isScreenOnTop = useIsScreenOnTop();
 
   const scenarioName = scenarioWordsKey(scenario);
-  // While the money is not confirmed yet, support needs something to look the transfer up by.
-  const isMoneyNotConfirmedYet =
-    MONEY_STATE_BY_OUTCOME[scenario] === MoneyState.NotConfirmedYet;
   const headingOutcome = t(`text_outcome.heading.${scenarioName}`);
   const bodyOutcome = t(`common.${scenarioName}.body`, {
     amount: transfer && formatMoney(transfer.amount),
@@ -61,7 +58,8 @@ export default function TextOutcome({
         {headingOutcome}
       </TextHeading>
       <TextBody style={styles.textBody}>{bodyOutcome}</TextBody>
-      {isMoneyNotConfirmedYet && (
+      {/* While the money is not confirmed yet, support needs something to look the transfer up by. */}
+      {MONEY_STATE_BY_OUTCOME[scenario] === MoneyState.NotConfirmedYet && (
         <TextBody tone="secondary" style={styles.textBody}>
           {t("text_outcome.reference_to_quote", {
             reference: transfer?.reference ?? transferId,

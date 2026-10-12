@@ -20,7 +20,7 @@ export default function BannerContactsRefused({ onAccessGranted }: Props) {
   // Access is granted in the phone's Settings, outside the app, so the only sign of it is the app coming back.
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (appState) => {
-      if (appState === "active") void recheckContactsAccess();
+      if (appState === "active") recheckContactsAccess();
     });
     return () => {
       subscription.remove();
@@ -32,9 +32,7 @@ export default function BannerContactsRefused({ onAccessGranted }: Props) {
       message={t("common.contacts_access_refused.body")}
       action={{
         label: t("common.contacts_access_refused.open_settings"),
-        onPress: () => {
-          void Linking.openSettings();
-        },
+        onPress: () => Linking.openSettings(),
       }}
     />
   );

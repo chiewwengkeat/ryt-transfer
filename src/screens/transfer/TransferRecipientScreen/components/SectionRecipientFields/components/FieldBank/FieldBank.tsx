@@ -71,9 +71,7 @@ export default function FieldBank({ bankCode, onBankChosen, error }: Props) {
             setIsBankSheetOpen(false);
             onBankChosen(chosenBankCode);
           }}
-          onClose={() => {
-            setIsBankSheetOpen(false);
-          }}
+          onClose={() => setIsBankSheetOpen(false)}
         />
       )}
     </View>

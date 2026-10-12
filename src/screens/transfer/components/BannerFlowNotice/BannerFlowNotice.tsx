@@ -33,7 +33,6 @@ export default function BannerFlowNotice({ step }: Props) {
     noticeDetail?.code !== undefined
   )
     return null;
-
   const message = (() => {
     if (
       notice === TransferScenarioId.UnderMaintenance &&
@@ -53,21 +52,16 @@ export default function BannerFlowNotice({ step }: Props) {
       );
     return t(`common.${scenarioWordsKey(notice)}.body`);
   })();
-
-  if (notice === TransferScenarioId.BalanceOrLimitShortAtConfirmation)
-    return (
-      <BannerAction
-        tone="negative"
-        message={message}
-        action={{
-          label: t(
-            "common.balance_or_limit_short_at_confirmation.change_amount",
-          ),
-          onPress: () => {
-            router.dismissTo("/transfer/amount");
-          },
-        }}
-      />
-    );
-  return <BannerNotice tone="negative" message={message} />;
+  return notice === TransferScenarioId.BalanceOrLimitShortAtConfirmation ? (
+    <BannerAction
+      tone="negative"
+      message={message}
+      action={{
+        label: t("common.balance_or_limit_short_at_confirmation.change_amount"),
+        onPress: () => router.dismissTo("/transfer/amount"),
+      }}
+    />
+  ) : (
+    <BannerNotice tone="negative" message={message} />
+  );
 }

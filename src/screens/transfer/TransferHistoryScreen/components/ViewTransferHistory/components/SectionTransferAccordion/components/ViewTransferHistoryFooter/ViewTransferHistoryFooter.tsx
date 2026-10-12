@@ -12,7 +12,7 @@ interface Props {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPageFailure: Error | null;
-  onRetry: () => void;
+  onRetry: () => unknown;
 }
 export default function ViewTransferHistoryFooter({
   hasNextPage,
@@ -25,10 +25,11 @@ export default function ViewTransferHistoryFooter({
   const { bottom } = useSafeAreaInsets();
   const doesPhoneReportConnection = usePhoneReportsConnection();
 
-  const content = (() => {
-    // The query keeps the page's error flag up while its retry runs.
-    if (fetchNextPageFailure !== null && !isFetchingNextPage)
-      return (
+  // The query keeps the page's error flag up while its retry runs.
+  const isFailureShown = fetchNextPageFailure !== null && !isFetchingNextPage;
+  return (
+    <View style={[styles.main, { paddingBottom: spacing.md + bottom }]}>
+      {isFailureShown && (
         <>
           <BannerAction
             tone="negative"
@@ -45,26 +46,19 @@ export default function ViewTransferHistoryFooter({
           />
           {!doesPhoneReportConnection && <TextOffline />}
         </>
-      );
-    if (!hasNextPage)
-      return (
+      )}
+      {!isFailureShown && !hasNextPage && (
         <TextBody tone="secondary">
           {t("view_transfer_history_footer.end")}
         </TextBody>
-      );
-    return (
-      isFetchingNextPage && (
+      )}
+      {hasNextPage && isFetchingNextPage && (
         <ActivityIndicator
           accessibilityLabel={t("view_transfer_history_footer.loading")}
           accessibilityLanguage={i18n.language}
           color={colors.accent}
         />
-      )
-    );
-  })();
-  return (
-    <View style={[styles.main, { paddingBottom: spacing.md + bottom }]}>
-      {content}
+      )}
     </View>
   );
 }

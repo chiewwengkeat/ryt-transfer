@@ -31,9 +31,7 @@ export default function BottomSheetContactMobiles({
           key={contactMobile.id}
           accessibilityRole="button"
           accessibilityLanguage={i18n.language}
-          onPress={() => {
-            onMobileChosen(contactMobile.mobileId);
-          }}
+          onPress={() => onMobileChosen(contactMobile.mobileId)}
           style={styles.btnMobile}
         >
           <Text style={styles.textLabel}>{contactMobile.label}</Text>

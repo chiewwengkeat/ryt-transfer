@@ -39,11 +39,11 @@ export default function BottomSheetPin() {
 
   // Only review going away answers as the person closing the sheet would: an ended session closes it too, but has a report of its own.
   useEffect(() => {
-    const answerShownSheetAsClosed = (closedAnswer: null | undefined) => {
+    function answerShownSheetAsClosed(closedAnswer: null | undefined) {
       const shown = approvalPinSheetStore.getState();
       if (shown.step !== ApprovalPinSheetStep.Closed)
         shown.answer(closedAnswer);
-    };
+    }
     const removeUnauthorizedListener = addUnauthorizedListener(() => {
       answerShownSheetAsClosed(undefined);
     });
@@ -71,7 +71,6 @@ export default function BottomSheetPin() {
   }, [isPinSheetShown]);
 
   if (!isPinSheetShown) return null;
-
   return (
     <BottomSheetFrame
       title={t(
@@ -81,9 +80,7 @@ export default function BottomSheetPin() {
       )}
       closeLabel={t("bottom_sheet_pin.close")}
       dismissable={!isSending}
-      onClose={() => {
-        sheet.answer(null);
-      }}
+      onClose={() => sheet.answer(null)}
     >
       {isPinLocked ? (
         <BannerNotice tone="negative" message={sheet.message} />

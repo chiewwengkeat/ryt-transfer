@@ -83,36 +83,32 @@ export default function SectionTransferButtons({
       AccessibilityInfo.announceForAccessibility(reasonHold);
   }, [reasonHold, isScreenOnTop]);
 
-  if (!shouldShowButtons)
-    return (
-      noticeOffline !== undefined && (
+  return (
+    <>
+      {!shouldShowButtons && noticeOffline !== undefined && (
         <TextBody tone="warning" alignCenter>
           {noticeOffline}
         </TextBody>
-      )
-    );
-
-  return (
-    <>
-      <ButtonPrimary
-        label={t("section_transfer_buttons.label")}
-        loading={isSending || isBusy}
-        disabledReason={reasonTransferDisabled}
-        onPress={() => {
-          onPress(ApprovalPath.Biometric);
-        }}
-      />
-      <ButtonUsePinInstead
-        pinTryAvailable={
-          !isSending &&
-          !isBusy &&
-          reasonTransferDisabled === undefined &&
-          isPinLocked === false
-        }
-        onPress={() => {
-          onPress(ApprovalPath.Pin);
-        }}
-      />
+      )}
+      {shouldShowButtons && (
+        <>
+          <ButtonPrimary
+            label={t("section_transfer_buttons.label")}
+            loading={isSending || isBusy}
+            disabledReason={reasonTransferDisabled}
+            onPress={() => onPress(ApprovalPath.Biometric)}
+          />
+          <ButtonUsePinInstead
+            pinTryAvailable={
+              !isSending &&
+              !isBusy &&
+              reasonTransferDisabled === undefined &&
+              isPinLocked === false
+            }
+            onPress={() => onPress(ApprovalPath.Pin)}
+          />
+        </>
+      )}
     </>
   );
 }

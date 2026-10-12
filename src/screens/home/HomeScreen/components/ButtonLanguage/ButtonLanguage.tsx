@@ -27,9 +27,7 @@ export default function ButtonLanguage() {
         // Starts with the text on screen, so voice control can press the button by what it shows.
         accessibilityLabel={`${shortName}, ${t("button_language.label")}`}
         accessibilityLanguage={i18n.language}
-        onPress={() => {
-          setIsSheetOpen(true);
-        }}
+        onPress={() => setIsSheetOpen(true)}
         style={({ pressed }) => [styles.main, pressed && styles.pressed]}
       >
         {/* The navigation bar never grows, so the label stops at what it holds. */}
@@ -38,11 +36,7 @@ export default function ButtonLanguage() {
         </Text>
       </Pressable>
       {isSheetOpen && (
-        <BottomSheetLanguage
-          onClose={() => {
-            setIsSheetOpen(false);
-          }}
-        />
+        <BottomSheetLanguage onClose={() => setIsSheetOpen(false)} />
       )}
     </>
   );

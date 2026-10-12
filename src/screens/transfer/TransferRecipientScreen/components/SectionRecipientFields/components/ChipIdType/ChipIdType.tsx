@@ -35,9 +35,7 @@ export default function ChipIdType({ idType, onIdTypeChange }: Props) {
           accessibilityRole="radio"
           accessibilityLanguage={i18n.language}
           accessibilityState={{ checked: chipIdType === idType }}
-          onPress={() => {
-            onIdTypeChange(chipIdType);
-          }}
+          onPress={() => onIdTypeChange(chipIdType)}
           style={[
             styles.btnChip,
             chipIdType === idType && styles.btnChipChosen,
