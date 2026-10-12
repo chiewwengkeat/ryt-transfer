@@ -33,18 +33,13 @@ sequenceDiagram
 
 ## Approval signs exactly what you saw
 
-Approval signs what review showed ([003](deep-dives/design-decisions/003-biometric-approval.md)):
-
-1. Face ID or a fingerprint unlocks a hardware-backed key on the phone
-2. The key signs the transfer details and BE's 60-second challenge
-3. BE verifies the signature
+A hardware-backed key signs what review showed, and BE verifies it ([003](deep-dives/design-decisions/003-biometric-approval.md)).
 
 **Characteristics**:
 
-1. Tamper-proof: nothing can change between what the user saw and what BE executes
-2. Proves who approved what, which a pass/fail biometric prompt can't
-3. Works without biometrics: a PIN that BE verifies, never the device passcode
-4. One trust boundary at BE, so every client follows the same rule
+1. Tamper-proof, and proves who approved what, which a pass/fail biometric prompt can't
+2. Works without biometrics: a PIN BE verifies, never the device passcode
+3. One trust boundary at BE, so every client follows the same rule
 
 **Rejected designs**:
 
@@ -52,18 +47,13 @@ Approval signs what review showed ([003](deep-dives/design-decisions/003-biometr
 
 ## A transfer can never be sent twice
 
-Create, then approve; only approval moves money ([006](deep-dives/design-decisions/006-never-sent-twice.md)):
-
-1. Every mutation carries an `Idempotency-Key`
-2. BE returns its first response to a repeated key
-3. With no response, FE retries, then polls the transfer status
+Create, then approve; idempotency keys make every retry safe, and FE polls when no response comes ([006](deep-dives/design-decisions/006-never-sent-twice.md)).
 
 **Characteristics**:
 
-1. Safe retries: a lost response can never pay twice
+1. A lost response can never pay twice
 2. Validation errors reach the user before they approve
 3. No retry is offered until the outcome is known, even after an app restart
-4. The guarantee is BE's API contract, so any client gets it
 
 **Rejected designs**:
 
@@ -71,16 +61,13 @@ Create, then approve; only approval moves money ([006](deep-dives/design-decisio
 
 ## Every scenario is written down once
 
-All 58 transfer scenarios live in one file, [the scenario matrix](../src/screens/transfer/scenarios/transfer.md) ([002](deep-dives/design-decisions/002-scenario-matrix.md)):
-
-1. Per scenario: the money state, the message to show, the actions to never offer
-2. Tests, the mock BE, translations and the Demo menu share its scenario ids
+All 58 transfer scenarios live in one file, [the scenario matrix](../src/screens/transfer/scenarios/transfer.md): per scenario, the money state, the message and the actions to never offer ([002](deep-dives/design-decisions/002-scenario-matrix.md)).
 
 **Characteristics**:
 
-1. One source of truth: every client and rewrite implements against the same file
+1. One source of truth for tests, the mock BE, translations and every client
 2. Product owners can edit it
-3. Enforced: [checks](../src/screens/transfer/scenarios/transfer.strings.check.test.ts) fail wording that hides the money state or offers a forbidden retry, and [ids that drift apart](../src/screens/transfer/scenarios/transfer.check.test.ts)
+3. [Checks](../src/screens/transfer/scenarios/transfer.strings.check.test.ts) fail wording that hides the money state or offers a forbidden retry
 
 **Rejected designs**:
 
@@ -88,19 +75,12 @@ All 58 transfer scenarios live in one file, [the scenario matrix](../src/screens
 
 ## Fast with a long history
 
-History stays fast over 5,000 transfers ([009](deep-dives/design-decisions/009-history-at-scale.md)):
-
-1. Cursor pagination, with per-day totals from BE
-2. A virtualized list that recycles rows
-3. A 30-second cache window before refetching
-4. Server state in TanStack Query ([010](deep-dives/design-decisions/010-query-cache-only.md)), flow state in zustand ([005](deep-dives/design-decisions/005-state.md))
+Cursor pagination with per-day totals from BE, a virtualized list, and a 30-second cache window, over 5,000 transfers; server state in TanStack Query, flow state in zustand ([009](deep-dives/design-decisions/009-history-at-scale.md), [010](deep-dives/design-decisions/010-query-cache-only.md), [005](deep-dives/design-decisions/005-state.md)).
 
 **Characteristics**:
 
-1. No duplicated or missing rows when transfers land mid-scroll
-2. Day totals stay correct across page boundaries
-3. Measured, not assumed: appending a page re-renders no visible row ([counts](deep-dives/history-re-render-counts.md))
-4. The same contract for every client
+1. No duplicated or missing rows, and correct day totals, when transfers land mid-scroll
+2. Measured: appending a page re-renders no visible row ([counts](deep-dives/history-re-render-counts.md))
 
 **Rejected designs**:
 
@@ -108,10 +88,7 @@ History stays fast over 5,000 transfers ([009](deep-dives/design-decisions/009-h
 
 ## Every component and hook has one place
 
-Vertical slices: a folder per flow, a domain per business area ([001](deep-dives/design-decisions/001-vertical-slices.md), [011](deep-dives/design-decisions/011-low-mental-load.md), [012](deep-dives/design-decisions/012-inline-or-own-folder.md)):
-
-1. Code lives beside its only user, moving up a level when a second user appears
-2. Layers import only downward
+Vertical slices: code lives beside its only user and moves up a level when a second user appears; layers import only downward ([001](deep-dives/design-decisions/001-vertical-slices.md), [011](deep-dives/design-decisions/011-low-mental-load.md), [012](deep-dives/design-decisions/012-inline-or-own-folder.md)).
 
 ```mermaid
 flowchart TD
@@ -125,8 +102,7 @@ flowchart TD
 **Characteristics**:
 
 1. Where code goes follows from the tree, so engineers put the same piece in the same place
-2. A flow's code sits together, so a change rarely reaches outside it
-3. Lint enforces both rules
+2. Lint enforces it
 
 **Rejected designs**:
 
@@ -134,33 +110,24 @@ flowchart TD
 
 ## One mock BE for tests and the demo
 
-Development and demo builds have a stateful mock API layer, built with MSW ([004](deep-dives/design-decisions/004-mock-backend.md)):
-
-1. Behaves like BE: balances, limits, idempotency, signatures
-2. Persists across app restarts
+Development and demo builds have a stateful MSW mock API layer that behaves like BE and persists across restarts ([004](deep-dives/design-decisions/004-mock-backend.md)).
 
 **Characteristics**:
 
 1. Simulates any scenario a real BE or network can produce, for automated tests and the Demo scenario picker
-2. One source for tests and the demo, so an API contract change lands once
-3. QA can walk any scenario on an installed build, app restarts included
+2. An API contract change lands once for tests and the demo
 
 **Rejected designs**:
 
-1. **Local mock server**. Reason: closest to production, but an installed APK has no server to reach
+1. **Local mock server**. Reason: an installed APK has no server to reach
 
 ## The mock BE can't reach production
 
-Production builds never contain mock code ([007](deep-dives/design-decisions/007-production-guard.md)):
-
-1. An unset build variant means production
-2. Mock code loads only through one build-time-gated `require`, stripped from release bundles
-3. CI checks every exported bundle for mock code
+An unset build variant means production, mock code loads only through one build-time-gated `require`, and CI checks every exported bundle for it ([007](deep-dives/design-decisions/007-production-guard.md)).
 
 **Characteristics**:
 
-1. Fails closed: a misconfigured build is a production build
-2. Checks the built artifact, not the intent, so it holds as the team grows
+1. Fails closed, and checks the built artifact rather than the intent
 
 **Rejected designs**:
 
@@ -168,18 +135,12 @@ Production builds never contain mock code ([007](deep-dives/design-decisions/007
 
 ## Security beyond the fingerprint
 
-Production hardening ([008](deep-dives/design-decisions/008-hardening.md)):
-
-1. Screen capture blocked everywhere but the receipts
-2. Approvals refused on rooted or jailbroken devices
-3. The app blurred in the iOS app switcher
-4. The Android PIN pad ignores touches through other apps' overlays
+Capture blocked everywhere but the receipts, approvals refused on rooted or jailbroken devices, an app-switcher blur and an overlay-touch guard on the PIN pad ([008](deep-dives/design-decisions/008-hardening.md)).
 
 **Characteristics**:
 
-1. New screens are blocked by default, so none is left capturable by accident
-2. Receipts stay capturable as proof of payment
-3. An inconclusive device check never blocks a legitimate user, and is logged
+1. New screens are blocked by default; receipts stay capturable as proof of payment
+2. An inconclusive device check never blocks a legitimate user
 
 **Rejected designs**:
 
@@ -188,8 +149,8 @@ Production hardening ([008](deep-dives/design-decisions/008-hardening.md)):
 ## Challenges
 
 1. **Back during the device check didn't cancel the transfer**. Fix: the approval re-checks that review is still open after every wait
-2. **A bottom-sheet library, reverted on evidence**: open bugs on this exact stack left sheets invisible or unable to reopen. Fix: an own sheet, about 250 lines
-3. **A production bundle could include the mock BE**: the bundler's cache ignored the build variant. Fix: the variant is in the cache key, and CI fails a production bundle carrying mock code
+2. **A bottom-sheet library with open bugs on this exact stack**. Fix: an own sheet, about 250 lines
+3. **A production bundle could include the mock BE**, since the bundler's cache ignored the build variant. Fix: the variant is in the cache key
 
 ## Limits, and what I'd do next
 
