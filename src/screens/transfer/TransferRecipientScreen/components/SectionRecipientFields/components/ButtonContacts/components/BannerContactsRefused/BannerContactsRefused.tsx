@@ -22,9 +22,7 @@ export default function BannerContactsRefused({ onAccessGranted }: Props) {
     const subscription = AppState.addEventListener("change", (appState) => {
       if (appState === "active") recheckContactsAccess();
     });
-    return () => {
-      subscription.remove();
-    };
+    return () => subscription.remove();
   }, []);
 
   return (

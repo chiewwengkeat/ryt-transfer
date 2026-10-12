@@ -20,9 +20,7 @@ export default function ViewSessionEnded({ onSignIn }: Props) {
       "hardwareBackPress",
       () => true,
     );
-    return () => {
-      subscription.remove();
-    };
+    return () => subscription.remove();
   }, []);
 
   return (

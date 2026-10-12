@@ -89,9 +89,7 @@ export default function SectionReviewDetails({ draft }: Props) {
       ({ data }) => {
         if (data.closing) return;
         timerAnnouncement = setTimeout(
-          () => {
-            setIsFailureAnnouncementDue(true);
-          },
+          () => setIsFailureAnnouncementDue(true),
           Platform.select({ ios: READERS_OWN_FOCUS_WAIT_MS, default: 0 }),
         );
       },
@@ -105,14 +103,10 @@ export default function SectionReviewDetails({ draft }: Props) {
   useEffect(() => {
     if (failureNameCheck !== TransferScenarioId.TooManyNameChecks) return;
     const timer = setTimeout(
-      () => {
-        setWaitedOutRefusalAt(refusedAt);
-      },
+      () => setWaitedOutRefusalAt(refusedAt),
       refusedAt + 60_000 - Date.now(),
     );
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [failureNameCheck, refusedAt]);
 
   const isNameCheckFailedShown =

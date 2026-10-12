@@ -25,8 +25,6 @@ export function useBackTwiceToCloseApp() {
         return true;
       },
     );
-    return () => {
-      subscription.remove();
-    };
+    return () => subscription.remove();
   }, [isHomeFocused, navigation]);
 }

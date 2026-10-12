@@ -66,14 +66,10 @@ export default function BannerEarlierTransferUnconfirmed({
       let isOvertaken = false;
       const stopWatchingWrites = queryClient
         .getMutationCache()
-        .subscribe(({ type }) => {
-          isOvertaken ||= type === "added";
-        });
+        .subscribe(({ type }) => (isOvertaken ||= type === "added"));
       const stopWatchingClears = queryClient
         .getQueryCache()
-        .subscribe(({ type }) => {
-          isOvertaken ||= type === "removed";
-        });
+        .subscribe(({ type }) => (isOvertaken ||= type === "removed"));
       (async () => {
         if (
           isSettledTransferOutcome(

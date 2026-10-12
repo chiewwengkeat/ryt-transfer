@@ -64,9 +64,7 @@ export default function ViewScreenFrame({
     <View
       ref={frameRef}
       onLayout={() => {
-        frameRef.current?.measureInWindow((_x, y) => {
-          setFrameTopInWindow(y);
-        });
+        frameRef.current?.measureInWindow((_x, y) => setFrameTopInWindow(y));
       }}
       style={styles.main}
     >
@@ -86,9 +84,7 @@ export default function ViewScreenFrame({
                 tintColor={colors.accent}
                 onRefresh={() => {
                   setIsPullRefreshing(true);
-                  onPullToRefresh().finally(() => {
-                    setIsPullRefreshing(false);
-                  });
+                  onPullToRefresh().finally(() => setIsPullRefreshing(false));
                 }}
               />
             )

@@ -29,7 +29,7 @@ function useTransferHistoryRenderMeasurementInDevelopment(
   const transfers = transferHistory.data?.transfers ?? [];
   useRenderMeasurement(
     {
-      pageAppend: () => transferHistory.fetchNextPage(),
+      pageAppend: transferHistory.fetchNextPage,
       pullToRefreshWithNothingNew: async () => {
         await resetTransferHistory(queryClient);
         listRef.current?.scrollToTop();

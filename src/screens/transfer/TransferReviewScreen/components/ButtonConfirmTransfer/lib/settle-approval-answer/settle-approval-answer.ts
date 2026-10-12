@@ -47,10 +47,8 @@ export async function settleApprovalAnswer({
     return;
   }
   async function returnRefusedApprovalToReview(action: ApprovalAction) {
-    await clearPendingTransfer(customerId, transferId).catch(
-      (error: unknown) => {
-        reportError(error, { boundary: "pending_transfer_clear" });
-      },
+    await clearPendingTransfer(customerId, transferId).catch((error: unknown) =>
+      reportError(error, { boundary: "pending_transfer_clear" }),
     );
     if (!isFlowNoLongerOnTransfer(transferFlowStore.getState(), transferId))
       dispatchTransferFlow(action);

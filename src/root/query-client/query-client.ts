@@ -30,9 +30,7 @@ focusManager.setEventListener((setFocused) => {
   }
   if (AppState.currentState === "active") followAppState("active");
   const subscription = AppState.addEventListener("change", followAppState);
-  return () => {
-    subscription.remove();
-  };
+  return () => subscription.remove();
 });
 
 export function createQueryClient() {

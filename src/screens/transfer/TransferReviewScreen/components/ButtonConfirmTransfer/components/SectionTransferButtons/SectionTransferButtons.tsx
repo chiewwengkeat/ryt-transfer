@@ -65,14 +65,10 @@ export default function SectionTransferButtons({
   useEffect(() => {
     if (coolingOffUntil === undefined) return;
     const timer = setTimeout(
-      () => {
-        setLiftedHold(hold);
-      },
+      () => setLiftedHold(hold),
       Date.parse(coolingOffUntil) - Date.now(),
     );
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [hold, coolingOffUntil]);
   // A disabled button's reason is never read out unless focus lands on it, so a hold says so as it appears, or
   // once the screen is back on top.

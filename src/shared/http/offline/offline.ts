@@ -64,9 +64,7 @@ export function forgetRequestOutcomes() {
 
 export function addServerReachedAgainListener(listener: () => void) {
   serverReachedAgainListeners.add(listener);
-  return () => {
-    serverReachedAgainListeners.delete(listener);
-  };
+  return () => serverReachedAgainListeners.delete(listener);
 }
 
 let isPhoneConnected = true;

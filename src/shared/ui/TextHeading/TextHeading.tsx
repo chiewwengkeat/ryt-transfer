@@ -38,14 +38,10 @@ export default function TextHeading({
       return;
     }
     const timer = setTimeout(
-      () => {
-        AccessibilityInfo.sendAccessibilityEvent(heading, "focus");
-      },
+      () => AccessibilityInfo.sendAccessibilityEvent(heading, "focus"),
       wasCovered || Platform.OS === "ios" ? READERS_OWN_FOCUS_WAIT_MS : 0,
     );
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [autoFocus, isCovered]);
 
   return (

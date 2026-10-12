@@ -7,12 +7,8 @@ import {
 
 export async function rememberApprovalPinLocked() {
   await writeSecureRecord(PIN_LOCKED_RECORD, "locked").then(
-    () => {
-      pinLockListeners.forEach((hearPinLock) => hearPinLock(true));
-    },
-    (error: unknown) => {
-      reportError(error, { boundary: "approval_pin_lock" });
-    },
+    () => pinLockListeners.forEach((hearPinLock) => hearPinLock(true)),
+    (error: unknown) => reportError(error, { boundary: "approval_pin_lock" }),
   );
 }
 
@@ -26,12 +22,8 @@ export async function isApprovalPinLocked() {
 
 export async function forgetApprovalPinLock() {
   await deleteSecureRecord(PIN_LOCKED_RECORD).then(
-    () => {
-      pinLockListeners.forEach((hearPinLock) => hearPinLock(false));
-    },
-    (error: unknown) => {
-      reportError(error, { boundary: "approval_pin_lock" });
-    },
+    () => pinLockListeners.forEach((hearPinLock) => hearPinLock(false)),
+    (error: unknown) => reportError(error, { boundary: "approval_pin_lock" }),
   );
 }
 
@@ -39,9 +31,7 @@ export function subscribeToApprovalPinLock(
   hearPinLock: (pinLocked: boolean) => void,
 ) {
   pinLockListeners.add(hearPinLock);
-  return () => {
-    pinLockListeners.delete(hearPinLock);
-  };
+  return () => pinLockListeners.delete(hearPinLock);
 }
 
 // Beside the phone's key ids, so whatever wipes the module's records takes the lock with them.

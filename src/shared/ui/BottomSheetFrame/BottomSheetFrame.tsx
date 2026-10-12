@@ -86,12 +86,8 @@ export default function BottomSheetFrame({
 
   // Asked at mount, the title's focus is lost under the fading sheet: VoiceOver took Close, TalkBack often nothing.
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setHasSheetOpened(true);
-    }, SHEET_OPENING_MS);
-    return () => {
-      clearTimeout(timer);
-    };
+    const timer = setTimeout(() => setHasSheetOpened(true), SHEET_OPENING_MS);
+    return () => clearTimeout(timer);
   }, []);
   const closeOnBack = useEffectEvent(() => {
     if (dismissable) onClose();
@@ -105,9 +101,7 @@ export default function BottomSheetFrame({
         return true;
       },
     );
-    return () => {
-      subscription.remove();
-    };
+    return () => subscription.remove();
   }, []);
   // Every render, before paint: a controlled field drawn in the host must never lag its value.
   useLayoutEffect(() => {

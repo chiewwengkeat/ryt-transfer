@@ -72,9 +72,7 @@ export function useApproveTransfer() {
         } catch (failure) {
           if (!isUnansweredWriteFailure(failure)) throw failure;
         }
-        await new Promise((resolve) => {
-          setTimeout(resolve, resendDelayMs);
-        });
+        await new Promise((resolve) => setTimeout(resolve, resendDelayMs));
       }
       return await sendApproveRequest();
     },

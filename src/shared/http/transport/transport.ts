@@ -18,9 +18,7 @@ export function configureTransport(
 // A 401 means only that the session ended.
 export function addUnauthorizedListener(listener: () => void) {
   unauthorizedListeners.add(listener);
-  return () => {
-    unauthorizedListeners.delete(listener);
-  };
+  return () => unauthorizedListeners.delete(listener);
 }
 
 export async function requestJson<Data>(
@@ -68,9 +66,7 @@ export async function requestJson<Data>(
   try {
     // A raced promise, because the demo send answers whether or not the request was aborted.
     response = await new Promise<Response>((resolve, reject) => {
-      rejectOnAbort = () => {
-        reject(new Error("aborted"));
-      };
+      rejectOnAbort = () => reject(new Error("aborted"));
       controller.signal.addEventListener("abort", rejectOnAbort);
       configuredSend(request).then(resolve, reject);
     });

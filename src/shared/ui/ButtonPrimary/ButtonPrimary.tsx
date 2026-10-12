@@ -52,9 +52,7 @@ export default function ButtonPrimary({
           const pressAnswer = onPress();
           if (!(pressAnswer instanceof Promise)) return;
           setIsPressAnswerAwaited(true);
-          pressAnswer.finally(() => {
-            setIsPressAnswerAwaited(false);
-          });
+          pressAnswer.finally(() => setIsPressAnswerAwaited(false));
         }}
         style={({ pressed }) => [
           styles.btn,

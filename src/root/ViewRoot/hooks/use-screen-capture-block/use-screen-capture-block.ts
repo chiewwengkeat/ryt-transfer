@@ -54,12 +54,7 @@ export function useScreenCaptureBlock(
   const blockCaptureForCrashScreen = useEffectEvent(() => {
     if (isProductionBuild || isCaptureBlockPicked) blockScreenCapture();
   });
-  useLayoutEffect(
-    () => () => {
-      blockCaptureForCrashScreen();
-    },
-    [],
-  );
+  useLayoutEffect(() => () => blockCaptureForCrashScreen(), []);
   // Before paint, so a receipt being left hands over to a screen that is drawn blocked.
   useLayoutEffect(() => {
     if (isBlocked) blockScreenCapture();
@@ -70,9 +65,7 @@ export function useScreenCaptureBlock(
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") blockScreenCapture();
     });
-    return () => {
-      subscription.remove();
-    };
+    return () => subscription.remove();
   }, [isBlocked]);
 }
 
