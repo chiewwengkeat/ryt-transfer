@@ -1,23 +1,35 @@
 # Write-up
 
-In short: a transfer is created, then approved; only the signed approval moves money. Every write carries an `Idempotency-Key`, so a lost answer is resent safely, since the bank returns its first answer, and then checked, never guessed. The signature, made on the phone behind Face ID, a fingerprint or a PIN the bank checks, proves to the bank who approved exactly what. Every scenario lives in one file that the tests, the mock bank and the app's words all follow.
+**Transfer flow:**
+
+1. Create Transfer API call
+2. Approve Transfer API call
 
 ```mermaid
 sequenceDiagram
     participant App
     participant Bank
-    App->>Bank: create the transfer, Idempotency-Key k1
-    Note right of Bank: checks the balance, the limits,<br/>any cooling-off and the account lock
-    Bank-->>App: the transfer and a 60-second challenge
-    Note left of App: behind Face ID, a fingerprint or the PIN,<br/>a key on the phone signs review and challenge
-    App->>Bank: approve, Idempotency-Key k2, the signature
-    Bank--xApp: the answer is lost
-    App->>Bank: the identical request, after 2 s and again after 4 s
-    Bank-->>App: its first answer, never a second run
-    Note over App,Bank: if no answer arrives at all
-    App->>Bank: read the status at 2, 4, 8 and 16 s, then every 15 s
-    Bank-->>App: what happened to the money
+    App->>Bank: [Create Transfer], Idempotency-Key k1
+    Note right of Bank: checks balance, limits,<br/>cooling-off and account lock
+    Bank-->>App: transfer + 60-second challenge
+    Note left of App: behind Face ID, a fingerprint or the PIN,<br/>a phone key signs review and challenge
+    App->>Bank: [Approve Transfer], Idempotency-Key k2, signature
+    Bank--xApp: response lost
+    App->>Bank: [Approve Transfer] resent after 2 s, then 4 s
+    Bank-->>App: its first response again, never a second run
+    Note over App,Bank: if no response arrives at all
+    App->>Bank: read transfer status at 2, 4, 8, 16 s, then every 15 s
+    Bank-->>App: transfer status
 ```
+
+**Notes**
+
+1. Both API calls carry an `Idempotency-Key`:
+   1. A transfer is never created or approved twice
+   2. With no response (e.g. network loss), FE resends with the same key; BE returns its first response instead of running it again
+2. Approve Transfer API call carries a signature ([details](#approval-signs-exactly-what-you-saw)):
+   1. BE verifies it covers exactly what review showed (recipient, amount, note, 60-second challenge), so nothing is swapped in between
+   2. Signed by a key in the phone's secure hardware, unlocked by Face ID or a fingerprint; without biometrics, a PIN BE checks
 
 ## Approval signs exactly what you saw
 
