@@ -39,7 +39,7 @@ The menu, top to bottom:
 
 1. Production, by default:
    1. Blocks screenshots and screen recording on every screen but the two receipts
-   2. Refuses approval on a phone that reports it is rooted, jailbroken or hooked
+   2. Refuses approval on a phone that reports it is rooted, jailbroken, or runs runtime hooks
 2. Demo and development builds, by default, do neither:
    1. Capture stays allowed, so the demo can be recorded
    2. The device check is skipped, so the demo approves on any test phone, emulator or simulator
@@ -49,29 +49,29 @@ The menu, top to bottom:
 
 The rest come from what you type or do, with **Normal, no scenario** picked unless a row says otherwise.
 
-| Scenario | How |
-| --- | --- |
-| Balance and today's limit shown | Open the app |
-| Earlier transfer still being checked | Pick **Transfer processing** and send a transfer. While it is still processing, start another (review warns), or close and reopen the app (Home warns) |
-| Badly formed ID, amount or note | Type a mobile number with too few digits, an amount with three decimals, or a note with symbols |
-| Contacts access refused | Tap the contacts button on the recipient step and deny access |
-| Picked contact has no Malaysian mobile number | Add a contact with no Malaysian mobile number to the phone's contacts, then pick it |
-| Recent recipient chosen | After one transfer, pick its recipient from the recent recipients, on Home or the recipient step |
-| Amount over the balance or a limit | Type more than the balance, more than today's remaining limit (RM5,000 a day to start with), or more than RM50,000 |
-| Recipient found, First transfer to this recipient | Enter any well-formed ID: the mock BE gives each ID a registered name and bank of its own, and an ID you haven't sent to before gets the first-transfer warning |
-| Details changed after no answer | Pick **No answer when confirming**, tap Transfer, go back, change the amount or note, and return to review |
-| Double tap on Transfer | Tap Transfer twice, quickly |
-| Face or fingerprint recognised | Approve with a matching face or finger ([below](#face-id-fingerprints-and-the-demo-pin)) |
-| Face or fingerprint not recognised | Route tests only: on the emulator and the simulator, a non-matching face or finger keeps the OS prompt open for another attempt, so FE only ever receives a cancel or, on Android, a lockout |
-| Too many face or fingerprint attempts | Android emulator: fail until its prompt asks for the emulator's own PIN, enter it, and the PIN sheet says there were too many attempts. The iOS simulator never locks Face ID out, so there the route tests cover it |
-| Approval cancelled | Cancel the prompt, or close the PIN sheet |
-| Face or fingerprint unavailable | Pick **Face or fingerprint unavailable**, remove every fingerprint from the emulator, or turn Face ID enrolment off on the simulator |
-| Fingerprints or face changed | Android: add a fingerprint in the emulator's settings once the app has set approval up. The iOS simulator never invalidates a key when enrolment changes, so it can't be shown there |
-| PIN chosen instead | Tap **Use PIN instead** under Transfer |
-| Incorrect PIN, PIN locked | Enter any PIN but the demo PIN. The third wrong PIN locks it; **Unlock PIN** in the Demo menu unlocks it |
-| Something unexpected while approving | Route tests only; nothing in the demo causes it |
-| Transfer completed | Approve a transfer |
-| App closed during approval | Pick **No answer to the approval** and approve; while review still shows it as sending, close the app from the app switcher, then reopen it |
+| Scenario                                          | How                                                                                                                                                                                                                  |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Balance and today's limit shown                   | Open the app                                                                                                                                                                                                         |
+| Earlier transfer still being checked              | Pick **Transfer processing** and send a transfer. While it is still processing, start another (review warns), or close and reopen the app (Home warns)                                                               |
+| Badly formed ID, amount or note                   | Type a mobile number with too few digits, an amount with three decimals, or a note with symbols                                                                                                                      |
+| Contacts access refused                           | Tap the contacts button on the recipient step and deny access                                                                                                                                                        |
+| Picked contact has no Malaysian mobile number     | Add a contact with no Malaysian mobile number to the phone's contacts, then pick it                                                                                                                                  |
+| Recent recipient chosen                           | After one transfer, pick its recipient from the recent recipients, on Home or the recipient step                                                                                                                     |
+| Amount over the balance or a limit                | Type more than the balance, more than today's remaining limit (RM5,000 a day to start with), or more than RM50,000                                                                                                   |
+| Recipient found, First transfer to this recipient | Enter any well-formed ID: the mock BE gives each ID a registered name and bank of its own, and an ID you haven't sent to before gets the first-transfer warning                                                      |
+| Details changed after no answer                   | Pick **No answer when confirming**, tap Transfer, go back, change the amount or note, and return to review                                                                                                           |
+| Double tap on Transfer                            | Tap Transfer twice, quickly                                                                                                                                                                                          |
+| Face or fingerprint recognised                    | Approve with a matching face or finger ([below](#face-id-fingerprints-and-the-demo-pin))                                                                                                                             |
+| Face or fingerprint not recognised                | Route tests only: on the emulator and the simulator, a non-matching face or finger keeps the OS prompt open for another attempt, so FE only ever receives a cancel or, on Android, a lockout                         |
+| Too many face or fingerprint attempts             | Android emulator: fail until its prompt asks for the emulator's own PIN, enter it, and the PIN sheet says there were too many attempts. The iOS simulator never locks Face ID out, so there the route tests cover it |
+| Approval cancelled                                | Cancel the prompt, or close the PIN sheet                                                                                                                                                                            |
+| Face or fingerprint unavailable                   | Pick **Face or fingerprint unavailable**, remove every fingerprint from the emulator, or turn Face ID enrolment off on the simulator                                                                                 |
+| Fingerprints or face changed                      | Android: add a fingerprint in the emulator's settings once the app has set approval up. The iOS simulator never invalidates a key when enrolment changes, so it can't be shown there                                 |
+| PIN chosen instead                                | Tap **Use PIN instead** under Transfer                                                                                                                                                                               |
+| Incorrect PIN, PIN locked                         | Enter any PIN but the demo PIN. The third wrong PIN locks it; **Unlock PIN** in the Demo menu unlocks it                                                                                                             |
+| Something unexpected while approving              | Route tests only; nothing in the demo causes it                                                                                                                                                                      |
+| Transfer completed                                | Approve a transfer                                                                                                                                                                                                   |
+| App closed during approval                        | Pick **No answer to the approval** and approve; while review still shows it as sending, close the app from the app switcher, then reopen it                                                                          |
 
 ## Face ID, fingerprints and the demo PIN
 
