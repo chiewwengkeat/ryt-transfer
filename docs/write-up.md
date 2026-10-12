@@ -39,7 +39,7 @@ A hardware-backed key signs what review showed, and BE verifies it ([003](deep-d
 
 1. Tamper-proof, and proves who approved what, which a pass/fail biometric prompt can't
 2. Works without biometrics: a PIN BE verifies
-3. BE checks every signature itself, so every client is held to the same rule
+3. BE verifies every signature itself, so the guarantee holds for every FE consumer (app, web, lite app) without trusting its code
 
 **Rejected designs**:
 
@@ -65,13 +65,13 @@ All 58 transfer scenarios live in one file, [the scenario matrix](../src/screens
 
 **Characteristics**:
 
-1. One source of truth for tests, the mock BE, translations and every client
+1. One source of truth for tests, the mock BE, translations and every FE consumer
 2. Product owners can edit it
 3. [Checks](../src/screens/transfer/scenarios/transfer.strings.check.test.ts) fail wording that hides the money state or offers a forbidden retry
 
 **Rejected designs**:
 
-1. **Exact copy in the matrix**. Reason: binds every client to one wording
+1. **Exact copy in the matrix**. Reason: binds every FE consumer to one wording
 
 ## Fast with a long history
 
