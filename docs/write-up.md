@@ -33,39 +33,39 @@ sequenceDiagram
 
 ## Approval signs exactly what you saw
 
-A yes-or-no biometric prompt proves nothing to the bank. Here, Face ID or a fingerprint unlocks a key in the phone's secure hardware that signs what review showed: recipient, amount, note and the bank's 60-second challenge. The bank checks the signature, so nothing can be swapped between screen and server. Without biometrics, a six-digit PIN the bank checks goes with a second hardware key's signature; the phone's passcode approves nothing ([003](deep-dives/design-decisions/003-biometric-approval.md)).
+A pass/fail biometric prompt proves nothing to BE. Here, Face ID or a fingerprint unlocks a private key in the phone's hardware-backed keystore, which signs the review payload: recipient, amount, note and BE's 60-second challenge. BE verifies the signature, so the payload can't be tampered with between UI and server. Without biometrics, a six-digit PIN that BE verifies goes with a second hardware key's signature; the device passcode approves nothing ([003](deep-dives/design-decisions/003-biometric-approval.md)).
 
-**Rejected:** a fallback key the phone's passcode unlocks, since family often knows it.
+**Rejected:** a fallback key unlocked by the device passcode, which family members often know.
 
-**At scale:** the bank's signature check is the trust boundary, so every client is held to the same rule.
+**At scale:** BE's signature verification is the trust boundary, so every client follows the same rule.
 
 ## A transfer can never be sent twice
 
-The bank creates a transfer first; only a separate approval moves money. Every write carries an idempotency key, reused by every repeat of the same act, and the bank returns its first answer to a repeated key for 24 hours, so a lost answer is resent safely; a refusal never is. If the approval's answer stays lost, the app asks the bank for its status, even after a restart, offering no resend until it knows ([006](deep-dives/design-decisions/006-never-sent-twice.md)).
+BE creates the transfer first; only the separate Approve API call moves money. Every mutation carries an `Idempotency-Key`, re-sent by every retry, and BE replays its first response to a repeated key for 24 hours, so a lost response is retried safely; an error response never is. If FE's retries never receive a response, FE polls the transfer status, even after an app restart, and offers no retry until it has one ([006](deep-dives/design-decisions/006-never-sent-twice.md)).
 
-**Rejected:** one call that checks and moves money, whose refusals would arrive only after approving.
+**Rejected:** a single API call that validates and moves money, whose validation errors would arrive only after approval.
 
-**At scale:** the guarantee is the bank's API contract, which a website or a lite app gets by following it.
+**At scale:** the guarantee is BE's API contract, so a web or lite client gets it by following the contract.
 
 ## Every scenario is written down once
 
-Each of the 58 situations a transfer can meet is one short section of [the scenario matrix](../src/screens/transfer/scenarios/transfer.md): what happened to the money, what to tell the person and, where it matters, what never to offer them. Tests, the mock bank, translations and the Demo menu share its permanent ids. The money is always one of four states; where the person must be told it, every language carries that state's fixed phrase, and where a resend is forbidden, nothing pressable may carry one of nine retry words. [A check](../src/screens/transfer/scenarios/transfer.strings.check.test.ts) fails a scenario's words that break either rule, and [another](../src/screens/transfer/scenarios/transfer.check.test.ts) ids that drift apart ([002](deep-dives/design-decisions/002-scenario-matrix.md)).
+Each of the 58 scenarios a transfer can hit is one short section of [the scenario matrix](../src/screens/transfer/scenarios/transfer.md): the money state, the user-facing message and, where it matters, which actions are forbidden. Tests, the mock BE, i18n and the Demo menu share its stable scenario ids. Money is always one of four states; where the user must be told it, every locale carries that state's fixed phrase, and where a retry is forbidden, no pressable element may carry one of nine retry words. [A check](../src/screens/transfer/scenarios/transfer.strings.check.test.ts) fails a scenario's strings that break either rule, and [another](../src/screens/transfer/scenarios/transfer.check.test.ts) fails scenario ids that drift apart ([002](deep-dives/design-decisions/002-scenario-matrix.md)).
 
-**Rejected:** the exact sentences in the matrix, which would bind every client to one wording.
+**Rejected:** exact copy in the matrix, which would bind every client to one wording.
 
-**At scale:** every client and rebuild implements from the same file, which product owners can edit.
+**At scale:** every client and rewrite implements against the same file, which product owners can edit.
 
 ## Fast with a long history
 
-The mock bank seeds 5,000 transfers. Pages of 30 come by cursor, and each day's count and net come from the bank, so a split day never reads short. FlashList recycles the rows. Reopened within 30 seconds of its last read, History draws what it holds and asks nothing; later, it asks once for the newest page, since someone checking before sending again needs it current. Before the latest history changes, I [counted re-renders](deep-dives/history-re-render-counts.md) rather than trust an emulator's frame rate: a new page or a folded day redraws no row already on screen, a status change redraws one ([009](deep-dives/design-decisions/009-history-at-scale.md)). Bank data lives in TanStack Query's cache ([010](deep-dives/design-decisions/010-query-cache-only.md)), the flow in a typed zustand reducer ([005](deep-dives/design-decisions/005-state.md)), and the React Compiler memoizes, with three hand-written memos where a reference must stay stable.
+The mock BE seeds 5,000 transfers. Cursor pagination returns pages of 30, and BE returns each day's count and net total, so a day split across pages never under-counts. FlashList recycles rows. Reopened within 30 seconds of its last fetch, History renders from cache without a request; after that, it refetches the first page once, since a user checking before re-sending needs fresh data. Before the latest History changes, I [counted re-renders](deep-dives/history-re-render-counts.md) rather than trust an emulator's frame rate: appending a page or collapsing a day re-renders no visible row, and a status change re-renders one ([009](deep-dives/design-decisions/009-history-at-scale.md)). Server state lives in TanStack Query's cache ([010](deep-dives/design-decisions/010-query-cache-only.md)), flow state in a typed zustand reducer ([005](deep-dives/design-decisions/005-state.md)), and the React Compiler memoizes, with three manual memos where referential stability matters.
 
-**Rejected:** offset paging, where a transfer made mid-scroll repeats a row on the next page.
+**Rejected:** offset pagination, which duplicates a row on the next page when a transfer lands mid-scroll.
 
-**At scale:** the cursor and day totals are the bank's contract, so every client pages and totals alike.
+**At scale:** cursors and day totals are BE's contract, so every client paginates and totals the same way.
 
 ## Every component and hook has one place
 
-The app is cut into vertical slices: a screens folder per flow, a domain per business area. A component, hook or module stays in the one screen using it until a second screen, then a second flow, needs it. A small module with a single module as its user folds into that user's file, but nothing folds into a component file: a piece one component uses inlines into its body or takes a folder of its own. Each layer imports only those below it: the placement check fails a piece placed higher than its users need, and the boundary lint an import running sideways or up ([001](deep-dives/design-decisions/001-vertical-slices.md), [011](deep-dives/design-decisions/011-low-mental-load.md), [012](deep-dives/design-decisions/012-inline-or-own-folder.md)).
+The app uses vertical slices: a screens folder per flow, a domain per business area. A component, hook or module is colocated with the one screen using it until a second screen, then a second flow, needs it. A small module with a single importer folds into it, but nothing folds into a component file: a child used by one component is inlined or gets its own folder. Each layer imports only from layers below: the placement check fails a piece placed higher than its consumers need, and the boundary lint fails a sideways or upward import ([001](deep-dives/design-decisions/001-vertical-slices.md), [011](deep-dives/design-decisions/011-low-mental-load.md), [012](deep-dives/design-decisions/012-inline-or-own-folder.md)).
 
 ```mermaid
 flowchart TD
@@ -76,47 +76,47 @@ flowchart TD
     root -.->|one gated require| mocks["src/mocks: the mock bank"]
 ```
 
-**Rejected:** Feature-Sliced Design, whose six layers split each feature, so "which layer?" becomes a recurring call.
+**Rejected:** Feature-Sliced Design, whose six layers split each feature, making "which layer?" a recurring call.
 
-**At scale:** where new code goes reads off the tree, so engineers file the same piece in the same place.
+**At scale:** placement follows from the tree, so engineers put the same piece in the same place.
 
-## One fake bank for tests and the demo
+## One mock BE for tests and the demo
 
-Development and demo builds carry a stateful mock bank that moves balances, uses up limits, replays a repeated key's first answer and verifies signatures. One set of msw handlers answers for it in Jest and on a phone, where the app's own transport hands each request to msw. They keep it across restarts, and a Demo menu switches it into any scenario the bank or the connection can cause ([004](deep-dives/design-decisions/004-mock-backend.md)).
+Development and demo builds ship a stateful mock BE that updates balances, consumes limits, replays a repeated idempotency key's first response and verifies signatures. One set of MSW handlers serves it in Jest and on device, where the app's transport layer routes each request to MSW. Its state persists across app restarts, and a Demo menu switches it into any scenario BE or the network can produce ([004](deep-dives/design-decisions/004-mock-backend.md)).
 
-**Rejected:** a local mock server: the most production-like, but an installed APK has no server to reach.
+**Rejected:** a local mock server: closest to production, but an installed APK has no server to reach.
 
-**At scale:** a contract changes once for tests and demo, and QA can walk any scenario on an installed build.
+**At scale:** an API contract change lands once for tests and the demo, and QA can walk any scenario on an installed build.
 
-## The mock bank can't reach production
+## The mock BE can't reach production
 
-An unset variant means production, so an unconfigured build fails closed. Mock code is reached only by one `require` in the app's root, gated on a literal comparison of `EXPO_PUBLIC_APP_VARIANT`, the one form the bundler strips from a release build; lint lets only the root `require` it, and no app code import it but the root's type-only import of the demo contract, which carries no code. On every push, CI exports each variant and fails a production or unset bundle whose source map lists a mock or msw file; the demo export must carry them ([007](deep-dives/design-decisions/007-production-guard.md)).
+An unset build variant means production, so a misconfigured build fails closed. Mock code is reachable only through one `require` in the app's root, gated on a literal comparison of `EXPO_PUBLIC_APP_VARIANT`, the one form Metro dead-code-eliminates from a release bundle; lint lets only the root `require` it, and no app code imports it except the root's type-only import of the demo contract, which emits no code. On every push, CI exports each variant and fails a production or unset bundle whose source map lists a mock or MSW file; the demo export must include them ([007](deep-dives/design-decisions/007-production-guard.md)).
 
-**Rejected:** one build with a demo mode to unlock: the mock bank would ship one unlock away from a customer.
+**Rejected:** one build with a hidden demo mode: the mock BE would ship one unlock away from a customer.
 
-**At scale:** the check reads what was built, not what was meant, so it holds as the team grows.
+**At scale:** the check inspects the built artifact, not the intent, so it holds as the team grows.
 
 ## Security beyond the fingerprint
 
-In production, capture is blocked on every screen but the two receipts, kept as proof of payment, and a new screen is blocked unless named a receipt. There, each approval refuses on a phone that clearly reports root, a jailbreak or runtime hooks, while an unclear check, or none within 5 seconds, lets it through, logged. iOS blurs the app in the switcher, and on Android the PIN pad ignores touches through another app's overlay ([008](deep-dives/design-decisions/008-hardening.md)).
+In production, screen capture is blocked on every screen except the two receipts, kept as proof of payment, and a new screen is blocked by default unless marked a receipt. Each approval is refused on a device that clearly reports root, a jailbreak or runtime hooking; an inconclusive check, or none within 5 seconds, lets it through and is logged. iOS blurs the app in the app switcher, and on Android the PIN pad drops touches passed through another app's overlay (tapjacking) ([008](deep-dives/design-decisions/008-hardening.md)).
 
-**Rejected:** blocking capture on the transfer steps only, leaving History's names and amounts capturable.
+**Rejected:** blocking capture only on the transfer steps, leaving History's names and amounts capturable.
 
-**At scale:** on-phone checks are a second layer a rooted phone can fool; the real control is the bank verifying the phone.
+**At scale:** on-device checks are a second layer a rooted device can bypass; the real control is BE attesting the device.
 
 ## Challenges
 
-**Back during the phone check didn't stop the transfer.** In production, every approval waits for a fresh rooted-phone check. An audit found that pressing Transfer, then Back during that wait, still created the transfer and raised the prompt over the screen they'd gone back to. The press now re-checks that review is still open after every wait.
+**Back during the integrity check didn't cancel the transfer.** In production, every approval awaits a fresh root/jailbreak check. An audit found that pressing Transfer, then Back during that await, still created the transfer and showed the biometric prompt over the previous screen. The press handler now re-checks that review is still the focused screen after every await.
 
-**A bottom-sheet library, reversed on evidence.** I first picked the common library. Its issue tracker held unfixed reports, on this exact React Native and Reanimated stack, of sheets that go invisible or never reopen. The app now draws its own sheet, about 250 lines.
+**A bottom-sheet library, reverted on evidence.** I first picked the popular library. Its issue tracker had open reports, on this exact React Native and Reanimated stack, of sheets that render invisible or never reopen. The app now ships its own sheet, about 250 lines.
 
-**A production bundle could carry the mock bank.** The bundler's cache key left out the build variant, so a production build made right after a demo one reused the demo's files. The variant is now in the key, and CI fails any production bundle it exports that carries mock code.
+**A production bundle could include the mock BE.** Metro's cache key omitted the build variant, so a production build right after a demo build reused the demo's transformed files. The variant is now part of the cache key, and CI fails any exported production bundle containing mock code.
 
 ## Limits, and what I'd do next
 
-- Only the screens' layout was checked on a physical phone, which also recorded the demo video. Next: prove the hardware keys, the Secure Enclave and the screenshot block on real devices.
-- The phone's integrity is checked on the phone. Next: the bank verifies it server-side, with Play Integrity and App Attest.
-- Malay and Chinese are machine translations no one reviewed. Next: a native speaker's review.
-- The API is a proposed contract. Next: agree it with the bank's backend.
+- Only screen layouts were verified on a physical device, which also recorded the demo video. Next: verify the hardware keys, the Secure Enclave and screenshot blocking on real devices.
+- Device integrity is checked client-side. Next: BE verifies it server-side, with Play Integrity and App Attest.
+- Malay and Chinese are unreviewed machine translations. Next: a native speaker's review.
+- The API is a proposed contract. Next: agree it with the bank's BE team.
 
 Full list: [limitations.md](deep-dives/limitations.md)
