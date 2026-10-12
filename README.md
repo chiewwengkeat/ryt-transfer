@@ -48,3 +48,5 @@ pnpm android:demo   # or: pnpm ios:demo
 4. **The API is designed here**: no BE exists, so each endpoint's types are a proposed API contract
 5. **Create, then approve**: Create Transfer checks balance and limits; only Approve Transfer moves money
 6. **Limits are the mock BE's**: RM5,000 a day, RM50,000 per transfer, 60 seconds to approve, three PIN attempts
+7. **Several FE consumers, one behaviour**: sister FE repos (web, a lite app) implement the same flows, transfer included, and must handle every scenario identically. Hence one [scenario matrix](src/screens/transfer/scenarios/transfer.md) they all follow ([002](docs/deep-dives/design-decisions/002-scenario-matrix.md))
+8. **The app keeps growing**: many more features, added by FE engineers new to the codebase, with no context of the whole system or its patterns. Hence a folder structure where each component's place follows from who uses it, enforced by lint ([001](docs/deep-dives/design-decisions/001-vertical-slices.md), [011](docs/deep-dives/design-decisions/011-low-mental-load.md))
