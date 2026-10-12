@@ -39,7 +39,7 @@ A hardware-backed key signs what review showed, and BE verifies it ([003](deep-d
 
 1. Tamper-proof, and proves who approved what, which a pass/fail biometric prompt can't
 2. Works without biometrics: a PIN BE verifies
-3. BE verifies every signature itself, so the guarantee holds for every FE consumer (app, web, lite app) without trusting its code
+3. BE verifies every signature itself, so no FE consumer (app, web, lite app) can approve a transfer without a valid one
 
 **Rejected designs**:
 
@@ -51,9 +51,9 @@ Create, then approve; idempotency keys make every retry safe, and FE polls when 
 
 **Characteristics**:
 
-1. A lost response can never pay twice
+1. Retrying after a lost response can never move money twice
 2. Validation errors reach the user before they approve
-3. No retry is offered until the outcome is known, even after an app restart
+3. No retry button until the transfer status is known, even after an app restart
 
 **Rejected designs**:
 
@@ -61,13 +61,13 @@ Create, then approve; idempotency keys make every retry safe, and FE polls when 
 
 ## Every scenario is written down once
 
-All 58 transfer scenarios live in one file, [the scenario matrix](../src/screens/transfer/scenarios/transfer.md): per scenario, the money state, the message and the actions to never offer ([002](deep-dives/design-decisions/002-scenario-matrix.md)).
+All 58 transfer scenarios live in one file, [the scenario matrix](../src/screens/transfer/scenarios/transfer.md): per scenario, whether money moved, the message to show and the actions to never offer ([002](deep-dives/design-decisions/002-scenario-matrix.md)).
 
 **Characteristics**:
 
 1. One source of truth for tests, the mock BE, translations and every FE consumer
 2. Product owners can edit it
-3. [Checks](../src/screens/transfer/scenarios/transfer.strings.check.test.ts) fail wording that hides the money state or offers a forbidden retry
+3. [Checks](../src/screens/transfer/scenarios/transfer.strings.check.test.ts) fail copy that hides whether money moved or offers a forbidden retry
 
 **Rejected designs**:
 
@@ -88,7 +88,7 @@ Cursor pagination with per-day totals from BE, a virtualized list, and a 30-seco
 
 ## Every component and hook has one place
 
-Vertical slices: code lives beside its only user and moves up a level when a second user appears; layers import only downward ([001](deep-dives/design-decisions/001-vertical-slices.md), [011](deep-dives/design-decisions/011-low-mental-load.md), [012](deep-dives/design-decisions/012-inline-or-own-folder.md)).
+Vertical slices: code is colocated with its only consumer and moves up a level when a second consumer appears; layers import only downward ([001](deep-dives/design-decisions/001-vertical-slices.md), [011](deep-dives/design-decisions/011-low-mental-load.md), [012](deep-dives/design-decisions/012-inline-or-own-folder.md)).
 
 ```mermaid
 flowchart TD
@@ -101,7 +101,7 @@ flowchart TD
 
 **Characteristics**:
 
-1. Where code goes follows from the tree, so engineers put the same piece in the same place
+1. Where code goes follows from the tree, so every engineer puts the same component in the same folder
 2. Lint enforces it
 
 **Rejected designs**:
@@ -110,7 +110,7 @@ flowchart TD
 
 ## One mock BE for tests and the demo
 
-Development and demo builds have a stateful MSW mock API layer that behaves like BE and persists across restarts ([004](deep-dives/design-decisions/004-mock-backend.md)).
+Development and demo builds have a stateful MSW mock API layer that behaves like BE and persists across app restarts ([004](deep-dives/design-decisions/004-mock-backend.md)).
 
 **Characteristics**:
 
@@ -127,7 +127,7 @@ An unset build variant means production, mock code loads only through one build-
 
 **Characteristics**:
 
-1. Fails closed, and checks the built artifact rather than the intent
+1. Fails closed, and checks the built bundle rather than the build config
 
 **Rejected designs**:
 
@@ -135,7 +135,7 @@ An unset build variant means production, mock code loads only through one build-
 
 ## Security beyond the fingerprint
 
-Capture blocked everywhere but the receipts, approvals refused on rooted or jailbroken devices, an app-switcher blur and an overlay-touch guard on the PIN pad ([008](deep-dives/design-decisions/008-hardening.md)).
+Capture blocked everywhere but the receipts, approvals refused on rooted or jailbroken devices, an app-switcher blur and a tapjacking guard on the PIN pad ([008](deep-dives/design-decisions/008-hardening.md)).
 
 **Characteristics**:
 
@@ -148,9 +148,9 @@ Capture blocked everywhere but the receipts, approvals refused on rooted or jail
 
 ## Challenges
 
-1. **Back during the device check didn't cancel the transfer**. Fix: the approval re-checks that review is still open after every wait
-2. **A bottom-sheet library with open bugs on this exact stack**. Fix: an own sheet, about 250 lines
-3. **A production bundle could include the mock BE**, since the bundler's cache ignored the build variant. Fix: the variant is in the cache key
+1. **Back during the device check didn't cancel the transfer**. Fix: the approval re-checks that review is still open after every await
+2. **A bottom-sheet library with open bugs on this exact stack**. Fix: a custom bottom sheet, about 250 lines
+3. **A production bundle could include the mock BE**, since Metro's cache ignored the build variant. Fix: the variant is in the cache key
 
 ## Limits, and what I'd do next
 
