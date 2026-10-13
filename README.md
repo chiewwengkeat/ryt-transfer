@@ -50,3 +50,27 @@ pnpm android:demo   # or: pnpm ios:demo
 6. **Limits are the mock BE's**: RM5,000 a day, RM50,000 per transfer, 60 seconds to approve, three PIN attempts
 7. **Several FE consumers, one behaviour**: sister FE repos (web, a lite app) implement the same flows, transfer included, and must handle every scenario identically. Hence one [scenario matrix](src/screens/transfer/scenarios/transfer.md) they all follow ([002](docs/deep-dives/design-decisions/002-scenario-matrix.md))
 8. **The app keeps growing**: many more features, added by FE engineers new to the codebase, with no context of the whole system or its patterns. Hence a folder structure where each component's place follows from who uses it, enforced by lint ([001](docs/deep-dives/design-decisions/001-vertical-slices.md), [011](docs/deep-dives/design-decisions/011-low-mental-load.md))
+
+## Claude Code workflow
+
+One session **(Build 2-2)** running 10 subagents in parallel. Three other sessions **(Build P-3, P-4, 3-2)** running in parallel:
+
+![One Claude Code session running 10 subagents in parallel](docs/deep-dives/claude-code-swarm.jpg)
+
+1. **Planning**
+   1. Planned for parallel work from the start: four sessions designed different parts of the app at once (structure, libraries, transfer, scenario matrix), then a fifth merged them into one build plan
+   2. The spec and build plans were presented at 500–700k tokens of context, each checked first by:
+      1. 2-4 Opus advisor calls
+      2. 1 Opus verifier subagent: re-derives the plan's load-bearing claims from source, without seeing how the plan was made
+      3. 1 Sonnet critic subagent: reads the plan cold, with no sources, for what a domain expert would find absurd
+      4. 1 FE architecture reviewer subagent: checks the plan against my FE conventions
+2. **Implementation**
+   1. 2–4 sessions in parallel. Peaked at 18 subagents running in parallel in 1 session. Largest session spawned 48 subagents before close-out.
+   2. All React code is written by a custom writer subagent. Reasons:
+      1. **Attention/thinking depth**: Only contains context about my React conventions and its task. No main session's prompt, output style, memory or conversation history
+      2. **Preserve main agent (Orchestrator)'s context**: Eliminates need for orchestrator to load React code-structure patterns into context
+   3. Swarm coordination: [cross-session messaging](https://code.claude.com/docs/en/cross-session-messaging) between sessions, [agent teammates](https://code.claude.com/docs/en/agent-teams) within one
+3. **Verification**: Sonnet subagents tested the app on four device lanes, each an Android emulator and an iOS simulator. Reasons, most important first:
+   1. **Speed**: Sonnet answers faster than Opus, so a pass ends sooner
+   2. **Cost**: Verification is token-intensive
+   3. **Enough**: Device checks are mechanical, so Opus adds little
