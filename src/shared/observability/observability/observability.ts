@@ -139,7 +139,9 @@ function logIgnoringItsFailure(
     const { pathname, search } = new URL(request.url);
     console.info(
       `[request] ${request.method} ${pathname}${search} ${outcome}`,
-      bodies,
+      Object.fromEntries(
+        Object.entries(bodies).filter(([, body]) => body !== undefined),
+      ),
     );
   } catch {
     // Swallowed: a broken log must never fail the request it describes.

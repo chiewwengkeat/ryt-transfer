@@ -138,7 +138,7 @@ it("logs a development build's request and answer with the PIN and signature mas
   );
 });
 
-it("logs a development build's failed request and hands its failure on", async () => {
+it("logs a development build's failed GET with no request body, and hands its failure on", async () => {
   const logged = jest
     .spyOn(console, "info")
     .mockImplementation(() => undefined);
@@ -151,13 +151,9 @@ it("logs a development build's failed request and hands its failure on", async (
   await expect(
     send(new Request("https://bank.test/accounts/primary")),
   ).rejects.toBe(failure);
-  expect(logged).toHaveBeenCalledWith(
-    "[request] GET /accounts/primary failed",
-    {
-      request: undefined,
-      failure,
-    },
-  );
+  expect(logged.mock.calls).toStrictEqual([
+    ["[request] GET /accounts/primary failed", { failure }],
+  ]);
 });
 
 it("never lets a broken log change a development build's answer or failure", async () => {
