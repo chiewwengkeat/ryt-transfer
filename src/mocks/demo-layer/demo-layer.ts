@@ -11,11 +11,12 @@ import type { PhoneSideScenarioId } from "@/mocks/scenarios/transfer-scenarios/t
 import ViewDemo from "@/mocks/switcher/components/ViewDemo/ViewDemo";
 import { switcherStore } from "@/mocks/switcher/switcher-store/switcher-store";
 import type { Send } from "@/shared/http/transport/transport";
+import { logRequestsInDevelopment } from "@/shared/observability/observability/observability";
 import { delay, getResponse, HttpResponse, type RequestHandler } from "msw";
 import type { ComponentType, ReactNode } from "react";
 
 export default {
-  demoSend: createDemoSend(handlersForActiveScenario),
+  demoSend: logRequestsInDevelopment(createDemoSend(handlersForActiveScenario)),
   demoPin: DEMO_PIN,
   ViewDemo,
   subscribeToScenarioChange: (onChange) => switcherStore.subscribe(onChange),

@@ -1,4 +1,5 @@
 import { TransportError } from "@/shared/http/transport-error/transport-error";
+import type { Send } from "@/shared/http/transport/transport";
 
 export function setObservabilitySink(nextSink: ObservabilitySink | null) {
   sink = nextSink;
@@ -36,6 +37,11 @@ export function reportError(
   });
 }
 
+export const logRequestsInDevelopment =
+  process.env.EXPO_PUBLIC_APP_VARIANT === "development"
+    ? wrapSendInConsoleLog
+    : (send: Send) => send;
+
 export type ObservabilitySink = (record: ObservedRecord) => void;
 
 export interface ObservedRecord {
@@ -60,6 +66,7 @@ const ALLOWED_PROPERTY_NAMES = new Set([
   "errorCode",
   "path",
 ]);
+const CREDENTIAL_KEYS = new Set(["pin", "signature"]);
 
 let sink: ObservabilitySink | null = __DEV__
   ? (record) => {
@@ -88,4 +95,35 @@ function redactProperties(properties: Record<string, unknown>) {
       allowed[name] = value;
   }
   return allowed;
+}
+
+function wrapSendInConsoleLog(send: Send): Send {
+  return async (request) => {
+    const { pathname, search } = new URL(request.url);
+    const title = `[request] ${request.method} ${pathname}${search}`;
+    const requestBody = parseMaskingCredentials(await request.clone().text());
+    let response: Response;
+    try {
+      response = await send(request);
+    } catch (failure) {
+      console.info(`${title} failed`, { request: requestBody, failure });
+      throw failure;
+    }
+    console.info(`${title} ${response.status}`, {
+      request: requestBody,
+      response: parseMaskingCredentials(await response.clone().text()),
+    });
+    return response;
+  };
+}
+
+function parseMaskingCredentials(body: string): unknown {
+  if (body === "") return undefined;
+  try {
+    return JSON.parse(body, (key, value: unknown) =>
+      CREDENTIAL_KEYS.has(key) ? "[masked]" : value,
+    );
+  } catch {
+    return body;
+  }
 }

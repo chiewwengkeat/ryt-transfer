@@ -3,10 +3,14 @@ import {
   TransportErrorKind,
 } from "@/shared/http/transport-error/transport-error";
 import { observedRecords } from "@/test/doubles/native-doubles";
+import type * as Observability from "./observability";
 import { reportError, setObservabilitySink, trackEvent } from "./observability";
 
 afterEach(() => {
   jest.restoreAllMocks();
+  if (VARIANT_BEFORE_TESTS === undefined)
+    delete process.env.EXPO_PUBLIC_APP_VARIANT;
+  else process.env.EXPO_PUBLIC_APP_VARIANT = VARIANT_BEFORE_TESTS;
 });
 
 it("passes an event's amount and outcome to the sink", () => {
@@ -108,3 +112,77 @@ it.each([
     expect(observe).not.toThrow();
   },
 );
+
+it("logs a development build's request and answer with the PIN and signature masked", async () => {
+  const logged = jest
+    .spyOn(console, "info")
+    .mockImplementation(() => undefined);
+  loadObservabilityBuiltAs("development");
+  const send = observability.logRequestsInDevelopment(() =>
+    Promise.resolve(Response.json({ transfer: { status: "completed" } })),
+  );
+
+  await send(
+    new Request("https://bank.test/transfers/tr_1/approve", {
+      method: "POST",
+      body: JSON.stringify({ keyId: "key_1", signature: "MEUC", pin: "1357" }),
+    }),
+  );
+
+  expect(logged).toHaveBeenCalledWith(
+    "[request] POST /transfers/tr_1/approve 200",
+    {
+      request: { keyId: "key_1", signature: "[masked]", pin: "[masked]" },
+      response: { transfer: { status: "completed" } },
+    },
+  );
+});
+
+it("logs a development build's failed request and hands its failure on", async () => {
+  const logged = jest
+    .spyOn(console, "info")
+    .mockImplementation(() => undefined);
+  const failure = new TypeError("Network request failed");
+  loadObservabilityBuiltAs("development");
+  const send = observability.logRequestsInDevelopment(() =>
+    Promise.reject(failure),
+  );
+
+  await expect(
+    send(new Request("https://bank.test/accounts/primary")),
+  ).rejects.toBe(failure);
+  expect(logged).toHaveBeenCalledWith(
+    "[request] GET /accounts/primary failed",
+    {
+      request: undefined,
+      failure,
+    },
+  );
+});
+
+it.each(["demo", "production"])(
+  "logs no request in a %s build",
+  async (variant) => {
+    const logged = jest
+      .spyOn(console, "info")
+      .mockImplementation(() => undefined);
+    loadObservabilityBuiltAs(variant);
+    const send = observability.logRequestsInDevelopment(() =>
+      Promise.resolve(Response.json({})),
+    );
+
+    await send(new Request("https://bank.test/accounts/primary"));
+
+    expect(logged).not.toHaveBeenCalled();
+  },
+);
+
+const VARIANT_BEFORE_TESTS = process.env.EXPO_PUBLIC_APP_VARIANT;
+let observability: typeof Observability;
+
+function loadObservabilityBuiltAs(variant: string) {
+  process.env.EXPO_PUBLIC_APP_VARIANT = variant;
+  jest.isolateModules(() => {
+    observability = jest.requireActual<typeof Observability>("./observability");
+  });
+}
