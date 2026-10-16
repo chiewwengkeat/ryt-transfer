@@ -99,31 +99,49 @@ function redactProperties(properties: Record<string, unknown>) {
 
 function wrapSendInConsoleLog(send: Send): Send {
   return async (request) => {
-    const { pathname, search } = new URL(request.url);
-    const title = `[request] ${request.method} ${pathname}${search}`;
-    const requestBody = parseMaskingCredentials(await request.clone().text());
-    let response: Response;
+    const requestBody = readMaskedBody(request);
     try {
-      response = await send(request);
+      const response = await send(request);
+      logIgnoringItsFailure(request, response.status, {
+        request: await requestBody,
+        response: await readMaskedBody(response),
+      });
+      return response;
     } catch (failure) {
-      console.info(`${title} failed`, { request: requestBody, failure });
+      logIgnoringItsFailure(request, "failed", {
+        request: await requestBody,
+        failure,
+      });
       throw failure;
     }
-    console.info(`${title} ${response.status}`, {
-      request: requestBody,
-      response: parseMaskingCredentials(await response.clone().text()),
-    });
-    return response;
   };
 }
 
-function parseMaskingCredentials(body: string): unknown {
-  if (body === "") return undefined;
+async function readMaskedBody(message: Request | Response): Promise<unknown> {
+  let body = "";
   try {
+    body = await message.clone().text();
+    if (body === "") return undefined;
     return JSON.parse(body, (key, value: unknown) =>
       CREDENTIAL_KEYS.has(key) ? "[masked]" : value,
     );
   } catch {
     return body;
+  }
+}
+
+function logIgnoringItsFailure(
+  request: Request,
+  outcome: number | string,
+  bodies: Record<string, unknown>,
+) {
+  try {
+    const { pathname, search } = new URL(request.url);
+    console.info(
+      `[request] ${request.method} ${pathname}${search} ${outcome}`,
+      bodies,
+    );
+  } catch {
+    // Swallowed: a broken log must never fail the request it describes.
   }
 }

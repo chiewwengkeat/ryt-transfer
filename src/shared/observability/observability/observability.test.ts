@@ -160,6 +160,28 @@ it("logs a development build's failed request and hands its failure on", async (
   );
 });
 
+it("never lets a broken log change a development build's answer or failure", async () => {
+  jest.spyOn(console, "info").mockImplementation(() => {
+    throw new Error("console broke");
+  });
+  const answer = Response.json({});
+  const failure = new TypeError("Network request failed");
+  loadObservabilityBuiltAs("development");
+  const answers = observability.logRequestsInDevelopment(() =>
+    Promise.resolve(answer),
+  );
+  const fails = observability.logRequestsInDevelopment(() =>
+    Promise.reject(failure),
+  );
+
+  await expect(
+    answers(new Request("https://bank.test/accounts/primary")),
+  ).resolves.toBe(answer);
+  await expect(
+    fails(new Request("https://bank.test/accounts/primary")),
+  ).rejects.toBe(failure);
+});
+
 it.each(["demo", "production"])(
   "logs no request in a %s build",
   async (variant) => {
