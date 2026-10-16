@@ -5,6 +5,7 @@
   "[typescript]": {
     "editor.codeActionsOnSave": [],
     "js/ts.validate.enabled": true,
+    "js/ts.preferences.importModuleSpecifier": "shortest",
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
@@ -15,6 +16,7 @@
   "[typescriptreact]": {
     "editor.codeActionsOnSave": [],
     "js/ts.validate.enabled": true,
+    "js/ts.preferences.importModuleSpecifier": "shortest",
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
@@ -25,6 +27,7 @@
   "[javascript]": {
     "editor.codeActionsOnSave": [],
     "js/ts.validate.enabled": true,
+    "js/ts.preferences.importModuleSpecifier": "shortest",
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
@@ -35,6 +38,7 @@
   "[javascriptreact]": {
     "editor.codeActionsOnSave": [],
     "js/ts.validate.enabled": true,
+    "js/ts.preferences.importModuleSpecifier": "shortest",
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
@@ -123,6 +127,8 @@
     "typeOrder": "auto",
     "unicodeCollation": "ordinal"
   },
+  // Auto-import writes @/ where lint bans ../, and keeps ./ inside a folder, which "non-relative" would not.
+  "js/ts.preferences.autoImportSpecifierExcludeRegexes": ["^\\.\\.(/|$)"],
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "js/ts.tsdk.promptToUseWorkspaceVersion": true
 }
