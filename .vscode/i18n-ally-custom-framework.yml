@@ -1,0 +1,6 @@
+# The Demo menu's t comes from this hook, and i18n-ally names its bundles' namespace by their folder.
+languageIds:
+  - typescript
+  - typescriptreact
+scopeRangeRegex: "@/mocks/(switcher)/components/ViewDemo/hooks/use-demo-translation/use-demo-translation"
+monopoly: false

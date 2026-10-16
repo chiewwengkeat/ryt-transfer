@@ -130,5 +130,23 @@
   // Auto-import writes @/ where lint bans ../, and keeps ./ inside a folder, which "non-relative" would not.
   "js/ts.preferences.autoImportSpecifierExcludeRegexes": ["^\\.\\.(/|$)"],
   "js/ts.tsdk.path": "node_modules/typescript/lib",
-  "js/ts.tsdk.promptToUseWorkspaceVersion": true
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "i18n-ally.enabledFrameworks": ["react-i18next", "custom"],
+  "i18n-ally.enabledParsers": ["json"],
+  "i18n-ally.localesPaths": ["src"],
+  "i18n-ally.pathMatcher": "**/{namespace}/i18n/{locale}.json",
+  // Left to guess, i18n-ally parses src's folder names as language tags, and "root" makes it stop loading.
+  "i18n-ally.dirStructure": "file",
+  "i18n-ally.namespace": true,
+  // The approval modules are handed a transfer t, so no useTranslation in them names a namespace.
+  "i18n-ally.defaultNamespace": "transfer",
+  // i18n-ally looks up a plural's bare key, which only exists as _one and _other, so calls passing count or
+  // defaultValue are left to the typed t, which checks them.
+  "i18n-ally.regex.usageMatch": [
+    "\\Wt\\(\\s*['\"`]({key})['\"`](?!\\s*,\\s*\\{[^}]*\\b(?:count|defaultValue)\\b)",
+    "\\Wi18nKey=['\"`]({key})['\"`]"
+  ],
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.sourceLanguage": "en-MY",
+  "i18n-ally.displayLanguage": "en-MY"
 }
