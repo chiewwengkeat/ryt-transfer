@@ -146,7 +146,17 @@
     "\\Wt\\(\\s*['\"`]({key})['\"`](?!\\s*,\\s*\\{[^}]*\\b(?:count|defaultValue)\\b)",
     "\\Wi18nKey=['\"`]({key})['\"`]"
   ],
+  "i18n-ally.regex.usageMatchAppend": [],
+  "i18n-ally.regex.key": "[\\w\\d\\. \\-\\[\\]\\/:]*?",
   "i18n-ally.keystyle": "nested",
   "i18n-ally.sourceLanguage": "en-MY",
-  "i18n-ally.displayLanguage": "en-MY"
+  "i18n-ally.displayLanguage": "en-MY",
+  "i18n-ally.disabled": false,
+  "i18n-ally.includeSubfolders": true,
+  "i18n-ally.disablePathParsing": false,
+  "i18n-ally.ignoreFiles": [],
+  "i18n-ally.ignoredLocales": [],
+  "i18n-ally.languageTagSystem": "bcp47",
+  "i18n-ally.encoding": "utf-8",
+  "i18n-ally.extract.autoDetect": false
 }
