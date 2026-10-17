@@ -8,6 +8,7 @@ import {
   configureTransport,
   requestJson,
 } from "@/shared/http/transport/transport";
+import { hideConsoleError } from "@/test/doubles/console-double";
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import type { RequestHandler } from "msw";
 import { delay, http, HttpResponse } from "msw";
@@ -73,6 +74,7 @@ it("answers a handler that throws with the 500 that Jest's server gives it", asy
   const handlerThatThrows = http.get(PROBE_URL, () => {
     throw new Error("bank bug");
   });
+  hideConsoleError("bank bug");
   mswServer.use(handlerThatThrows);
   await expect(requestJson("/probe")).rejects.toMatchObject({
     kind: TransportErrorKind.Http,

@@ -1,9 +1,11 @@
+import { hideConsoleError } from "@/test/doubles/console-double";
 import { observedRecords } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Text } from "react-native";
 
 it("replaces the app when a screen with no boundary of its own crashes, and Try again remounts it", async () => {
+  hideConsoleError("render failed");
   await renderRoute("/", {
     appDir: "src/app",
     overrides: { index: ScreenWithNoBoundary },

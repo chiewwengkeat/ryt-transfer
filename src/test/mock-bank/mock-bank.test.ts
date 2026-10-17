@@ -1,4 +1,5 @@
 import { clearTransferScenario, pickTransferScenario } from "@/mocks/bank/bank";
+import { hideConsoleError } from "@/test/doubles/console-double";
 import { http, HttpResponse } from "msw";
 import {
   BANK_ORIGIN,
@@ -46,6 +47,9 @@ it("records the method, URL, headers and body of each request the test sent", as
 });
 
 it("catches a request no handler answers, even for a .json path", async () => {
+  hideConsoleError(
+    "No mock handler for GET https://api.example.test/scenarios/unmocked.json",
+  );
   await fetch("https://api.example.test/scenarios/unmocked.json");
 
   expect(unhandledRequests.splice(0)).toEqual([

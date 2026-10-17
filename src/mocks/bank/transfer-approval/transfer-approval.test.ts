@@ -8,6 +8,7 @@ import {
 import { demoBankNotifications, unlockDemoPin } from "@/mocks/bank/bank";
 import { bankPorts, bindBankPorts } from "@/mocks/bank/ports/ports";
 import { DEMO_PIN } from "@/mocks/bank/seed/seed";
+import { hideConsoleError } from "@/test/doubles/console-double";
 import {
   pairTestPhone,
   readBankBalanceMinor,
@@ -251,6 +252,7 @@ it("keeps a transfer approvable when minting its reference fails", async () => {
       throw new Error("No randomness on this phone");
     },
   });
+  hideConsoleError("No randomness on this phone");
 
   const failed = await sendToBank("POST", started.approvalPath, {
     body: approval,

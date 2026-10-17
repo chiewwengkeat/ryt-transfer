@@ -1,3 +1,4 @@
+import { hideConsoleError } from "@/test/doubles/console-double";
 import { observedRecords } from "@/test/doubles/native-doubles";
 import { renderRoute } from "@/test/render/render-route";
 import { fireEvent, screen } from "@testing-library/react-native";
@@ -7,6 +8,7 @@ import ViewScreenError from "./ViewScreenError";
 
 beforeEach(() => {
   screenCrashes = true;
+  hideConsoleError("render failed");
 });
 
 it("puts a crashed screen behind Try again, which renders it afresh", async () => {

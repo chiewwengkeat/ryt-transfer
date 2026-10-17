@@ -1,5 +1,6 @@
 import { accountKeys } from "@/domains/account/api/account.keys";
 import { requestJson } from "@/shared/http/transport/transport";
+import { hideConsoleError } from "@/test/doubles/console-double";
 import { isScreenCaptureBlocked } from "@/test/doubles/native-doubles";
 import { mswServer } from "@/test/mock-bank/mock-bank";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
@@ -17,6 +18,7 @@ export function ButtonCrashScreen() {
     <Pressable
       accessibilityRole="button"
       onPress={() => {
+        hideConsoleError("render failed");
         setCrashed(true);
       }}
     >
