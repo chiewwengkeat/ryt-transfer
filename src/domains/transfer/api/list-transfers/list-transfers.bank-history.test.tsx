@@ -1,4 +1,5 @@
 import {
+  type Transfer,
   TransferFunds,
   TransferStatus,
 } from "@/domains/transfer/api/get-transfer/get-transfer.type";
@@ -181,7 +182,7 @@ it("patches a transfer with its newer version and moves its day's net by the mon
     funds: TransferFunds.Refunded,
   };
 
-  await act(() => patchTransferInHistory(queryClient, refunded));
+  await patchHistory(queryClient, refunded);
 
   const after = queryClient.getQueryData(getListTransfersOptions().queryKey);
   expect(after?.pages[0]?.items[0]).toEqual(refunded);
@@ -202,13 +203,11 @@ it("moves a split day's net in both pages that carry it", async () => {
   if (splitDayTransfer?.createdAt.slice(0, 10) !== "2026-09-26")
     throw new Error("The bank's page 2 no longer opens on the split day.");
 
-  await act(() =>
-    patchTransferInHistory(queryClient, {
-      ...splitDayTransfer,
-      version: splitDayTransfer.version + 1,
-      funds: TransferFunds.NotDebited,
-    }),
-  );
+  await patchHistory(queryClient, {
+    ...splitDayTransfer,
+    version: splitDayTransfer.version + 1,
+    funds: TransferFunds.NotDebited,
+  });
 
   const [firstPageNet, secondPageNet] =
     queryClient
@@ -226,12 +225,10 @@ it("ignores a copy of the same version as the one listed", async () => {
   const listed = before.pages[0]?.items[0];
   if (!listed) throw new Error("The bank listed no transfers.");
 
-  await act(() =>
-    patchTransferInHistory(queryClient, {
-      ...listed,
-      funds: TransferFunds.Refunded,
-    }),
-  );
+  await patchHistory(queryClient, {
+    ...listed,
+    funds: TransferFunds.Refunded,
+  });
 
   expect(queryClient.getQueryData(getListTransfersOptions().queryKey)).toBe(
     before,
@@ -263,6 +260,12 @@ async function loadBothPages(queryClient: QueryClient) {
   );
   if (!cachedPages) throw new Error("History did not load.");
   return { firstPage, bothPages: result.current.data, cachedPages };
+}
+
+async function patchHistory(queryClient: QueryClient, transfer: Transfer) {
+  await act(() => patchTransferInHistory(queryClient, transfer));
+  // The mounted list re-renders on React Query's notify timer, which must fire inside act.
+  await act(() => new Promise((resolve) => setTimeout(resolve)));
 }
 
 async function askForNextPageWhileARefreshWaitsOffline(
